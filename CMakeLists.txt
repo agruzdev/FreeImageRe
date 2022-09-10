@@ -11,7 +11,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
 
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Source)

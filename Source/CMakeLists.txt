@@ -91,53 +91,53 @@ set(freeimage_sources
     ./FreeImageToolkit/MultigridPoissonSolver.cpp
     ./FreeImageToolkit/Rescale.cpp
     ./FreeImageToolkit/Resize.cpp
-    ./LibJPEG/jaricom.c
-    ./LibJPEG/jcapimin.c
-    ./LibJPEG/jcapistd.c 
-    ./LibJPEG/jcarith.c 
-    ./LibJPEG/jccoefct.c 
-    ./LibJPEG/jccolor.c 
-    ./LibJPEG/jcdctmgr.c 
-    ./LibJPEG/jchuff.c 
-    ./LibJPEG/jcinit.c 
-    ./LibJPEG/jcmainct.c 
-    ./LibJPEG/jcmarker.c 
-    ./LibJPEG/jcmaster.c 
-    ./LibJPEG/jcomapi.c 
-    ./LibJPEG/jcparam.c 
-    ./LibJPEG/jcprepct.c 
-    ./LibJPEG/jcsample.c 
-    ./LibJPEG/jctrans.c 
-    ./LibJPEG/jdapimin.c 
-    ./LibJPEG/jdapistd.c 
-    ./LibJPEG/jdarith.c 
-    ./LibJPEG/jdatadst.c 
-    ./LibJPEG/jdatasrc.c 
-    ./LibJPEG/jdcoefct.c 
-    ./LibJPEG/jdcolor.c 
-    ./LibJPEG/jddctmgr.c 
-    ./LibJPEG/jdhuff.c 
-    ./LibJPEG/jdinput.c 
-    ./LibJPEG/jdmainct.c 
-    ./LibJPEG/jdmarker.c 
-    ./LibJPEG/jdmaster.c 
-    ./LibJPEG/jdmerge.c 
-    ./LibJPEG/jdpostct.c 
-    ./LibJPEG/jdsample.c 
-    ./LibJPEG/jdtrans.c 
-    ./LibJPEG/jerror.c 
-    ./LibJPEG/jfdctflt.c 
-    ./LibJPEG/jfdctfst.c 
-    ./LibJPEG/jfdctint.c 
-    ./LibJPEG/jidctflt.c 
-    ./LibJPEG/jidctfst.c 
-    ./LibJPEG/jidctint.c 
-    ./LibJPEG/jmemmgr.c 
-    ./LibJPEG/jmemnobs.c 
-    ./LibJPEG/jquant1.c 
-    ./LibJPEG/jquant2.c 
-    ./LibJPEG/jutils.c 
-    ./LibJPEG/transupp.c 
+    #./LibJPEG/jaricom.c
+    #./LibJPEG/jcapimin.c
+    #./LibJPEG/jcapistd.c 
+    #./LibJPEG/jcarith.c 
+    #./LibJPEG/jccoefct.c 
+    #./LibJPEG/jccolor.c 
+    #./LibJPEG/jcdctmgr.c 
+    #./LibJPEG/jchuff.c 
+    #./LibJPEG/jcinit.c 
+    #./LibJPEG/jcmainct.c 
+    #./LibJPEG/jcmarker.c 
+    #./LibJPEG/jcmaster.c 
+    #./LibJPEG/jcomapi.c 
+    #./LibJPEG/jcparam.c 
+    #./LibJPEG/jcprepct.c 
+    #./LibJPEG/jcsample.c 
+    #./LibJPEG/jctrans.c 
+    #./LibJPEG/jdapimin.c 
+    #./LibJPEG/jdapistd.c 
+    #./LibJPEG/jdarith.c 
+    #./LibJPEG/jdatadst.c 
+    #./LibJPEG/jdatasrc.c 
+    #./LibJPEG/jdcoefct.c 
+    #./LibJPEG/jdcolor.c 
+    #./LibJPEG/jddctmgr.c 
+    #./LibJPEG/jdhuff.c 
+    #./LibJPEG/jdinput.c 
+    #./LibJPEG/jdmainct.c 
+    #./LibJPEG/jdmarker.c 
+    #./LibJPEG/jdmaster.c 
+    #./LibJPEG/jdmerge.c 
+    #./LibJPEG/jdpostct.c 
+    #./LibJPEG/jdsample.c 
+    #./LibJPEG/jdtrans.c 
+    #./LibJPEG/jerror.c 
+    #./LibJPEG/jfdctflt.c 
+    #./LibJPEG/jfdctfst.c 
+    #./LibJPEG/jfdctint.c 
+    #./LibJPEG/jidctflt.c 
+    #./LibJPEG/jidctfst.c 
+    #./LibJPEG/jidctint.c 
+    #./LibJPEG/jmemmgr.c 
+    #./LibJPEG/jmemnobs.c 
+    #./LibJPEG/jquant1.c 
+    #./LibJPEG/jquant2.c 
+    #./LibJPEG/jutils.c 
+    #./LibJPEG/transupp.c 
     ./LibPNG/png.c 
     ./LibPNG/pngerror.c 
     ./LibPNG/pngget.c 
@@ -529,8 +529,10 @@ add_definitions("-DFREEIMAGE_COLORORDER=1")
 add_library(FreeImage SHARED ${freeimage_sources})
 
 target_include_directories(FreeImage PRIVATE ${ZLIB_INCLUDE_DIR})
+target_include_directories(FreeImage PRIVATE ${JPEG_INCLUDE_DIR})
 
 target_link_libraries(FreeImage PRIVATE ${ZLIB_LIBRARIES})
+target_link_libraries(FreeImage PRIVATE ${JPEG_LIBRARIES})
 
 
 
