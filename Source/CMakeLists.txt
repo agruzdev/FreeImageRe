@@ -189,21 +189,21 @@ set(freeimage_sources
     ./LibTIFF4/tif_warning.c 
     ./LibTIFF4/tif_write.c 
     ./LibTIFF4/tif_zip.c 
-    ./ZLib/adler32.c
-    ./ZLib/compress.c 
-    ./ZLib/crc32.c 
-    ./ZLib/deflate.c 
-    ./ZLib/gzclose.c 
-    ./ZLib/gzlib.c 
-    ./ZLib/gzread.c 
-    ./ZLib/gzwrite.c 
-    ./ZLib/infback.c 
-    ./ZLib/inffast.c 
-    ./ZLib/inflate.c 
-    ./ZLib/inftrees.c 
-    ./ZLib/trees.c 
-    ./ZLib/uncompr.c 
-    ./ZLib/zutil.c 
+#    ./ZLib/adler32.c
+#    ./ZLib/compress.c 
+#    ./ZLib/crc32.c 
+#    ./ZLib/deflate.c 
+#    ./ZLib/gzclose.c 
+#    ./ZLib/gzlib.c 
+#    ./ZLib/gzread.c 
+#    ./ZLib/gzwrite.c 
+#    ./ZLib/infback.c 
+#    ./ZLib/inffast.c 
+#    ./ZLib/inflate.c 
+#    ./ZLib/inftrees.c 
+#    ./ZLib/trees.c 
+#    ./ZLib/uncompr.c 
+#    ./ZLib/zutil.c 
     ./LibOpenJPEG/bio.c 
     ./LibOpenJPEG/cio.c 
     ./LibOpenJPEG/dwt.c 
@@ -519,11 +519,18 @@ add_definitions(
 
 if(WIN32)
     add_definitions("-DWINVER=0x0500")
+    if(MSVC)
+        add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
+    endif()
 endif()
 
 add_definitions("-DFREEIMAGE_COLORORDER=1")
 
 add_library(FreeImage SHARED ${freeimage_sources})
+
+target_include_directories(FreeImage PRIVATE ${ZLIB_INCLUDE_DIR})
+
+target_link_libraries(FreeImage PRIVATE ${ZLIB_LIBRARIES})
 
 
 
