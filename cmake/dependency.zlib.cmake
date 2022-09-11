@@ -4,7 +4,7 @@
 # Output variables:
 # ZLIB_INCLUDE_DIR - includes
 # ZLIB_LIBRARY_DIR - link directories
-# ZLIB_LIBRARIES   - link targets
+# ZLIB_LIBRARY     - link targets
 
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 
@@ -28,8 +28,12 @@ if(NOT TARGET zlibstatic)
     endif()
 
     unset(SKIP_INSTALL_ALL)
+
+    add_library(ZLIB::ZLIB ALIAS zlibstatic)
+
+    target_include_directories(zlibstatic INTERFACE ${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib)
 endif()
 
 set(ZLIB_INCLUDE_DIR ${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib CACHE PATH "")
 set(ZLIB_LIBRARY_DIR "" CACHE PATH "")
-set(ZLIB_LIBRARIES zlibstatic CACHE STRING "")
+set(ZLIB_LIBRARY zlibstatic CACHE STRING "")

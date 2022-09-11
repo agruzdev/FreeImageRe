@@ -3,7 +3,7 @@
 # Output variables:
 # JPEG_INCLUDE_DIR - includes
 # JPEG_LIBRARY_DIR - link directories
-# JPEG_LIBRARIES   - link targets
+# JPEG_LIBRARY     - link targets
 
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 
@@ -20,8 +20,9 @@ dependency_find_or_download(
 if(NOT TARGET LibJPEG)
     add_subdirectory(${CMAKE_SOURCE_DIR}/cmake/libjpeg ${CMAKE_BINARY_DIR}/dependencies/libjpeg)
     set_property(TARGET LibJPEG PROPERTY FOLDER "Dependencies")
+    target_include_directories(LibJPEG INTERFACE ${JPEG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg)
 endif()
 
 set(JPEG_INCLUDE_DIR ${JPEG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg CACHE PATH "")
 set(JPEG_LIBRARY_DIR "" CACHE PATH "")
-set(JPEG_LIBRARIES LibJPEG CACHE STRING "")
+set(JPEG_LIBRARY LibJPEG CACHE STRING "")
