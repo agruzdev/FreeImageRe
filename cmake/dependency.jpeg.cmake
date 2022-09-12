@@ -24,10 +24,9 @@ if (JPEG_REPOSITORY STREQUAL "IJG")
     if(NOT TARGET LibJPEG)
         add_subdirectory(${CMAKE_SOURCE_DIR}/cmake/libjpeg ${CMAKE_BINARY_DIR}/dependencies/libjpeg)
         set_property(TARGET LibJPEG PROPERTY FOLDER "Dependencies")
-        target_include_directories(LibJPEG INTERFACE ${JPEG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg)
     endif()
 
-    set(JPEG_IJG_INCLUDE_DIR ${JPEG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg CACHE PATH "")
+    set(JPEG_IJG_INCLUDE_DIR ${JPEG_IJG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg CACHE PATH "")
     set(JPEG_IJG_LIBRARY_DIR "" CACHE PATH "")
     set(JPEG_IJG_LIBRARY LibJPEG CACHE STRING "")
 
