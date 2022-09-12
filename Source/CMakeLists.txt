@@ -204,25 +204,25 @@ set(freeimage_sources
 #    ./ZLib/trees.c 
 #    ./ZLib/uncompr.c 
 #    ./ZLib/zutil.c 
-    ./LibOpenJPEG/bio.c 
-    ./LibOpenJPEG/cio.c 
-    ./LibOpenJPEG/dwt.c 
-    ./LibOpenJPEG/event.c 
-    ./LibOpenJPEG/function_list.c 
-    ./LibOpenJPEG/image.c 
-    ./LibOpenJPEG/invert.c 
-    ./LibOpenJPEG/j2k.c 
-    ./LibOpenJPEG/jp2.c 
-    ./LibOpenJPEG/mct.c 
-    ./LibOpenJPEG/mqc.c 
-    ./LibOpenJPEG/openjpeg.c 
-    ./LibOpenJPEG/opj_clock.c 
-    ./LibOpenJPEG/pi.c 
-    ./LibOpenJPEG/raw.c 
-    ./LibOpenJPEG/t1.c 
-    ./LibOpenJPEG/t2.c 
-    ./LibOpenJPEG/tcd.c 
-    ./LibOpenJPEG/tgt.c 
+#    ./LibOpenJPEG/bio.c 
+#    ./LibOpenJPEG/cio.c 
+#    ./LibOpenJPEG/dwt.c 
+#    ./LibOpenJPEG/event.c 
+#    ./LibOpenJPEG/function_list.c 
+#    ./LibOpenJPEG/image.c 
+#    ./LibOpenJPEG/invert.c 
+#    ./LibOpenJPEG/j2k.c 
+#    ./LibOpenJPEG/jp2.c 
+#    ./LibOpenJPEG/mct.c 
+#    ./LibOpenJPEG/mqc.c 
+#    ./LibOpenJPEG/openjpeg.c 
+#    ./LibOpenJPEG/opj_clock.c 
+#    ./LibOpenJPEG/pi.c 
+#    ./LibOpenJPEG/raw.c 
+#    ./LibOpenJPEG/t1.c 
+#    ./LibOpenJPEG/t2.c 
+#    ./LibOpenJPEG/tcd.c 
+#    ./LibOpenJPEG/tgt.c 
     #./OpenEXR/IexMath/IexMathFpu.cpp 
     #./OpenEXR/IlmImf/b44ExpLogTable.cpp 
     #./OpenEXR/IlmImf/ImfAcesFile.cpp 
@@ -532,10 +532,12 @@ target_link_libraries(FreeImage PRIVATE
     ${ZLIB_LIBRARY}
     ${JPEG_LIBRARY}
     ${EXR_LIBRARY}
+    ${OPENJPEG_LIBRARY}
 )
 
 target_include_directories(FreeImage PRIVATE
     ${JPEG_INCLUDE_DIR}
+    ${OPENJPEG_INCLUDE_DIR}
 )
 
 

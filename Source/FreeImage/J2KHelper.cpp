@@ -21,7 +21,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
-#include "../LibOpenJPEG/openjpeg.h"
+#include "openjp2/openjpeg.h"
 #include "J2KHelper.h"
 
 // --------------------------------------------------------------------------

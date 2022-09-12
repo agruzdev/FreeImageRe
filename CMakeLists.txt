@@ -19,6 +19,7 @@ cmake_policy(SET CMP0079 NEW) # -> target_link_libraries() allows use with targe
 # Dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
 
 
