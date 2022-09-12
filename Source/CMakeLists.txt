@@ -534,5 +534,8 @@ target_link_libraries(FreeImage PRIVATE
     ${EXR_LIBRARY}
 )
 
+target_include_directories(FreeImage PRIVATE
+    ${JPEG_INCLUDE_DIR}
+)
 
 

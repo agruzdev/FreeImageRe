@@ -484,6 +484,7 @@ marker_is_icc(jpeg_saved_marker_ptr marker) {
 	return FALSE;
 }
 
+#ifndef JPEG_HAS_READ_ICC_PROFILE
 /**
   See if there was an ICC profile in the JPEG file being read;
   if so, reassemble and return the profile data.
@@ -593,6 +594,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	
 	return TRUE;
 }
+#endif
 
 /**
 	Read JPEG_APPD marker (IPTC or Adobe Photoshop profile)
