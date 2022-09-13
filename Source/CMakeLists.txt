@@ -138,21 +138,21 @@ set(freeimage_sources
     #./LibJPEG/jquant2.c 
     #./LibJPEG/jutils.c 
     #./LibJPEG/transupp.c 
-    ./LibPNG/png.c 
-    ./LibPNG/pngerror.c 
-    ./LibPNG/pngget.c 
-    ./LibPNG/pngmem.c 
-    ./LibPNG/pngpread.c 
-    ./LibPNG/pngread.c 
-    ./LibPNG/pngrio.c 
-    ./LibPNG/pngrtran.c 
-    ./LibPNG/pngrutil.c 
-    ./LibPNG/pngset.c 
-    ./LibPNG/pngtrans.c 
-    ./LibPNG/pngwio.c 
-    ./LibPNG/pngwrite.c 
-    ./LibPNG/pngwtran.c 
-    ./LibPNG/pngwutil.c 
+#    ./LibPNG/png.c 
+#    ./LibPNG/pngerror.c 
+#    ./LibPNG/pngget.c 
+#    ./LibPNG/pngmem.c 
+#    ./LibPNG/pngpread.c 
+#    ./LibPNG/pngread.c 
+#    ./LibPNG/pngrio.c 
+#    ./LibPNG/pngrtran.c 
+#    ./LibPNG/pngrutil.c 
+#    ./LibPNG/pngset.c 
+#    ./LibPNG/pngtrans.c 
+#    ./LibPNG/pngwio.c 
+#    ./LibPNG/pngwrite.c 
+#    ./LibPNG/pngwtran.c 
+#    ./LibPNG/pngwutil.c 
     ./LibTIFF4/tif_aux.c 
     ./LibTIFF4/tif_close.c 
     ./LibTIFF4/tif_codec.c 
@@ -533,11 +533,13 @@ target_link_libraries(FreeImage PRIVATE
     ${JPEG_LIBRARY}
     ${EXR_LIBRARY}
     ${OPENJPEG_LIBRARY}
+    ${PNG_LIBRARY}
 )
 
 target_include_directories(FreeImage PRIVATE
     ${JPEG_INCLUDE_DIR}
     ${OPENJPEG_INCLUDE_DIR}
+    ${PNG_INCLUDE_DIR}
 )
 
 

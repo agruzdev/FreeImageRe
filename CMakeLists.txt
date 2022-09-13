@@ -21,6 +21,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
 
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Source)
