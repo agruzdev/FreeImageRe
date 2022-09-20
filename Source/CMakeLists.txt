@@ -449,29 +449,29 @@ set(freeimage_sources
     ./LibWebP/src/utils/rescaler_utils.c 
     ./LibWebP/src/utils/thread_utils.c 
     ./LibWebP/src/utils/utils.c 
-    ./LibJXR/image/decode/decode.c 
-    ./LibJXR/image/decode/JXRTranscode.c 
-    ./LibJXR/image/decode/postprocess.c 
-    ./LibJXR/image/decode/segdec.c 
-    ./LibJXR/image/decode/strdec.c 
-    ./LibJXR/image/decode/strdec_x86.c 
-    ./LibJXR/image/decode/strInvTransform.c 
-    ./LibJXR/image/decode/strPredQuantDec.c 
-    ./LibJXR/image/encode/encode.c 
-    ./LibJXR/image/encode/segenc.c 
-    ./LibJXR/image/encode/strenc.c 
-    ./LibJXR/image/encode/strenc_x86.c 
-    ./LibJXR/image/encode/strFwdTransform.c 
-    ./LibJXR/image/encode/strPredQuantEnc.c 
-    ./LibJXR/image/sys/adapthuff.c 
-    ./LibJXR/image/sys/image.c 
-    ./LibJXR/image/sys/strcodec.c 
-    ./LibJXR/image/sys/strPredQuant.c 
-    ./LibJXR/image/sys/strTransform.c 
-    ./LibJXR/jxrgluelib/JXRGlue.c 
-    ./LibJXR/jxrgluelib/JXRGlueJxr.c 
-    ./LibJXR/jxrgluelib/JXRGluePFC.c 
-    ./LibJXR/jxrgluelib/JXRMeta.c 
+    #./LibJXR/image/decode/decode.c 
+    #./LibJXR/image/decode/JXRTranscode.c 
+    #./LibJXR/image/decode/postprocess.c 
+    #./LibJXR/image/decode/segdec.c 
+    #./LibJXR/image/decode/strdec.c 
+    #./LibJXR/image/decode/strdec_x86.c 
+    #./LibJXR/image/decode/strInvTransform.c 
+    #./LibJXR/image/decode/strPredQuantDec.c 
+    #./LibJXR/image/encode/encode.c 
+    #./LibJXR/image/encode/segenc.c 
+    #./LibJXR/image/encode/strenc.c 
+    #./LibJXR/image/encode/strenc_x86.c 
+    #./LibJXR/image/encode/strFwdTransform.c 
+    #./LibJXR/image/encode/strPredQuantEnc.c 
+    #./LibJXR/image/sys/adapthuff.c 
+    #./LibJXR/image/sys/image.c 
+    #./LibJXR/image/sys/strcodec.c 
+    #./LibJXR/image/sys/strPredQuant.c 
+    #./LibJXR/image/sys/strTransform.c 
+    #./LibJXR/jxrgluelib/JXRGlue.c 
+    #./LibJXR/jxrgluelib/JXRGlueJxr.c 
+    #./LibJXR/jxrgluelib/JXRGluePFC.c 
+    #./LibJXR/jxrgluelib/JXRMeta.c 
     #./Wrapper/FreeImagePlus/src/fipImage.cpp
     #./Wrapper/FreeImagePlus/src/fipMemoryIO.cpp
     #./Wrapper/FreeImagePlus/src/fipMetadataFind.cpp
@@ -485,28 +485,28 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/Metadata
     ${CMAKE_CURRENT_SOURCE_DIR}/FreeImageToolkit
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibJPEG
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibPNG
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibJPEG
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibPNG
     ${CMAKE_CURRENT_SOURCE_DIR}/LibTIFF4
-    ${CMAKE_CURRENT_SOURCE_DIR}/ZLib
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibOpenJPEG
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Half
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Iex
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IlmImf
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IlmThread
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Imath
-    ${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IexMath
+    #${CMAKE_CURRENT_SOURCE_DIR}/ZLib
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibOpenJPEG
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Half
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Iex
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IlmImf
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IlmThread
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Imath
+    #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IexMath
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/dcraw
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/internal
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/libraw
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/src
     ${CMAKE_CURRENT_SOURCE_DIR}/LibWebP
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibJXR
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/common/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/image/sys
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/jxrgluelib
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/common/include
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/image/sys
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/jxrgluelib
     #${CMAKE_CURRENT_SOURCE_DIR}/FreeImagePlus
 )
 
@@ -514,7 +514,7 @@ add_definitions(
     "-DFREEIMAGE_EXPORTS"
     "-DLIBRAW_NODLL"
     "-DOPJ_STATIC"
-    "-DDISABLE_PERF_MEASUREMENT"
+#    "-DDISABLE_PERF_MEASUREMENT"
 )
 
 if(WIN32)
@@ -534,6 +534,7 @@ target_link_libraries(FreeImage PRIVATE
     ${EXR_LIBRARY}
     ${OPENJPEG_LIBRARY}
     ${PNG_LIBRARY}
+    LibJXR
 )
 
 target_include_directories(FreeImage PRIVATE

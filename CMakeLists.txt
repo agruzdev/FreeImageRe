@@ -16,12 +16,15 @@ set(CMAKE_INSTALL_DOCDIR doc)
 set(CMAKE_POLICY_DEFAULT_CMP0077 "NEW")
 cmake_policy(SET CMP0079 NEW) # -> target_link_libraries() allows use with targets in other directories.
 
-# Dependencies
+# External dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
+
+# Internal dependencies
+add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
 
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Source)

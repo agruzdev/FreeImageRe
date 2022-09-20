@@ -23,7 +23,7 @@
 #include "Utilities.h"
 #include "../Metadata/FreeImageTag.h"
 
-#include "../LibJXR/jxrgluelib/JXRGlue.h"
+#include "jxrgluelib/JXRGlue.h"
 
 // ==========================================================
 // Plugin Interface
