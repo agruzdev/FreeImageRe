@@ -329,12 +329,12 @@ set(freeimage_sources
     #./OpenEXR/IlmThread/IlmThreadPool.cpp 
     #./OpenEXR/IlmThread/IlmThreadSemaphore.cpp 
     #./OpenEXR/IexMath/IexMathFloatExc.cpp 
-    ./LibRawLite/internal/dcraw_common.cpp 
-    ./LibRawLite/internal/dcraw_fileio.cpp 
-    ./LibRawLite/internal/demosaic_packs.cpp 
-    ./LibRawLite/src/libraw_c_api.cpp 
-    ./LibRawLite/src/libraw_cxx.cpp 
-    ./LibRawLite/src/libraw_datastream.cpp 
+    #./LibRawLite/internal/dcraw_common.cpp 
+    #./LibRawLite/internal/dcraw_fileio.cpp 
+    #./LibRawLite/internal/demosaic_packs.cpp 
+    #./LibRawLite/src/libraw_c_api.cpp 
+    #./LibRawLite/src/libraw_cxx.cpp 
+    #./LibRawLite/src/libraw_datastream.cpp 
     #./LibWebP/src/dec/alpha_dec.c 
     #./LibWebP/src/dec/buffer_dec.c 
     #./LibWebP/src/dec/frame_dec.c 
@@ -497,11 +497,11 @@ include_directories(
     #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IlmThread
     #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/Imath
     #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR/IexMath
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/dcraw
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/internal
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/libraw
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/src
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/dcraw
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/internal
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/libraw
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/src
     #${CMAKE_CURRENT_SOURCE_DIR}/LibWebP
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/common/include
@@ -512,7 +512,7 @@ include_directories(
 
 add_definitions(
     "-DFREEIMAGE_EXPORTS"
-    "-DLIBRAW_NODLL"
+#    "-DLIBRAW_NODLL"
     "-DOPJ_STATIC"
 #    "-DDISABLE_PERF_MEASUREMENT"
 )
@@ -536,6 +536,7 @@ target_link_libraries(FreeImage PRIVATE
     ${PNG_LIBRARY}
     ${TIFF_LIBRARY}
     ${WEBP_LIBRARY}
+    ${RAW_LIBRARY}
     LibJXR
 )
 
@@ -545,6 +546,7 @@ target_include_directories(FreeImage PRIVATE
     ${PNG_INCLUDE_DIR}
     ${TIFF_INCLUDE_DIR}
     ${WEBP_INCLUDE_DIR}
+    ${RAW_INCLUDE_DIR}
 )
 
 

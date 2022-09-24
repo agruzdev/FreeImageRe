@@ -24,6 +24,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.tiff.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.webp.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.raw.cmake)
 
 # Internal dependencies
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
