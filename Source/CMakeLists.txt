@@ -335,120 +335,120 @@ set(freeimage_sources
     ./LibRawLite/src/libraw_c_api.cpp 
     ./LibRawLite/src/libraw_cxx.cpp 
     ./LibRawLite/src/libraw_datastream.cpp 
-    ./LibWebP/src/dec/alpha_dec.c 
-    ./LibWebP/src/dec/buffer_dec.c 
-    ./LibWebP/src/dec/frame_dec.c 
-    ./LibWebP/src/dec/idec_dec.c 
-    ./LibWebP/src/dec/io_dec.c 
-    ./LibWebP/src/dec/quant_dec.c 
-    ./LibWebP/src/dec/tree_dec.c 
-    ./LibWebP/src/dec/vp8l_dec.c 
-    ./LibWebP/src/dec/vp8_dec.c 
-    ./LibWebP/src/dec/webp_dec.c 
-    ./LibWebP/src/demux/anim_decode.c 
-    ./LibWebP/src/demux/demux.c 
-    ./LibWebP/src/dsp/alpha_processing.c 
-    ./LibWebP/src/dsp/alpha_processing_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/alpha_processing_neon.c 
-    ./LibWebP/src/dsp/alpha_processing_sse2.c 
-    ./LibWebP/src/dsp/alpha_processing_sse41.c 
-    ./LibWebP/src/dsp/cost.c
-    ./LibWebP/src/dsp/cost_mips32.c 
-    ./LibWebP/src/dsp/cost_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/cost_sse2.c 
-    ./LibWebP/src/dsp/cpu.c 
-    ./LibWebP/src/dsp/dec.c 
-    ./LibWebP/src/dsp/dec_clip_tables.c 
-    ./LibWebP/src/dsp/dec_mips32.c 
-    ./LibWebP/src/dsp/dec_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/dec_msa.c 
-    ./LibWebP/src/dsp/dec_neon.c 
-    ./LibWebP/src/dsp/dec_sse2.c 
-    ./LibWebP/src/dsp/dec_sse41.c 
-    ./LibWebP/src/dsp/enc.c 
-    ./LibWebP/src/dsp/enc_avx2.c 
-    ./LibWebP/src/dsp/enc_mips32.c 
-    ./LibWebP/src/dsp/enc_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/enc_msa.c 
-    ./LibWebP/src/dsp/enc_neon.c 
-    ./LibWebP/src/dsp/enc_sse2.c 
-    ./LibWebP/src/dsp/enc_sse41.c 
-    ./LibWebP/src/dsp/filters.c 
-    ./LibWebP/src/dsp/filters_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/filters_msa.c 
-    ./LibWebP/src/dsp/filters_neon.c 
-    ./LibWebP/src/dsp/filters_sse2.c 
-    ./LibWebP/src/dsp/lossless.c 
-    ./LibWebP/src/dsp/lossless_enc.c 
-    ./LibWebP/src/dsp/lossless_enc_mips32.c 
-    ./LibWebP/src/dsp/lossless_enc_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/lossless_enc_msa.c 
-    ./LibWebP/src/dsp/lossless_enc_neon.c 
-    ./LibWebP/src/dsp/lossless_enc_sse2.c 
-    ./LibWebP/src/dsp/lossless_enc_sse41.c 
-    ./LibWebP/src/dsp/lossless_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/lossless_msa.c 
-    ./LibWebP/src/dsp/lossless_neon.c 
-    ./LibWebP/src/dsp/lossless_sse2.c 
-    ./LibWebP/src/dsp/rescaler.c 
-    ./LibWebP/src/dsp/rescaler_mips32.c 
-    ./LibWebP/src/dsp/rescaler_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/rescaler_msa.c 
-    ./LibWebP/src/dsp/rescaler_neon.c 
-    ./LibWebP/src/dsp/rescaler_sse2.c 
-    ./LibWebP/src/dsp/ssim.c 
-    ./LibWebP/src/dsp/ssim_sse2.c 
-    ./LibWebP/src/dsp/upsampling.c 
-    ./LibWebP/src/dsp/upsampling_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/upsampling_msa.c 
-    ./LibWebP/src/dsp/upsampling_neon.c 
-    ./LibWebP/src/dsp/upsampling_sse2.c 
-    ./LibWebP/src/dsp/upsampling_sse41.c 
-    ./LibWebP/src/dsp/yuv.c 
-    ./LibWebP/src/dsp/yuv_mips32.c 
-    ./LibWebP/src/dsp/yuv_mips_dsp_r2.c 
-    ./LibWebP/src/dsp/yuv_neon.c 
-    ./LibWebP/src/dsp/yuv_sse2.c 
-    ./LibWebP/src/dsp/yuv_sse41.c 
-    ./LibWebP/src/enc/alpha_enc.c 
-    ./LibWebP/src/enc/analysis_enc.c 
-    ./LibWebP/src/enc/backward_references_cost_enc.c 
-    ./LibWebP/src/enc/backward_references_enc.c 
-    ./LibWebP/src/enc/config_enc.c 
-    ./LibWebP/src/enc/cost_enc.c 
-    ./LibWebP/src/enc/filter_enc.c 
-    ./LibWebP/src/enc/frame_enc.c 
-    ./LibWebP/src/enc/histogram_enc.c 
-    ./LibWebP/src/enc/iterator_enc.c 
-    ./LibWebP/src/enc/near_lossless_enc.c 
-    ./LibWebP/src/enc/picture_csp_enc.c 
-    ./LibWebP/src/enc/picture_enc.c 
-    ./LibWebP/src/enc/picture_psnr_enc.c 
-    ./LibWebP/src/enc/picture_rescale_enc.c 
-    ./LibWebP/src/enc/picture_tools_enc.c 
-    ./LibWebP/src/enc/predictor_enc.c 
-    ./LibWebP/src/enc/quant_enc.c 
-    ./LibWebP/src/enc/syntax_enc.c 
-    ./LibWebP/src/enc/token_enc.c 
-    ./LibWebP/src/enc/tree_enc.c 
-    ./LibWebP/src/enc/vp8l_enc.c 
-    ./LibWebP/src/enc/webp_enc.c 
-    ./LibWebP/src/mux/anim_encode.c 
-    ./LibWebP/src/mux/muxedit.c 
-    ./LibWebP/src/mux/muxinternal.c 
-    ./LibWebP/src/mux/muxread.c 
-    ./LibWebP/src/utils/bit_reader_utils.c 
-    ./LibWebP/src/utils/bit_writer_utils.c 
-    ./LibWebP/src/utils/color_cache_utils.c 
-    ./LibWebP/src/utils/filters_utils.c 
-    ./LibWebP/src/utils/huffman_encode_utils.c 
-    ./LibWebP/src/utils/huffman_utils.c 
-    ./LibWebP/src/utils/quant_levels_dec_utils.c 
-    ./LibWebP/src/utils/quant_levels_utils.c 
-    ./LibWebP/src/utils/random_utils.c 
-    ./LibWebP/src/utils/rescaler_utils.c 
-    ./LibWebP/src/utils/thread_utils.c 
-    ./LibWebP/src/utils/utils.c 
+    #./LibWebP/src/dec/alpha_dec.c 
+    #./LibWebP/src/dec/buffer_dec.c 
+    #./LibWebP/src/dec/frame_dec.c 
+    #./LibWebP/src/dec/idec_dec.c 
+    #./LibWebP/src/dec/io_dec.c 
+    #./LibWebP/src/dec/quant_dec.c 
+    #./LibWebP/src/dec/tree_dec.c 
+    #./LibWebP/src/dec/vp8l_dec.c 
+    #./LibWebP/src/dec/vp8_dec.c 
+    #./LibWebP/src/dec/webp_dec.c 
+    #./LibWebP/src/demux/anim_decode.c 
+    #./LibWebP/src/demux/demux.c 
+    #./LibWebP/src/dsp/alpha_processing.c 
+    #./LibWebP/src/dsp/alpha_processing_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/alpha_processing_neon.c 
+    #./LibWebP/src/dsp/alpha_processing_sse2.c 
+    #./LibWebP/src/dsp/alpha_processing_sse41.c 
+    #./LibWebP/src/dsp/cost.c
+    #./LibWebP/src/dsp/cost_mips32.c 
+    #./LibWebP/src/dsp/cost_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/cost_sse2.c 
+    #./LibWebP/src/dsp/cpu.c 
+    #./LibWebP/src/dsp/dec.c 
+    #./LibWebP/src/dsp/dec_clip_tables.c 
+    #./LibWebP/src/dsp/dec_mips32.c 
+    #./LibWebP/src/dsp/dec_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/dec_msa.c 
+    #./LibWebP/src/dsp/dec_neon.c 
+    #./LibWebP/src/dsp/dec_sse2.c 
+    #./LibWebP/src/dsp/dec_sse41.c 
+    #./LibWebP/src/dsp/enc.c 
+    #./LibWebP/src/dsp/enc_avx2.c 
+    #./LibWebP/src/dsp/enc_mips32.c 
+    #./LibWebP/src/dsp/enc_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/enc_msa.c 
+    #./LibWebP/src/dsp/enc_neon.c 
+    #./LibWebP/src/dsp/enc_sse2.c 
+    #./LibWebP/src/dsp/enc_sse41.c 
+    #./LibWebP/src/dsp/filters.c 
+    #./LibWebP/src/dsp/filters_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/filters_msa.c 
+    #./LibWebP/src/dsp/filters_neon.c 
+    #./LibWebP/src/dsp/filters_sse2.c 
+    #./LibWebP/src/dsp/lossless.c 
+    #./LibWebP/src/dsp/lossless_enc.c 
+    #./LibWebP/src/dsp/lossless_enc_mips32.c 
+    #./LibWebP/src/dsp/lossless_enc_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/lossless_enc_msa.c 
+    #./LibWebP/src/dsp/lossless_enc_neon.c 
+    #./LibWebP/src/dsp/lossless_enc_sse2.c 
+    #./LibWebP/src/dsp/lossless_enc_sse41.c 
+    #./LibWebP/src/dsp/lossless_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/lossless_msa.c 
+    #./LibWebP/src/dsp/lossless_neon.c 
+    #./LibWebP/src/dsp/lossless_sse2.c 
+    #./LibWebP/src/dsp/rescaler.c 
+    #./LibWebP/src/dsp/rescaler_mips32.c 
+    #./LibWebP/src/dsp/rescaler_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/rescaler_msa.c 
+    #./LibWebP/src/dsp/rescaler_neon.c 
+    #./LibWebP/src/dsp/rescaler_sse2.c 
+    #./LibWebP/src/dsp/ssim.c 
+    #./LibWebP/src/dsp/ssim_sse2.c 
+    #./LibWebP/src/dsp/upsampling.c 
+    #./LibWebP/src/dsp/upsampling_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/upsampling_msa.c 
+    #./LibWebP/src/dsp/upsampling_neon.c 
+    #./LibWebP/src/dsp/upsampling_sse2.c 
+    #./LibWebP/src/dsp/upsampling_sse41.c 
+    #./LibWebP/src/dsp/yuv.c 
+    #./LibWebP/src/dsp/yuv_mips32.c 
+    #./LibWebP/src/dsp/yuv_mips_dsp_r2.c 
+    #./LibWebP/src/dsp/yuv_neon.c 
+    #./LibWebP/src/dsp/yuv_sse2.c 
+    #./LibWebP/src/dsp/yuv_sse41.c 
+    #./LibWebP/src/enc/alpha_enc.c 
+    #./LibWebP/src/enc/analysis_enc.c 
+    #./LibWebP/src/enc/backward_references_cost_enc.c 
+    #./LibWebP/src/enc/backward_references_enc.c 
+    #./LibWebP/src/enc/config_enc.c 
+    #./LibWebP/src/enc/cost_enc.c 
+    #./LibWebP/src/enc/filter_enc.c 
+    #./LibWebP/src/enc/frame_enc.c 
+    #./LibWebP/src/enc/histogram_enc.c 
+    #./LibWebP/src/enc/iterator_enc.c 
+    #./LibWebP/src/enc/near_lossless_enc.c 
+    #./LibWebP/src/enc/picture_csp_enc.c 
+    #./LibWebP/src/enc/picture_enc.c 
+    #./LibWebP/src/enc/picture_psnr_enc.c 
+    #./LibWebP/src/enc/picture_rescale_enc.c 
+    #./LibWebP/src/enc/picture_tools_enc.c 
+    #./LibWebP/src/enc/predictor_enc.c 
+    #./LibWebP/src/enc/quant_enc.c 
+    #./LibWebP/src/enc/syntax_enc.c 
+    #./LibWebP/src/enc/token_enc.c 
+    #./LibWebP/src/enc/tree_enc.c 
+    #./LibWebP/src/enc/vp8l_enc.c 
+    #./LibWebP/src/enc/webp_enc.c 
+    #./LibWebP/src/mux/anim_encode.c 
+    #./LibWebP/src/mux/muxedit.c 
+    #./LibWebP/src/mux/muxinternal.c 
+    #./LibWebP/src/mux/muxread.c 
+    #./LibWebP/src/utils/bit_reader_utils.c 
+    #./LibWebP/src/utils/bit_writer_utils.c 
+    #./LibWebP/src/utils/color_cache_utils.c 
+    #./LibWebP/src/utils/filters_utils.c 
+    #./LibWebP/src/utils/huffman_encode_utils.c 
+    #./LibWebP/src/utils/huffman_utils.c 
+    #./LibWebP/src/utils/quant_levels_dec_utils.c 
+    #./LibWebP/src/utils/quant_levels_utils.c 
+    #./LibWebP/src/utils/random_utils.c 
+    #./LibWebP/src/utils/rescaler_utils.c 
+    #./LibWebP/src/utils/thread_utils.c 
+    #./LibWebP/src/utils/utils.c 
     #./LibJXR/image/decode/decode.c 
     #./LibJXR/image/decode/JXRTranscode.c 
     #./LibJXR/image/decode/postprocess.c 
@@ -502,7 +502,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/internal
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/libraw
     ${CMAKE_CURRENT_SOURCE_DIR}/LibRawLite/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibWebP
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibWebP
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/common/include
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJXR/image/sys
@@ -535,6 +535,7 @@ target_link_libraries(FreeImage PRIVATE
     ${OPENJPEG_LIBRARY}
     ${PNG_LIBRARY}
     ${TIFF_LIBRARY}
+    ${WEBP_LIBRARY}
     LibJXR
 )
 
@@ -543,6 +544,7 @@ target_include_directories(FreeImage PRIVATE
     ${OPENJPEG_INCLUDE_DIR}
     ${PNG_INCLUDE_DIR}
     ${TIFF_INCLUDE_DIR}
+    ${WEBP_INCLUDE_DIR}
 )
 
 
