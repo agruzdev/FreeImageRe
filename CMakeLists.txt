@@ -22,6 +22,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.tiff.cmake)
 
 # Internal dependencies
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)

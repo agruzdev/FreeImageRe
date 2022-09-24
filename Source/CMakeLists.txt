@@ -153,42 +153,42 @@ set(freeimage_sources
 #    ./LibPNG/pngwrite.c 
 #    ./LibPNG/pngwtran.c 
 #    ./LibPNG/pngwutil.c 
-    ./LibTIFF4/tif_aux.c 
-    ./LibTIFF4/tif_close.c 
-    ./LibTIFF4/tif_codec.c 
-    ./LibTIFF4/tif_color.c 
-    ./LibTIFF4/tif_compress.c 
-    ./LibTIFF4/tif_dir.c 
-    ./LibTIFF4/tif_dirinfo.c 
-    ./LibTIFF4/tif_dirread.c 
-    ./LibTIFF4/tif_dirwrite.c 
-    ./LibTIFF4/tif_dumpmode.c 
-    ./LibTIFF4/tif_error.c 
-    ./LibTIFF4/tif_extension.c 
-    ./LibTIFF4/tif_fax3.c 
-    ./LibTIFF4/tif_fax3sm.c 
-    ./LibTIFF4/tif_flush.c 
-    ./LibTIFF4/tif_getimage.c 
-    ./LibTIFF4/tif_jpeg.c 
-    ./LibTIFF4/tif_luv.c 
-    ./LibTIFF4/tif_lzma.c 
-    ./LibTIFF4/tif_lzw.c 
-    ./LibTIFF4/tif_next.c 
-    ./LibTIFF4/tif_ojpeg.c 
-    ./LibTIFF4/tif_open.c 
-    ./LibTIFF4/tif_packbits.c 
-    ./LibTIFF4/tif_pixarlog.c 
-    ./LibTIFF4/tif_predict.c 
-    ./LibTIFF4/tif_print.c 
-    ./LibTIFF4/tif_read.c 
-    ./LibTIFF4/tif_strip.c 
-    ./LibTIFF4/tif_swab.c 
-    ./LibTIFF4/tif_thunder.c 
-    ./LibTIFF4/tif_tile.c 
-    ./LibTIFF4/tif_version.c 
-    ./LibTIFF4/tif_warning.c 
-    ./LibTIFF4/tif_write.c 
-    ./LibTIFF4/tif_zip.c 
+#    ./LibTIFF4/tif_aux.c 
+#    ./LibTIFF4/tif_close.c 
+#    ./LibTIFF4/tif_codec.c 
+#    ./LibTIFF4/tif_color.c 
+#    ./LibTIFF4/tif_compress.c 
+#    ./LibTIFF4/tif_dir.c 
+#    ./LibTIFF4/tif_dirinfo.c 
+#    ./LibTIFF4/tif_dirread.c 
+#    ./LibTIFF4/tif_dirwrite.c 
+#    ./LibTIFF4/tif_dumpmode.c 
+#    ./LibTIFF4/tif_error.c 
+#    ./LibTIFF4/tif_extension.c 
+#    ./LibTIFF4/tif_fax3.c 
+#    ./LibTIFF4/tif_fax3sm.c 
+#    ./LibTIFF4/tif_flush.c 
+#    ./LibTIFF4/tif_getimage.c 
+#    ./LibTIFF4/tif_jpeg.c 
+#    ./LibTIFF4/tif_luv.c 
+#    ./LibTIFF4/tif_lzma.c 
+#    ./LibTIFF4/tif_lzw.c 
+#    ./LibTIFF4/tif_next.c 
+#    ./LibTIFF4/tif_ojpeg.c 
+#    ./LibTIFF4/tif_open.c 
+#    ./LibTIFF4/tif_packbits.c 
+#    ./LibTIFF4/tif_pixarlog.c 
+#    ./LibTIFF4/tif_predict.c 
+#    ./LibTIFF4/tif_print.c 
+#    ./LibTIFF4/tif_read.c 
+#    ./LibTIFF4/tif_strip.c 
+#    ./LibTIFF4/tif_swab.c 
+#    ./LibTIFF4/tif_thunder.c 
+#    ./LibTIFF4/tif_tile.c 
+#    ./LibTIFF4/tif_version.c 
+#    ./LibTIFF4/tif_warning.c 
+#    ./LibTIFF4/tif_write.c 
+#    ./LibTIFF4/tif_zip.c 
 #    ./ZLib/adler32.c
 #    ./ZLib/compress.c 
 #    ./ZLib/crc32.c 
@@ -487,7 +487,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/FreeImageToolkit
     #${CMAKE_CURRENT_SOURCE_DIR}/LibJPEG
     #${CMAKE_CURRENT_SOURCE_DIR}/LibPNG
-    ${CMAKE_CURRENT_SOURCE_DIR}/LibTIFF4
+    #${CMAKE_CURRENT_SOURCE_DIR}/LibTIFF4
     #${CMAKE_CURRENT_SOURCE_DIR}/ZLib
     #${CMAKE_CURRENT_SOURCE_DIR}/LibOpenJPEG
     #${CMAKE_CURRENT_SOURCE_DIR}/OpenEXR
@@ -530,17 +530,19 @@ add_library(FreeImage SHARED ${freeimage_sources})
 
 target_link_libraries(FreeImage PRIVATE
     ${ZLIB_LIBRARY}
-    ${JPEG_LIBRARY}
+    ${LIBJPEG_LIBRARY}
     ${EXR_LIBRARY}
     ${OPENJPEG_LIBRARY}
     ${PNG_LIBRARY}
+    ${TIFF_LIBRARY}
     LibJXR
 )
 
 target_include_directories(FreeImage PRIVATE
-    ${JPEG_INCLUDE_DIR}
+    ${LIBJPEG_INCLUDE_DIR}
     ${OPENJPEG_INCLUDE_DIR}
     ${PNG_INCLUDE_DIR}
+    ${TIFF_INCLUDE_DIR}
 )
 
 

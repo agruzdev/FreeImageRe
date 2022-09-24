@@ -29,7 +29,8 @@
 #pragma warning (disable : 4786) // identifier was truncated to 'number' characters
 #endif
 
-#include "../LibTIFF4/tiffiop.h"
+#define TIFF_DISABLE_DEPRECATED
+#include "tiffiop.h"
 
 #include "FreeImage.h"
 #include "Utilities.h"
@@ -234,8 +235,8 @@ Read a single Exif tag
 @return Returns TRUE if successful, returns FALSE otherwise
 */
 static BOOL 
-tiff_read_exif_tag(TIFF *tif, uint32 tag_id, FIBITMAP *dib, TagLib::MDMODEL md_model) {
-	uint32 value_count = 0;
+tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md_model) {
+	uint32_t value_count = 0;
 	int mem_alloc = 0;
 	void *raw_data = NULL;
 
@@ -267,16 +268,16 @@ tiff_read_exif_tag(TIFF *tif, uint32 tag_id, FIBITMAP *dib, TagLib::MDMODEL md_m
 		// a count value is required for 'TIFFGetField'
 
 		if (TIFFFieldReadCount(fip) != TIFF_VARIABLE2) {
-			// a count is required, it will be of type uint16
-			uint16 value_count16 = 0;
+			// a count is required, it will be of type uint16_t
+			uint16_t value_count16 = 0;
 			if(TIFFGetField(tif, tag_id, &value_count16, &raw_data) != 1) {
 				// stop, ignore error
 				return TRUE;
 			}
 			value_count = value_count16;
 		} else {
-			// a count is required, it will be of type uint32
-			uint32 value_count32 = 0;
+			// a count is required, it will be of type uint32_t
+			uint32_t value_count32 = 0;
 			if(TIFFGetField(tif, tag_id, &value_count32, &raw_data) != 1) {
 				// stop, ignore error
 				return TRUE;
@@ -290,7 +291,7 @@ tiff_read_exif_tag(TIFF *tif, uint32 tag_id, FIBITMAP *dib, TagLib::MDMODEL md_m
 		if (TIFFFieldReadCount(fip) == TIFF_VARIABLE || TIFFFieldReadCount(fip) == TIFF_VARIABLE2) {
 			value_count = 1;
 		} else if (TIFFFieldReadCount(fip) == TIFF_SPP) {
-			uint16 spp;
+			uint16_t spp;
 			TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &spp);
 			value_count = spp;
 		} else {
@@ -446,7 +447,7 @@ tiff_read_exif_tag(TIFF *tif, uint32 tag_id, FIBITMAP *dib, TagLib::MDMODEL md_m
 		case TIFF_RATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
 			DWORD *rvalue = (DWORD*)malloc(2 * value_count * sizeof(DWORD));
-			for(uint32 i = 0; i < value_count; i++) {
+			for(uint32_t i = 0; i < value_count; i++) {
 				float *fv = (float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
@@ -463,7 +464,7 @@ tiff_read_exif_tag(TIFF *tif, uint32 tag_id, FIBITMAP *dib, TagLib::MDMODEL md_m
 		case TIFF_SRATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
 			LONG *rvalue = (LONG*)malloc(2 * value_count * sizeof(LONG));
-			for(uint32 i = 0; i < value_count; i++) {
+			for(uint32_t i = 0; i < value_count; i++) {
 				float *fv = (float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
@@ -565,7 +566,7 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 
 	const int count = TIFFGetTagListCount(tif);
 	for(int i = 0; i < count; i++) {
-		uint32 tag_id = TIFFGetTagListEntry(tif, i);
+		uint32_t tag_id = TIFFGetTagListEntry(tif, i);
 		// read the tag
 		if (!tiff_read_exif_tag(tif, tag_id, dib, md_model))
 			return FALSE;
@@ -578,12 +579,12 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 	if(md_model == TagLib::EXIF_MAIN) {
 		const TIFFDirectory *td = &tif->tif_dir;
 
-		uint32 lastTag = 0;	//<- used to prevent reading some tags twice (as stored in tif_fieldinfo)
+		uint32_t lastTag = 0;	//<- used to prevent reading some tags twice (as stored in tif_fieldinfo)
 
 		for (int fi = 0, nfi = (int)tif->tif_nfields; nfi > 0; nfi--, fi++) {
 			const TIFFField *fld = tif->tif_fields[fi];
 
-			const uint32 tag_id = TIFFFieldTag(fld);
+			const uint32_t tag_id = TIFFFieldTag(fld);
 
 			if(tag_id == lastTag) {
 				continue;
@@ -624,7 +625,7 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 Skip tags that are already handled by the LibTIFF writing process
 */
 static BOOL 
-skip_write_field(TIFF* tif, uint32 tag) {
+skip_write_field(TIFF* tif, uint32_t tag) {
 	switch (tag) {
 		case TIFFTAG_SUBFILETYPE:
 		case TIFFTAG_OSUBFILETYPE:
@@ -726,7 +727,7 @@ tiff_write_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 	for (int fi = 0, nfi = (int)tif->tif_nfields; nfi > 0; nfi--, fi++) {
 		const TIFFField *fld = tif->tif_fields[fi];
 		
-		const uint32 tag_id = TIFFFieldTag(fld);
+		const uint32_t tag_id = TIFFFieldTag(fld);
 
 		if(skip_write_field(tif, tag_id)) {
 			// skip tags that are already handled by the LibTIFF writing process
@@ -749,7 +750,7 @@ tiff_write_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 				continue;
 			}
 			// type of storage may differ (e.g. rationnal array vs float array type)
-			if((unsigned)_TIFFDataSize(tif_tag_type) != FreeImage_TagDataWidth(tag_type)) {
+			if((unsigned)TIFFDataWidth(tif_tag_type) != FreeImage_TagDataWidth(tag_type)) {
 				// skip tag or _TIFFmemcpy will fail
 				continue;
 			}
