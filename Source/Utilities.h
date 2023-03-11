@@ -362,7 +362,7 @@ Swap red and blue channels in a 24- or 32-bit dib.
 @return Returns TRUE if successful, returns FALSE otherwise
 @see See definition in Conversion.cpp
 */
-BOOL SwapRedBlue32(FIBITMAP* dib);
+DLL_API BOOL DLL_CALLCONV SwapRedBlue32(FIBITMAP* dib);
 
 /**
 Inplace convert CMYK to RGBA.(8- and 16-bit). 
@@ -370,27 +370,27 @@ Alpha is filled with the first extra channel if any or white otherwise.
 @return Returns TRUE if successful, returns FALSE otherwise
 @see See definition in Conversion.cpp
 */
-BOOL ConvertCMYKtoRGBA(FIBITMAP* dib);
+DLL_API BOOL DLL_CALLCONV ConvertCMYKtoRGBA(FIBITMAP* dib);
 
 /**
 Inplace convert CIELab to RGBA (8- and 16-bit).
 @return Returns TRUE if successful, returns FALSE otherwise
 @see See definition in Conversion.cpp
 */
-BOOL ConvertLABtoRGB(FIBITMAP* dib);
+DLL_API BOOL DLL_CALLCONV ConvertLABtoRGB(FIBITMAP* dib);
 
 /**
 RGBA to RGB conversion
 @see See definition in Conversion.cpp
 */
-FIBITMAP* RemoveAlphaChannel(FIBITMAP* dib);
+DLL_API FIBITMAP* DLL_CALLCONV RemoveAlphaChannel(FIBITMAP* dib);
 
 /**
 Rotate a dib according to Exif info
 @param dib Input / Output dib to rotate
 @see Exif.cpp, PluginJPEG.cpp
 */
-void RotateExif(FIBITMAP **dib);
+DLL_API void DLL_CALLCONV RotateExif(FIBITMAP **dib);
 
 
 // ==========================================================
