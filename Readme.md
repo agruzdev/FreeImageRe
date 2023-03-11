@@ -18,5 +18,14 @@ Changes made to FreeImage:
 
 Version 0.1:
  - Compilation fix for FREEIMAGE_COLORORDER_RGB
+ - Export Utility.h functions from DLL
+ - Linking image formt dependencies as static libs
+ - Updated zlib till v1.2.12
+ - Updated OpenEXR till v3.1.4
+ - Updated OpenJPEG till v2.5.0 (alternatively JPEG-turbo v2.1.4)
+ - Updated LibPNG till v1.6.37
+ - Updated LibTIFF till v4.4.0
+ - Updated LibWebP till v1.2.4
+ - Updated LibRaw till v0.20.0
 
 
