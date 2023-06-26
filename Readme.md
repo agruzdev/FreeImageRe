@@ -14,7 +14,7 @@ All changes are described below in this file.
 
 ### What's new
 
-Changes made to FreeImage:
+Changes made to FreeImage v3.18:
 
 Version 0.1:
  - Compilation fix for FREEIMAGE_COLORORDER_RGB
