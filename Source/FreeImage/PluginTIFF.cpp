@@ -600,10 +600,12 @@ ReadImageType(TIFF *tiff, uint16_t bitspersample, uint16_t samplesperpixel) {
 			}
 		}
 		else if(samplesperpixel == 3) {
-			if(bpp == 48) fit = FIT_RGB16;
+			if(bitspersample > 8 && bitspersample <= 16) {
+				fit = FIT_RGB16;
+			}
 		}
 		else if(samplesperpixel >= 4) { 
-			if(bitspersample == 16) {
+			if(bitspersample > 8 && bitspersample <= 16) {
 				fit = FIT_RGBA16;
 			}
 		}
@@ -1122,6 +1124,19 @@ IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samp
 			break;
 		case 8:
 			return TRUE;
+		case 9:
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+			if (photometric == PHOTOMETRIC_RGB) {
+				return TRUE;
+			}
+			else {
+				return FALSE;
+			}
 		case 16:
 			if(photometric != PHOTOMETRIC_PALETTE) { 
 				return TRUE;
@@ -1894,6 +1909,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				const unsigned dst_pitch = FreeImage_GetPitch(dib);
 				const unsigned Bpp = FreeImage_GetBPP(dib) / 8;
 				const unsigned srcBpp = bitspersample * samplesperpixel / 8;
+				const unsigned srcBits = bitspersample * samplesperpixel;
 
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -1931,11 +1947,49 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 						}
 						else {
-							for (int l = 0; l < strips; l++) {
-								for(BYTE *pixel = bits, *src_pixel =  buf + l * src_line; pixel < bits + dst_pitch; pixel += Bpp, src_pixel += srcBpp) {
-									AssignPixel(pixel, src_pixel, Bpp);
+							if (srcBpp * 8 == srcBits) {
+								for (int l = 0; l < strips; l++) {
+									for (BYTE* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch; pixel += Bpp, src_pixel += srcBpp) {
+										AssignPixel(pixel, src_pixel, Bpp);
+									}
+									bits -= dst_pitch;
 								}
-								bits -= dst_pitch;
+							}
+							else { // not whole number of bytes
+								DWORD bits_mask = (static_cast<DWORD>(1) << bitspersample) - 1;
+								for (int l = 0; l < strips; l++) {
+									DWORD t = 0;
+									WORD stored_bits = 0;
+									if (bitspersample <= 8) {
+										for (BYTE* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch;) {
+											t <<= 8;
+											t |= *src_pixel++;
+											stored_bits += 8;
+											while (stored_bits >= bitspersample) {
+												stored_bits -= bitspersample;
+												*pixel++ = static_cast<BYTE>((t >> stored_bits) & bits_mask);
+											}
+										}
+									}
+									else if (bitspersample <= 16) {
+										for (BYTE* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch;) {
+											t <<= 8;
+											t |= *src_pixel++;
+											t <<= 8;
+											t |= *src_pixel++;
+											stored_bits += 16;
+											while (stored_bits >= bitspersample) {
+												stored_bits -= bitspersample;
+												*reinterpret_cast<WORD*>(pixel) = static_cast<WORD>((t >> stored_bits) & bits_mask);
+												pixel += 2;
+											}
+										}
+									}
+									else {
+										// not supported
+									}
+									bits -= dst_pitch;
+								}
 							}
 						}
 					}
