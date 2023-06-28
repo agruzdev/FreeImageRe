@@ -16,6 +16,11 @@ set(CMAKE_INSTALL_DOCDIR doc)
 set(CMAKE_POLICY_DEFAULT_CMP0077 "NEW")
 cmake_policy(SET CMP0079 NEW) # -> target_link_libraries() allows use with targets in other directories.
 
+if (UNIX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif()
+
 # External dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)

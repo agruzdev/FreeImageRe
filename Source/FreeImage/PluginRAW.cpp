@@ -24,6 +24,8 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "../Metadata/FreeImageTag.h"
+static_assert(sizeof(INT64) == 8, "Wrong INT64");
+static_assert(sizeof(UINT64) == 8, "Wrong UINT64");
 
 // ==========================================================
 // Plugin Interface

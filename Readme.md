@@ -27,5 +27,6 @@ Version 0.1:
  - Updated LibTIFF till v4.4.0
  - Updated LibWebP till v1.2.4
  - Updated LibRaw till v0.20.0
+ - PluginTIFF fixed to read images with packed bits
 
 

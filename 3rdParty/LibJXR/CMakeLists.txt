@@ -32,7 +32,7 @@ target_compile_definitions(LibJXR PUBLIC -DDISABLE_PERF_MEASUREMENT)
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/jxrgluelib)
 target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/image/sys)
-target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
+target_include_directories(LibJXR PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/common/include)
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image)
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image/decode)
 target_include_directories(LibJXR PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/image/encode)
@@ -42,5 +42,7 @@ set_property(TARGET LibJXR PROPERTY FOLDER "Dependencies")
 
 if (MSVC)
     target_compile_options(LibJXR PRIVATE "/w")
+else() # UNIX like
+    target_compile_options(LibJXR PRIVATE "-D__ANSI__=1")
 endif()
 

@@ -147,7 +147,6 @@ FI_STRUCT (FIMULTIBITMAP) { void *data; };
 #define SEEK_END  2
 #endif
 
-#ifndef _MSC_VER
 // define portable types for 32-bit / 64-bit OS
 #include <inttypes.h>
 typedef int32_t BOOL;
@@ -155,18 +154,11 @@ typedef uint8_t BYTE;
 typedef uint16_t WORD;
 typedef uint32_t DWORD;
 typedef int32_t LONG;
-typedef int64_t INT64;
-typedef uint64_t UINT64;
-#else
-// MS is not C99 ISO compliant
-typedef long BOOL;
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
-typedef long LONG;
-typedef signed __int64 INT64;
-typedef unsigned __int64 UINT64;
-#endif // _MSC_VER
+//typedef int64_t INT64;
+//typedef uint64_t UINT64;
+typedef long long INT64;
+typedef unsigned long long UINT64;
+
 
 #if (defined(_WIN32) || defined(__WIN32__))
 #pragma pack(push, 1)

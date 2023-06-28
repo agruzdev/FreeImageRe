@@ -11,10 +11,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME PNG
     VERBOSE_NAME "LibPNG"
-    URL "https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/lpng1637.zip/download?download="
-    HASH_MD5 "883764a8ebb8352904679f2ec70eda69"
-    FILE_NAME "lpng1637.zip"
-    PREFIX "lpng1637"
+    URL "https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/libpng-1.6.37.tar.gz/download?download="
+    HASH_MD5 "6c7519f6c75939efa0ed3053197abd54"
+    FILE_NAME "libpng-1.6.37.tar.gz"
+    PREFIX "libpng-1.6.37"
 )
 
 if(NOT TARGET png_static)
