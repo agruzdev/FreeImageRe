@@ -23,6 +23,15 @@
 // Use at your own risk!
 // ==========================================================
 
+//===========================================================
+// FreeImage Re(surrected)
+// Modified fork from the original FreeImage 3.18
+// with updated dependencies and extended features.
+//
+// See changes in ReadMe.md
+// 
+//===========================================================
+
 #ifndef FREEIMAGE_H
 #define FREEIMAGE_H
 
@@ -806,6 +815,8 @@ DLL_API void DLL_CALLCONV FreeImage_DeInitialise(void);
 
 DLL_API const char *DLL_CALLCONV FreeImage_GetVersion(void);
 DLL_API const char *DLL_CALLCONV FreeImage_GetCopyrightMessage(void);
+DLL_API const char *DLL_CALLCONV FreeImageRe_GetVersion(void);
+DLL_API void DLL_CALLCONV FreeImageRe_GetVersionNumbers(int* major, int* minor);
 
 // Message output functions -------------------------------------------------
 

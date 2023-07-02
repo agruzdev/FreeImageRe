@@ -29,5 +29,6 @@ Version 0.1:
  - Updated LibRaw till v0.20.0
  - PluginTIFF fixed to read images with packed bits
  - Minimalistic support of RGB(A) 32bits per channel for loading and conversion
+ - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
 
 

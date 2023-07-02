@@ -78,6 +78,9 @@ void FreeImage_SO_DeInitialise() {
 
 //----------------------------------------------------------------------
 
+#define QUOTE_MACRO_(T) #T
+#define QUOTE_MACRO(T) QUOTE_MACRO_(T)
+
 const char * DLL_CALLCONV
 FreeImage_GetVersion() {
 	static char s_version[16];
@@ -88,6 +91,23 @@ FreeImage_GetVersion() {
 const char * DLL_CALLCONV
 FreeImage_GetCopyrightMessage() {
 	return s_copyright;
+}
+
+const char* DLL_CALLCONV
+FreeImageRe_GetVersion() {
+	static const char* version = QUOTE_MACRO(FREEIMAGERE_MAJOR_VERSION) "." QUOTE_MACRO(FREEIMAGERE_MINOR_VERSION);
+	return version;
+}
+
+void DLL_CALLCONV
+FreeImageRe_GetVersionNumbers(int* major, int* minor)
+{
+	if (major) {
+		*major = FREEIMAGERE_MAJOR_VERSION;
+	}
+	if (minor) {
+		*minor = FREEIMAGERE_MINOR_VERSION;
+	}
 }
 
 //----------------------------------------------------------------------

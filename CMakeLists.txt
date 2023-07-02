@@ -37,6 +37,9 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Source)
 
+add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")
+add_definitions("-DFREEIMAGERE_MINOR_VERSION=${FREEIMAGERE_MINOR_VERSION}")
+
 add_subdirectory(Source)
 
 option(FREEIMAGE_BUILD_TESTS "Build test executables" OFF)
