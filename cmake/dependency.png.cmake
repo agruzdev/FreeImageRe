@@ -1,5 +1,5 @@
 # LibPNG dependency
-# https://github.com/madler/zlib
+# https://sourceforge.net/projects/libpng
 
 # Output variables:
 # PNG_INCLUDE_DIR - includes
@@ -33,6 +33,8 @@ if(NOT TARGET png_static)
     if (MSVC)
         target_compile_options(png_static PRIVATE "/w")
     endif()
+
+    add_dependencies(png_static zlibstatic)
 endif()
 
 set(PNG_INCLUDE_DIR ${PNG_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/png CACHE PATH "")
