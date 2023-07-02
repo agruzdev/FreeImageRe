@@ -358,6 +358,12 @@ FreeImage_AllocateBitmap(BOOL header_only, BYTE *ext_bits, unsigned ext_pitch, F
 		case FIT_RGBA16:
 			bpp = 8 * sizeof(FIRGBA16);
 			break;
+		case FIT_RGB32:
+			bpp = 8 * sizeof(FIRGB32);
+			break;
+		case FIT_RGBA32:
+			bpp = 8 * sizeof(FIRGBA32);
+			break;
 		case FIT_RGBF:
 			bpp = 8 * sizeof(FIRGBF);
 			break;

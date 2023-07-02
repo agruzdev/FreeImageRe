@@ -62,6 +62,14 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 			// allow conversion from 64-bit RGBA
 			src = dib;
 			break;
+		case FIT_RGB32:
+			// allow conversion from 96-bit RGB
+			src = dib;
+			break;
+		case FIT_RGBA32:
+			// allow conversion from 128-bit RGBA
+			src = dib;
+			break;
 		case FIT_FLOAT:
 			// allow conversion from 32-bit float
 			src = dib;
@@ -187,6 +195,50 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.0F;
 					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.0F;
 					dst_pixel[x].alpha = (float)(src_pixel[x].alpha) / 65535.0F;
+				}
+				src_bits += src_pitch;
+				dst_bits += dst_pitch;
+			}
+		}
+		break;
+
+		case FIT_RGB32:
+		{
+			const BYTE *src_bits = (BYTE*)FreeImage_GetBits(src);
+			BYTE *dst_bits = (BYTE*)FreeImage_GetBits(dst);
+
+			for(unsigned y = 0; y < height; y++) {
+				const FIRGB32 *src_pixel = (FIRGB32*)src_bits;
+				FIRGBAF *dst_pixel = (FIRGBAF*)dst_bits;
+
+				for(unsigned x = 0; x < width; x++) {
+					// convert and scale to the range [0..1]
+					dst_pixel[x].red   = (float)(src_pixel[x].red   / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].green = (float)(src_pixel[x].green / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue  / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].alpha = 1.0F;
+				}
+				src_bits += src_pitch;
+				dst_bits += dst_pitch;
+			}
+		}
+		break;
+
+		case FIT_RGBA32:
+		{
+			const BYTE *src_bits = (BYTE*)FreeImage_GetBits(src);
+			BYTE *dst_bits = (BYTE*)FreeImage_GetBits(dst);
+
+			for(unsigned y = 0; y < height; y++) {
+				const FIRGBA32 *src_pixel = (FIRGBA32*)src_bits;
+				FIRGBAF *dst_pixel = (FIRGBAF*)dst_bits;
+
+				for(unsigned x = 0; x < width; x++) {
+					// convert and scale to the range [0..1]
+					dst_pixel[x].red   = (float)(src_pixel[x].red   / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].green = (float)(src_pixel[x].green / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue  / static_cast<double>(std::numeric_limits<uint32_t>::max()));
+					dst_pixel[x].alpha = (float)(src_pixel[x].alpha / static_cast<double>(std::numeric_limits<uint32_t>::max()));
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;

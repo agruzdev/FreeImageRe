@@ -528,6 +528,14 @@ ReadImageType(TIFF *tiff, uint16_t bitspersample, uint16_t samplesperpixel) {
 							fit = FIT_RGBA16;
 						}
 						break;
+					case 96:
+						fit = FIT_RGB32;
+						break;
+					default:
+						if (bpp >= 128) {
+							fit = FIT_RGBA32;
+						}
+						break;
 				}
 				break;
 

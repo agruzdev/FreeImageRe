@@ -3,7 +3,7 @@
 //
 // Design and implementation by
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herv Drolon (drolon@infonie.fr)
 //
 // Contributors:
 // - see changes log named 'Whatsnew.txt', see header of each .h and .cpp file
@@ -243,6 +243,24 @@ typedef struct tagFIRGBA16 {
 	WORD alpha;
 } FIRGBA16;
 
+
+/** 96-bit RGB
+*/
+typedef struct tagFIRGB32 {
+	DWORD red;
+	DWORD green;
+	DWORD blue;
+} FIRGB32;
+
+/** 128-bit RGBA
+*/
+typedef struct tagFIRGBA32 {
+	DWORD red;
+	DWORD green;
+	DWORD blue;
+	DWORD alpha;
+} FIRGBA32;
+
 /** 96-bit RGB Float
 */
 typedef struct tagFIRGBF {
@@ -429,7 +447,9 @@ FI_ENUM(FREE_IMAGE_TYPE) {
 	FIT_RGB16	= 9,	//! 48-bit RGB image			: 3 x 16-bit
 	FIT_RGBA16	= 10,	//! 64-bit RGBA image		: 4 x 16-bit
 	FIT_RGBF	= 11,	//! 96-bit RGB float image	: 3 x 32-bit IEEE floating point
-	FIT_RGBAF	= 12	//! 128-bit RGBA float image	: 4 x 32-bit IEEE floating point
+	FIT_RGBAF	= 12,	//! 128-bit RGBA float image	: 4 x 32-bit IEEE floating point
+	FIT_RGB32   = 13,	//! 96-bit RGB image			: 3 x 32-bit
+	FIT_RGBA32  = 14	//! 128-bit RGBA image		: 4 x 32-bit
 };
 
 /** Image color type used in FreeImage.
