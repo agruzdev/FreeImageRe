@@ -11,10 +11,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME ZLIB
     VERBOSE_NAME "ZLib"
-    URL "https://github.com/madler/zlib/archive/refs/tags/v1.2.12.zip"
-    HASH_MD5 "50f045c0f544726cf70d1d865bb4d6a4"
-    FILE_NAME "v1.2.12.zip"
-    PREFIX "zlib-1.2.12"
+    URL "https://github.com/madler/zlib/archive/refs/tags/v1.2.13.zip"
+    HASH_MD5 "fdedf0c8972a04a7c153dd73492d2d91"
+    FILE_NAME "v1.2.13.zip"
+    PREFIX "zlib-1.2.13"
 )
 
 if(NOT TARGET zlibstatic)
