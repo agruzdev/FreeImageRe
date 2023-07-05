@@ -133,27 +133,22 @@ FI_STRUCT (FIMULTIBITMAP) { void *data; };
 
 // Types used in the library (directly copied from Windows) -----------------
 
-#if defined(__MINGW32__) && defined(_WINDOWS_H)
-#define _WINDOWS_	// prevent a bug in MinGW32
-#endif // __MINGW32__
-
-#ifndef _WINDOWS_
-#define _WINDOWS_
+#if !(defined(_WINDOWS_) || defined(_WINDOWS_H))
 
 #ifndef FALSE
-#define FALSE 0
+# define FALSE 0
 #endif
 #ifndef TRUE
-#define TRUE 1
+# define TRUE 1
 #endif
 #ifndef NULL
-#define NULL 0
+# define NULL 0
 #endif
 
 #ifndef SEEK_SET
-#define SEEK_SET  0
-#define SEEK_CUR  1
-#define SEEK_END  2
+# define SEEK_SET  0
+# define SEEK_CUR  1
+# define SEEK_END  2
 #endif
 
 // define portable types for 32-bit / 64-bit OS
@@ -169,61 +164,7 @@ typedef long long INT64;
 typedef unsigned long long UINT64;
 
 
-#if (defined(_WIN32) || defined(__WIN32__))
-#pragma pack(push, 1)
-#else
-#pragma pack(1)
-#endif // WIN32
 
-typedef struct tagRGBQUAD {
-#if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-  BYTE rgbBlue;
-  BYTE rgbGreen;
-  BYTE rgbRed;
-#else
-  BYTE rgbRed;
-  BYTE rgbGreen;
-  BYTE rgbBlue;
-#endif // FREEIMAGE_COLORORDER
-  BYTE rgbReserved;
-} RGBQUAD;
-
-typedef struct tagRGBTRIPLE {
-#if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-  BYTE rgbtBlue;
-  BYTE rgbtGreen;
-  BYTE rgbtRed;
-#else
-  BYTE rgbtRed;
-  BYTE rgbtGreen;
-  BYTE rgbtBlue;
-#endif // FREEIMAGE_COLORORDER
-} RGBTRIPLE;
-
-#if (defined(_WIN32) || defined(__WIN32__))
-#pragma pack(pop)
-#else
-#pragma pack()
-#endif // WIN32
-
-typedef struct tagBITMAPINFOHEADER{
-  DWORD biSize;
-  LONG  biWidth; 
-  LONG  biHeight; 
-  WORD  biPlanes; 
-  WORD  biBitCount;
-  DWORD biCompression; 
-  DWORD biSizeImage; 
-  LONG  biXPelsPerMeter; 
-  LONG  biYPelsPerMeter; 
-  DWORD biClrUsed; 
-  DWORD biClrImportant;
-} BITMAPINFOHEADER, *PBITMAPINFOHEADER; 
-
-typedef struct tagBITMAPINFO { 
-  BITMAPINFOHEADER bmiHeader; 
-  RGBQUAD          bmiColors[1];
-} BITMAPINFO, *PBITMAPINFO;
 
 #endif // _WINDOWS_
 
@@ -234,6 +175,23 @@ typedef struct tagBITMAPINFO {
 #else
 #pragma pack(1)
 #endif // WIN32
+
+/** 24-bit RGB
+*/
+typedef struct tagFIRGB8 {
+	BYTE red;
+	BYTE green;
+	BYTE blue;
+} FIRGB8;
+
+/** 32-bit RGB
+*/
+typedef struct tagFIRGBA8 {
+	BYTE red;
+	BYTE green;
+	BYTE blue;
+	BYTE alpha;
+} FIRGBA8;
 
 /** 48-bit RGB 
 */
@@ -302,8 +260,31 @@ typedef struct tagFICOMPLEX {
 #pragma pack()
 #endif // WIN32
 
+
+
+typedef struct FIBITMAPINFOHEADER {
+	DWORD biSize;
+	LONG  biWidth;
+	LONG  biHeight;
+	WORD  biPlanes;
+	WORD  biBitCount;
+	DWORD biCompression;
+	DWORD biSizeImage;
+	LONG  biXPelsPerMeter;
+	LONG  biYPelsPerMeter;
+	DWORD biClrUsed;
+	DWORD biClrImportant;
+} FIBITMAPINFOHEADER, * PFIBITMAPINFOHEADER;
+
+typedef struct FIBITMAPINFO {
+	FIBITMAPINFOHEADER bmiHeader;
+	FIRGBA8          bmiColors[1];
+} FIBITMAPINFO, * PFIBITMAPINFO;
+
+
+
 // Indexes for byte arrays, masks and shifts for treating pixels as words ---
-// These coincide with the order of RGBQUAD and RGBTRIPLE -------------------
+// These coincide with the order of FIRGBA8 and FIRGB8 -------------------
 
 #ifndef FREEIMAGE_BIGENDIAN
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
@@ -567,7 +548,7 @@ FI_ENUM(FREE_IMAGE_MDTYPE) {
 	FIDT_FLOAT		= 11,	//! 32-bit IEEE floating point 
 	FIDT_DOUBLE		= 12,	//! 64-bit IEEE floating point 
 	FIDT_IFD		= 13,	//! 32-bit unsigned integer (offset) 
-	FIDT_PALETTE	= 14,	//! 32-bit RGBQUAD 
+	FIDT_PALETTE	= 14,	//! 32-bit FIRGBA8 
 	FIDT_LONG8		= 16,	//! 64-bit unsigned integer 
 	FIDT_SLONG8		= 17,	//! 64-bit signed integer
 	FIDT_IFD8		= 18	//! 64-bit unsigned integer (offset)
@@ -788,8 +769,8 @@ typedef void (DLL_CALLCONV *FI_InitProc)(Plugin *plugin, int format_id);
 // Background filling options ---------------------------------------------------------
 // Constants used in FreeImage_FillBackground and FreeImage_EnlargeCanvas
 
-#define FI_COLOR_IS_RGB_COLOR			0x00	//! RGBQUAD color is a RGB color (contains no valid alpha channel)
-#define FI_COLOR_IS_RGBA_COLOR			0x01	//! RGBQUAD color is a RGBA color (contains a valid alpha channel)
+#define FI_COLOR_IS_RGB_COLOR			0x00	//! FIRGBA8 color is a RGB color (contains no valid alpha channel)
+#define FI_COLOR_IS_RGBA_COLOR			0x01	//! FIRGBA8 color is a RGBA color (contains a valid alpha channel)
 #define FI_COLOR_FIND_EQUAL_COLOR		0x02	//! For palettized images: lookup equal RGB color from palette
 #define FI_COLOR_ALPHA_IS_INDEX			0x04	//! The color's rgbReserved member (alpha) contains the palette index to be used
 #define FI_COLOR_PALETTE_SEARCH_MASK	(FI_COLOR_FIND_EQUAL_COLOR | FI_COLOR_ALPHA_IS_INDEX)	// No color lookup is performed
@@ -928,9 +909,9 @@ DLL_API BYTE *DLL_CALLCONV FreeImage_GetBits(FIBITMAP *dib);
 DLL_API BYTE *DLL_CALLCONV FreeImage_GetScanLine(FIBITMAP *dib, int scanline);
 
 DLL_API BOOL DLL_CALLCONV FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value);
-DLL_API BOOL DLL_CALLCONV FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value);
+DLL_API BOOL DLL_CALLCONV FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value);
 DLL_API BOOL DLL_CALLCONV FreeImage_SetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value);
-DLL_API BOOL DLL_CALLCONV FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value);
+DLL_API BOOL DLL_CALLCONV FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value);
 
 // DIB info routines --------------------------------------------------------
 
@@ -942,15 +923,15 @@ DLL_API unsigned DLL_CALLCONV FreeImage_GetLine(FIBITMAP *dib);
 DLL_API unsigned DLL_CALLCONV FreeImage_GetPitch(FIBITMAP *dib);
 DLL_API unsigned DLL_CALLCONV FreeImage_GetDIBSize(FIBITMAP *dib);
 DLL_API unsigned DLL_CALLCONV FreeImage_GetMemorySize(FIBITMAP *dib);
-DLL_API RGBQUAD *DLL_CALLCONV FreeImage_GetPalette(FIBITMAP *dib);
+DLL_API FIRGBA8 *DLL_CALLCONV FreeImage_GetPalette(FIBITMAP *dib);
 
 DLL_API unsigned DLL_CALLCONV FreeImage_GetDotsPerMeterX(FIBITMAP *dib);
 DLL_API unsigned DLL_CALLCONV FreeImage_GetDotsPerMeterY(FIBITMAP *dib);
 DLL_API void DLL_CALLCONV FreeImage_SetDotsPerMeterX(FIBITMAP *dib, unsigned res);
 DLL_API void DLL_CALLCONV FreeImage_SetDotsPerMeterY(FIBITMAP *dib, unsigned res);
 
-DLL_API BITMAPINFOHEADER *DLL_CALLCONV FreeImage_GetInfoHeader(FIBITMAP *dib);
-DLL_API BITMAPINFO *DLL_CALLCONV FreeImage_GetInfo(FIBITMAP *dib);
+DLL_API FIBITMAPINFOHEADER *DLL_CALLCONV FreeImage_GetInfoHeader(FIBITMAP *dib);
+DLL_API FIBITMAPINFO *DLL_CALLCONV FreeImage_GetInfo(FIBITMAP *dib);
 DLL_API FREE_IMAGE_COLOR_TYPE DLL_CALLCONV FreeImage_GetColorType(FIBITMAP *dib);
 
 DLL_API unsigned DLL_CALLCONV FreeImage_GetRedMask(FIBITMAP *dib);
@@ -966,8 +947,8 @@ DLL_API void DLL_CALLCONV FreeImage_SetTransparentIndex(FIBITMAP *dib, int index
 DLL_API int DLL_CALLCONV FreeImage_GetTransparentIndex(FIBITMAP *dib);
 
 DLL_API BOOL DLL_CALLCONV FreeImage_HasBackgroundColor(FIBITMAP *dib);
-DLL_API BOOL DLL_CALLCONV FreeImage_GetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor);
-DLL_API BOOL DLL_CALLCONV FreeImage_SetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor);
+DLL_API BOOL DLL_CALLCONV FreeImage_GetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor);
+DLL_API BOOL DLL_CALLCONV FreeImage_SetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor);
 
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_GetThumbnail(FIBITMAP *dib);
 DLL_API BOOL DLL_CALLCONV FreeImage_SetThumbnail(FIBITMAP *dib, FIBITMAP *thumbnail);
@@ -981,7 +962,7 @@ DLL_API void DLL_CALLCONV FreeImage_DestroyICCProfile(FIBITMAP *dib);
 // Line conversion routines -------------------------------------------------
 
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To4(BYTE *target, BYTE *source, int width_in_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To4(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To4(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To4_555(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To4_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine24To4(BYTE *target, BYTE *source, int width_in_pixels);
@@ -992,30 +973,30 @@ DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To8_555(BYTE *target, BYTE *sou
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To8_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine24To8(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine32To8(BYTE *target, BYTE *source, int width_in_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To16_555(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To16_555(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To16_555(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To16_555(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To16_555(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To16_555(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16_565_To16_555(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine24To16_555(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine32To16_555(BYTE *target, BYTE *source, int width_in_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To16_565(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To16_565(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To16_565(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To16_565(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16_555_To16_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine24To16_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine32To16_565(BYTE *target, BYTE *source, int width_in_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To24(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To24(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To24(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To24(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To24_555(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To24_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine32To24(BYTE *target, BYTE *source, int width_in_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To32(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette);
-DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, RGBQUAD *palette, BYTE *table, int transparent_pixels);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8* palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette, BYTE *table, int transparent_pixels);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette, BYTE *table, int transparent_pixels);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To32(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To32MapTransparency(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette, BYTE *table, int transparent_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To32_555(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To32_565(BYTE *target, BYTE *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine24To32(BYTE *target, BYTE *source, int width_in_pixels);
@@ -1030,7 +1011,7 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertTo16Bits565(FIBITMAP *dib);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertTo24Bits(FIBITMAP *dib);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertTo32Bits(FIBITMAP *dib);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ColorQuantize(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize);
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize FI_DEFAULT(FIQ_WUQUANT), int PaletteSize FI_DEFAULT(256), int ReserveSize FI_DEFAULT(0), RGBQUAD *ReservePalette FI_DEFAULT(NULL));
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize FI_DEFAULT(FIQ_WUQUANT), int PaletteSize FI_DEFAULT(256), int ReserveSize FI_DEFAULT(0), FIRGBA8 *ReservePalette FI_DEFAULT(NULL));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Threshold(FIBITMAP *dib, BYTE T);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm);
 
@@ -1146,8 +1127,8 @@ DLL_API BOOL DLL_CALLCONV FreeImage_Invert(FIBITMAP *dib);
 DLL_API BOOL DLL_CALLCONV FreeImage_GetHistogram(FIBITMAP *dib, DWORD *histo, FREE_IMAGE_COLOR_CHANNEL channel FI_DEFAULT(FICC_BLACK));
 DLL_API int DLL_CALLCONV FreeImage_GetAdjustColorsLookupTable(BYTE *LUT, double brightness, double contrast, double gamma, BOOL invert);
 DLL_API BOOL DLL_CALLCONV FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double gamma, BOOL invert FI_DEFAULT(FALSE));
-DLL_API unsigned DLL_CALLCONV FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolors, unsigned count, BOOL ignore_alpha, BOOL swap);
-DLL_API unsigned DLL_CALLCONV FreeImage_SwapColors(FIBITMAP *dib, RGBQUAD *color_a, RGBQUAD *color_b, BOOL ignore_alpha);
+DLL_API unsigned DLL_CALLCONV FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolors, unsigned count, BOOL ignore_alpha, BOOL swap);
+DLL_API unsigned DLL_CALLCONV FreeImage_SwapColors(FIBITMAP *dib, FIRGBA8 *color_a, FIRGBA8 *color_b, BOOL ignore_alpha);
 DLL_API unsigned DLL_CALLCONV FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, BYTE *srcindices,	BYTE *dstindices, unsigned count, BOOL swap);
 DLL_API unsigned DLL_CALLCONV FreeImage_SwapPaletteIndices(FIBITMAP *dib, BYTE *index_a, BYTE *index_b);
 
@@ -1162,14 +1143,14 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Copy(FIBITMAP *dib, int left, int top, 
 DLL_API BOOL DLL_CALLCONV FreeImage_Paste(FIBITMAP *dst, FIBITMAP *src, int left, int top, int alpha);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_CreateView(FIBITMAP *dib, unsigned left, unsigned top, unsigned right, unsigned bottom);
 
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg FI_DEFAULT(FALSE), RGBQUAD *appBkColor FI_DEFAULT(NULL), FIBITMAP *bg FI_DEFAULT(NULL));
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg FI_DEFAULT(FALSE), FIRGBA8 *appBkColor FI_DEFAULT(NULL), FIBITMAP *bg FI_DEFAULT(NULL));
 DLL_API BOOL DLL_CALLCONV FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib);
 
 // background filling routines
 DLL_API BOOL DLL_CALLCONV FreeImage_FillBackground(FIBITMAP *dib, const void *color, int options FI_DEFAULT(0));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom, const void *color, int options FI_DEFAULT(0));
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_AllocateEx(int width, int height, int bpp, const RGBQUAD *color, int options FI_DEFAULT(0), const RGBQUAD *palette FI_DEFAULT(NULL), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, const void *color, int options FI_DEFAULT(0), const RGBQUAD *palette FI_DEFAULT(NULL), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_AllocateEx(int width, int height, int bpp, const FIRGBA8 *color, int options FI_DEFAULT(0), const FIRGBA8 *palette FI_DEFAULT(NULL), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, const void *color, int options FI_DEFAULT(0), const FIRGBA8 *palette FI_DEFAULT(NULL), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
 
 // miscellaneous algorithms
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle FI_DEFAULT(3));

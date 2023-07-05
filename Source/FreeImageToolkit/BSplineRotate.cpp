@@ -559,9 +559,9 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	if(!dst)
 		return NULL;
 	// buid a grey scale palette
-	RGBQUAD *pal = FreeImage_GetPalette(dst);
+	FIRGBA8 *pal = FreeImage_GetPalette(dst);
 	for(int i = 0; i < 256; i++) {
-		pal[i].rgbRed = pal[i].rgbGreen = pal[i].rgbBlue = (BYTE)i;
+		pal[i].red = pal[i].green = pal[i].blue = (BYTE)i;
 	}
 
 	// allocate a temporary array

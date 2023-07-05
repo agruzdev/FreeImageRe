@@ -81,7 +81,7 @@ FI_STRUCT (FREEIMAGEHEADER) {
 	FREE_IMAGE_TYPE type;
 
 	/** background color used for RGB transparency */
-	RGBQUAD bkgnd_color;
+	FIRGBA8 bkgnd_color;
 
 	/**@name transparency management */
 	//@{
@@ -214,10 +214,10 @@ static size_t
 FreeImage_GetInternalImageSize(BOOL header_only, unsigned width, unsigned height, unsigned bpp, BOOL need_masks) {
 	size_t dib_size = sizeof(FREEIMAGEHEADER);
 	dib_size += (dib_size % FIBITMAP_ALIGNMENT ? FIBITMAP_ALIGNMENT - dib_size % FIBITMAP_ALIGNMENT : 0);
-	dib_size += FIBITMAP_ALIGNMENT - sizeof(BITMAPINFOHEADER) % FIBITMAP_ALIGNMENT;
-	dib_size += sizeof(BITMAPINFOHEADER);
+	dib_size += FIBITMAP_ALIGNMENT - sizeof(FIBITMAPINFOHEADER) % FIBITMAP_ALIGNMENT;
+	dib_size += sizeof(FIBITMAPINFOHEADER);
 	// palette is aligned on a 16 bytes boundary
-	dib_size += sizeof(RGBQUAD) * CalculateUsedPaletteEntries(bpp);
+	dib_size += sizeof(FIRGBA8) * CalculateUsedPaletteEntries(bpp);
 	// we both add palette size and masks size if need_masks is true, since CalculateUsedPaletteEntries
 	// always returns 0 if need_masks is true (which is only true for 16 bit images).
 	dib_size += need_masks ? sizeof(DWORD) * 3 : 0;
@@ -265,7 +265,7 @@ or NULL, if no masks are present (e.g. for 24 bit images).
 */
 static FREEIMAGERGBMASKS *
 FreeImage_GetRGBMasks(FIBITMAP *dib) {
-	return FreeImage_HasRGBMasks(dib) ? (FREEIMAGERGBMASKS *)(((BYTE *)FreeImage_GetInfoHeader(dib)) + sizeof(BITMAPINFOHEADER)) : NULL;
+	return FreeImage_HasRGBMasks(dib) ? (FREEIMAGERGBMASKS *)(((BYTE *)FreeImage_GetInfoHeader(dib)) + sizeof(FIBITMAPINFOHEADER)) : NULL;
 }
 
 /**
@@ -404,7 +404,7 @@ FreeImage_AllocateBitmap(BOOL header_only, BYTE *ext_bits, unsigned ext_pitch, F
 
 			fih->type = type;
 
-			memset(&fih->bkgnd_color, 0, sizeof(RGBQUAD));
+			memset(&fih->bkgnd_color, 0, sizeof(FIRGBA8));
 
 			fih->transparent = FALSE;
 			fih->transparency_count = 0;
@@ -434,8 +434,8 @@ FreeImage_AllocateBitmap(BOOL header_only, BYTE *ext_bits, unsigned ext_pitch, F
 
 			// write out the BITMAPINFOHEADER
 
-			BITMAPINFOHEADER *bih   = FreeImage_GetInfoHeader(bitmap);
-			bih->biSize             = sizeof(BITMAPINFOHEADER);
+			FIBITMAPINFOHEADER *bih   = FreeImage_GetInfoHeader(bitmap);
+			bih->biSize             = sizeof(FIBITMAPINFOHEADER);
 			bih->biWidth            = width;
 			bih->biHeight           = height;
 			bih->biPlanes           = 1;
@@ -448,11 +448,11 @@ FreeImage_AllocateBitmap(BOOL header_only, BYTE *ext_bits, unsigned ext_pitch, F
 
 			if(bpp == 8) {
 				// build a default greyscale palette (very useful for image processing)
-				RGBQUAD *pal = FreeImage_GetPalette(bitmap);
+				FIRGBA8 *pal = FreeImage_GetPalette(bitmap);
 				for(int i = 0; i < 256; i++) {
-					pal[i].rgbRed	= (BYTE)i;
-					pal[i].rgbGreen = (BYTE)i;
-					pal[i].rgbBlue	= (BYTE)i;
+					pal[i].red	= (BYTE)i;
+					pal[i].green = (BYTE)i;
+					pal[i].blue	= (BYTE)i;
 				}
 			}
 
@@ -658,7 +658,7 @@ FreeImage_GetBits(FIBITMAP *dib) {
 
 	// returns the pixels aligned on a FIBITMAP_ALIGNMENT bytes alignment boundary
 	size_t lp = (size_t)FreeImage_GetInfoHeader(dib);
-	lp += sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * FreeImage_GetColorsUsed(dib);
+	lp += sizeof(FIBITMAPINFOHEADER) + sizeof(FIRGBA8) * FreeImage_GetColorsUsed(dib);
 	lp += FreeImage_HasRGBMasks(dib) ? sizeof(DWORD) * 3 : 0;
 	lp += (lp % FIBITMAP_ALIGNMENT ? FIBITMAP_ALIGNMENT - lp % FIBITMAP_ALIGNMENT : 0);
 	return (BYTE *)lp;
@@ -693,7 +693,7 @@ FreeImage_SetThumbnail(FIBITMAP *dib, FIBITMAP *thumbnail) {
 
 FREE_IMAGE_COLOR_TYPE DLL_CALLCONV
 FreeImage_GetColorType(FIBITMAP *dib) {
-	RGBQUAD *rgb;
+	FIRGBA8 *rgb;
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 
@@ -733,18 +733,18 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 		{
 			rgb = FreeImage_GetPalette(dib);
 
-			if ((rgb->rgbRed == 0) && (rgb->rgbGreen == 0) && (rgb->rgbBlue == 0)) {
+			if ((rgb->red == 0) && (rgb->green == 0) && (rgb->blue == 0)) {
 				rgb++;
 
-				if ((rgb->rgbRed == 255) && (rgb->rgbGreen == 255) && (rgb->rgbBlue == 255)) {
+				if ((rgb->red == 255) && (rgb->green == 255) && (rgb->blue == 255)) {
 					return FIC_MINISBLACK;
 				}
 			}
 
-			if ((rgb->rgbRed == 255) && (rgb->rgbGreen == 255) && (rgb->rgbBlue == 255)) {
+			if ((rgb->red == 255) && (rgb->green == 255) && (rgb->blue == 255)) {
 				rgb++;
 
-				if ((rgb->rgbRed == 0) && (rgb->rgbGreen == 0) && (rgb->rgbBlue == 0)) {
+				if ((rgb->red == 0) && (rgb->green == 0) && (rgb->blue == 0)) {
 					return FIC_MINISWHITE;
 				}
 			}
@@ -760,14 +760,14 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 			rgb = FreeImage_GetPalette(dib);
 
 			for (int i = 0; i < ncolors; i++) {
-				if ((rgb->rgbRed != rgb->rgbGreen) || (rgb->rgbRed != rgb->rgbBlue)) {
+				if ((rgb->red != rgb->green) || (rgb->red != rgb->blue)) {
 					return FIC_PALETTE;
 				}
 
 				// The DIB has a color palette if the greyscale isn't a linear ramp
 				// Take care of reversed grey images
-				if (rgb->rgbRed != i) {
-					if ((ncolors-i-1) != rgb->rgbRed) {
+				if (rgb->red != i) {
+					if ((ncolors-i-1) != rgb->red) {
 						return FIC_PALETTE;
 					} else {
 						minisblack = 0;
@@ -793,10 +793,10 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 			if( FreeImage_HasPixels(dib) ) {
 				// check for fully opaque alpha layer
 				for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
-					rgb = (RGBQUAD *)FreeImage_GetScanLine(dib, y);
+					rgb = (FIRGBA8 *)FreeImage_GetScanLine(dib, y);
 
 					for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
-						if (rgb[x].rgbReserved != 0xFF) {
+						if (rgb[x].alpha != 0xFF) {
 							return FIC_RGBALPHA;
 						}
 					}
@@ -889,27 +889,27 @@ FreeImage_GetBlueMask(FIBITMAP *dib) {
 BOOL DLL_CALLCONV
 FreeImage_HasBackgroundColor(FIBITMAP *dib) {
 	if(dib) {
-		RGBQUAD *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
-		return (bkgnd_color->rgbReserved != 0) ? TRUE : FALSE;
+		FIRGBA8 *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
+		return (bkgnd_color->alpha != 0) ? TRUE : FALSE;
 	}
 	return FALSE;
 }
 
 BOOL DLL_CALLCONV
-FreeImage_GetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor) {
+FreeImage_GetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor) {
 	if(dib && bkcolor) {
 		if(FreeImage_HasBackgroundColor(dib)) {
 			// get the background color
-			RGBQUAD *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
-			memcpy(bkcolor, bkgnd_color, sizeof(RGBQUAD));
+			FIRGBA8 *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
+			memcpy(bkcolor, bkgnd_color, sizeof(FIRGBA8));
 			// get the background index
 			if(FreeImage_GetBPP(dib) == 8) {
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
-					if(bkgnd_color->rgbRed == pal[i].rgbRed) {
-						if(bkgnd_color->rgbGreen == pal[i].rgbGreen) {
-							if(bkgnd_color->rgbBlue == pal[i].rgbBlue) {
-								bkcolor->rgbReserved = (BYTE)i;
+					if(bkgnd_color->red == pal[i].red) {
+						if(bkgnd_color->green == pal[i].green) {
+							if(bkgnd_color->blue == pal[i].blue) {
+								bkcolor->alpha = (BYTE)i;
 								return TRUE;
 							}
 						}
@@ -917,7 +917,7 @@ FreeImage_GetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor) {
 				}
 			}
 
-			bkcolor->rgbReserved = 0;
+			bkcolor->alpha = 0;
 
 			return TRUE;
 		}
@@ -927,17 +927,17 @@ FreeImage_GetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor) {
 }
 
 BOOL DLL_CALLCONV 
-FreeImage_SetBackgroundColor(FIBITMAP *dib, RGBQUAD *bkcolor) {
+FreeImage_SetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor) {
 	if(dib) {
-		RGBQUAD *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
+		FIRGBA8 *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
 		if(bkcolor) {
 			// set the background color
-			memcpy(bkgnd_color, bkcolor, sizeof(RGBQUAD));
+			memcpy(bkgnd_color, bkcolor, sizeof(FIRGBA8));
 			// enable the file background color
-			bkgnd_color->rgbReserved = 1;
+			bkgnd_color->alpha = 1;
 		} else {
 			// clear and disable the file background color
-			memset(bkgnd_color, 0, sizeof(RGBQUAD));
+			memset(bkgnd_color, 0, sizeof(FIRGBA8));
 		}
 		return TRUE;
 	}
@@ -1147,12 +1147,12 @@ FreeImage_GetColorsUsed(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetDIBSize(FIBITMAP *dib) {
-	return (dib) ? sizeof(BITMAPINFOHEADER) + (FreeImage_GetColorsUsed(dib) * sizeof(RGBQUAD)) + (FreeImage_GetPitch(dib) * FreeImage_GetHeight(dib)) : 0;
+	return (dib) ? sizeof(FIBITMAPINFOHEADER) + (FreeImage_GetColorsUsed(dib) * sizeof(FIRGBA8)) + (FreeImage_GetPitch(dib) * FreeImage_GetHeight(dib)) : 0;
 }
 
-RGBQUAD * DLL_CALLCONV
+FIRGBA8 * DLL_CALLCONV
 FreeImage_GetPalette(FIBITMAP *dib) {
-	return (dib && FreeImage_GetBPP(dib) < 16) ? (RGBQUAD *)(((BYTE *)FreeImage_GetInfoHeader(dib)) + sizeof(BITMAPINFOHEADER)) : NULL;
+	return (dib && FreeImage_GetBPP(dib) < 16) ? (FIRGBA8 *)(((BYTE *)FreeImage_GetInfoHeader(dib)) + sizeof(FIBITMAPINFOHEADER)) : NULL;
 }
 
 unsigned DLL_CALLCONV
@@ -1179,20 +1179,20 @@ FreeImage_SetDotsPerMeterY(FIBITMAP *dib, unsigned res) {
 	}
 }
 
-BITMAPINFOHEADER * DLL_CALLCONV
+FIBITMAPINFOHEADER * DLL_CALLCONV
 FreeImage_GetInfoHeader(FIBITMAP *dib) {
 	if(!dib) {
 		return NULL;
 	}
 	size_t lp = (size_t)dib->data + sizeof(FREEIMAGEHEADER);
 	lp += (lp % FIBITMAP_ALIGNMENT ? FIBITMAP_ALIGNMENT - lp % FIBITMAP_ALIGNMENT : 0);
-	lp += FIBITMAP_ALIGNMENT - sizeof(BITMAPINFOHEADER) % FIBITMAP_ALIGNMENT;
-	return (BITMAPINFOHEADER *)lp;
+	lp += FIBITMAP_ALIGNMENT - sizeof(FIBITMAPINFOHEADER) % FIBITMAP_ALIGNMENT;
+	return (FIBITMAPINFOHEADER *)lp;
 }
 
-BITMAPINFO * DLL_CALLCONV
+FIBITMAPINFO * DLL_CALLCONV
 FreeImage_GetInfo(FIBITMAP *dib) {
-	return (BITMAPINFO *)FreeImage_GetInfoHeader(dib);
+	return (FIBITMAPINFO *)FreeImage_GetInfoHeader(dib);
 }
 
 // ----------------------------------------------------------
@@ -1530,7 +1530,7 @@ FreeImage_GetMemorySize(FIBITMAP *dib) {
 		return 0;
 	}
 	FREEIMAGEHEADER *header = (FREEIMAGEHEADER *)dib->data;
-	BITMAPINFOHEADER *bih = FreeImage_GetInfoHeader(dib);
+	FIBITMAPINFOHEADER *bih = FreeImage_GetInfoHeader(dib);
 
 	BOOL header_only = !header->has_pixels || header->external_bits != NULL;
 	BOOL need_masks = bih->biCompression == BI_BITFIELDS;

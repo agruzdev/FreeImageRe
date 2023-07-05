@@ -1167,9 +1167,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			if(FreeImage_GetBPP(dib) == 1) {
 				// BD_1 - build a FIC_MINISBLACK palette
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
-				pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-				pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				pal[0].red = pal[0].green = pal[0].blue = 0;
+				pal[1].red = pal[1].green = pal[1].blue = 255;
 			}
 		}
 

@@ -33,7 +33,7 @@ LFPQuantizer::~LFPQuantizer() {
     delete[] m_map;
 }
 
-FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *ReservePalette) {
+FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette) {
 
 	if (ReserveSize > 0 && ReservePalette != NULL) {
 		AddReservePalette(ReservePalette, ReserveSize);

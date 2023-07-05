@@ -1252,12 +1252,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (cinfo.output_components == 1) {
 					// build a greyscale palette
-					RGBQUAD *colors = FreeImage_GetPalette(dib);
+					FIRGBA8 *colors = FreeImage_GetPalette(dib);
 
 					for (int i = 0; i < 256; i++) {
-						colors[i].rgbRed   = (BYTE)i;
-						colors[i].rgbGreen = (BYTE)i;
-						colors[i].rgbBlue  = (BYTE)i;
+						colors[i].red   = (BYTE)i;
+						colors[i].green = (BYTE)i;
+						colors[i].blue  = (BYTE)i;
 					}
 				}
 			}
@@ -1646,7 +1646,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			}
 			else if(color_type == FIC_PALETTE) {
 				// 8-bit palettized images are converted to 24-bit images
-				RGBQUAD *palette = FreeImage_GetPalette(dib);
+				FIRGBA8 *palette = FreeImage_GetPalette(dib);
 				BYTE *target = (BYTE*)malloc(cinfo.image_width * 3);
 				if (target == NULL) {
 					throw FI_MSG_ERROR_MEMORY;

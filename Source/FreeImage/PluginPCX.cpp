@@ -345,7 +345,7 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBITMAP *dib = NULL;
 	BYTE *bits;			  // Pointer to dib data
-	RGBQUAD *pal;		  // Pointer to dib palette
+	FIRGBA8 *pal;		  // Pointer to dib palette
 	BYTE *line = NULL;	  // PCX raster line
 	BYTE *ReadBuf = NULL; // buffer;
 	BOOL bIsRLE;		  // True if the file is run-length encoded
@@ -426,8 +426,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			case 1:
 			{
 				pal = FreeImage_GetPalette(dib);
-				pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-				pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+				pal[0].red = pal[0].green = pal[0].blue = 0;
+				pal[1].red = pal[1].green = pal[1].blue = 255;
 				break;
 			}
 
@@ -438,9 +438,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				BYTE *pColormap = &header.color_map[0];
 
 				for (int i = 0; i < 16; i++) {
-					pal[i].rgbRed   = pColormap[0];
-					pal[i].rgbGreen = pColormap[1];
-					pal[i].rgbBlue  = pColormap[2];
+					pal[i].red   = pColormap[0];
+					pal[i].green = pColormap[1];
+					pal[i].blue  = pColormap[2];
 					pColormap += 3;
 				}
 
@@ -464,9 +464,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						BYTE *pColormap = &cmap[0];
 
 						for(int i = 0; i < 256; i++) {
-							pal[i].rgbRed   = pColormap[0];
-							pal[i].rgbGreen = pColormap[1];
-							pal[i].rgbBlue  = pColormap[2];
+							pal[i].red   = pColormap[0];
+							pal[i].green = pColormap[1];
+							pal[i].blue  = pColormap[2];
 							pColormap += 3;
 						}
 
@@ -481,9 +481,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					pal = FreeImage_GetPalette(dib);
 
 					for(int i = 0; i < 256; i++) {
-						pal[i].rgbRed   = (BYTE)i;
-						pal[i].rgbGreen = (BYTE)i;
-						pal[i].rgbBlue  = (BYTE)i;
+						pal[i].red   = (BYTE)i;
+						pal[i].green = (BYTE)i;
+						pal[i].blue  = (BYTE)i;
 					}
 				}
 

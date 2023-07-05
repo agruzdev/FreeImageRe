@@ -163,12 +163,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (dib) {
 			// write out the commodore 64 color palette
 
-			RGBQUAD *palette = FreeImage_GetPalette(dib);
+			FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 			for (int i = 0; i < 16; i++) {
-				palette[i].rgbBlue  = (BYTE)c64colours[i].b;
-				palette[i].rgbGreen = (BYTE)c64colours[i].g;
-				palette[i].rgbRed   = (BYTE)c64colours[i].r;
+				palette[i].blue  = (BYTE)c64colours[i].b;
+				palette[i].green = (BYTE)c64colours[i].g;
+				palette[i].red   = (BYTE)c64colours[i].r;
 			}
 
 			// write out bitmap data

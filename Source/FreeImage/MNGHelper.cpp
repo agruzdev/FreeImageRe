@@ -786,7 +786,7 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 
 	DWORD res_x = 2835;	// 72 dpi
 	DWORD res_y = 2835;	// 72 dpi
-	RGBQUAD rgbBkColor = {0, 0, 0, 0};
+	FIRGBA8 rgbBkColor = {0, 0, 0, 0};
 	WORD bk_red, bk_green, bk_blue;
 	BOOL hasBkColor = FALSE;
 	BOOL mHasIDAT = FALSE;
@@ -1053,13 +1053,13 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 				case bKGD:
 					memcpy(&bk_red, &mChunk[0], 2);
 					mng_SwapShort(&bk_red);
-					rgbBkColor.rgbRed = (BYTE)bk_red;
+					rgbBkColor.red = (BYTE)bk_red;
 					memcpy(&bk_green, &mChunk[2], 2);
 					mng_SwapShort(&bk_green);
-					rgbBkColor.rgbGreen = (BYTE)bk_green;
+					rgbBkColor.green = (BYTE)bk_green;
 					memcpy(&bk_blue, &mChunk[4], 2);
 					mng_SwapShort(&bk_blue);
-					rgbBkColor.rgbBlue = (BYTE)bk_blue;
+					rgbBkColor.blue = (BYTE)bk_blue;
 					hasBkColor = TRUE;
 					break;
 				

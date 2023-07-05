@@ -363,7 +363,7 @@ Fill the dib palette according to the TIFF photometric
 */
 static void 
 ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *dib) {
-	RGBQUAD *pal = FreeImage_GetPalette(dib);
+	FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 	switch(photometric) {
 		case PHOTOMETRIC_MINISBLACK:	// bitmap and greyscale image types
@@ -372,11 +372,11 @@ ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *
 
 			if (bitspersample == 1) {
 				if (photometric == PHOTOMETRIC_MINISWHITE) {
-					pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 255;
-					pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 0;
+					pal[0].red = pal[0].green = pal[0].blue = 255;
+					pal[1].red = pal[1].green = pal[1].blue = 0;
 				} else {
-					pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-					pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+					pal[0].red = pal[0].green = pal[0].blue = 0;
+					pal[1].red = pal[1].green = pal[1].blue = 255;
 				}
 
 			} else if ((bitspersample == 4) ||(bitspersample == 8)) {
@@ -385,15 +385,15 @@ ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *
 
 				if (photometric == PHOTOMETRIC_MINISBLACK) {
 					for (int i = 0; i < ncolors; i++) {
-						pal[i].rgbRed	=
-						pal[i].rgbGreen =
-						pal[i].rgbBlue	= (BYTE)(i*(255/(ncolors-1)));
+						pal[i].red	=
+						pal[i].green =
+						pal[i].blue	= (BYTE)(i*(255/(ncolors-1)));
 					}
 				} else {
 					for (int i = 0; i < ncolors; i++) {
-						pal[i].rgbRed	=
-						pal[i].rgbGreen =
-						pal[i].rgbBlue	= (BYTE)(255-i*(255/(ncolors-1)));
+						pal[i].red	=
+						pal[i].green =
+						pal[i].blue	= (BYTE)(255-i*(255/(ncolors-1)));
 					}
 				}
 			}
@@ -411,15 +411,15 @@ ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *
 
 			if (CheckColormap(1<<bitspersample, red, green, blue) == 16) {
 				for (int i = (1 << bitspersample) - 1; i >= 0; i--) {
-					pal[i].rgbRed =(BYTE) CVT(red[i]);
-					pal[i].rgbGreen = (BYTE) CVT(green[i]);
-					pal[i].rgbBlue = (BYTE) CVT(blue[i]);           
+					pal[i].red =(BYTE) CVT(red[i]);
+					pal[i].green = (BYTE) CVT(green[i]);
+					pal[i].blue = (BYTE) CVT(blue[i]);           
 				}
 			} else {
 				for (int i = (1 << bitspersample) - 1; i >= 0; i--) {
-					pal[i].rgbRed = (BYTE) red[i];
-					pal[i].rgbGreen = (BYTE) green[i];
-					pal[i].rgbBlue = (BYTE) blue[i];        
+					pal[i].red = (BYTE) red[i];
+					pal[i].green = (BYTE) green[i];
+					pal[i].blue = (BYTE) blue[i];        
 				}
 			}
 
@@ -2497,7 +2497,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		if (photometric == PHOTOMETRIC_PALETTE) {
 			uint16_t *r, *g, *b;
 			uint16_t nColors = (uint16_t)FreeImage_GetColorsUsed(dib);
-			RGBQUAD *pal = FreeImage_GetPalette(dib);
+			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 			r = (uint16_t *) _TIFFmalloc(sizeof(uint16_t) * 3 * nColors);
 			if(r == NULL) {
@@ -2507,9 +2507,9 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 			b = g + nColors;
 
 			for (int i = nColors - 1; i >= 0; i--) {
-				r[i] = SCALE((uint16_t)pal[i].rgbRed);
-				g[i] = SCALE((uint16_t)pal[i].rgbGreen);
-				b[i] = SCALE((uint16_t)pal[i].rgbBlue);
+				r[i] = SCALE((uint16_t)pal[i].red);
+				g[i] = SCALE((uint16_t)pal[i].green);
+				b[i] = SCALE((uint16_t)pal[i].blue);
 			}
 
 			TIFFSetField(out, TIFFTAG_COLORMAP, r, g, b);

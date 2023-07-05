@@ -602,11 +602,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						// store the palette
 
-						RGBQUAD *palette = FreeImage_GetPalette(dib);
+						FIRGBA8 *palette = FreeImage_GetPalette(dib);
 						for(int i = 0; i < palette_entries; i++) {
-							palette[i].rgbRed   = png_palette[i].red;
-							palette[i].rgbGreen = png_palette[i].green;
-							palette[i].rgbBlue  = png_palette[i].blue;
+							palette[i].red   = png_palette[i].red;
+							palette[i].green = png_palette[i].green;
+							palette[i].blue  = png_palette[i].blue;
 						}
 					}
 					break;
@@ -615,13 +615,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, pixel_depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 
 					if(dib && (pixel_depth <= 8)) {
-						RGBQUAD *palette = FreeImage_GetPalette(dib);
+						FIRGBA8 *palette = FreeImage_GetPalette(dib);
 						const int palette_entries = 1 << pixel_depth;
 
 						for(int i = 0; i < palette_entries; i++) {
-							palette[i].rgbRed   =
-							palette[i].rgbGreen =
-							palette[i].rgbBlue  = (BYTE)((i * 255) / (palette_entries - 1));
+							palette[i].red   =
+							palette[i].green =
+							palette[i].blue  = (BYTE)((i * 255) / (palette_entries - 1));
 						}
 					}
 					break;
@@ -673,13 +673,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// use it - you should use the (solid) application background if it has one.
 
 				png_color_16p image_background = NULL;
-				RGBQUAD rgbBkColor;
+				FIRGBA8 rgbBkColor;
 
 				if (png_get_bKGD(png_ptr, info_ptr, &image_background)) {
-					rgbBkColor.rgbRed      = (BYTE)image_background->red;
-					rgbBkColor.rgbGreen    = (BYTE)image_background->green;
-					rgbBkColor.rgbBlue     = (BYTE)image_background->blue;
-					rgbBkColor.rgbReserved = 0;
+					rgbBkColor.red      = (BYTE)image_background->red;
+					rgbBkColor.green    = (BYTE)image_background->green;
+					rgbBkColor.blue     = (BYTE)image_background->blue;
+					rgbBkColor.alpha = 0;
 
 					FreeImage_SetBackgroundColor(dib, &rgbBkColor);
 				}
@@ -813,7 +813,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	png_uint_32 width, height;
 	BOOL has_alpha_channel = FALSE;
 
-	RGBQUAD *pal;					// pointer to dib palette
+	FIRGBA8 *pal;					// pointer to dib palette
 	int bit_depth, pixel_depth;		// pixel_depth = bit_depth * channels
 	int palette_entries;
 	int	interlace_type;
@@ -945,9 +945,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					pal = FreeImage_GetPalette(dib);
 
 					for (int i = 0; i < palette_entries; i++) {
-						palette[i].red   = pal[i].rgbRed;
-						palette[i].green = pal[i].rgbGreen;
-						palette[i].blue  = pal[i].rgbBlue;
+						palette[i].red   = pal[i].red;
+						palette[i].green = pal[i].green;
+						palette[i].blue  = pal[i].blue;
 					}
 					
 					png_set_PLTE(png_ptr, info_ptr, palette, palette_entries);
@@ -1018,14 +1018,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			if(FreeImage_HasBackgroundColor(dib)) {
 				png_color_16 image_background;
-				RGBQUAD rgbBkColor;
+				FIRGBA8 rgbBkColor;
 
 				FreeImage_GetBackgroundColor(dib, &rgbBkColor);
 				memset(&image_background, 0, sizeof(png_color_16));
-				image_background.blue  = rgbBkColor.rgbBlue;
-				image_background.green = rgbBkColor.rgbGreen;
-				image_background.red   = rgbBkColor.rgbRed;
-				image_background.index = rgbBkColor.rgbReserved;
+				image_background.blue  = rgbBkColor.blue;
+				image_background.green = rgbBkColor.green;
+				image_background.red   = rgbBkColor.red;
+				image_background.index = rgbBkColor.alpha;
 
 				png_set_bKGD(png_ptr, info_ptr, &image_background);
 			}

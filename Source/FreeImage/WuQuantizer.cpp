@@ -99,7 +99,7 @@ WuQuantizer::~WuQuantizer() {
 
 // Build 3-D color histogram of counts, r/g/b, c^2
 void 
-WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, RGBQUAD *ReservePalette) {
+WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, FIRGBA8 *ReservePalette) {
 	int ind = 0;
 	int inr, ing, inb, table[256];
 	int i;
@@ -155,15 +155,15 @@ WuQuantizer::Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int R
 		}
 		max++;
 		for(i = 0; i < ReserveSize; i++) {
-			inr = (ReservePalette[i].rgbRed >> 3) + 1;
-			ing = (ReservePalette[i].rgbGreen >> 3) + 1;
-			inb = (ReservePalette[i].rgbBlue >> 3) + 1;
+			inr = (ReservePalette[i].red >> 3) + 1;
+			ing = (ReservePalette[i].green >> 3) + 1;
+			inb = (ReservePalette[i].blue >> 3) + 1;
 			ind = INDEX(inr, ing, inb);
 			wt[ind] = max;
-			mr[ind] = max * ReservePalette[i].rgbRed;
-			mg[ind] = max * ReservePalette[i].rgbGreen;
-			mb[ind] = max * ReservePalette[i].rgbBlue;
-			gm2[ind] = (float)max * (float)(table[ReservePalette[i].rgbRed] + table[ReservePalette[i].rgbGreen] + table[ReservePalette[i].rgbBlue]);
+			mr[ind] = max * ReservePalette[i].red;
+			mg[ind] = max * ReservePalette[i].green;
+			mb[ind] = max * ReservePalette[i].blue;
+			gm2[ind] = (float)max * (float)(table[ReservePalette[i].red] + table[ReservePalette[i].green] + table[ReservePalette[i].blue]);
 		}
 	}
 }
@@ -445,7 +445,7 @@ WuQuantizer::Mark(Box *cube, int label, BYTE *tag) {
 
 // Wu Quantization algorithm
 FIBITMAP *
-WuQuantizer::Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette) {
+WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette) {
 	BYTE *tag = NULL;
 
 	try {
@@ -512,7 +512,7 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette)
 
 		// create an optimized palette
 
-		RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
 		tag = (BYTE*) malloc(SIZE_3D * sizeof(BYTE));
 		if (tag == NULL) {
@@ -525,13 +525,13 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette)
 			weight = Vol(&cube[k], wt);
 
 			if (weight) {
-				new_pal[k].rgbRed	= (BYTE)(((float)Vol(&cube[k], mr) / (float)weight) + 0.5f);
-				new_pal[k].rgbGreen = (BYTE)(((float)Vol(&cube[k], mg) / (float)weight) + 0.5f);
-				new_pal[k].rgbBlue	= (BYTE)(((float)Vol(&cube[k], mb) / (float)weight) + 0.5f);
+				new_pal[k].red	= (BYTE)(((float)Vol(&cube[k], mr) / (float)weight) + 0.5f);
+				new_pal[k].green = (BYTE)(((float)Vol(&cube[k], mg) / (float)weight) + 0.5f);
+				new_pal[k].blue	= (BYTE)(((float)Vol(&cube[k], mb) / (float)weight) + 0.5f);
 			} else {
 				// Error: bogus box 'k'
 
-				new_pal[k].rgbRed = new_pal[k].rgbGreen = new_pal[k].rgbBlue = 0;		
+				new_pal[k].red = new_pal[k].green = new_pal[k].blue = 0;		
 			}
 		}
 

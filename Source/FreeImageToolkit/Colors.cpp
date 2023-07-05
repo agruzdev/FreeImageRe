@@ -66,12 +66,12 @@ FreeImage_Invert(FIBITMAP *src) {
 				// else, keep the linear grayscale
 
 				if (FreeImage_GetColorType(src) == FIC_PALETTE) {
-					RGBQUAD *pal = FreeImage_GetPalette(src);
+					FIRGBA8 *pal = FreeImage_GetPalette(src);
 
 					for(i = 0; i < FreeImage_GetColorsUsed(src); i++) {
-						pal[i].rgbRed	= 255 - pal[i].rgbRed;
-						pal[i].rgbGreen = 255 - pal[i].rgbGreen;
-						pal[i].rgbBlue	= 255 - pal[i].rgbBlue;
+						pal[i].red	= 255 - pal[i].red;
+						pal[i].green = 255 - pal[i].green;
+						pal[i].blue	= 255 - pal[i].blue;
 					}
 				} else {
 					for(y = 0; y < height; y++) {
@@ -165,11 +165,11 @@ FreeImage_AdjustCurve(FIBITMAP *src, BYTE *LUT, FREE_IMAGE_COLOR_CHANNEL channel
 			// else, apply the LUT to pixel values
 
 			if(FreeImage_GetColorType(src) == FIC_PALETTE) {
-				RGBQUAD *rgb = FreeImage_GetPalette(src);
+				FIRGBA8 *rgb = FreeImage_GetPalette(src);
 				for (unsigned pal = 0; pal < FreeImage_GetColorsUsed(src); pal++) {
-					rgb->rgbRed   = LUT[rgb->rgbRed];
-					rgb->rgbGreen = LUT[rgb->rgbGreen];
-					rgb->rgbBlue  = LUT[rgb->rgbBlue];
+					rgb->red   = LUT[rgb->red];
+					rgb->green = LUT[rgb->green];
+					rgb->blue  = LUT[rgb->blue];
 					rgb++;
 				}
 			}
@@ -664,7 +664,7 @@ FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV
-FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolors, unsigned count, BOOL ignore_alpha, BOOL swap) {
+FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolors, unsigned count, BOOL ignore_alpha, BOOL swap) {
 	unsigned result = 0;
 
 	if (!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) {
@@ -682,17 +682,17 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 4:
 		case 8: {
 			unsigned size = FreeImage_GetColorsUsed(dib);
-			RGBQUAD *pal = FreeImage_GetPalette(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *pal = FreeImage_GetPalette(dib);
+			FIRGBA8 *a, *b;
 			for (unsigned x = 0; x < size; x++) {
 				for (unsigned j = 0; j < count; j++) {
 					a = srccolors;
 					b = dstcolors;
 					for (int i = (swap ? 0 : 1); i < 2; i++) {
-						if ((pal[x].rgbBlue == a[j].rgbBlue)&&(pal[x].rgbGreen == a[j].rgbGreen) &&(pal[x].rgbRed== a[j].rgbRed)) {
-							pal[x].rgbBlue = b[j].rgbBlue;
-							pal[x].rgbGreen = b[j].rgbGreen;
-							pal[x].rgbRed = b[j].rgbRed;
+						if ((pal[x].blue == a[j].blue)&&(pal[x].green == a[j].green) &&(pal[x].red== a[j].red)) {
+							pal[x].blue = b[j].blue;
+							pal[x].green = b[j].green;
+							pal[x].red = b[j].red;
 							result++;
 							j = count;
 							break;
@@ -750,7 +750,7 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 24: {
 			unsigned height = FreeImage_GetHeight(dib);
 			unsigned width = FreeImage_GetWidth(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
 				BYTE *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 3) {
@@ -758,10 +758,10 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 						a = srccolors;
 						b = dstcolors;
 						for (int i = (swap ? 0 : 1); i < 2; i++) {
-							if ((bits[FI_RGBA_BLUE] == a[j].rgbBlue) && (bits[FI_RGBA_GREEN] == a[j].rgbGreen) &&(bits[FI_RGBA_RED] == a[j].rgbRed)) {
-								bits[FI_RGBA_BLUE] = b[j].rgbBlue;
-								bits[FI_RGBA_GREEN] = b[j].rgbGreen;
-								bits[FI_RGBA_RED] = b[j].rgbRed;
+							if ((bits[FI_RGBA_BLUE] == a[j].blue) && (bits[FI_RGBA_GREEN] == a[j].green) &&(bits[FI_RGBA_RED] == a[j].red)) {
+								bits[FI_RGBA_BLUE] = b[j].blue;
+								bits[FI_RGBA_GREEN] = b[j].green;
+								bits[FI_RGBA_RED] = b[j].red;
 								result++;
 								j = count;
 								break;
@@ -777,7 +777,7 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 		case 32: {
 			unsigned height = FreeImage_GetHeight(dib);
 			unsigned width = FreeImage_GetWidth(dib);
-			RGBQUAD *a, *b;
+			FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
 				BYTE *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 4) {
@@ -785,13 +785,13 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
 						a = srccolors;
 						b = dstcolors;
 						for (int i = (swap ? 0 : 1); i < 2; i++) {
-							if ((bits[FI_RGBA_BLUE] == a[j].rgbBlue) &&(bits[FI_RGBA_GREEN] == a[j].rgbGreen) &&(bits[FI_RGBA_RED] == a[j].rgbRed)
-								&&((ignore_alpha) || (bits[FI_RGBA_ALPHA] == a[j].rgbReserved))) {
-								bits[FI_RGBA_BLUE] = b[j].rgbBlue;
-								bits[FI_RGBA_GREEN] = b[j].rgbGreen;
-								bits[FI_RGBA_RED] = b[j].rgbRed;
+							if ((bits[FI_RGBA_BLUE] == a[j].blue) &&(bits[FI_RGBA_GREEN] == a[j].green) &&(bits[FI_RGBA_RED] == a[j].red)
+								&&((ignore_alpha) || (bits[FI_RGBA_ALPHA] == a[j].alpha))) {
+								bits[FI_RGBA_BLUE] = b[j].blue;
+								bits[FI_RGBA_GREEN] = b[j].green;
+								bits[FI_RGBA_RED] = b[j].red;
 								if (!ignore_alpha) {
-									bits[FI_RGBA_ALPHA] = b[j].rgbReserved;
+									bits[FI_RGBA_ALPHA] = b[j].alpha;
 								}
 								result++;
 								j = count;
@@ -832,7 +832,7 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, RGBQUAD *srccolors, RGBQUAD *dstcolor
  @return Returns the total number of pixels changed. 
  */
 unsigned DLL_CALLCONV
-FreeImage_SwapColors(FIBITMAP *dib, RGBQUAD *color_a, RGBQUAD *color_b, BOOL ignore_alpha) {
+FreeImage_SwapColors(FIBITMAP *dib, FIRGBA8 *color_a, FIRGBA8 *color_b, BOOL ignore_alpha) {
 	return FreeImage_ApplyColorMapping(dib, color_a, color_b, 1, ignore_alpha, TRUE);
 }
 

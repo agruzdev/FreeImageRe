@@ -41,7 +41,7 @@ static FREE_IMAGE_COLOR_TYPE
 GetExtendedColorType(FIBITMAP *dib, BOOL *bIsGreyscale) {
 	const unsigned bpp = FreeImage_GetBPP(dib);
 	const unsigned size = CalculateUsedPaletteEntries(bpp);
-	const RGBQUAD * const pal = FreeImage_GetPalette(dib);
+	const FIRGBA8 * const pal = FreeImage_GetPalette(dib);
 	FREE_IMAGE_COLOR_TYPE color_type = FIC_MINISBLACK;
 	BOOL bIsGrey = TRUE;
 
@@ -49,16 +49,16 @@ GetExtendedColorType(FIBITMAP *dib, BOOL *bIsGreyscale) {
 		case 1:
 		{
 			for (unsigned i = 0; i < size; i++) {
-				if ((pal[i].rgbRed != pal[i].rgbGreen) || (pal[i].rgbRed != pal[i].rgbBlue)) {
+				if ((pal[i].red != pal[i].green) || (pal[i].red != pal[i].blue)) {
 					color_type = FIC_PALETTE;
 					bIsGrey = FALSE;
 					break;
 				}
 			}
 			if (bIsGrey) {
-				if (pal[0].rgbBlue == 255 && pal[1].rgbBlue == 0) {
+				if (pal[0].blue == 255 && pal[1].blue == 0) {
 					color_type = FIC_MINISWHITE;
-				} else if (pal[0].rgbBlue != 0 || pal[1].rgbBlue != 255) {
+				} else if (pal[0].blue != 0 || pal[1].blue != 255) {
 					color_type = FIC_PALETTE;
 				}
 			}
@@ -69,13 +69,13 @@ GetExtendedColorType(FIBITMAP *dib, BOOL *bIsGreyscale) {
 		case 8:
 		{
 			for (unsigned i = 0; i < size; i++) {
-				if ((pal[i].rgbRed != pal[i].rgbGreen) || (pal[i].rgbRed != pal[i].rgbBlue)) {
+				if ((pal[i].red != pal[i].green) || (pal[i].red != pal[i].blue)) {
 					color_type = FIC_PALETTE;
 					bIsGrey = FALSE;
 					break;
 				}
-				if (color_type != FIC_PALETTE && pal[i].rgbBlue != i) {
-					if ((size - i - 1) != pal[i].rgbBlue) {
+				if (color_type != FIC_PALETTE && pal[i].blue != i) {
+					if ((size - i - 1) != pal[i].blue) {
 						color_type = FIC_PALETTE;
 						if (!bIsGreyscale) {
 							// exit loop if we're not setting
@@ -109,29 +109,29 @@ GetExtendedColorType(FIBITMAP *dib, BOOL *bIsGreyscale) {
 Returns a pointer to an RGBA palette, created from the specified bitmap.
 The RGBA palette is a copy of the specified bitmap's palette, that, additionally
 contains the bitmap's transparency information in the rgbReserved member
-of the palette's RGBQUAD elements.
+of the palette's FIRGBA8 elements.
 @param dib A pointer to a FreeImage bitmap to create the RGBA palette from.
 @param buffer A pointer to the buffer to store the RGBA palette.
 @return A pointer to the newly created RGBA palette or NULL, if the specified
 bitmap is no palletized standard bitmap. If non-NULL, the returned value is
 actually the pointer passed in parameter 'buffer'.
 */
-static inline RGBQUAD *
-GetRGBAPalette(FIBITMAP *dib, RGBQUAD * const buffer) {
+static inline FIRGBA8 *
+GetRGBAPalette(FIBITMAP *dib, FIRGBA8 * const buffer) {
 	// clone the palette
 	const unsigned ncolors = FreeImage_GetColorsUsed(dib);
 	if (ncolors == 0) {
 		return NULL;
 	}
-	memcpy(buffer, FreeImage_GetPalette(dib), ncolors * sizeof(RGBQUAD));
+	memcpy(buffer, FreeImage_GetPalette(dib), ncolors * sizeof(FIRGBA8));
 	// merge the transparency table
 	const unsigned ntransp = MIN(ncolors, FreeImage_GetTransparencyCount(dib));
 	const BYTE * const tt = FreeImage_GetTransparencyTable(dib);
 	for (unsigned i = 0; i < ntransp; i++) {
-		buffer[i].rgbReserved = tt[i];
+		buffer[i].alpha = tt[i];
 	}
 	for (unsigned i = ntransp; i < ncolors; i++) {
-		buffer[i].rgbReserved = 255;
+		buffer[i].alpha = 255;
 	}
 	return buffer;
 }
@@ -317,8 +317,8 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 		return (out != src) ? out : FreeImage_Clone(src);
 	}
 
-	RGBQUAD pal_buffer[256];
-	RGBQUAD *src_pal = NULL;
+	FIRGBA8 pal_buffer[256];
+	FIRGBA8 *src_pal = NULL;
 
 	// provide the source image's palette to the rescaler for
 	// FIC_PALETTE type images (this includes palletized greyscale
@@ -340,7 +340,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	}
 	
 	if (dst_bpp == 8) {
-		RGBQUAD * const dst_pal = FreeImage_GetPalette(dst);
+		FIRGBA8 * const dst_pal = FreeImage_GetPalette(dst);
 		if (color_type == FIC_MINISWHITE) {
 			// build an inverted greyscale palette
 			CREATE_GREYSCALE_PALETTE_REVERSE(dst_pal, 256);
@@ -505,7 +505,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	return dst;
 } 
 
-void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsigned src_width, unsigned src_offset_x, unsigned src_offset_y, const RGBQUAD *const src_pal, FIBITMAP *const dst, unsigned dst_width) {
+void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsigned src_width, unsigned src_offset_x, unsigned src_offset_y, const FIRGBA8 *const src_pal, FIBITMAP *const dst, unsigned dst_width) {
 
 	// allocate and calculate the contributions
 	CWeightsTable weightsTable(m_pFilter, dst_width, src_width);
@@ -1276,7 +1276,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 }
 
 /// Performs vertical image filtering
-void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned src_height, unsigned src_offset_x, unsigned src_offset_y, const RGBQUAD *const src_pal, FIBITMAP *const dst, unsigned dst_height) {
+void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned src_height, unsigned src_offset_x, unsigned src_offset_y, const FIRGBA8 *const src_pal, FIBITMAP *const dst, unsigned dst_height) {
 
 	// allocate and calculate the contributions
 	CWeightsTable weightsTable(m_pFilter, dst_height, src_height);

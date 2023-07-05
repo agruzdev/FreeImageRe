@@ -122,7 +122,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 		FreeImage_CloneMetadata(new_dib, dib);
 
 		// Palette of destination image has already been initialized
-		RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
 		const FREE_IMAGE_COLOR_TYPE color_type = FreeImage_GetColorType(dib);
 
@@ -133,7 +133,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 				{
 					if (color_type == FIC_PALETTE) {
 						// Copy the palette
-						RGBQUAD *old_pal = FreeImage_GetPalette(dib);
+						FIRGBA8 *old_pal = FreeImage_GetPalette(dib);
 						new_pal[0] = old_pal[0];
 						new_pal[255] = old_pal[1];
 
@@ -153,7 +153,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 				{
 					if (color_type == FIC_PALETTE) {
 						// Copy the palette
-						memcpy(new_pal, FreeImage_GetPalette(dib), 16 * sizeof(RGBQUAD));
+						memcpy(new_pal, FreeImage_GetPalette(dib), 16 * sizeof(FIRGBA8));
 					}
 
 					// Expand and copy the bitmap data
@@ -245,10 +245,10 @@ FreeImage_ConvertToGreyscale(FIBITMAP *dib) {
 
 		// Create a greyscale palette
 		BYTE grey_pal[256];
-		const RGBQUAD *pal = FreeImage_GetPalette(dib);
+		const FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		const unsigned size = CalculateUsedPaletteEntries(bpp);
 		for (unsigned i = 0; i < size; i++) {
-			grey_pal[i] = GREY(pal->rgbRed, pal->rgbGreen, pal->rgbBlue);
+			grey_pal[i] = GREY(pal->red, pal->green, pal->blue);
 			pal++;
 		}
 

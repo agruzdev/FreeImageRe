@@ -501,9 +501,9 @@ Returns TRUE if the format of a dib is RGB565
 #define IS_FORMAT_RGB565(dib) ((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK))
 
 /**
-Convert a RGB565 or RGB555 RGBQUAD pixel to a WORD
+Convert a RGB565 or RGB555 FIRGBA8 pixel to a WORD
 */
-#define RGBQUAD_TO_WORD(dib, color) (IS_FORMAT_RGB565(dib) ? RGB565((color)->rgbBlue, (color)->rgbGreen, (color)->rgbRed) : RGB555((color)->rgbBlue, (color)->rgbGreen, (color)->rgbRed))
+#define RGBQUAD_TO_WORD(dib, color) (IS_FORMAT_RGB565(dib) ? RGB565((color)->blue, (color)->green, (color)->red) : RGB555((color)->blue, (color)->green, (color)->red))
 
 /**
 Create a greyscale palette

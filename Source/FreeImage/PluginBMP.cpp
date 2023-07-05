@@ -94,7 +94,7 @@ static int s_format_id;
 
 #ifdef FREEIMAGE_BIGENDIAN
 static void
-SwapInfoHeader(BITMAPINFOHEADER *header) {
+SwapInfoHeader(FIBITMAPINFOHEADER *header) {
 	SwapLong(&header->biSize);
 	SwapLong((DWORD *)&header->biWidth);
 	SwapLong((DWORD *)&header->biHeight);
@@ -464,9 +464,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 
 		// load the info header
 
-		BITMAPINFOHEADER bih;
+		FIBITMAPINFOHEADER bih;
 
-		io->read_proc(&bih, sizeof(BITMAPINFOHEADER), 1, handle);
+		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
@@ -509,17 +509,17 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 					case 56:	// sizeof(BITMAPV3INFOHEADER) (undocumented)
 					case 108:	// sizeof(BITMAPV4HEADER) - all Windows versions since Windows 95/NT4 (not supported)
 					case 124:	// sizeof(BITMAPV5HEADER) - Windows 98/2000 and newer (not supported)
-						io->seek_proc(handle, (long)(type - sizeof(BITMAPINFOHEADER)), SEEK_CUR);
+						io->seek_proc(handle, (long)(type - sizeof(FIBITMAPINFOHEADER)), SEEK_CUR);
 						break;
 				}
 				
 				// load the palette
 
-				io->read_proc(FreeImage_GetPalette(dib), used_colors * sizeof(RGBQUAD), 1, handle);
+				io->read_proc(FreeImage_GetPalette(dib), used_colors * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				for(int i = 0; i < used_colors; i++) {
-					INPLACESWAP(pal[i].rgbRed, pal[i].rgbBlue);
+					INPLACESWAP(pal[i].red, pal[i].blue);
 				}
 #endif
 
@@ -680,9 +680,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 		// load the info header
 
-		BITMAPINFOHEADER bih;
+		FIBITMAPINFOHEADER bih;
 
-		io->read_proc(&bih, sizeof(BITMAPINFOHEADER), 1, handle);
+		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
@@ -722,7 +722,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 				io->seek_proc(handle, sizeof(BITMAPFILEHEADER) + bih.biSize, SEEK_SET);
 
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 				if(pal_size == 4) {
 					for (unsigned count = 0; count < used_colors; count++) {
@@ -730,9 +730,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 						io->read_proc(&bgra, sizeof(FILE_BGRA), 1, handle);
 						
-						pal[count].rgbRed	= bgra.r;
-						pal[count].rgbGreen = bgra.g;
-						pal[count].rgbBlue	= bgra.b;
+						pal[count].red	= bgra.r;
+						pal[count].green = bgra.g;
+						pal[count].blue	= bgra.b;
 					} 
 				} else if(pal_size == 3) {
 					for (unsigned count = 0; count < used_colors; count++) {
@@ -740,9 +740,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 						io->read_proc(&bgr, sizeof(FILE_BGR), 1, handle);
 						
-						pal[count].rgbRed	= bgr.r;
-						pal[count].rgbGreen = bgr.g;
-						pal[count].rgbBlue	= bgr.b;
+						pal[count].red	= bgr.r;
+						pal[count].green = bgr.g;
+						pal[count].blue	= bgr.b;
 					} 
 				}
 				
@@ -754,7 +754,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				// seek to the actual pixel data.
 				// this is needed because sometimes the palette is larger than the entries it contains predicts
 
-				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (used_colors * 3))) {
+				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(FIBITMAPINFOHEADER) + (used_colors * 3))) {
 					io->seek_proc(handle, bitmap_bits_offset, SEEK_SET);
 				}
 
@@ -812,7 +812,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 					return dib;
 				}
 
-				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (used_colors * 3))) {
+				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(FIBITMAPINFOHEADER) + (used_colors * 3))) {
 					io->seek_proc(handle, bitmap_bits_offset, SEEK_SET);
 				}
 
@@ -847,7 +847,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				// Skip over the optional palette 
 				// A 24 or 32 bit DIB may contain a palette for faster color reduction
 
-				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + (used_colors * 3))) {
+				if (bitmap_bits_offset > (sizeof(BITMAPFILEHEADER) + sizeof(FIBITMAPINFOHEADER) + (used_colors * 3))) {
 					io->seek_proc(handle, bitmap_bits_offset, SEEK_SET);
 				}
 				
@@ -916,16 +916,16 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				
 				// load the palette
 
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 				for (unsigned count = 0; count < used_colors; count++) {
 					FILE_BGR bgr;
 
 					io->read_proc(&bgr, sizeof(FILE_BGR), 1, handle);
 					
-					pal[count].rgbRed	= bgr.r;
-					pal[count].rgbGreen = bgr.g;
-					pal[count].rgbBlue	= bgr.b;
+					pal[count].red	= bgr.r;
+					pal[count].green = bgr.g;
+					pal[count].blue	= bgr.b;
 				}
 				
 				if(header_only) {
@@ -1310,7 +1310,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		BITMAPFILEHEADER bitmapfileheader;
 		bitmapfileheader.bfType = 0x4D42;
-		bitmapfileheader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + FreeImage_GetColorsUsed(dib) * sizeof(RGBQUAD);
+		bitmapfileheader.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(FIBITMAPINFOHEADER) + FreeImage_GetColorsUsed(dib) * sizeof(FIRGBA8);
 		bitmapfileheader.bfSize = bitmapfileheader.bfOffBits + dst_height * dst_pitch;
 		bitmapfileheader.bfReserved1 = 0;
 		bitmapfileheader.bfReserved2 = 0;
@@ -1333,8 +1333,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		// update the bitmap info header
 
-		BITMAPINFOHEADER bih;
-		memcpy(&bih, FreeImage_GetInfoHeader(dib), sizeof(BITMAPINFOHEADER));
+		FIBITMAPINFOHEADER bih;
+		memcpy(&bih, FreeImage_GetInfoHeader(dib), sizeof(FIBITMAPINFOHEADER));
 
 		if (bit_fields) {
 			bih.biCompression = BI_BITFIELDS;
@@ -1351,7 +1351,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
-		if (io->write_proc(&bih, sizeof(BITMAPINFOHEADER), 1, handle) != 1) {
+		if (io->write_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle) != 1) {
 			return FALSE;
 		}
 
@@ -1382,13 +1382,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		// write the palette
 
 		if (FreeImage_GetPalette(dib) != NULL) {
-			RGBQUAD *pal = FreeImage_GetPalette(dib);
+			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 			FILE_BGRA bgra;
 			for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++ ) {
-				bgra.b = pal[i].rgbBlue;
-				bgra.g = pal[i].rgbGreen;
-				bgra.r = pal[i].rgbRed;
-				bgra.a = pal[i].rgbReserved;
+				bgra.b = pal[i].blue;
+				bgra.g = pal[i].green;
+				bgra.r = pal[i].red;
+				bgra.a = pal[i].alpha;
 				if (io->write_proc(&bgra, sizeof(FILE_BGRA), 1, handle) != 1) {
 					return FALSE;
 				}
@@ -1447,10 +1447,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			for(unsigned y = 0; y < dst_height; y++) {
 				BYTE *line = FreeImage_GetScanLine(dib, y);
 				for(unsigned x = 0; x < dst_width; x++) {
-					RGBTRIPLE *triple = ((RGBTRIPLE *)line)+x;
-					bgr.b = triple->rgbtBlue;
-					bgr.g = triple->rgbtGreen;
-					bgr.r = triple->rgbtRed;
+					FIRGB8 *triple = ((FIRGB8 *)line)+x;
+					bgr.b = triple->blue;
+					bgr.g = triple->green;
+					bgr.r = triple->red;
 					if (io->write_proc(&bgr, sizeof(FILE_BGR), 1, handle) != 1) {
 						return FALSE;
 					}
@@ -1466,11 +1466,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			for(unsigned y = 0; y < dst_height; y++) {
 				BYTE *line = FreeImage_GetScanLine(dib, y);
 				for(unsigned x = 0; x < dst_width; x++) {
-					RGBQUAD *quad = ((RGBQUAD *)line)+x;
-					bgra.b = quad->rgbBlue;
-					bgra.g = quad->rgbGreen;
-					bgra.r = quad->rgbRed;
-					bgra.a = quad->rgbReserved;
+					FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
+					bgra.b = quad->blue;
+					bgra.g = quad->green;
+					bgra.r = quad->red;
+					bgra.a = quad->alpha;
 					if (io->write_proc(&bgra, sizeof(FILE_BGRA), 1, handle) != 1) {
 						return FALSE;
 					}

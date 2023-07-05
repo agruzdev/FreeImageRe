@@ -82,8 +82,8 @@ CalculateImageSize(FIBITMAP* icon_dib) {
 	unsigned height		= FreeImage_GetHeight(icon_dib);
 	unsigned pitch		= FreeImage_GetPitch(icon_dib);
 
-	dwNumBytes = sizeof( BITMAPINFOHEADER );	// header
-	dwNumBytes += colors * sizeof(RGBQUAD);		// palette
+	dwNumBytes = sizeof( FIBITMAPINFOHEADER );	// header
+	dwNumBytes += colors * sizeof(FIRGBA8);		// palette
 	dwNumBytes += height * pitch;				// XOR mask
 	dwNumBytes += height * WidthBytes(width);	// AND mask
 
@@ -129,7 +129,7 @@ IsPNG(FreeImageIO *io, fi_handle handle) {
 
 #ifdef FREEIMAGE_BIGENDIAN
 static void
-SwapInfoHeader(BITMAPINFOHEADER *header) {
+SwapInfoHeader(FIBITMAPINFOHEADER *header) {
 	SwapLong(&header->biSize);
 	SwapLong((DWORD *)&header->biWidth);
 	SwapLong((DWORD *)&header->biHeight);
@@ -291,8 +291,8 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, BOOL header_only)
 	FIBITMAP *dib = NULL;
 
 	// load the BITMAPINFOHEADER
-	BITMAPINFOHEADER bmih;
-	io->read_proc(&bmih, sizeof(BITMAPINFOHEADER), 1, handle);
+	FIBITMAPINFOHEADER bmih;
+	io->read_proc(&bmih, sizeof(FIBITMAPINFOHEADER), 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapInfoHeader(&bmih);
 #endif
@@ -314,11 +314,11 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, BOOL header_only)
 
 	if( bmih.biBitCount <= 8 ) {
 		// read the palette data
-		io->read_proc(FreeImage_GetPalette(dib), CalculateUsedPaletteEntries(bit_count) * sizeof(RGBQUAD), 1, handle);
+		io->read_proc(FreeImage_GetPalette(dib), CalculateUsedPaletteEntries(bit_count) * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		for(unsigned i = 0; i < CalculateUsedPaletteEntries(bit_count); i++) {
-			INPLACESWAP(pal[i].rgbRed, pal[i].rgbBlue);
+			INPLACESWAP(pal[i].red, pal[i].blue);
 		}
 #endif
 	}
@@ -375,14 +375,14 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, BOOL header_only)
 
 		//loop through each line of the AND-mask generating the alpha channel, invert XOR-mask
 		for(int y = 0; y < height; y++) {
-			RGBQUAD *quad = (RGBQUAD *)FreeImage_GetScanLine(dib32, y);
+			FIRGBA8 *quad = (FIRGBA8 *)FreeImage_GetScanLine(dib32, y);
 			io->read_proc(line_and, width_and, 1, handle);
 			for(int x = 0; x < width; x++) {
-				quad->rgbReserved = (line_and[x>>3] & (0x80 >> (x & 0x07))) != 0 ? 0 : 0xFF;
-				if( quad->rgbReserved == 0 ) {
-					quad->rgbBlue ^= 0xFF;
-					quad->rgbGreen ^= 0xFF;
-					quad->rgbRed ^= 0xFF;
+				quad->alpha = (line_and[x>>3] & (0x80 >> (x & 0x07))) != 0 ? 0 : 0xFF;
+				if( quad->alpha == 0 ) {
+					quad->blue ^= 0xFF;
+					quad->green ^= 0xFF;
+					quad->red ^= 0xFF;
 				}
 				quad++;
 			}
@@ -458,7 +458,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 static BOOL 
 SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
-	BITMAPINFOHEADER *bmih = NULL;
+	FIBITMAPINFOHEADER *bmih = NULL;
 
 	// write the BITMAPINFOHEADER
 	bmih = FreeImage_GetInfoHeader(dib);
@@ -466,7 +466,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapInfoHeader(bmih);
 #endif
-	io->write_proc(bmih, sizeof(BITMAPINFOHEADER), 1, handle);
+	io->write_proc(bmih, sizeof(FIBITMAPINFOHEADER), 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapInfoHeader(bmih);
 #endif
@@ -474,13 +474,13 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 
 	// write the palette data
 	if (FreeImage_GetPalette(dib) != NULL) {
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		FILE_BGRA bgra;
 		for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
-			bgra.b = pal[i].rgbBlue;
-			bgra.g = pal[i].rgbGreen;
-			bgra.r = pal[i].rgbRed;
-			bgra.a = pal[i].rgbReserved;
+			bgra.b = pal[i].blue;
+			bgra.g = pal[i].green;
+			bgra.r = pal[i].red;
+			bgra.a = pal[i].alpha;
 			io->write_proc(&bgra, sizeof(FILE_BGRA), 1, handle);
 		}
 	}
@@ -515,10 +515,10 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			BYTE *line = FreeImage_GetScanLine(dib, y);
 			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
-				RGBTRIPLE *triple = ((RGBTRIPLE *)line)+x;
-				bgr.b = triple->rgbtBlue;
-				bgr.g = triple->rgbtGreen;
-				bgr.r = triple->rgbtRed;
+				FIRGB8 *triple = ((FIRGB8 *)line)+x;
+				bgr.b = triple->blue;
+				bgr.g = triple->green;
+				bgr.r = triple->red;
 				if (io->write_proc(&bgr, sizeof(FILE_BGR), 1, handle) != 1)
 					return FALSE;
 			}
@@ -528,11 +528,11 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			BYTE *line = FreeImage_GetScanLine(dib, y);
 			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
-				RGBQUAD *quad = ((RGBQUAD *)line)+x;
-				bgra.b = quad->rgbBlue;
-				bgra.g = quad->rgbGreen;
-				bgra.r = quad->rgbRed;
-				bgra.a = quad->rgbReserved;
+				FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
+				bgra.b = quad->blue;
+				bgra.g = quad->green;
+				bgra.r = quad->red;
+				bgra.a = quad->alpha;
 				if (io->write_proc(&bgra, sizeof(FILE_BGRA), 1, handle) != 1)
 					return FALSE;
 			}
@@ -565,10 +565,10 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 			memset(and_mask, 0, size_and);
 
 			for(int y = 0; y < height; y++) {
-				RGBQUAD *bits = (RGBQUAD*)FreeImage_GetScanLine(dib, y);
+				FIRGBA8 *bits = (FIRGBA8*)FreeImage_GetScanLine(dib, y);
 
 				for(int x = 0; x < width; x++) {
-					if(bits[x].rgbReserved != 0xFF) {
+					if(bits[x].alpha != 0xFF) {
 						// set any transparent color to full transparency
 						and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
 					}
@@ -723,7 +723,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// convert internal format to ICONDIRENTRY
 			// take into account Vista icons whose size is 256x256
-			const BITMAPINFOHEADER *bmih = FreeImage_GetInfoHeader(icon_dib);
+			const FIBITMAPINFOHEADER *bmih = FreeImage_GetInfoHeader(icon_dib);
 			icon_list[k].bWidth			= (bmih->biWidth > 255)  ? 0 : (BYTE)bmih->biWidth;
 			icon_list[k].bHeight		= (bmih->biHeight > 255) ? 0 : (BYTE)bmih->biHeight;
 			icon_list[k].bReserved		= 0;

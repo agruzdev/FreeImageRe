@@ -107,8 +107,8 @@ Combine4(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsigned 
 	}
 
 	// get src and dst palettes
-	RGBQUAD *src_pal = FreeImage_GetPalette(src_dib);
-	RGBQUAD *dst_pal = FreeImage_GetPalette(dst_dib);
+	FIRGBA8 *src_pal = FreeImage_GetPalette(src_dib);
+	FIRGBA8 *dst_pal = FreeImage_GetPalette(dst_dib);
 	if (src_pal == NULL || dst_pal == NULL) {
 		return FALSE;
 	}
@@ -121,9 +121,9 @@ Combine4(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsigned 
 		for (int j = 0; j < 16; j++)	{
 			// calculates the color difference using a Manhattan distance
 			WORD abs_diff = (WORD)(
-				abs(src_pal[i].rgbBlue - dst_pal[j].rgbBlue)
-				+ abs(src_pal[i].rgbGreen - dst_pal[j].rgbGreen)
-				+ abs(src_pal[i].rgbRed - dst_pal[j].rgbRed)
+				abs(src_pal[i].blue - dst_pal[j].blue)
+				+ abs(src_pal[i].green - dst_pal[j].green)
+				+ abs(src_pal[i].red - dst_pal[j].red)
 				);
 
 			if (abs_diff < min_diff)	{
@@ -260,31 +260,31 @@ Combine16_555(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsi
 	} else {
 		for(unsigned rows = 0; rows < FreeImage_GetHeight(src_dib); rows++) {
 			for(unsigned cols = 0; cols < FreeImage_GetLine(src_dib); cols += 2) {
-				RGBTRIPLE color_s;
-				RGBTRIPLE color_t;
+				FIRGB8 color_s;
+				FIRGB8 color_t;
 				
 				WORD *tmp1 = (WORD *)&dst_bits[cols];
 				WORD *tmp2 = (WORD *)&src_bits[cols];
 
 				// convert 16-bit colors to 24-bit
 
-				color_s.rgbtRed = (BYTE)(((*tmp1 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) << 3);
-				color_s.rgbtGreen = (BYTE)(((*tmp1 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) << 3);
-				color_s.rgbtBlue = (BYTE)(((*tmp1 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) << 3);
+				color_s.red = (BYTE)(((*tmp1 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) << 3);
+				color_s.green = (BYTE)(((*tmp1 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) << 3);
+				color_s.blue = (BYTE)(((*tmp1 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) << 3);
 
-				color_t.rgbtRed = (BYTE)(((*tmp2 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) << 3);
-				color_t.rgbtGreen = (BYTE)(((*tmp2 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) << 3);
-				color_t.rgbtBlue = (BYTE)(((*tmp2 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) << 3);
+				color_t.red = (BYTE)(((*tmp2 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) << 3);
+				color_t.green = (BYTE)(((*tmp2 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) << 3);
+				color_t.blue = (BYTE)(((*tmp2 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) << 3);
 
 				// alpha blend
 
-				color_s.rgbtRed = (BYTE)(((color_t.rgbtRed - color_s.rgbtRed) * alpha + (color_s.rgbtRed << 8)) >> 8);
-				color_s.rgbtGreen = (BYTE)(((color_t.rgbtGreen - color_s.rgbtGreen) * alpha + (color_s.rgbtGreen << 8)) >> 8);
-				color_s.rgbtBlue = (BYTE)(((color_t.rgbtBlue - color_s.rgbtBlue) * alpha + (color_s.rgbtBlue << 8)) >> 8);
+				color_s.red = (BYTE)(((color_t.red - color_s.red) * alpha + (color_s.red << 8)) >> 8);
+				color_s.green = (BYTE)(((color_t.green - color_s.green) * alpha + (color_s.green << 8)) >> 8);
+				color_s.blue = (BYTE)(((color_t.blue - color_s.blue) * alpha + (color_s.blue << 8)) >> 8);
 
 				// convert 24-bit color back to 16-bit
 
-				*tmp1 = RGB555(color_s.rgbtRed, color_s.rgbtGreen, color_s.rgbtBlue);
+				*tmp1 = RGB555(color_s.red, color_s.green, color_s.blue);
 			}
 
 			dst_bits += FreeImage_GetPitch(dst_dib);
@@ -320,31 +320,31 @@ Combine16_565(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsi
 	} else {
 		for(unsigned rows = 0; rows < FreeImage_GetHeight(src_dib); rows++) {
 			for(unsigned cols = 0; cols < FreeImage_GetLine(src_dib); cols += 2) {
-				RGBTRIPLE color_s;
-				RGBTRIPLE color_t;
+				FIRGB8 color_s;
+				FIRGB8 color_t;
 				
 				WORD *tmp1 = (WORD *)&dst_bits[cols];
 				WORD *tmp2 = (WORD *)&src_bits[cols];
 
 				// convert 16-bit colors to 24-bit
 
-				color_s.rgbtRed = (BYTE)(((*tmp1 & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) << 3);
-				color_s.rgbtGreen = (BYTE)(((*tmp1 & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) << 2);
-				color_s.rgbtBlue = (BYTE)(((*tmp1 & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) << 3);
+				color_s.red = (BYTE)(((*tmp1 & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) << 3);
+				color_s.green = (BYTE)(((*tmp1 & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) << 2);
+				color_s.blue = (BYTE)(((*tmp1 & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) << 3);
 
-				color_t.rgbtRed = (BYTE)(((*tmp2 & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) << 3);
-				color_t.rgbtGreen = (BYTE)(((*tmp2 & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) << 2);
-				color_t.rgbtBlue = (BYTE)(((*tmp2 & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) << 3);
+				color_t.red = (BYTE)(((*tmp2 & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) << 3);
+				color_t.green = (BYTE)(((*tmp2 & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) << 2);
+				color_t.blue = (BYTE)(((*tmp2 & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) << 3);
 
 				// alpha blend
 
-				color_s.rgbtRed = (BYTE)(((color_t.rgbtRed - color_s.rgbtRed) * alpha + (color_s.rgbtRed << 8)) >> 8);
-				color_s.rgbtGreen = (BYTE)(((color_t.rgbtGreen - color_s.rgbtGreen) * alpha + (color_s.rgbtGreen << 8)) >> 8);
-				color_s.rgbtBlue = (BYTE)(((color_t.rgbtBlue - color_s.rgbtBlue) * alpha + (color_s.rgbtBlue << 8)) >> 8);
+				color_s.red = (BYTE)(((color_t.red - color_s.red) * alpha + (color_s.red << 8)) >> 8);
+				color_s.green = (BYTE)(((color_t.green - color_s.green) * alpha + (color_s.green << 8)) >> 8);
+				color_s.blue = (BYTE)(((color_t.blue - color_s.blue) * alpha + (color_s.blue << 8)) >> 8);
 
 				// convert 24-bit color back to 16-bit
 
-				*tmp1 = RGB565(color_s.rgbtRed, color_s.rgbtGreen, color_s.rgbtBlue);
+				*tmp1 = RGB565(color_s.red, color_s.green, color_s.blue);
 			}
 
 			dst_bits += FreeImage_GetPitch(dst_dib);
@@ -556,7 +556,7 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 
 	// copy the palette
 
-	memcpy(FreeImage_GetPalette(dst), FreeImage_GetPalette(src), FreeImage_GetColorsUsed(src) * sizeof(RGBQUAD));
+	memcpy(FreeImage_GetPalette(dst), FreeImage_GetPalette(src), FreeImage_GetColorsUsed(src) * sizeof(FIRGBA8));
 
 	// copy the bits
 	if(bpp == 1) {
@@ -607,7 +607,7 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 	FreeImage_SetTransparencyTable(dst, FreeImage_GetTransparencyTable(src), FreeImage_GetTransparencyCount(src));
 	
 	// copy background color 
-	RGBQUAD bkcolor; 
+	FIRGBA8 bkcolor; 
 	if( FreeImage_GetBackgroundColor(src, &bkcolor) ) {
 		FreeImage_SetBackgroundColor(dst, &bkcolor); 
 	}
@@ -841,13 +841,13 @@ FreeImage_CreateView(FIBITMAP *dib, unsigned left, unsigned top, unsigned right,
 	FreeImage_SetDotsPerMeterY(dst, FreeImage_GetDotsPerMeterY(dib));
 
 	// background color
-	RGBQUAD bkcolor;
+	FIRGBA8 bkcolor;
 	if (FreeImage_GetBackgroundColor(dib, &bkcolor)) {
 		FreeImage_SetBackgroundColor(dst, &bkcolor);
 	}
 
 	// palette
-	memcpy(FreeImage_GetPalette(dst), FreeImage_GetPalette(dib), FreeImage_GetColorsUsed(dib) * sizeof(RGBQUAD));
+	memcpy(FreeImage_GetPalette(dst), FreeImage_GetPalette(dib), FreeImage_GetColorsUsed(dib) * sizeof(FIRGBA8));
 
 	// transparency table
 	FreeImage_SetTransparencyTable(dst, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));

@@ -322,9 +322,9 @@ FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm) {
 		if(NULL == new_dib) return NULL;
 		if(FreeImage_GetColorType(new_dib) == FIC_PALETTE) {
 			// Build a monochrome palette
-			RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		return new_dib;
 	}
@@ -377,11 +377,11 @@ FreeImage_Dither(FIBITMAP *dib, FREE_IMAGE_DITHER algorithm) {
 	}
 
 	// Build a greyscale palette (needed by threshold)
-	RGBQUAD *grey_pal = FreeImage_GetPalette(dib8);
+	FIRGBA8 *grey_pal = FreeImage_GetPalette(dib8);
 	for(int i = 0; i < 256; i++) {
-		grey_pal[i].rgbRed	= (BYTE)i;
-		grey_pal[i].rgbGreen = (BYTE)i;
-		grey_pal[i].rgbBlue	= (BYTE)i;
+		grey_pal[i].red	= (BYTE)i;
+		grey_pal[i].green = (BYTE)i;
+		grey_pal[i].blue	= (BYTE)i;
 	}
 
 	// Convert to 1-bit
@@ -411,9 +411,9 @@ FreeImage_Threshold(FIBITMAP *dib, BYTE T) {
 		if(NULL == new_dib) return NULL;
 		if(FreeImage_GetColorType(new_dib) == FIC_PALETTE) {
 			// Build a monochrome palette
-			RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		return new_dib;
 	}
@@ -443,9 +443,9 @@ FreeImage_Threshold(FIBITMAP *dib, BYTE T) {
 	FIBITMAP *new_dib = FreeImage_Allocate(width, height, 1);
 	if(NULL == new_dib) return NULL;
 	// Build a monochrome palette
-	RGBQUAD *pal = FreeImage_GetPalette(new_dib);
-	pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-	pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+	FIRGBA8 *pal = FreeImage_GetPalette(new_dib);
+	pal[0].red = pal[0].green = pal[0].blue = 0;
+	pal[1].red = pal[1].green = pal[1].blue = 255;
 
 	// Perform the thresholding
 	//

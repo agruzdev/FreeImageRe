@@ -294,10 +294,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//build palette if needed
 			if( colors <= 256 ) {
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
-				pal[i].rgbBlue = rgba.b;
-				pal[i].rgbGreen = rgba.g;
-				pal[i].rgbRed = rgba.r;
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				pal[i].blue = rgba.b;
+				pal[i].green = rgba.g;
+				pal[i].red = rgba.r;
 			}
 
 			free(str);
@@ -364,7 +364,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			return FALSE;
 
 		int width = FreeImage_GetWidth(dib), height = FreeImage_GetHeight(dib), bpp = FreeImage_GetBPP(dib);
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		int x,y;
 
 		//map base92 chrs to the rgb value to create the palette
@@ -391,9 +391,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					line += 3;
 				} else {
 					u.index = *line;
-					rgb.b = pal[u.index].rgbBlue;
-					rgb.g = pal[u.index].rgbGreen;
-					rgb.r = pal[u.index].rgbRed;
+					rgb.b = pal[u.index].blue;
+					rgb.g = pal[u.index].green;
+					rgb.r = pal[u.index].red;
 					line++;
 				}
 				if( color2chrs.find(u.index) == color2chrs.end() ) { //new color

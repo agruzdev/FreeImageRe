@@ -288,14 +288,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (header.depth < 24) {
 					// Create linear color ramp
 
-					RGBQUAD *pal = FreeImage_GetPalette(dib);
+					FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 					int numcolors = 1 << header.depth;
 
 					for (int i = 0; i < numcolors; i++) {
-						pal[i].rgbRed	= (BYTE)((255 * i) / (numcolors - 1));
-						pal[i].rgbGreen = (BYTE)((255 * i) / (numcolors - 1));
-						pal[i].rgbBlue	= (BYTE)((255 * i) / (numcolors - 1));
+						pal[i].red	= (BYTE)((255 * i) / (numcolors - 1));
+						pal[i].green = (BYTE)((255 * i) / (numcolors - 1));
+						pal[i].blue	= (BYTE)((255 * i) / (numcolors - 1));
 					}
 				}
 
@@ -320,14 +320,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				g = r + numcolors;
 				b = g + numcolors;
 
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 				io->read_proc(r, 3 * numcolors, 1, handle);
 
 				for (int i = 0; i < numcolors; i++) {
-					pal[i].rgbRed	= r[i];
-					pal[i].rgbGreen = g[i];
-					pal[i].rgbBlue	= b[i];
+					pal[i].red	= r[i];
+					pal[i].green = g[i];
+					pal[i].blue	= b[i];
 				}
 
 				free(r);

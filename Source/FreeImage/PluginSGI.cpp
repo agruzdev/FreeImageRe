@@ -314,12 +314,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (bitcount == 8) {
 			// 8-bit SGI files are grayscale images, so we'll generate
 			// a grayscale palette.
-			RGBQUAD *pclrs = FreeImage_GetPalette(dib);
+			FIRGBA8 *pclrs = FreeImage_GetPalette(dib);
 			for (i = 0; i < 256; i++) {
-				pclrs[i].rgbRed = (BYTE)i;
-				pclrs[i].rgbGreen = (BYTE)i;
-				pclrs[i].rgbBlue = (BYTE)i;
-				pclrs[i].rgbReserved = 0;
+				pclrs[i].red = (BYTE)i;
+				pclrs[i].green = (BYTE)i;
+				pclrs[i].blue = (BYTE)i;
+				pclrs[i].alpha = 0;
 			}
 		}
 

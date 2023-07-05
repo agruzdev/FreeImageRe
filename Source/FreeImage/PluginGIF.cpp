@@ -689,18 +689,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			SwapShort(&logicalheight);
 #endif
 			//set the background color with 0 alpha
-			RGBQUAD background;
+			FIRGBA8 background;
 			if( info->global_color_table_offset != 0 && info->background_color < info->global_color_table_size ) {
 				io->seek_proc(handle, (long)(info->global_color_table_offset + (info->background_color * 3)), SEEK_SET);
-				io->read_proc(&background.rgbRed, 1, 1, handle);
-				io->read_proc(&background.rgbGreen, 1, 1, handle);
-				io->read_proc(&background.rgbBlue, 1, 1, handle);
+				io->read_proc(&background.red, 1, 1, handle);
+				io->read_proc(&background.green, 1, 1, handle);
+				io->read_proc(&background.blue, 1, 1, handle);
 			} else {
-				background.rgbRed = 0;
-				background.rgbGreen = 0;
-				background.rgbBlue = 0;
+				background.red = 0;
+				background.green = 0;
+				background.blue = 0;
 			}
-			background.rgbReserved = 0;
+			background.alpha = 0;
 
 			//allocate entire logical area
 			dib = FreeImage_Allocate(logicalwidth, logicalheight, 32);
@@ -710,9 +710,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//fill with background color to start
 			int x, y;
-			RGBQUAD *scanline;
+			FIRGBA8 *scanline;
 			for( y = 0; y < logicalheight; y++ ) {
-				scanline = (RGBQUAD *)FreeImage_GetScanLine(dib, y);
+				scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, y);
 				for( x = 0; x < logicalwidth; x++ ) {
 					*scanline++ = background;
 				}
@@ -776,7 +776,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							if ( scanidx < 0 ) {
 								break;  // If data is corrupt, don't calculate in invalid scanline
 							}
-							scanline = (RGBQUAD *)FreeImage_GetScanLine(dib, scanidx) + info.left;
+							scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
 							for( x = 0; x < info.width; x++ ) {
 								*scanline++ = background;
 							}
@@ -788,7 +788,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				//decode page
 				FIBITMAP *pagedib = Load(io, handle, page, GIF_LOAD256, data);
 				if( pagedib != NULL ) {
-					RGBQUAD *pal = FreeImage_GetPalette(pagedib);
+					FIRGBA8 *pal = FreeImage_GetPalette(pagedib);
 					have_transparent = false;
 					if( FreeImage_IsTransparent(pagedib) ) {
 						int count = FreeImage_GetTransparencyCount(pagedib);
@@ -807,12 +807,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						if ( scanidx < 0 ) {
 							break;  // If data is corrupt, don't calculate in invalid scanline
 						}
-						scanline = (RGBQUAD *)FreeImage_GetScanLine(dib, scanidx) + info.left;
+						scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
 						BYTE *pageline = FreeImage_GetScanLine(pagedib, info.height - y - 1);
 						for( x = 0; x < info.width; x++ ) {
 							if( !have_transparent || *pageline != transparent_color ) {
 								*scanline = pal[*pageline];
-								scanline->rgbReserved = 255;
+								scanline->alpha = 255;
 							}
 							scanline++;
 							pageline++;
@@ -876,15 +876,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "Interlaced", ANIMTAG_INTERLACED, FIDT_BYTE, 1, 1, &b);
 
 		//Palette
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		if( !no_local_palette ) {
 			int size = 2 << (packed & GIF_PACKED_ID_LCTSIZE);
 
 			int i = 0;
 			while( i < size ) {
-				io->read_proc(&pal[i].rgbRed, 1, 1, handle);
-				io->read_proc(&pal[i].rgbGreen, 1, 1, handle);
-				io->read_proc(&pal[i].rgbBlue, 1, 1, handle);
+				io->read_proc(&pal[i].red, 1, 1, handle);
+				io->read_proc(&pal[i].green, 1, 1, handle);
+				io->read_proc(&pal[i].blue, 1, 1, handle);
 				i++;
 			}
 		} else if( info->global_color_table_offset != 0 ) {
@@ -893,9 +893,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			int i = 0;
 			while( i < info->global_color_table_size ) {
-				io->read_proc(&pal[i].rgbRed, 1, 1, handle);
-				io->read_proc(&pal[i].rgbGreen, 1, 1, handle);
-				io->read_proc(&pal[i].rgbBlue, 1, 1, handle);
+				io->read_proc(&pal[i].red, 1, 1, handle);
+				io->read_proc(&pal[i].green, 1, 1, handle);
+				io->read_proc(&pal[i].blue, 1, 1, handle);
 				i++;
 			}
 
@@ -903,9 +903,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} else {
 			//its legal to have no palette, but we're going to generate *something*
 			for( int i = 0; i < 256; i++ ) {
-				pal[i].rgbRed   = (BYTE)i;
-				pal[i].rgbGreen = (BYTE)i;
-				pal[i].rgbBlue  = (BYTE)i;
+				pal[i].red   = (BYTE)i;
+				pal[i].green = (BYTE)i;
+				pal[i].blue  = (BYTE)i;
 			}
 		}
 
@@ -971,14 +971,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//Global Color Table
 			if( info->global_color_table_offset != 0 ) {
-				RGBQUAD globalpalette[256];
+				FIRGBA8 globalpalette[256];
 				io->seek_proc(handle, (long)info->global_color_table_offset, SEEK_SET);
 				int i = 0;
 				while( i < info->global_color_table_size ) {
-					io->read_proc(&globalpalette[i].rgbRed, 1, 1, handle);
-					io->read_proc(&globalpalette[i].rgbGreen, 1, 1, handle);
-					io->read_proc(&globalpalette[i].rgbBlue, 1, 1, handle);
-					globalpalette[i].rgbReserved = 0;
+					io->read_proc(&globalpalette[i].red, 1, 1, handle);
+					io->read_proc(&globalpalette[i].green, 1, 1, handle);
+					io->read_proc(&globalpalette[i].blue, 1, 1, handle);
+					globalpalette[i].alpha = 0;
 					i++;
 				}
 				FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", ANIMTAG_GLOBALPALETTE, FIDT_PALETTE, info->global_color_table_size, info->global_color_table_size * 4, globalpalette);
@@ -1115,7 +1115,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			disposal_method = *(BYTE *)FreeImage_GetTagValue(tag);
 		}
 
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapShort(&left);
 		SwapShort(&top);
@@ -1139,12 +1139,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				SwapShort(&logicalheight);
 #endif
 			}
-			RGBQUAD *globalpalette = NULL;
+			FIRGBA8 *globalpalette = NULL;
 			int globalpalette_size = 0;
 			if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", FIDT_PALETTE, &tag) ) {
 				globalpalette_size = FreeImage_GetTagCount(tag);
 				if( globalpalette_size >= 2 ) {
-					globalpalette = (RGBQUAD *)FreeImage_GetTagValue(tag);
+					globalpalette = (FIRGBA8 *)FreeImage_GetTagValue(tag);
 				}
 			}
 
@@ -1153,7 +1153,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			io->write_proc(&logicalheight, 2, 1, handle);
 			packed = GIF_PACKED_LSD_COLORRES;
 			b = 0;
-			RGBQUAD background_color;
+			FIRGBA8 background_color;
 			if( globalpalette != NULL ) {
 				packed |= GIF_PACKED_LSD_HAVEGCT;
 				if( globalpalette_size < 4 ) {
@@ -1183,9 +1183,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				}
 				if( FreeImage_GetBackgroundColor(dib, &background_color) ) {
 					for( int i = 0; i < globalpalette_size; i++ ) {
-						if( background_color.rgbRed == globalpalette[i].rgbRed &&
-							background_color.rgbGreen == globalpalette[i].rgbGreen &&
-							background_color.rgbBlue == globalpalette[i].rgbBlue ) {
+						if( background_color.red == globalpalette[i].red &&
+							background_color.green == globalpalette[i].green &&
+							background_color.blue == globalpalette[i].blue ) {
 
 							b = (BYTE)i;
 							break;
@@ -1204,9 +1204,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			if( globalpalette != NULL ) {
 				int i = 0;
 				while( i < globalpalette_size ) {
-					io->write_proc(&globalpalette[i].rgbRed, 1, 1, handle);
-					io->write_proc(&globalpalette[i].rgbGreen, 1, 1, handle);
-					io->write_proc(&globalpalette[i].rgbBlue, 1, 1, handle);
+					io->write_proc(&globalpalette[i].red, 1, 1, handle);
+					io->write_proc(&globalpalette[i].green, 1, 1, handle);
+					io->write_proc(&globalpalette[i].blue, 1, 1, handle);
 					i++;
 				}
 			}
@@ -1302,9 +1302,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		if( !no_local_palette ) {
 			int palsize = 1 << bpp;
 			for( int i = 0; i < palsize; i++ ) {
-				io->write_proc(&pal[i].rgbRed, 1, 1, handle);
-				io->write_proc(&pal[i].rgbGreen, 1, 1, handle);
-				io->write_proc(&pal[i].rgbBlue, 1, 1, handle);
+				io->write_proc(&pal[i].red, 1, 1, handle);
+				io->write_proc(&pal[i].green, 1, 1, handle);
+				io->write_proc(&pal[i].blue, 1, 1, handle);
 			}
 		}
 

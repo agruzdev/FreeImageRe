@@ -39,7 +39,7 @@ For colour images, the computation is done separately for R, G, and B samples.
 @see FreeImage_IsTransparent, FreeImage_HasBackgroundColor
 */
 FIBITMAP * DLL_CALLCONV
-FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP *bg) {
+FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP *bg) {
 	if(!FreeImage_HasPixels(fg)) return NULL;
 
 	int width  = FreeImage_GetWidth(fg);
@@ -63,18 +63,18 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 	int x, y, c;
 	BYTE alpha = 0, not_alpha;
 	BYTE index;
-	RGBQUAD fgc;	// foreground color
-	RGBQUAD bkc;	// background color
+	FIRGBA8 fgc;	// foreground color
+	FIRGBA8 bkc;	// background color
 
-	memset(&fgc, 0, sizeof(RGBQUAD));
-	memset(&bkc, 0, sizeof(RGBQUAD));
+	memset(&fgc, 0, sizeof(FIRGBA8));
+	memset(&bkc, 0, sizeof(FIRGBA8));
 
 	// allocate the composite image
 	FIBITMAP *composite = FreeImage_Allocate(width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 	if(!composite) return NULL;
 
 	// get the palette
-	RGBQUAD *pal = FreeImage_GetPalette(fg);
+	FIRGBA8 *pal = FreeImage_GetPalette(fg);
 
 	// retrieve the alpha table from the foreground image
 	BOOL bIsTransparent = FreeImage_IsTransparent(fg);
@@ -90,7 +90,7 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 		// no file background color
 		// use application background color ?
 		if(appBkColor) {
-			memcpy(&bkc, appBkColor, sizeof(RGBQUAD));
+			memcpy(&bkc, appBkColor, sizeof(FIRGBA8));
 			bHasBkColor = TRUE;
 		}
 		// use background image ?
@@ -114,7 +114,7 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 			if(bpp == 8) {
 				// get the foreground color
 				index = fg_bits[0];
-				memcpy(&fgc, &pal[index], sizeof(RGBQUAD));
+				memcpy(&fgc, &pal[index], sizeof(FIRGBA8));
 				// get the alpha
 				if(bIsTransparent) {
 					alpha = trns[index];
@@ -124,9 +124,9 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 			}
 			else if(bpp == 32) {
 				// get the foreground color
-				fgc.rgbBlue  = fg_bits[FI_RGBA_BLUE];
-				fgc.rgbGreen = fg_bits[FI_RGBA_GREEN];
-				fgc.rgbRed   = fg_bits[FI_RGBA_RED];
+				fgc.blue  = fg_bits[FI_RGBA_BLUE];
+				fgc.green = fg_bits[FI_RGBA_GREEN];
+				fgc.red   = fg_bits[FI_RGBA_RED];
 				// get the alpha
 				alpha = fg_bits[FI_RGBA_ALPHA];
 			}
@@ -136,17 +136,17 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 			if(!bHasBkColor) {
 				if(bg) {
 					// get the background color from the background image
-					bkc.rgbBlue  = bg_bits[FI_RGBA_BLUE];
-					bkc.rgbGreen = bg_bits[FI_RGBA_GREEN];
-					bkc.rgbRed   = bg_bits[FI_RGBA_RED];
+					bkc.blue  = bg_bits[FI_RGBA_BLUE];
+					bkc.green = bg_bits[FI_RGBA_GREEN];
+					bkc.red   = bg_bits[FI_RGBA_RED];
 				}
 				else {
 					// use a checkerboard pattern
 					c = (((y & 0x8) == 0) ^ ((x & 0x8) == 0)) * 192;
 					c = c ? c : 255;
-					bkc.rgbBlue  = (BYTE)c;
-					bkc.rgbGreen = (BYTE)c;
-					bkc.rgbRed   = (BYTE)c;
+					bkc.blue  = (BYTE)c;
+					bkc.green = (BYTE)c;
+					bkc.red   = (BYTE)c;
 				}
 			}
 
@@ -154,22 +154,22 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, RGBQUAD *appBkColor, FIBITMAP
 
 			if(alpha == 0) {
 				// output = background
-				cp_bits[FI_RGBA_BLUE] = bkc.rgbBlue;
-				cp_bits[FI_RGBA_GREEN] = bkc.rgbGreen;
-				cp_bits[FI_RGBA_RED] = bkc.rgbRed;
+				cp_bits[FI_RGBA_BLUE] = bkc.blue;
+				cp_bits[FI_RGBA_GREEN] = bkc.green;
+				cp_bits[FI_RGBA_RED] = bkc.red;
 			}
 			else if(alpha == 255) {
 				// output = foreground
-				cp_bits[FI_RGBA_BLUE] = fgc.rgbBlue;
-				cp_bits[FI_RGBA_GREEN] = fgc.rgbGreen;
-				cp_bits[FI_RGBA_RED] = fgc.rgbRed;
+				cp_bits[FI_RGBA_BLUE] = fgc.blue;
+				cp_bits[FI_RGBA_GREEN] = fgc.green;
+				cp_bits[FI_RGBA_RED] = fgc.red;
 			}
 			else {
 				// output = alpha * foreground + (1-alpha) * background
 				not_alpha = (BYTE)~alpha;
-				cp_bits[FI_RGBA_BLUE] = (BYTE)((alpha * (WORD)fgc.rgbBlue  + not_alpha * (WORD)bkc.rgbBlue) >> 8);
-				cp_bits[FI_RGBA_GREEN] = (BYTE)((alpha * (WORD)fgc.rgbGreen + not_alpha * (WORD)bkc.rgbGreen) >> 8);
-				cp_bits[FI_RGBA_RED] = (BYTE)((alpha * (WORD)fgc.rgbRed   + not_alpha * (WORD)bkc.rgbRed) >> 8);
+				cp_bits[FI_RGBA_BLUE] = (BYTE)((alpha * (WORD)fgc.blue  + not_alpha * (WORD)bkc.blue) >> 8);
+				cp_bits[FI_RGBA_GREEN] = (BYTE)((alpha * (WORD)fgc.green + not_alpha * (WORD)bkc.green) >> 8);
+				cp_bits[FI_RGBA_RED] = (BYTE)((alpha * (WORD)fgc.red   + not_alpha * (WORD)bkc.red) >> 8);
 			}
 
 			fg_bits += bytespp;

@@ -67,7 +67,7 @@ FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
 }
 
 BOOL DLL_CALLCONV
-FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value) {
+FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
@@ -80,31 +80,31 @@ FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value) {
 				bits += 2*x;
 				WORD *pixel = (WORD *)bits;
 				if((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
-					value->rgbBlue		= (BYTE)((((*pixel & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
-					value->rgbGreen		= (BYTE)((((*pixel & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
-					value->rgbRed		= (BYTE)((((*pixel & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
-					value->rgbReserved	= 0;
+					value->blue		= (BYTE)((((*pixel & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
+					value->green		= (BYTE)((((*pixel & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
+					value->red		= (BYTE)((((*pixel & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
+					value->alpha	= 0;
 				} else {
-					value->rgbBlue		= (BYTE)((((*pixel & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
-					value->rgbGreen		= (BYTE)((((*pixel & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-					value->rgbRed		= (BYTE)((((*pixel & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
-					value->rgbReserved	= 0;
+					value->blue		= (BYTE)((((*pixel & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+					value->green		= (BYTE)((((*pixel & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+					value->red		= (BYTE)((((*pixel & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+					value->alpha	= 0;
 				}
 				break;
 			}
 			case 24:
 				bits += 3*x;
-				value->rgbBlue		= bits[FI_RGBA_BLUE];	// B
-				value->rgbGreen		= bits[FI_RGBA_GREEN];	// G
-				value->rgbRed		= bits[FI_RGBA_RED];	// R
-				value->rgbReserved	= 0;
+				value->blue		= bits[FI_RGBA_BLUE];	// B
+				value->green		= bits[FI_RGBA_GREEN];	// G
+				value->red		= bits[FI_RGBA_RED];	// R
+				value->alpha	= 0;
 				break;
 			case 32:
 				bits += 4*x;
-				value->rgbBlue		= bits[FI_RGBA_BLUE];	// B
-				value->rgbGreen		= bits[FI_RGBA_GREEN];	// G
-				value->rgbRed		= bits[FI_RGBA_RED];	// R
-				value->rgbReserved	= bits[FI_RGBA_ALPHA];	// A
+				value->blue		= bits[FI_RGBA_BLUE];	// B
+				value->green		= bits[FI_RGBA_GREEN];	// G
+				value->red		= bits[FI_RGBA_RED];	// R
+				value->alpha	= bits[FI_RGBA_ALPHA];	// A
 				break;
 			default:
 				return FALSE;
@@ -149,7 +149,7 @@ FreeImage_SetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
 }
 
 BOOL DLL_CALLCONV
-FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value) {
+FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
@@ -162,28 +162,28 @@ FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, RGBQUAD *value) {
 				bits += 2*x;
 				WORD *pixel = (WORD *)bits;
 				if((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
-					*pixel = ((value->rgbBlue >> 3) << FI16_565_BLUE_SHIFT) |
-						((value->rgbGreen >> 2) << FI16_565_GREEN_SHIFT) |
-						((value->rgbRed >> 3) << FI16_565_RED_SHIFT);
+					*pixel = ((value->blue >> 3) << FI16_565_BLUE_SHIFT) |
+						((value->green >> 2) << FI16_565_GREEN_SHIFT) |
+						((value->red >> 3) << FI16_565_RED_SHIFT);
 				} else {
-					*pixel = ((value->rgbBlue >> 3) << FI16_555_BLUE_SHIFT) |
-						((value->rgbGreen >> 3) << FI16_555_GREEN_SHIFT) |
-						((value->rgbRed >> 3) << FI16_555_RED_SHIFT);
+					*pixel = ((value->blue >> 3) << FI16_555_BLUE_SHIFT) |
+						((value->green >> 3) << FI16_555_GREEN_SHIFT) |
+						((value->red >> 3) << FI16_555_RED_SHIFT);
 				}
 				break;
 			}
 			case 24:
 				bits += 3*x;
-				bits[FI_RGBA_BLUE]	= value->rgbBlue;	// B
-				bits[FI_RGBA_GREEN] = value->rgbGreen;	// G
-				bits[FI_RGBA_RED]	= value->rgbRed;	// R
+				bits[FI_RGBA_BLUE]	= value->blue;	// B
+				bits[FI_RGBA_GREEN] = value->green;	// G
+				bits[FI_RGBA_RED]	= value->red;	// R
 				break;
 			case 32:
 				bits += 4*x;
-				bits[FI_RGBA_BLUE]	= value->rgbBlue;		// B
-				bits[FI_RGBA_GREEN] = value->rgbGreen;		// G
-				bits[FI_RGBA_RED]	= value->rgbRed;		// R
-				bits[FI_RGBA_ALPHA] = value->rgbReserved;	// A
+				bits[FI_RGBA_BLUE]	= value->blue;		// B
+				bits[FI_RGBA_GREEN] = value->green;		// G
+				bits[FI_RGBA_RED]	= value->red;		// R
+				bits[FI_RGBA_ALPHA] = value->alpha;	// A
 				break;
 			default:
 				return FALSE;

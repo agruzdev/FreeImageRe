@@ -376,7 +376,7 @@ FreeImage_ColorQuantize(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize) {
 }
 
 FIBITMAP * DLL_CALLCONV
-FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette) {
+FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette) {
 	if( PaletteSize < 2 ) PaletteSize = 2;
 	if( PaletteSize > 256 ) PaletteSize = 256;
 	if( ReserveSize < 0 ) ReserveSize = 0;

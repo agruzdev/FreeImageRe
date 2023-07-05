@@ -139,10 +139,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// stuff it with a palette
 
-		RGBQUAD *palette = FreeImage_GetPalette(dib);
+		FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 		for (int j = 0; j < 256; ++j) {
-			palette[j].rgbBlue = palette[j].rgbGreen = palette[j].rgbRed = (BYTE)j;
+			palette[j].blue = palette[j].green = palette[j].red = (BYTE)j;
 		}
 		
 		if(header_only) {

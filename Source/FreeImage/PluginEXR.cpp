@@ -323,13 +323,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				
 				for (unsigned y = 0; y < thHeight; ++y) {
 					const Imf::PreviewRgba *src_pixel = src_line;
-					RGBQUAD* dst_pixel = (RGBQUAD*)dst_line;
+					FIRGBA8* dst_pixel = (FIRGBA8*)dst_line;
 					
 					for(unsigned x = 0; x < thWidth; ++x) {
-						dst_pixel->rgbRed = src_pixel->r;
-						dst_pixel->rgbGreen = src_pixel->g;
-						dst_pixel->rgbBlue = src_pixel->b;
-						dst_pixel->rgbReserved = src_pixel->a;				
+						dst_pixel->red = src_pixel->r;
+						dst_pixel->green = src_pixel->g;
+						dst_pixel->blue = src_pixel->b;
+						dst_pixel->alpha = src_pixel->a;				
 						src_pixel++;
 						dst_pixel++;
 					}
@@ -469,14 +469,14 @@ SetPreviewImage(FIBITMAP *dib, Imf::Header& header) {
 		const unsigned srcPitch = FreeImage_GetPitch(thumbnail);
 		
 		for (unsigned y = 0; y < thHeight; y++) {
-			const RGBQUAD* src_pixel = (RGBQUAD*)src_line;
+			const FIRGBA8* src_pixel = (FIRGBA8*)src_line;
 			Imf::PreviewRgba* dst_pixel = dst_line;
 			
 			for(unsigned x = 0; x < thWidth; x++) {
-				dst_pixel->r = src_pixel->rgbRed;
-				dst_pixel->g = src_pixel->rgbGreen;
-				dst_pixel->b = src_pixel->rgbBlue;
-				dst_pixel->a = src_pixel->rgbReserved;
+				dst_pixel->r = src_pixel->red;
+				dst_pixel->g = src_pixel->green;
+				dst_pixel->b = src_pixel->blue;
+				dst_pixel->a = src_pixel->alpha;
 				
 				src_pixel++;
 				dst_pixel++;

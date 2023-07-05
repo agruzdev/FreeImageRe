@@ -428,7 +428,7 @@ void NNQuantizer::learn(int sampling_factor) {
 // Quantizer
 // -----------
 
-FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *ReservePalette, int sampling) {
+FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette, int sampling) {
 
 	if ((!dib) || (FreeImage_GetBPP(dib) != 24)) {
 		return NULL;
@@ -465,9 +465,9 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *Reserve
 
 	// 3.5) Overwrite the last few palette entries with the reserved ones
     for (int i = 0; i < ReserveSize; i++) {
-		network[netsize - ReserveSize + i][FI_RGBA_BLUE] = ReservePalette[i].rgbBlue;
-		network[netsize - ReserveSize + i][FI_RGBA_GREEN] = ReservePalette[i].rgbGreen;
-		network[netsize - ReserveSize + i][FI_RGBA_RED] = ReservePalette[i].rgbRed;
+		network[netsize - ReserveSize + i][FI_RGBA_BLUE] = ReservePalette[i].blue;
+		network[netsize - ReserveSize + i][FI_RGBA_GREEN] = ReservePalette[i].green;
+		network[netsize - ReserveSize + i][FI_RGBA_RED] = ReservePalette[i].red;
 		network[netsize - ReserveSize + i][3] = netsize - ReserveSize + i;
 	}
 
@@ -480,12 +480,12 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *Reserve
 
 	// 5) Write the quantized palette
 
-	RGBQUAD *new_pal = FreeImage_GetPalette(new_dib);
+	FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
     for (int j = 0; j < netsize; j++) {
-		new_pal[j].rgbBlue  = (BYTE)network[j][FI_RGBA_BLUE];
-		new_pal[j].rgbGreen = (BYTE)network[j][FI_RGBA_GREEN];
-		new_pal[j].rgbRed	= (BYTE)network[j][FI_RGBA_RED];
+		new_pal[j].blue  = (BYTE)network[j][FI_RGBA_BLUE];
+		new_pal[j].green = (BYTE)network[j][FI_RGBA_GREEN];
+		new_pal[j].red	= (BYTE)network[j][FI_RGBA_RED];
 	}
 
 	inxbuild();

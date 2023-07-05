@@ -238,11 +238,11 @@ libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
 			// write data
 			BYTE *raw_data = (BYTE*)image->data;
 			for(unsigned y = 0; y < height; y++) {
-				RGBTRIPLE *output = (RGBTRIPLE*)FreeImage_GetScanLine(dib, height - 1 - y);
+				FIRGB8 *output = (FIRGB8*)FreeImage_GetScanLine(dib, height - 1 - y);
 				for(unsigned x = 0; x < width; x++) {
-					output[x].rgbtRed   = raw_data[0];
-					output[x].rgbtGreen = raw_data[1];
-					output[x].rgbtBlue  = raw_data[2];
+					output[x].red   = raw_data[0];
+					output[x].green = raw_data[1];
+					output[x].blue  = raw_data[2];
 					raw_data += 3;
 				}
 			}

@@ -369,13 +369,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// fill the bitmap structure ...
 		// ... palette
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		if(photometric_in == PHOTOMETRIC_MINISWHITE) {
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 255;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 0;
+			pal[0].red = pal[0].green = pal[0].blue = 255;
+			pal[1].red = pal[1].green = pal[1].blue = 0;
 		} else {
-			pal[0].rgbRed = pal[0].rgbGreen = pal[0].rgbBlue = 0;
-			pal[1].rgbRed = pal[1].rgbGreen = pal[1].rgbBlue = 255;
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 		// ... resolution
 		FreeImage_SetDotsPerMeterX(dib, (unsigned)(resX/0.0254000 + 0.5));

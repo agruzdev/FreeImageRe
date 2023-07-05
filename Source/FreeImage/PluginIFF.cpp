@@ -275,13 +275,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (!dib)
 					return NULL;
 
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				if(pal != NULL) {
 					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib));
 					for (unsigned k = 0; k < palette_entries; k++) {					
-						io->read_proc(&pal[k].rgbRed, 1, 1, handle );
-						io->read_proc(&pal[k].rgbGreen, 1, 1, handle );
-						io->read_proc(&pal[k].rgbBlue, 1, 1, handle );
+						io->read_proc(&pal[k].red, 1, 1, handle );
+						io->read_proc(&pal[k].green, 1, 1, handle );
+						io->read_proc(&pal[k].blue, 1, 1, handle );
 					}
 				}
 			} else if (ch_type == ID_BODY) {

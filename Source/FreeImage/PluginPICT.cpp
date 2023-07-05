@@ -371,7 +371,7 @@ ReadPixmap( FreeImageIO *io, fi_handle handle, MacpixMap* pPixMap ) {
 Reads a mac color table into a bitmap palette.
 */
 static void 
-ReadColorTable( FreeImageIO *io, fi_handle handle, WORD* pNumColors, RGBQUAD* pPal ) {
+ReadColorTable( FreeImageIO *io, fi_handle handle, WORD* pNumColors, FIRGBA8* pPal ) {
 	LONG        ctSeed;
 	WORD        ctFlags;
 	WORD        val;
@@ -394,9 +394,9 @@ ReadColorTable( FreeImageIO *io, fi_handle handle, WORD* pNumColors, RGBQUAD* pP
 			throw "pixel value greater than color table size.";
 		}
 		// Mac colour tables contain 16-bit values for R, G, and B...
-		pPal[val].rgbRed = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
-		pPal[val].rgbGreen = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
-		pPal[val].rgbBlue = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
+		pPal[val].red = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
+		pPal[val].green = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
+		pPal[val].blue = ((BYTE) (((WORD) (Read16( io, handle )) >> 8) & 0xFF));
 	}
 }
 
@@ -830,16 +830,16 @@ DecodeBitmap( FreeImageIO *io, fi_handle handle, FIBITMAP* dib, BOOL isRegion, M
 		SkipPolyOrRegion( io, handle );
 	}
 	
-	RGBQUAD* pal = FreeImage_GetPalette( dib );
+	FIRGBA8* pal = FreeImage_GetPalette( dib );
 	if ( !pal ) {
 		throw "No palette for bitmap!";
 	}
 	
 	for (int i = 0; i < 2; i++) {
 		unsigned char val = i ? 0xFF : 0x0;
-		pal[i].rgbRed = val;
-		pal[i].rgbGreen = val;
-		pal[i].rgbBlue = val;
+		pal[i].red = val;
+		pal[i].green = val;
+		pal[i].blue = val;
 	}
 	
 	UnpackBits( io, handle, dib, bounds, rowBytes, 1 );
@@ -849,19 +849,19 @@ static void
 DecodePixmap( FreeImageIO *io, fi_handle handle, FIBITMAP* dib, BOOL isRegion, MacpixMap* pixMap, WORD rowBytes ) {
 	// Read mac colour table into windows palette.
 	WORD numColors;    // Palette size.
-	RGBQUAD ct[256];
+	FIRGBA8 ct[256];
 	
 	ReadColorTable( io, handle, &numColors, ct );
 	if ( FreeImage_GetBPP( dib ) == 8 ) {
-		RGBQUAD* pal = FreeImage_GetPalette( dib );
+		FIRGBA8* pal = FreeImage_GetPalette( dib );
 		if ( !pal ) {
 			throw "No palette for bitmap!";
 		}
 		
 		for (int i = 0; i < numColors; i++) {
-			pal[i].rgbRed = ct[ i ].rgbRed;
-			pal[i].rgbGreen = ct[ i ].rgbGreen;
-			pal[i].rgbBlue = ct[ i ].rgbBlue;
+			pal[i].red = ct[ i ].red;
+			pal[i].green = ct[ i ].green;
+			pal[i].blue = ct[ i ].blue;
 		}
 	}
 	
@@ -1048,7 +1048,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								ReadRect( io, handle, &p.Bounds );
 								ReadPixmap( io, handle, &p);
 								
-								RGBQUAD ct[256];
+								FIRGBA8 ct[256];
 								ReadColorTable(io, handle, &numColors, ct );
 								SkipBits( io, handle, &p.Bounds, rowBytes, p.pixelSize );
 								break;

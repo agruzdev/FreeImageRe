@@ -396,12 +396,12 @@ bool psdColourModeData::Write(FreeImageIO *io, fi_handle handle) {
 }
 
 bool psdColourModeData::FillPalette(FIBITMAP *dib) {
-	RGBQUAD *pal = FreeImage_GetPalette(dib);
+	FIRGBA8 *pal = FreeImage_GetPalette(dib);
 	if(pal) {
 		for (int i = 0; i < 256; i++) {
-			pal[i].rgbRed	= _plColourData[i + 0*256];
-			pal[i].rgbGreen = _plColourData[i + 1*256];
-			pal[i].rgbBlue	= _plColourData[i + 2*256];
+			pal[i].red	= _plColourData[i + 0*256];
+			pal[i].green = _plColourData[i + 1*256];
+			pal[i].blue	= _plColourData[i + 2*256];
 		}
 		return true;
 	}
@@ -2103,13 +2103,13 @@ bool psdParser::Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page,
 	_colourModeData._Length = 0;
 	_colourModeData._plColourData = NULL;
 	if (FreeImage_GetPalette(dib) != NULL) {
-		RGBQUAD *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		_colourModeData._Length = FreeImage_GetColorsUsed(dib) * 3;
 		_colourModeData._plColourData = new BYTE[_colourModeData._Length];
 		for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++ ) {
-			_colourModeData._plColourData[i + 0*256] = pal[i].rgbRed;
-			_colourModeData._plColourData[i + 1*256] = pal[i].rgbGreen;
-			_colourModeData._plColourData[i + 2*256] = pal[i].rgbBlue;
+			_colourModeData._plColourData[i + 0*256] = pal[i].red;
+			_colourModeData._plColourData[i + 1*256] = pal[i].green;
+			_colourModeData._plColourData[i + 2*256] = pal[i].blue;
 		}
 	}
 

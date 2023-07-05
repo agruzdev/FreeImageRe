@@ -849,13 +849,13 @@ FreeImage_Rotate(FIBITMAP *dib, double angle, const void *bkcolor) {
 					if(!dst) throw(1);
 
 					// build a greyscale palette
-					RGBQUAD *dst_pal = FreeImage_GetPalette(dst);
+					FIRGBA8 *dst_pal = FreeImage_GetPalette(dst);
 					if(FreeImage_GetColorType(dib) == FIC_MINISBLACK) {
-						dst_pal[0].rgbRed = dst_pal[0].rgbGreen = dst_pal[0].rgbBlue = 0;
-						dst_pal[1].rgbRed = dst_pal[1].rgbGreen = dst_pal[1].rgbBlue = 255;			
+						dst_pal[0].red = dst_pal[0].green = dst_pal[0].blue = 0;
+						dst_pal[1].red = dst_pal[1].green = dst_pal[1].blue = 255;			
 					} else {
-						dst_pal[0].rgbRed = dst_pal[0].rgbGreen = dst_pal[0].rgbBlue = 255;
-						dst_pal[1].rgbRed = dst_pal[1].rgbGreen = dst_pal[1].rgbBlue = 0;			
+						dst_pal[0].red = dst_pal[0].green = dst_pal[0].blue = 255;
+						dst_pal[1].red = dst_pal[1].green = dst_pal[1].blue = 0;			
 					}
 
 					// copy metadata from src to dst
@@ -869,15 +869,15 @@ FreeImage_Rotate(FIBITMAP *dib, double angle, const void *bkcolor) {
 					
 					if(bpp == 8) {
 						// copy original palette to rotated bitmap
-						RGBQUAD *src_pal = FreeImage_GetPalette(dib);
-						RGBQUAD *dst_pal = FreeImage_GetPalette(dst);
-						memcpy(&dst_pal[0], &src_pal[0], 256 * sizeof(RGBQUAD));
+						FIRGBA8 *src_pal = FreeImage_GetPalette(dib);
+						FIRGBA8 *dst_pal = FreeImage_GetPalette(dst);
+						memcpy(&dst_pal[0], &src_pal[0], 256 * sizeof(FIRGBA8));
 
 						// copy transparency table 
 						FreeImage_SetTransparencyTable(dst, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 
 						// copy background color 
-						RGBQUAD bkcolor; 
+						FIRGBA8 bkcolor; 
 						if( FreeImage_GetBackgroundColor(dib, &bkcolor) ) {
 							FreeImage_SetBackgroundColor(dst, &bkcolor); 
 						}

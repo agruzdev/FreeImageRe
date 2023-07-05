@@ -90,11 +90,11 @@ CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, BOOL scale_linear) {
 	if(!dst) return NULL;
 
 	// build a greyscale palette
-	RGBQUAD *pal = FreeImage_GetPalette(dst);
+	FIRGBA8 *pal = FreeImage_GetPalette(dst);
 	for(int i = 0; i < 256; i++) {
-		pal[i].rgbRed = (BYTE)i;
-		pal[i].rgbGreen = (BYTE)i;
-		pal[i].rgbBlue = (BYTE)i;
+		pal[i].red = (BYTE)i;
+		pal[i].green = (BYTE)i;
+		pal[i].blue = (BYTE)i;
 	}
 
 	// convert the src image to dst

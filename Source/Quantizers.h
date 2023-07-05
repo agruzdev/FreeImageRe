@@ -58,7 +58,7 @@ protected:
 	FIBITMAP *m_dib;
 
 protected:
-    void Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, RGBQUAD *ReservePalette);
+    void Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, FIRGBA8 *ReservePalette);
 	void M3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2);
 	LONG Vol(Box *cube, LONG *mmt);
 	LONG Bottom(Box *cube, BYTE dir, LONG *mmt);
@@ -75,7 +75,7 @@ public:
 	// Destructor
 	~WuQuantizer();
 	// Quantizer - Return value: quantized 8-bit (color palette) DIB
-	FIBITMAP* Quantize(int PaletteSize, int ReserveSize, RGBQUAD *ReservePalette);
+	FIBITMAP* Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette);
 };
 
 
@@ -223,7 +223,7 @@ public:
 	1 => slower (but better), 30 => faster. Default value is 1
 	@return returns the quantized 8-bit (color palette) DIB
 	*/
-	FIBITMAP* Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *ReservePalette, int sampling = 1);
+	FIBITMAP* Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette, int sampling = 1);
 
 };
 
@@ -261,7 +261,7 @@ public:
 	 * @param dib input 24-bit or 32-bit bitmap to be quantized
 	 * @return returns the pseudo-quantized 8-bit bitmap
 	 */
-	FIBITMAP* Quantize(FIBITMAP *dib, int ReserveSize, RGBQUAD *ReservePalette);
+	FIBITMAP* Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette);
 
 protected:
 	/** The maximum size of a palette. */

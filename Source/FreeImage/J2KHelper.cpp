@@ -208,11 +208,11 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, BOOL heade
 
 				// build a greyscale palette
 				
-				RGBQUAD *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				for (int i = 0; i < 256; i++) {
-					pal[i].rgbRed	= (BYTE)i;
-					pal[i].rgbGreen = (BYTE)i;
-					pal[i].rgbBlue	= (BYTE)i;
+					pal[i].red	= (BYTE)i;
+					pal[i].green = (BYTE)i;
+					pal[i].blue	= (BYTE)i;
 				}
 
 				// load pixel data

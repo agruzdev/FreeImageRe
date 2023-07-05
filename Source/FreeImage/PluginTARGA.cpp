@@ -745,7 +745,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					
 				// read the palette (even if header only)
 
-				RGBQUAD *palette = FreeImage_GetPalette(dib);
+				FIRGBA8 *palette = FreeImage_GetPalette(dib);
 
 				if (header.color_map_type > 0) {
 					unsigned count, csize;
@@ -769,9 +769,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbRed   = (BYTE)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
-								palette[count].rgbGreen = (BYTE)((((*rgb555 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-								palette[count].rgbBlue  = (BYTE)((((*rgb555 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+								palette[count].red   = (BYTE)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+								palette[count].green = (BYTE)((((*rgb555 & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+								palette[count].blue  = (BYTE)((((*rgb555 & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
 								rgb555++;
 							}
 						}
@@ -783,9 +783,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbBlue  = bgr->b;
-								palette[count].rgbGreen = bgr->g;
-								palette[count].rgbRed   = bgr->r;
+								palette[count].blue  = bgr->b;
+								palette[count].green = bgr->g;
+								palette[count].red   = bgr->r;
 								bgr++;
 							}
 						}
@@ -802,9 +802,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
-								palette[count].rgbBlue  = bgra->b;
-								palette[count].rgbGreen = bgra->g;
-								palette[count].rgbRed   = bgra->r;
+								palette[count].blue  = bgra->b;
+								palette[count].green = bgra->g;
+								palette[count].red   = bgra->r;
 								// alpha
 								trns[count] = bgra->a;
 								bgra++;
@@ -824,8 +824,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if(th) {
-					RGBQUAD* pal = FreeImage_GetPalette(dib);
-					RGBQUAD* dst_pal = FreeImage_GetPalette(th);
+					FIRGBA8* pal = FreeImage_GetPalette(dib);
+					FIRGBA8* dst_pal = FreeImage_GetPalette(th);
 					if(dst_pal && pal) {
 						for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
 							dst_pal[i] = pal[i];
@@ -1328,7 +1328,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		return FALSE;
 	}
 
-	RGBQUAD *palette = FreeImage_GetPalette(dib);
+	FIRGBA8 *palette = FreeImage_GetPalette(dib);
 	const unsigned bpp = FreeImage_GetBPP(dib);
 
 	// write the file header
@@ -1384,9 +1384,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			BYTE *trns = FreeImage_GetTransparencyTable(dib);
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
-				bgra_pal[i].b = palette[i].rgbBlue;
-				bgra_pal[i].g = palette[i].rgbGreen;
-				bgra_pal[i].r = palette[i].rgbRed;
+				bgra_pal[i].b = palette[i].blue;
+				bgra_pal[i].g = palette[i].green;
+				bgra_pal[i].r = palette[i].red;
 				bgra_pal[i].a = trns[i];
 			}
 
@@ -1398,9 +1398,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			FILE_BGR *bgr_pal = (FILE_BGR*)malloc(header.cm_length * sizeof(FILE_BGR));
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
-				bgr_pal[i].b = palette[i].rgbBlue;
-				bgr_pal[i].g = palette[i].rgbGreen;
-				bgr_pal[i].r = palette[i].rgbRed;
+				bgr_pal[i].b = palette[i].blue;
+				bgr_pal[i].g = palette[i].green;
+				bgr_pal[i].r = palette[i].red;
 			}
 
 			io->write_proc(bgr_pal, sizeof(FILE_BGR), header.cm_length, handle);
@@ -1460,10 +1460,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						line_source = scanline;
 #else 
 					for (unsigned x = 0; x < width; ++x) {
-						RGBTRIPLE* trip = ((RGBTRIPLE *)scanline) + x;
-						line[0] = trip->rgbtBlue;
-						line[1] = trip->rgbtGreen;
-						line[2] = trip->rgbtRed;
+						FIRGB8* trip = ((FIRGB8 *)scanline) + x;
+						line[0] = trip->blue;
+						line[1] = trip->green;
+						line[2] = trip->red;
 
 						line += pixel_size;
 					}
@@ -1477,11 +1477,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					line_source = scanline;
 #else 
 					for (unsigned x = 0; x < width; ++x) {
-						RGBQUAD* quad = ((RGBQUAD *)scanline) + x;
-						line[0] = quad->rgbBlue;
-						line[1] = quad->rgbGreen;
-						line[2] = quad->rgbRed;
-						line[3] = quad->rgbReserved;
+						FIRGBA8* quad = ((FIRGBA8 *)scanline) + x;
+						line[0] = quad->blue;
+						line[1] = quad->green;
+						line[2] = quad->red;
+						line[3] = quad->alpha;
 						
 						line += pixel_size;
 					}
