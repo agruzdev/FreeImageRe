@@ -27,7 +27,7 @@
 
 // ----------------------------------------------------------
 
-BYTE * DLL_CALLCONV
+uint8_t * DLL_CALLCONV
 FreeImage_GetScanLine(FIBITMAP *dib, int scanline) {
 	if(!FreeImage_HasPixels(dib)) {
 		return NULL;
@@ -35,22 +35,22 @@ FreeImage_GetScanLine(FIBITMAP *dib, int scanline) {
 	return CalculateScanLine(FreeImage_GetBits(dib), FreeImage_GetPitch(dib), scanline);
 }
 
-BOOL DLL_CALLCONV
-FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
-	BYTE shift;
+FIBOOL DLL_CALLCONV
+FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, uint8_t *value) {
+	uint8_t shift;
 
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 1:
 				*value = (bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
 				break;
 			case 4:
-				shift = (BYTE)((1 - x % 2) << 2);
+				shift = (uint8_t)((1 - x % 2) << 2);
 				*value = (bits[x >> 1] & (0x0F << shift)) >> shift;
 				break;
 			case 8:
@@ -66,28 +66,28 @@ FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 16:
 			{
 				bits += 2*x;
-				WORD *pixel = (WORD *)bits;
+				uint16_t *pixel = (uint16_t *)bits;
 				if((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
-					value->blue		= (BYTE)((((*pixel & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
-					value->green		= (BYTE)((((*pixel & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
-					value->red		= (BYTE)((((*pixel & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
+					value->blue		= (uint8_t)((((*pixel & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
+					value->green		= (uint8_t)((((*pixel & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);
+					value->red		= (uint8_t)((((*pixel & FI16_565_RED_MASK) >> FI16_565_RED_SHIFT) * 0xFF) / 0x1F);
 					value->alpha	= 0;
 				} else {
-					value->blue		= (BYTE)((((*pixel & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
-					value->green		= (BYTE)((((*pixel & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
-					value->red		= (BYTE)((((*pixel & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
+					value->blue		= (uint8_t)((((*pixel & FI16_555_BLUE_MASK) >> FI16_555_BLUE_SHIFT) * 0xFF) / 0x1F);
+					value->green		= (uint8_t)((((*pixel & FI16_555_GREEN_MASK) >> FI16_555_GREEN_SHIFT) * 0xFF) / 0x1F);
+					value->red		= (uint8_t)((((*pixel & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
 					value->alpha	= 0;
 				}
 				break;
@@ -116,22 +116,22 @@ FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
-FreeImage_SetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
-	BYTE shift;
+FIBOOL DLL_CALLCONV
+FreeImage_SetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, uint8_t *value) {
+	uint8_t shift;
 
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 1:
 				*value ? bits[x >> 3] |= (0x80 >> (x & 0x7)) : bits[x >> 3] &= (0xFF7F >> (x & 0x7));
 				break;
 			case 4:
-				shift = (BYTE)((1 - x % 2) << 2);
+				shift = (uint8_t)((1 - x % 2) << 2);
 				bits[x >> 1] &= ~(0x0F << shift);
 				bits[x >> 1] |= ((*value & 0x0F) << shift);
 				break;
@@ -148,19 +148,19 @@ FreeImage_SetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, BYTE *value) {
 	return FALSE;
 }
 
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_SetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP))
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 16:
 			{
 				bits += 2*x;
-				WORD *pixel = (WORD *)bits;
+				uint16_t *pixel = (uint16_t *)bits;
 				if((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
 					*pixel = ((value->blue >> 3) << FI16_565_BLUE_SHIFT) |
 						((value->green >> 2) << FI16_565_GREEN_SHIFT) |

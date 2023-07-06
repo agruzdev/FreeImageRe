@@ -27,8 +27,8 @@
 // ----------------------------------------------------------
 
 void DLL_CALLCONV
-FreeImage_ConvertLine1To4(BYTE *target, BYTE *source, int width_in_pixels) {
-	BOOL hinibble = TRUE;
+FreeImage_ConvertLine1To4(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	FIBOOL hinibble = TRUE;
 	for (int cols = 0; cols < width_in_pixels; cols++){
 		if (hinibble == TRUE){
 			target[cols >> 1] = ((source[cols >> 3] & (0x80 >> (cols & 0x07))) != 0 ? 15 : 0) << 4;
@@ -42,9 +42,9 @@ FreeImage_ConvertLine1To4(BYTE *target, BYTE *source, int width_in_pixels) {
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine8To4(BYTE *target, BYTE *source, int width_in_pixels, FIRGBA8 *palette) {
-	BOOL hinibble = TRUE;
-	BYTE index;
+FreeImage_ConvertLine8To4(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
+	FIBOOL hinibble = TRUE;
+	uint8_t index;
 
 	for (int cols = 0; cols < width_in_pixels; cols++){
 		index = GREY(palette[source[cols]].red, palette[source[cols]].green, palette[source[cols]].blue);
@@ -59,9 +59,9 @@ FreeImage_ConvertLine8To4(BYTE *target, BYTE *source, int width_in_pixels, FIRGB
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To4_555(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
-	BOOL hinibble = TRUE;
+FreeImage_ConvertLine16To4_555(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
+	FIBOOL hinibble = TRUE;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		if (hinibble) {
@@ -81,9 +81,9 @@ FreeImage_ConvertLine16To4_555(BYTE *target, BYTE *source, int width_in_pixels) 
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine16To4_565(BYTE *target, BYTE *source, int width_in_pixels) {
-	WORD *bits = (WORD *)source;
-	BOOL hinibble = TRUE;
+FreeImage_ConvertLine16To4_565(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	uint16_t *bits = (uint16_t *)source;
+	FIBOOL hinibble = TRUE;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		if (hinibble) {
@@ -103,8 +103,8 @@ FreeImage_ConvertLine16To4_565(BYTE *target, BYTE *source, int width_in_pixels) 
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine24To4(BYTE *target, BYTE *source, int width_in_pixels) {
-	BOOL hinibble = TRUE;
+FreeImage_ConvertLine24To4(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	FIBOOL hinibble = TRUE;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		if (hinibble) {
@@ -119,8 +119,8 @@ FreeImage_ConvertLine24To4(BYTE *target, BYTE *source, int width_in_pixels) {
 }
 
 void DLL_CALLCONV
-FreeImage_ConvertLine32To4(BYTE *target, BYTE *source, int width_in_pixels) {
-	BOOL hinibble = TRUE;
+FreeImage_ConvertLine32To4(uint8_t *target, uint8_t *source, int width_in_pixels) {
+	FIBOOL hinibble = TRUE;
 
 	for (int cols = 0; cols < width_in_pixels; cols++) {
 		if (hinibble) {
@@ -161,9 +161,9 @@ FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
 		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
 		for(int i = 0; i < 16; i++) {
-			new_pal[i].red	= (BYTE)((i << 4) + i);
-			new_pal[i].green = (BYTE)((i << 4) + i);
-			new_pal[i].blue	= (BYTE)((i << 4) + i);
+			new_pal[i].red	= (uint8_t)((i << 4) + i);
+			new_pal[i].green = (uint8_t)((i << 4) + i);
+			new_pal[i].blue	= (uint8_t)((i << 4) + i);
 		}
 
 		switch(bpp) {
@@ -183,7 +183,7 @@ FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
 					// Reverse the grayscale palette
 
 					for(int i = 0; i < 16; i++) {
-						new_pal[i].red = new_pal[i].green = new_pal[i].blue = (BYTE)(255 - ((i << 4) + i));
+						new_pal[i].red = new_pal[i].green = new_pal[i].blue = (uint8_t)(255 - ((i << 4) + i));
 					}
 				}
 

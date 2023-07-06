@@ -31,4 +31,5 @@ Version 0.1:
  - Minimalistic support of RGB(A) 32bits per channel for loading and conversion
  - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
 
-
+Version 0.2:
+ - Removed Windows datatypes to anoid collisions

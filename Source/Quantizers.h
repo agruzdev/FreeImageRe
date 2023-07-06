@@ -49,8 +49,8 @@ typedef struct tagBox {
 
 protected:
     float *gm2;
-	LONG *wt, *mr, *mg, *mb;
-	WORD *Qadd;
+	int32_t *wt, *mr, *mg, *mb;
+	uint16_t *Qadd;
 
 	// DIB data
 	unsigned width, height;
@@ -58,16 +58,16 @@ protected:
 	FIBITMAP *m_dib;
 
 protected:
-    void Hist3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2, int ReserveSize, FIRGBA8 *ReservePalette);
-	void M3D(LONG *vwt, LONG *vmr, LONG *vmg, LONG *vmb, float *m2);
-	LONG Vol(Box *cube, LONG *mmt);
-	LONG Bottom(Box *cube, BYTE dir, LONG *mmt);
-	LONG Top(Box *cube, BYTE dir, int pos, LONG *mmt);
+    void Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, float *m2, int ReserveSize, FIRGBA8 *ReservePalette);
+	void M3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, float *m2);
+	int32_t Vol(Box *cube, int32_t *mmt);
+	int32_t Bottom(Box *cube, uint8_t dir, int32_t *mmt);
+	int32_t Top(Box *cube, uint8_t dir, int pos, int32_t *mmt);
 	float Var(Box *cube);
-	float Maximize(Box *cube, BYTE dir, int first, int last , int *cut,
-				   LONG whole_r, LONG whole_g, LONG whole_b, LONG whole_w);
+	float Maximize(Box *cube, uint8_t dir, int first, int last , int *cut,
+				   int32_t whole_r, int32_t whole_g, int32_t whole_b, int32_t whole_w);
 	bool Cut(Box *set1, Box *set2);
-	void Mark(Box *cube, int label, BYTE *tag);
+	void Mark(Box *cube, int label, uint8_t *tag);
 
 public:
 	// Constructor - Input parameter: DIB 24-bit to be quantized

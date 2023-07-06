@@ -90,7 +90,7 @@ G3GetFileSize(FreeImageIO *io, fi_handle handle) {
     return fileSize;
 }
 
-static BOOL 
+static FIBOOL 
 G3ReadFile(FreeImageIO *io, fi_handle handle, uint8_t *tif_rawdata, tmsize_t tif_rawdatasize) {
 	return ((tmsize_t)(io->read_proc(tif_rawdata, (unsigned)tif_rawdatasize, 1, handle) * tif_rawdatasize) == tif_rawdatasize);
 }
@@ -101,8 +101,8 @@ G3ReadFile(FreeImageIO *io, fi_handle handle, uint8_t *tif_rawdata, tmsize_t tif
 
 static int 
 copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int stretch, FIMEMORY *memory) {
-	BYTE *rowbuf = NULL;
-	BYTE *refbuf = NULL;
+	uint8_t *rowbuf = NULL;
+	uint8_t *refbuf = NULL;
 	uint32_t row;
 	uint16_t badrun;
 	uint16_t	badfaxrun;
@@ -112,8 +112,8 @@ copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int 
 	try {
 
 		uint32_t linesize = TIFFhowmany8(xsize);
-		rowbuf = (BYTE*) _TIFFmalloc(linesize);
-		refbuf = (BYTE*) _TIFFmalloc(linesize);
+		rowbuf = (uint8_t*) _TIFFmalloc(linesize);
+		refbuf = (uint8_t*) _TIFFmalloc(linesize);
 		if (rowbuf == NULL || refbuf == NULL) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
@@ -223,7 +223,7 @@ MimeType() {
 	return "image/fax-g3";
 }
 
-static BOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV 
 SupportsExportDepth(int depth) {
 	return	FALSE;
 }
@@ -383,7 +383,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// read the decoded scanline and fill the bitmap data
 		FreeImage_SeekMemory(memory, 0, SEEK_SET);
-		BYTE *bits = FreeImage_GetScanLine(dib, rows - 1);
+		uint8_t *bits = FreeImage_GetScanLine(dib, rows - 1);
 		for(int k = 0; k < rows; k++) {
 			FreeImage_ReadMemory(bits, linesize, 1, memory);
 			bits -= pitch;

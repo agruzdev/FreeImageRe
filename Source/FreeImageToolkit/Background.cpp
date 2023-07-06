@@ -32,7 +32,7 @@
  @return Returns TRUE if the palette of the image specified contains only
  greyscales, FALSE otherwise.
  */
-static BOOL
+static FIBOOL
 IsVisualGreyscaleImage(FIBITMAP *dib) {
 
 	switch (FreeImage_GetBPP(dib)) {
@@ -137,8 +137,8 @@ GetPaletteIndex(FIBITMAP *dib, const FIRGBA8 *color, int options, FREE_IMAGE_COL
 	} else {
 		unsigned minimum = UINT_MAX;
 		unsigned ncolors = FreeImage_GetColorsUsed(dib);
-		BYTE *palette = (BYTE *)FreeImage_GetPalette(dib);
-		BYTE red, green, blue;
+		uint8_t *palette = (uint8_t *)FreeImage_GetPalette(dib);
+		uint8_t red, green, blue;
 		if (!IsVisualGreyscaleImage(dib)) {
 			red = color->red;
 			green = color->green;
@@ -183,19 +183,19 @@ GetPaletteIndex(FIBITMAP *dib, const FIRGBA8 *color, int options, FREE_IMAGE_COL
  @return Returns TRUE on success, FALSE otherwise. This function fails if any of
  the color arguments is a null pointer.
  */
-static BOOL
+static FIBOOL
 GetAlphaBlendedColor(const FIRGBA8 *bgcolor, const FIRGBA8 *fgcolor, FIRGBA8 *blended) {
 	
 	if ((!bgcolor) || (!fgcolor) || (!blended)) {
 		return FALSE;
 	}
 	
-	BYTE alpha = fgcolor->alpha;
-	BYTE not_alpha = ~alpha;
+	uint8_t alpha = fgcolor->alpha;
+	uint8_t not_alpha = ~alpha;
 	
-	blended->red = (BYTE)( ((WORD)fgcolor->red * alpha + not_alpha * (WORD)bgcolor->red)   >> 8 );
-	blended->green = (BYTE)( ((WORD)fgcolor->green * alpha + not_alpha * (WORD)bgcolor->green) >> 8) ;
-	blended->blue = (BYTE)(((WORD)fgcolor->blue * alpha + not_alpha * (WORD)bgcolor->blue) >> 8);
+	blended->red = (uint8_t)( ((uint16_t)fgcolor->red * alpha + not_alpha * (uint16_t)bgcolor->red)   >> 8 );
+	blended->green = (uint8_t)( ((uint16_t)fgcolor->green * alpha + not_alpha * (uint16_t)bgcolor->green) >> 8) ;
+	blended->blue = (uint8_t)(((uint16_t)fgcolor->blue * alpha + not_alpha * (uint16_t)bgcolor->blue) >> 8);
 	blended->alpha = 0xFF;
 
 	return TRUE;
@@ -211,7 +211,7 @@ GetAlphaBlendedColor(const FIRGBA8 *bgcolor, const FIRGBA8 *fgcolor, FIRGBA8 *bl
  @return Returns TRUE on success, FALSE otherwise. This function fails if any of
  the dib and color is NULL or the provided image is not a FIT_BITMAP image.
  */
-static BOOL
+static FIBOOL
 FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 
 	if ((!dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) {
@@ -230,10 +230,10 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 	FREE_IMAGE_COLOR_TYPE color_type = FreeImage_GetColorType(dib);
 	
 	// get a pointer to the first scanline (bottom line)
-	BYTE *src_bits = FreeImage_GetScanLine(dib, 0);
-	BYTE *dst_bits = src_bits;	
+	uint8_t *src_bits = FreeImage_GetScanLine(dib, 0);
+	uint8_t *dst_bits = src_bits;	
 	
-	BOOL supports_alpha = ((bpp >= 24) || ((bpp == 8) && (color_type != FIC_PALETTE)));
+	FIBOOL supports_alpha = ((bpp >= 24) || ((bpp == 8) && (color_type != FIC_PALETTE)));
 	
 	// Check for RGBA case if bitmap supports alpha 
 	// blending (8-bit greyscale, 24- or 32-bit images)
@@ -310,9 +310,9 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 			break;
 		}
 		case 16: {
-			WORD wcolor = RGBQUAD_TO_WORD(dib, color_intl);
+			uint16_t wcolor = RGBQUAD_TO_WORD(dib, color_intl);
 			for (unsigned x = 0; x < width; x++) {
-				((WORD *)dst_bits)[x] = wcolor;
+				((uint16_t *)dst_bits)[x] = wcolor;
 			}
 			break;
 		}
@@ -417,7 +417,7 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
  @return Returns TRUE on success, FALSE otherwise. This function fails if any of
  dib and color is NULL.
  */
-BOOL DLL_CALLCONV
+FIBOOL DLL_CALLCONV
 FreeImage_FillBackground(FIBITMAP *dib, const void *color, int options) {
 
 	if (!FreeImage_HasPixels(dib)) {
@@ -435,8 +435,8 @@ FreeImage_FillBackground(FIBITMAP *dib, const void *color, int options) {
 	
 	// first, construct the first scanline (bottom line)
 	unsigned bytespp = (FreeImage_GetBPP(dib) / 8);
-	BYTE *src_bits = FreeImage_GetScanLine(dib, 0);
-	BYTE *dst_bits = src_bits;
+	uint8_t *src_bits = FreeImage_GetScanLine(dib, 0);
+	uint8_t *dst_bits = src_bits;
 	for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 		memcpy(dst_bits, color, bytespp);
 		dst_bits += bytespp;
@@ -555,7 +555,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 						// Otherwise inject the specified color into the so far
 						// black-only palette. We use color->rgbReserved as the
 						// desired palette index.
-						BYTE index = ((FIRGBA8 *)color)->alpha & 0x01;
+						uint8_t index = ((FIRGBA8 *)color)->alpha & 0x01;
 						upal[index] = *urgb & 0x00FFFFFF;  
 					}
 					options |= FI_COLOR_ALPHA_IS_INDEX;
@@ -586,7 +586,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 						// Otherwise inject the specified color into the so far
 						// black-only palette. We use color->rgbReserved as the
 						// desired palette index.
-						BYTE index = (rgb->alpha & 0x0F);
+						uint8_t index = (rgb->alpha & 0x0F);
 						((unsigned *)pal)[index] = *((unsigned *)rgb) & 0x00FFFFFF;
 					}
 					options |= FI_COLOR_ALPHA_IS_INDEX;
@@ -617,7 +617,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 						// Otherwise inject the specified color into the so far
 						// black-only palette. We use color->rgbReserved as the
 						// desired palette index.
-						BYTE index = rgb->alpha;
+						uint8_t index = rgb->alpha;
 						((unsigned *)pal)[index] = *((unsigned *)rgb) & 0x00FFFFFF;  
 					}
 					options |= FI_COLOR_ALPHA_IS_INDEX;
@@ -627,8 +627,8 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 				break;
 			}
 			case 16: {
-				WORD wcolor = (type == FIT_BITMAP) ?
-					RGBQUAD_TO_WORD(bitmap, ((FIRGBA8 *)color)) : *((WORD *)color);
+				uint16_t wcolor = (type == FIT_BITMAP) ?
+					RGBQUAD_TO_WORD(bitmap, ((FIRGBA8 *)color)) : *((uint16_t *)color);
 				if (wcolor != 0) {
 					FreeImage_FillBackground(bitmap, color, options);
 				}
@@ -637,7 +637,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 			default: {
 				int bytespp = bpp / 8;
 				for (int i = 0; i < bytespp; i++) {
-					if (((BYTE *)color)[i] != 0) {
+					if (((uint8_t *)color)[i] != 0) {
 						FreeImage_FillBackground(bitmap, color, options);
 						break;
 					}
@@ -847,8 +847,8 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 	} else {
 
 		int bytespp = bpp / 8;
-		BYTE *srcPtr = FreeImage_GetScanLine(src, height - 1 - ((top >= 0) ? 0 : -top));
-		BYTE *dstPtr = FreeImage_GetScanLine(dst, newHeight - 1 - ((top <= 0) ? 0 : top));
+		uint8_t *srcPtr = FreeImage_GetScanLine(src, height - 1 - ((top >= 0) ? 0 : -top));
+		uint8_t *dstPtr = FreeImage_GetScanLine(dst, newHeight - 1 - ((top <= 0) ? 0 : top));
 
 		unsigned srcPitch = FreeImage_GetPitch(src);
 		unsigned dstPitch = FreeImage_GetPitch(dst);

@@ -101,7 +101,7 @@ public:
  CResizeEngine<br>
  This class performs filtered zoom. It scales an image to the desired dimensions with 
  any of the CGenericFilter derived filter class.<br>
- It works with FIT_BITMAP buffers, WORD buffers (FIT_UINT16, FIT_RGB16, FIT_RGBA16) 
+ It works with FIT_BITMAP buffers, uint16_t buffers (FIT_UINT16, FIT_RGB16, FIT_RGBA16) 
  and float buffers (FIT_FLOAT, FIT_RGBF, FIT_RGBAF).<br><br>
 
  <b>References</b> : <br>

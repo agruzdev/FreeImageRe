@@ -39,7 +39,7 @@ For colour images, the computation is done separately for R, G, and B samples.
 @see FreeImage_IsTransparent, FreeImage_HasBackgroundColor
 */
 FIBITMAP * DLL_CALLCONV
-FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP *bg) {
+FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP *bg) {
 	if(!FreeImage_HasPixels(fg)) return NULL;
 
 	int width  = FreeImage_GetWidth(fg);
@@ -61,8 +61,8 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP
 
 	
 	int x, y, c;
-	BYTE alpha = 0, not_alpha;
-	BYTE index;
+	uint8_t alpha = 0, not_alpha;
+	uint8_t index;
 	FIRGBA8 fgc;	// foreground color
 	FIRGBA8 bkc;	// background color
 
@@ -77,11 +77,11 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP
 	FIRGBA8 *pal = FreeImage_GetPalette(fg);
 
 	// retrieve the alpha table from the foreground image
-	BOOL bIsTransparent = FreeImage_IsTransparent(fg);
-	BYTE *trns = FreeImage_GetTransparencyTable(fg);
+	FIBOOL bIsTransparent = FreeImage_IsTransparent(fg);
+	uint8_t *trns = FreeImage_GetTransparencyTable(fg);
 
 	// retrieve the background color from the foreground image
-	BOOL bHasBkColor = FALSE;
+	FIBOOL bHasBkColor = FALSE;
 
 	if(useFileBkg && FreeImage_HasBackgroundColor(fg)) {
 		FreeImage_GetBackgroundColor(fg, &bkc);
@@ -101,11 +101,11 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP
 
 	for(y = 0; y < height; y++) {
 		// foreground
-		BYTE *fg_bits = FreeImage_GetScanLine(fg, y);
+		uint8_t *fg_bits = FreeImage_GetScanLine(fg, y);
 		// background
-		BYTE *bg_bits = FreeImage_GetScanLine(bg, y);
+		uint8_t *bg_bits = FreeImage_GetScanLine(bg, y);
 		// composite image
-		BYTE *cp_bits = FreeImage_GetScanLine(composite, y);
+		uint8_t *cp_bits = FreeImage_GetScanLine(composite, y);
 
 		for(x = 0; x < width; x++) {
 
@@ -144,9 +144,9 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP
 					// use a checkerboard pattern
 					c = (((y & 0x8) == 0) ^ ((x & 0x8) == 0)) * 192;
 					c = c ? c : 255;
-					bkc.blue  = (BYTE)c;
-					bkc.green = (BYTE)c;
-					bkc.red   = (BYTE)c;
+					bkc.blue  = (uint8_t)c;
+					bkc.green = (uint8_t)c;
+					bkc.red   = (uint8_t)c;
 				}
 			}
 
@@ -166,10 +166,10 @@ FreeImage_Composite(FIBITMAP *fg, BOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP
 			}
 			else {
 				// output = alpha * foreground + (1-alpha) * background
-				not_alpha = (BYTE)~alpha;
-				cp_bits[FI_RGBA_BLUE] = (BYTE)((alpha * (WORD)fgc.blue  + not_alpha * (WORD)bkc.blue) >> 8);
-				cp_bits[FI_RGBA_GREEN] = (BYTE)((alpha * (WORD)fgc.green + not_alpha * (WORD)bkc.green) >> 8);
-				cp_bits[FI_RGBA_RED] = (BYTE)((alpha * (WORD)fgc.red   + not_alpha * (WORD)bkc.red) >> 8);
+				not_alpha = (uint8_t)~alpha;
+				cp_bits[FI_RGBA_BLUE] = (uint8_t)((alpha * (uint16_t)fgc.blue  + not_alpha * (uint16_t)bkc.blue) >> 8);
+				cp_bits[FI_RGBA_GREEN] = (uint8_t)((alpha * (uint16_t)fgc.green + not_alpha * (uint16_t)bkc.green) >> 8);
+				cp_bits[FI_RGBA_RED] = (uint8_t)((alpha * (uint16_t)fgc.red   + not_alpha * (uint16_t)bkc.red) >> 8);
 			}
 
 			fg_bits += bytespp;
@@ -192,7 +192,7 @@ channel(x, y) = channel(x, y) * alpha_channel(x, y) / 255
 @param dib Input/Output dib to be premultiplied
 @return Returns TRUE on success, FALSE otherwise (e.g. when the bitdepth of the source dib cannot be handled). 
 */
-BOOL DLL_CALLCONV 
+FIBOOL DLL_CALLCONV 
 FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 	if (!FreeImage_HasPixels(dib)) return FALSE;
 	
@@ -204,9 +204,9 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 	int height = FreeImage_GetHeight(dib);
 
 	for(int y = 0; y < height; y++) {
-		BYTE *bits = FreeImage_GetScanLine(dib, y);
+		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 		for (int x = 0; x < width; x++, bits += 4) {
-			const BYTE alpha = bits[FI_RGBA_ALPHA];
+			const uint8_t alpha = bits[FI_RGBA_ALPHA];
 			// slightly faster: care for two special cases
 			if(alpha == 0x00) {
 				// special case for alpha == 0x00
@@ -219,9 +219,9 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 				// color * 0xFF / 0xFF = color
 				continue;
 			} else {
-				bits[FI_RGBA_BLUE] = (BYTE)( (alpha * (WORD)bits[FI_RGBA_BLUE] + 127) / 255 );
-				bits[FI_RGBA_GREEN] = (BYTE)( (alpha * (WORD)bits[FI_RGBA_GREEN] + 127) / 255 );
-				bits[FI_RGBA_RED] = (BYTE)( (alpha * (WORD)bits[FI_RGBA_RED] + 127) / 255 );
+				bits[FI_RGBA_BLUE] = (uint8_t)( (alpha * (uint16_t)bits[FI_RGBA_BLUE] + 127) / 255 );
+				bits[FI_RGBA_GREEN] = (uint8_t)( (alpha * (uint16_t)bits[FI_RGBA_GREEN] + 127) / 255 );
+				bits[FI_RGBA_RED] = (uint8_t)( (alpha * (uint16_t)bits[FI_RGBA_RED] + 127) / 255 );
 			}
 		}
 	}
