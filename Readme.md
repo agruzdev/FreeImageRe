@@ -4,6 +4,8 @@ Fork of [the FreeImage project](https://freeimage.sourceforge.io/) in order to s
 
 Also small extensions and fixes can be added.
 
+The dynamic library is binary compatible with FreeImage 3.18 and can replace it.
+
 
 ### Licensing
 
@@ -32,4 +34,4 @@ Version 0.1:
  - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
 
 Version 0.2:
- - Removed Windows datatypes to anoid collisions
+ - Removed Windows datatypes to avoid collisions
