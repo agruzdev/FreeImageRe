@@ -93,21 +93,15 @@
 // Color-Order:
 // The specified order of color components red, green and blue affects 24-
 // and 32-bit images of type FIT_BITMAP as well as the colors that are part
-// of a color palette. All other images always use RGB order. By default,
-// color order is coupled to endianness:
-// little-endian -> BGR
-// big-endian    -> RGB
+// of a color palette. All other images always use RGB order.
+// By default, color order is RGB.
 // However, you can always define FREEIMAGE_COLORORDER to any of the known
 // orders FREEIMAGE_COLORORDER_BGR (0) and FREEIMAGE_COLORORDER_RGB (1) to
 // specify your preferred color order.
 #define FREEIMAGE_COLORORDER_BGR    0
 #define FREEIMAGE_COLORORDER_RGB    1
 #if (!defined(FREEIMAGE_COLORORDER)) || ((FREEIMAGE_COLORORDER != FREEIMAGE_COLORORDER_BGR) && (FREEIMAGE_COLORORDER != FREEIMAGE_COLORORDER_RGB))
-	#if defined(FREEIMAGE_BIGENDIAN)
-		#define FREEIMAGE_COLORORDER FREEIMAGE_COLORORDER_RGB
-	#else
-		#define FREEIMAGE_COLORORDER FREEIMAGE_COLORORDER_BGR
-	#endif // FREEIMAGE_BIGENDIAN
+	#define FREEIMAGE_COLORORDER FREEIMAGE_COLORORDER_RGB
 #endif // FREEIMAGE_COLORORDER
 
 // Ensure 4-byte enums if we're using Borland C++ compilers
