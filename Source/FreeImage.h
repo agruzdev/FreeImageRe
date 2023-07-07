@@ -1005,7 +1005,13 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertFromRawBits(uint8_t *bits, int w
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertFromRawBitsEx(FIBOOL copySource, uint8_t *bits, FREE_IMAGE_TYPE type, int width, int height, int pitch, unsigned bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask, FIBOOL topdown FI_DEFAULT(FALSE));
 DLL_API void DLL_CALLCONV FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask, FIBOOL topdown FI_DEFAULT(FALSE));
 
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToFloat(FIBITMAP *dib);
+/**
+ * Converts an image to a FIT_FLOAT image type
+ * If scale_linear is TRUE, then resulting pixel values are normalized to [0, 1].
+ * In case of floating point types scale_linear implies only CLAMP to [0, 1] for backward compatibility.
+ * If scale_linear is FALSE, then resulting pixel value is casted to FIT_FLOAT as is.
+ */
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear FI_DEFAULT(TRUE));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToRGBF(FIBITMAP *dib);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToRGBAF(FIBITMAP *dib);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToUINT16(FIBITMAP *dib);
