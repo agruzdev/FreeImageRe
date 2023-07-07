@@ -112,6 +112,9 @@ int main(int argc, char *argv[]) {
 	FreeImage_DeInitialise();
 #endif
 
+	// other tests
+	testConvertToFloat();
+
 	return 0;
 }
 

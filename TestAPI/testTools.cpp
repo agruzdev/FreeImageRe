@@ -41,7 +41,7 @@
 */
 FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale) {
 	const double PI = 3.1415926535898;
-	BYTE sinTab[256];
+	uint8_t sinTab[256];
 
 	FIBITMAP *dst;
 	int i, j, x, y;
@@ -53,16 +53,16 @@ FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale) {
 		return NULL;
 
 	// build a greyscale palette
-	RGBQUAD *pal = FreeImage_GetPalette(dst);
+	FIRGBA8 *pal = FreeImage_GetPalette(dst);
 	for(i = 0; i < 256; i++) {
-		pal[i].rgbRed	= (BYTE)i;
-		pal[i].rgbGreen = (BYTE)i;
-		pal[i].rgbBlue	= (BYTE)i;
+		pal[i].red	= (uint8_t)i;
+		pal[i].green = (uint8_t)i;
+		pal[i].blue	= (uint8_t)i;
 	}
 
 	// build the sinus table
 	for(i = 0; i < 256; i++) {
-		sinTab[i] = (BYTE)(127.5 * sin(PI * (i - 127.5) / 127.5) + 127.5);
+		sinTab[i] = (uint8_t)(127.5 * sin(PI * (i - 127.5) / 127.5) + 127.5);
 	}
 
 	cX = width / 2;
@@ -70,7 +70,7 @@ FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale) {
 	
 	// create a zone plate
 	for(i = height, y = -cY; i--; y++) {
-		BYTE *dst_bits = FreeImage_GetScanLine(dst, i);
+		uint8_t *dst_bits = FreeImage_GetScanLine(dst, i);
 		for (j = width, x = -cX; j--; x++) {
 			d = ((x * x + y * y) * scale) >> 8;
 			dst_bits[j] = sinTab[d & 0xFF];

@@ -25,7 +25,7 @@
 /**
 Test thumbnail loading
 */
-static BOOL testLoadThumbnail(const char *lpszPathName, int flags) {
+static FIBOOL testLoadThumbnail(const char *lpszPathName, int flags) {
 	FIBITMAP *dib = NULL;
 
 	try {
@@ -55,8 +55,8 @@ static BOOL testLoadThumbnail(const char *lpszPathName, int flags) {
 /**
 Test thumbnail saving
 */
-static BOOL testSaveThumbnail(const char *lpszPathName, int flags) {
-	BOOL bResult = FALSE;
+static FIBOOL testSaveThumbnail(const char *lpszPathName, int flags) {
+	FIBOOL bResult = FALSE;
 	FIBITMAP *dib = NULL;
 	FIBITMAP *t_clone = NULL;
 	const char *lpszImagePathName = "exif_new_thumb.jpg";
@@ -123,7 +123,7 @@ static BOOL testSaveThumbnail(const char *lpszPathName, int flags) {
 Test thumbnail functions
 */
 void testThumbnail(const char *lpszPathName, int flags) {
-	BOOL bResult = FALSE;
+	FIBOOL bResult = FALSE;
 
 	printf("testThumbnail ...\n");
 

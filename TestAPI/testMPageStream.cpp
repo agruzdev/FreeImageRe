@@ -44,7 +44,7 @@ myTellProc(fi_handle handle) {
 	return ftell((FILE *)handle);
 }
 
-BOOL testStreamMultiPageOpen(const char *input, int flags) {
+FIBOOL testStreamMultiPageOpen(const char *input, int flags) {
 	// initialize your own IO functions
 
 	FreeImageIO io;
@@ -54,7 +54,7 @@ BOOL testStreamMultiPageOpen(const char *input, int flags) {
 	io.seek_proc  = mySeekProc;
 	io.tell_proc  = myTellProc;
 
-	BOOL bSuccess = FALSE;
+	FIBOOL bSuccess = FALSE;
 
 	// Open src stream in read-only mode
 	FILE *file = fopen(input, "r+b");	
@@ -85,7 +85,7 @@ BOOL testStreamMultiPageOpen(const char *input, int flags) {
 	return bSuccess;
 }
 
-BOOL testStreamMultiPageSave(const char *input, const char *output, int input_flag, int output_flag) {
+FIBOOL testStreamMultiPageSave(const char *input, const char *output, int input_flag, int output_flag) {
 	// initialize your own IO functions
 
 	FreeImageIO io;
@@ -95,9 +95,9 @@ BOOL testStreamMultiPageSave(const char *input, const char *output, int input_fl
 	io.seek_proc  = mySeekProc;
 	io.tell_proc  = myTellProc;
 
-	BOOL bCreateNew = FALSE;
-	BOOL bReadOnly = TRUE;
-	BOOL bMemoryCache = TRUE;
+	FIBOOL bCreateNew = FALSE;
+	FIBOOL bReadOnly = TRUE;
+	FIBOOL bMemoryCache = TRUE;
 
 	// Open src file (read-only, use memory cache)
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(input);
@@ -108,7 +108,7 @@ BOOL testStreamMultiPageSave(const char *input, const char *output, int input_fl
 		FILE *file = fopen(output, "w+b");	
 		if (file != NULL) {
 			// Save the multi-page file to the stream
-			BOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)file, output_flag);
+			FIBOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)file, output_flag);
 			assert(bSuccess);
 
 			// Close the dst stream
@@ -127,7 +127,7 @@ BOOL testStreamMultiPageSave(const char *input, const char *output, int input_fl
 	return FALSE;
 }
 
-BOOL testStreamMultiPageOpenSave(const char *input, const char *output, int input_flag, int output_flag) {
+FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int input_flag, int output_flag) {
 	// initialize your own IO functions
 
 	FreeImageIO io;
@@ -137,7 +137,7 @@ BOOL testStreamMultiPageOpenSave(const char *input, const char *output, int inpu
 	io.seek_proc  = mySeekProc;
 	io.tell_proc  = myTellProc;
 
-	BOOL bSuccess = FALSE;
+	FIBOOL bSuccess = FALSE;
 
 	// Open src stream in read-only mode
 	FILE *src_file = fopen(input, "r+b");
@@ -173,7 +173,7 @@ BOOL testStreamMultiPageOpenSave(const char *input, const char *output, int inpu
 			assert(dst_file);
 			if (dst_file != NULL) {
 				// Save the multi-page file to the stream (modifications are applied)
-				BOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)dst_file, output_flag);
+				FIBOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)dst_file, output_flag);
 				assert(bSuccess);
 
 				// Close the dst stream
@@ -197,7 +197,7 @@ BOOL testStreamMultiPageOpenSave(const char *input, const char *output, int inpu
 // --------------------------------------------------------------------------
 
 void testStreamMultiPage(const char *lpszPathName) {
-	BOOL bSuccess;
+	FIBOOL bSuccess;
 	
 	printf("testStreamMultiPage ...\n");
 

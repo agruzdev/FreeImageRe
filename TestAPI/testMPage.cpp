@@ -61,7 +61,7 @@ testBuildMPage(const char *src_filename, const char *dst_filename, FREE_IMAGE_FO
 
 void testMPageCache(const char *src_filename, const char *dst_filename) {
 
-	BOOL keep_cache_in_memory = FALSE;
+	FIBOOL keep_cache_in_memory = FALSE;
 
 	// get the file type
 	FREE_IMAGE_FORMAT src_fif = FreeImage_GetFileType(src_filename);
@@ -93,9 +93,9 @@ void testMPageCache(const char *src_filename, const char *dst_filename) {
 
 // --------------------------------------------------------------------------
 
-BOOL testCloneMultiPage(FREE_IMAGE_FORMAT fif, const char *input, const char *output, int output_flag) {
+FIBOOL testCloneMultiPage(FREE_IMAGE_FORMAT fif, const char *input, const char *output, int output_flag) {
 
-	BOOL bMemoryCache = TRUE;
+	FIBOOL bMemoryCache = TRUE;
 
 	// Open src file (read-only, use memory cache)
 	FIMULTIBITMAP *src = FreeImage_OpenMultiBitmap(fif, input, FALSE, TRUE, bMemoryCache);
@@ -134,9 +134,9 @@ BOOL testCloneMultiPage(FREE_IMAGE_FORMAT fif, const char *input, const char *ou
 
 void testLockDeleteMultiPage(const char *input) {
 
-	BOOL bCreateNew = FALSE;
-	BOOL bReadOnly = FALSE;
-	BOOL bMemoryCache = TRUE;
+	FIBOOL bCreateNew = FALSE;
+	FIBOOL bReadOnly = FALSE;
+	FIBOOL bMemoryCache = TRUE;
 
 	// Open src file (read/write, use memory cache)
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(input);

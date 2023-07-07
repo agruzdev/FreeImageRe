@@ -48,7 +48,7 @@ void showPlugins();
 // Image types test suite
 // ==========================================================
 void testAllocateCloneUnload(const char *lpszPathName);
-BOOL testAllocateCloneUnloadType(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height);
+FIBOOL testAllocateCloneUnloadType(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height);
 void testImageType(unsigned width, unsigned height);
 void testImageTypeTIFF(unsigned width, unsigned height);
 
@@ -93,6 +93,12 @@ void testThumbnail(const char *lpszPathName, int flags);
 void testWrappedBuffer(const char *lpszPathName, int flags);
 
 void testCreateView(const char *lpszPathName, int flags);
+
+// Other tests
+// ==========================================================
+
+void testConvertToFloat();
+
 
 #endif // TEST_FREEIMAGE_API_H
 

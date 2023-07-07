@@ -76,11 +76,11 @@ void testLoadMemIO(const char *lpszPathName) {
 	result = stat(lpszPathName, &buf);
 	if(result == 0) {
 		// allocate a memory buffer and load temporary data
-		BYTE *mem_buffer = (BYTE*)malloc(buf.st_size * sizeof(BYTE));
+		uint8_t *mem_buffer = (uint8_t*)malloc(buf.st_size * sizeof(uint8_t));
 		if(mem_buffer) {
 			FILE *stream = fopen(lpszPathName, "rb");
 			if(stream) {
-				fread(mem_buffer, sizeof(BYTE), buf.st_size, stream);
+				fread(mem_buffer, sizeof(uint8_t), buf.st_size, stream);
 				fclose(stream);
 
 				// attach the binary data to a memory stream
@@ -122,15 +122,15 @@ void testAcquireMemIO(const char *lpszPathName) {
 	FreeImage_Unload(dib);
 
 	// get the buffer from the memory stream
-	BYTE *mem_buffer = NULL;
-	DWORD size_in_bytes = 0;
+	uint8_t *mem_buffer = NULL;
+	uint32_t size_in_bytes = 0;
 
 	FreeImage_AcquireMemory(hmem, &mem_buffer, &size_in_bytes);
 
 	// save the buffer in a file stream
 	FILE *stream = fopen("buffer.png", "wb");
 	if(stream) {
-		fwrite(mem_buffer, sizeof(BYTE), size_in_bytes, stream);
+		fwrite(mem_buffer, sizeof(uint8_t), size_in_bytes, stream);
 		fclose(stream);
 	}
 

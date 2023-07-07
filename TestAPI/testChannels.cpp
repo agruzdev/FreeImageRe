@@ -26,7 +26,7 @@
 // ----------------------------------------------------------
 
 void test24BitsChannels(unsigned width, unsigned height) {
-	BOOL bResult = FALSE;
+	FIBOOL bResult = FALSE;
 
 	// create a test 8-bit image
 	FIBITMAP *src = createZonePlateImage(width, height, 128);
@@ -54,7 +54,7 @@ void test24BitsChannels(unsigned width, unsigned height) {
 }
 
 void test32BitsChannels(unsigned width, unsigned height) {
-	BOOL bResult = FALSE;
+	FIBOOL bResult = FALSE;
 
 	// create a test 8-bit image
 	FIBITMAP *src = createZonePlateImage(width, height, 128);
@@ -81,8 +81,8 @@ void test32BitsChannels(unsigned width, unsigned height) {
 	FreeImage_Unload(src);
 }
 
-void testRGBAChannels(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height, BOOL bUseAlpha) {
-	BOOL bResult = FALSE;
+void testRGBAChannels(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height, FIBOOL bUseAlpha) {
+	FIBOOL bResult = FALSE;
 
 	// create a test image
 	FIBITMAP *src = FreeImage_AllocateT(image_type, width, height);

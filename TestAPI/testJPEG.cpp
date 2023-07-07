@@ -26,8 +26,8 @@
 // ----------------------------------------------------------
 
 void testJPEGTransform(const char *src_file) {
-	BOOL bResult;
-	BOOL perfect;
+	FIBOOL bResult;
+	FIBOOL perfect;
 
 	// perfect transformation
 	perfect = TRUE;
@@ -67,7 +67,7 @@ void testJPEGTransform(const char *src_file) {
 
 void testJPEGCrop(const char *src_file) {
 	int left, top, right, bottom;
-	BOOL bResult;
+	FIBOOL bResult;
 
 	// perfect transformation
 	left = 50; top = 100; right = 359; bottom = 354;
@@ -81,8 +81,8 @@ void testJPEGCrop(const char *src_file) {
 }
 
 void testJPEGTransformCombined(const char *src_file, const char *dst_file) {
-	BOOL bResult;
-	BOOL perfect;
+	FIBOOL bResult;
+	FIBOOL perfect;
 	int left, top, right, bottom;
 
 	// perfect transformation required
@@ -183,8 +183,8 @@ void testJPEGTransformCombined(const char *src_file, const char *dst_file) {
 }
 
 void testJPEGSameFile(const char *src_file) {
-	BOOL bResult;
-	BOOL perfect;
+	FIBOOL bResult;
+	FIBOOL perfect;
 
 	// perfect transformation
 	perfect = TRUE;
