@@ -696,6 +696,7 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 	FIRGBA8 *rgb;
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
+	const FIICCPROFILE* icc_profile = FreeImage_GetICCProfile(dib);
 
 	// special bitmap type
 	if(image_type != FIT_BITMAP) {
@@ -715,13 +716,26 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 			}
 			break;
 
+			case FIT_RGB32:
 			case FIT_RGB16:
 			case FIT_RGBF:
+				if (icc_profile && ((icc_profile->flags & FIICC_COLOR_IS_YUV) == FIICC_COLOR_IS_YUV)) {
+					return FIC_YUV;
+				}
 				return FIC_RGB;
 
+			case FIT_RGBA32:
 			case FIT_RGBA16:
 			case FIT_RGBAF:
-				return (((FreeImage_GetICCProfile(dib)->flags) & FIICC_COLOR_IS_CMYK) == FIICC_COLOR_IS_CMYK) ? FIC_CMYK : FIC_RGBALPHA;
+				if (icc_profile) {
+					if ((icc_profile->flags & FIICC_COLOR_IS_CMYK) == FIICC_COLOR_IS_CMYK) {
+						return FIC_CMYK;
+					}
+					if ((icc_profile->flags & FIICC_COLOR_IS_YUV) == FIICC_COLOR_IS_YUV) {
+						return FIC_YUV;
+					}
+				}
+				return FIC_RGBALPHA;
 		}
 
 		return FIC_MINISBLACK;
@@ -786,8 +800,13 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 
 		case 32:
 		{
-			if (((FreeImage_GetICCProfile(dib)->flags) & FIICC_COLOR_IS_CMYK) == FIICC_COLOR_IS_CMYK) {
-				return FIC_CMYK;
+			if (icc_profile) {
+				if ((icc_profile->flags & FIICC_COLOR_IS_CMYK) == FIICC_COLOR_IS_CMYK) {
+					return FIC_CMYK;
+				}
+				if ((icc_profile->flags & FIICC_COLOR_IS_YUV) == FIICC_COLOR_IS_YUV) {
+					return FIC_YUV;
+				}
 			}
 
 			if( FreeImage_HasPixels(dib) ) {

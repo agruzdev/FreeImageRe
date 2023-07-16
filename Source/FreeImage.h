@@ -351,6 +351,7 @@ typedef struct FIBITMAPINFO {
 
 #define FIICC_DEFAULT			0x00
 #define FIICC_COLOR_IS_CMYK		0x01
+#define FIICC_COLOR_IS_YUV		0x02
 
 FI_STRUCT (FIICCPROFILE) { 
 	uint16_t    flags;	//! info flag
@@ -432,7 +433,8 @@ FI_ENUM(FREE_IMAGE_COLOR_TYPE) {
     FIC_RGB        = 2,		//! RGB color model
     FIC_PALETTE    = 3,		//! color map indexed
 	FIC_RGBALPHA   = 4,		//! RGB color model with alpha channel
-	FIC_CMYK       = 5		//! CMYK color model
+	FIC_CMYK       = 5,		//! CMYK color model
+	FIC_YUV        = 6		//! YUV color model
 };
 
 /** Color quantization algorithms.
@@ -764,6 +766,12 @@ typedef void (DLL_CALLCONV *FI_InitProc)(Plugin *plugin, int format_id);
 #define FI_RESCALE_TRUE_COLOR		0x01	//! for non-transparent greyscale images, convert to 24-bit if src bitdepth <= 8 (default is a 8-bit greyscale image). 
 #define FI_RESCALE_OMIT_METADATA	0x02	//! do not copy metadata to the rescaled image
 
+// Color conversion parameters
+FI_ENUM(FREE_IMAGE_CVT_COLOR_PARAM) {
+	FICPARAM_YUV_STANDARD_DEFAULT = 0,
+	FICPARAM_YUV_STANDARD_JPEG = FICPARAM_YUV_STANDARD_DEFAULT
+};
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -1020,6 +1028,8 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToRGBA16(FIBITMAP *dib);
 
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToStandardType(FIBITMAP *src, FIBOOL scale_linear FI_DEFAULT(TRUE));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ConvertToType(FIBITMAP *src, FREE_IMAGE_TYPE dst_type, FIBOOL scale_linear FI_DEFAULT(TRUE));
+
+DLL_API FIBITMAP* DLL_CALLCONV FreeImage_ConvertToColor(FIBITMAP* dib, FREE_IMAGE_COLOR_TYPE dst_color, int64_t fisrt_param FI_DEFAULT(0), int64_t second_param FI_DEFAULT(0));
 
 // Tone mapping operators ---------------------------------------------------
 

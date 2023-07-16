@@ -21,37 +21,12 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include "SimpleTools.h"
 
 // ----------------------------------------------------------
 //   smart convert X to Float
 // ----------------------------------------------------------
 
-namespace
-{
-
-	template <typename DstPixel_, typename SrcPixel_, typename UnaryOperation_>
-	void BitmapTransform(FIBITMAP* dst, FIBITMAP* src, UnaryOperation_ unary_op)
-	{
-		const unsigned width = FreeImage_GetWidth(src);
-		const unsigned height = FreeImage_GetHeight(src);
-		const unsigned src_pitch = FreeImage_GetPitch(src);
-		const unsigned dst_pitch = FreeImage_GetPitch(dst);
-
-		const uint8_t* src_bits = FreeImage_GetBits(src);
-		uint8_t* dst_bits = FreeImage_GetBits(dst);
-
-		for (unsigned y = 0; y < height; ++y) {
-			auto src_pixel = static_cast<const SrcPixel_*>(static_cast<const void*>(src_bits));
-			auto dst_pixel = static_cast<DstPixel_*>(static_cast<void*>(dst_bits));
-			for (unsigned x = 0; x < width; ++x) {
-				dst_pixel[x] = unary_op(src_pixel[x]);
-			}
-			src_bits += src_pitch;
-			dst_bits += dst_pitch;
-		}
-	}
-
-} // namespace
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear) {
@@ -146,7 +121,7 @@ FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear) {
 		case FIT_UINT32:
 			if (scale_linear) {
 				BitmapTransform<float, uint32_t>(dst, src, [](uint32_t v) {
-					return static_cast<float>(static_cast<double>(v) / static_cast<double > (std::numeric_limits<uint32_t>::max())); });
+					return static_cast<float>(static_cast<double>(v) / static_cast<double>(std::numeric_limits<uint32_t>::max())); });
 			}
 			else {
 				BitmapTransform<float, uint32_t>(dst, src, [](uint32_t v) { return static_cast<float>(v); });

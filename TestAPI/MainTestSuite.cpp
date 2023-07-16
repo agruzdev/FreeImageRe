@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
 
 	// other tests
 	testConvertToFloat();
+	testConvertToColor();
 
 	return 0;
 }

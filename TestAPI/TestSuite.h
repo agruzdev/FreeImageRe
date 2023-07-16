@@ -98,6 +98,7 @@ void testCreateView(const char *lpszPathName, int flags);
 // ==========================================================
 
 void testConvertToFloat();
+void testConvertToColor();
 
 
 #endif // TEST_FREEIMAGE_API_H
