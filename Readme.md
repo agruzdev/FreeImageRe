@@ -35,3 +35,6 @@ Version 0.1:
 
 Version 0.2:
  - Removed Windows datatypes to avoid collisions
+ - Added basic support for YUV images
+ - Added function FreeImage_ConvertToColor
+ - Added function FreeImage_FindMinMax

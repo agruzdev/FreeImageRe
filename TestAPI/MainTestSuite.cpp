@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();
+	testFindMinMax();
 
 	return 0;
 }

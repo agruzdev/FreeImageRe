@@ -21,6 +21,8 @@
 
 
 #include "TestSuite.h"
+#include <cmath>
+#include <memory>
 
 
 // ----------------------------------------------------------
@@ -78,5 +80,126 @@ FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale) {
 	}
 
 	return dst;
+}
+
+
+void testFindMinMax()
+{
+	{
+		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBF, 4, 4, 3 * sizeof(float)), &::FreeImage_Unload);
+		assert(bmp1 != nullptr);
+		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
+		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
+			const auto line = reinterpret_cast<FIRGBF*>(FreeImage_GetScanLine(bmp1.get(), y));
+			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
+				if (y == 1 && x == 2) {
+					line[x].red = line[x].green = line[x].blue = 0.8f;
+				}
+				else if (y == 2 && x == 3) {
+					line[x].red = line[x].green = line[x].blue = 0.1f;
+				}
+				else if (y == 0 && x == 0) {
+					line[x].red = line[x].green = line[x].blue = static_cast<float>(std::nan("1"));
+				}
+				else {
+					line[x].red   = 0.50;
+					line[x].green = 0.50;
+					line[x].blue  = 0.50;
+				}
+			}
+		}
+
+		FIRGBF* minPtr = nullptr;
+		FIRGBF* maxPtr = nullptr;
+		double minBrightness{};
+		double maxBrightness{};
+
+		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
+		assert(success);
+		assert(std::abs(maxBrightness - 0.8) < 1e-6);
+		assert(std::abs(minBrightness - 0.1) < 1e-6);
+
+		const auto stride = FreeImage_GetPitch(bmp1.get());
+		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 3 * sizeof(FIRGBF));
+		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 2 * sizeof(FIRGBF));
+	}
+
+	{
+		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_Allocate(4, 4, 32), &::FreeImage_Unload);
+		auto icc = FreeImage_CreateICCProfile(bmp1.get(), nullptr, 0);
+		icc->flags = FIICC_COLOR_IS_YUV;
+
+		assert(bmp1 != nullptr);
+		assert(FreeImage_GetColorType(bmp1.get()) == FIC_YUV);
+		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
+			const auto line = reinterpret_cast<FIRGBA8*>(FreeImage_GetScanLine(bmp1.get(), y));
+			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
+				if (y == 3 && x == 1) {
+					line[x].red   = 125;
+					line[x].green = 5;
+					line[x].blue  = 200;
+				}
+				else if (y == 2 && x == 2) {
+					line[x].red   = 10;
+					line[x].green = 0;
+					line[x].blue  = 180;
+				}
+				else {
+					line[x].red   = 100;
+					line[x].green = 255;
+					line[x].blue  = 0;
+				}
+			}
+		}
+
+		FIRGBA8* minPtr = nullptr;
+		FIRGBA8* maxPtr = nullptr;
+		double minBrightness{};
+		double maxBrightness{};
+
+		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
+		assert(success);
+		assert(std::abs(maxBrightness - 125.0) < 1e-6);
+		assert(std::abs(minBrightness - 10.0) < 1e-6);
+
+		const auto stride = FreeImage_GetPitch(bmp1.get());
+		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 2 * sizeof(FIRGBA8));
+		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 1 * sizeof(FIRGBA8));
+	}
+
+
+	{
+		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_Allocate(4, 4, 8), &::FreeImage_Unload);
+		assert(bmp1 != nullptr);
+		assert(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
+		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
+			const auto line = reinterpret_cast<uint8_t*>(FreeImage_GetScanLine(bmp1.get(), y));
+			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
+				if (y == 3 && x == 3) {
+					line[x] = 101;
+				}
+				else if (y == 1 && x == 0) {
+					line[x] = 8;
+				}
+				else {
+					line[x] = 100;
+				}
+			}
+		}
+
+		uint8_t* minPtr = nullptr;
+		uint8_t* maxPtr = nullptr;
+		double minBrightness{};
+		double maxBrightness{};
+
+		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
+		assert(success);
+		assert(std::abs(maxBrightness - 101.0) < 1e-6);
+		assert(std::abs(minBrightness - 8.0) < 1e-6);
+
+		const auto stride = FreeImage_GetPitch(bmp1.get());
+		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 0 * sizeof(uint8_t));
+		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 3 * sizeof(uint8_t));
+	}
 }
 

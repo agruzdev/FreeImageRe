@@ -1157,6 +1157,13 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int w
 // miscellaneous algorithms
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle FI_DEFAULT(3));
 
+/**
+ * Finds pixels with min and max brightness.
+ * For one channel images brighntess is pixel value. For RGB color brightness is compuyed according default YUV conversion.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr FI_DEFAULT(NULL), void** max_ptr FI_DEFAULT(NULL));
+
+
 // restore the borland-specific enum size option
 #if defined(__BORLANDC__)
 #pragma option pop
