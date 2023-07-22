@@ -117,6 +117,7 @@ int main(int argc, char *argv[]) {
 	testConvertToColor();
 	testFindMinMax();
 	testTmoClamp();
+	testTmoLinear();
 
 	return 0;
 }

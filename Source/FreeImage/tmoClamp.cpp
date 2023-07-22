@@ -8,13 +8,11 @@
 #include "SimpleTools.h"
 #include <algorithm>
 #include <memory>
+#include <limits>
 
-FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double low_value, double high_value)
+FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double max_value)
 {
     if (!FreeImage_HasPixels(src)) {
-        return nullptr;
-    }
-    if (low_value < 0.0 || high_value > 255.0 || low_value > high_value) {
         return nullptr;
     }
 
@@ -45,19 +43,42 @@ FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double low_value, double high_value)
         return nullptr;
     }
 
-    auto ClampFloat = [=](auto v) {
-        using Ty_ = decltype(v);
-        return static_cast<uint8_t>(std::clamp(v * static_cast<Ty_>(256.0), static_cast<Ty_>(low_value), static_cast<Ty_>(high_value)));
+    if (max_value <= 0.0) {
+        switch (imageType) {
+        case FIT_RGBAF:
+        case FIT_RGBF:
+        case FIT_DOUBLE:
+        case FIT_FLOAT:
+            max_value = 1.0;
+            break;
+        case FIT_RGBA32:
+        case FIT_RGB32:
+        case FIT_UINT32:
+            max_value = static_cast<double>(std::numeric_limits<uint32_t>::max());
+            break;
+        case FIT_RGBA16:
+        case FIT_RGB16:
+        case FIT_UINT16:
+            max_value = static_cast<double>(std::numeric_limits<uint16_t>::max());
+            break;
+        case FIT_BITMAP:
+            max_value = std::pow(2.0, FreeImage_GetBPP(src)) - 1.0;
+            break;
+        default:
+            return nullptr;
+        }
+    }
+
+    auto ClampFloat = [](auto v) {
+        return static_cast<uint8_t>(std::clamp(v * 256.0, 0.0, 255.0));
     };
 
-    auto ClampInt = [=](auto v) {
-        using Ty_ = decltype(v);
-        return static_cast<uint8_t>(std::clamp(v, static_cast<Ty_>(low_value), static_cast<Ty_>(high_value)));
+    auto ClampInt = [div = 256.0 / max_value](auto v) {
+        return static_cast<uint8_t>(std::clamp(v * div, 0.0, 255.0));
     };
 
     const unsigned h = FreeImage_GetHeight(src);
     const unsigned w = FreeImage_GetWidth(src);
-
     std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> dst(FreeImage_Allocate(w, h, dstBpp), &::FreeImage_Unload);
 
     switch (imageType) {
@@ -66,24 +87,24 @@ FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double low_value, double high_value)
             return FIRGBA8{ ClampFloat(p.red), ClampFloat(p.green), ClampFloat(p.blue), ClampFloat(p.alpha) };
         });
         break;
-    case FIT_RGBA32:
-        BitmapTransform<FIRGBA8, FIRGBA32>(dst.get(), src, [&](const FIRGBA32& p) {
-            return FIRGBA8{ ClampInt(p.red), ClampInt(p.green), ClampInt(p.blue), ClampInt(p.alpha) };
-        });
-        break;
-    case FIT_RGBA16:
-        BitmapTransform<FIRGBA8, FIRGBA16>(dst.get(), src, [&](const FIRGBA16& p) {
-            return FIRGBA8{ ClampInt(p.red), ClampInt(p.green), ClampInt(p.blue), ClampInt(p.alpha) };
-        });
-        break;
     case FIT_RGBF:
         BitmapTransform<FIRGB8, FIRGBF>(dst.get(), src, [&](const FIRGBF& p) {
             return FIRGB8{ ClampFloat(p.red), ClampFloat(p.green), ClampFloat(p.blue) };
         });
         break;
+    case FIT_RGBA32:
+        BitmapTransform<FIRGBA8, FIRGBA32>(dst.get(), src, [&](const FIRGBA32& p) {
+            return FIRGBA8{ ClampInt(p.red), ClampInt(p.green), ClampInt(p.blue), ClampInt(p.alpha) };
+        });
+        break;
     case FIT_RGB32:
         BitmapTransform<FIRGB8, FIRGB32>(dst.get(), src, [&](const FIRGB32& p) {
             return FIRGB8{ ClampInt(p.red), ClampInt(p.green), ClampInt(p.blue) };
+        });
+        break;
+    case FIT_RGBA16:
+        BitmapTransform<FIRGBA8, FIRGBA16>(dst.get(), src, [&](const FIRGBA16& p) {
+            return FIRGBA8{ ClampInt(p.red), ClampInt(p.green), ClampInt(p.blue), ClampInt(p.alpha) };
         });
         break;
     case FIT_RGB16:

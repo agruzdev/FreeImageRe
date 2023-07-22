@@ -20,7 +20,7 @@ FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_b
 	
 	switch (FreeImage_GetImageType(dib))
 	{
-	case FIT_BITMAP: {		
+	case FIT_BITMAP: {
 			const auto bpp = FreeImage_GetBPP(dib);
 			if (bpp == 32) {
 				if (colorType == FIC_RGBALPHA) {
@@ -130,5 +130,29 @@ FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_b
 	}
 
 	return success ? TRUE : FALSE;
+}
+
+FIBOOL FreeImage_Fill(FIBITMAP* dib, const void* value_ptr, size_t value_size)
+{
+	if (!FreeImage_HasPixels(dib)) {
+		return FALSE;
+	}
+	if (FreeImage_GetBPP(dib) != 8 * value_size) {
+		return FALSE;
+	}
+
+	const unsigned width  = FreeImage_GetWidth(dib);
+	const unsigned height = FreeImage_GetHeight(dib);
+	const unsigned pitch  = FreeImage_GetPitch(dib);
+
+	uint8_t* dst_line = FreeImage_GetBits(dib);
+	for (unsigned y = 0; y < height; ++y, dst_line += pitch) {
+		uint8_t* dst_pixel = dst_line;
+		for (unsigned x = 0; x < width; ++x, dst_pixel += value_size) {
+			std::memcpy(dst_pixel, value_ptr, value_size);
+		}
+	}
+
+	return TRUE;
 }
 

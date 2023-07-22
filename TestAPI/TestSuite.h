@@ -101,6 +101,7 @@ void testConvertToFloat();
 void testConvertToColor();
 void testFindMinMax();
 void testTmoClamp();
+void testTmoLinear();
 
 
 #endif // TEST_FREEIMAGE_API_H

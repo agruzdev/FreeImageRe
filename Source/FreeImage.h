@@ -480,7 +480,8 @@ FI_ENUM(FREE_IMAGE_TMO) {
     FITMO_DRAGO03	 = 0,	//! Adaptive logarithmic mapping (F. Drago, 2003)
 	FITMO_REINHARD05 = 1,	//! Dynamic range reduction inspired by photoreceptor physiology (E. Reinhard, 2005)
 	FITMO_FATTAL02	 = 2,	//! Gradient domain high dynamic range compression (R. Fattal, 2002)
-	FITMO_CLAMP      = 3	//! Trivial tonemapping by clamping
+	FITMO_CLAMP      = 3,	//! Trivial tonemapping by clamping
+	FITMO_LINEAR     = 4	//! Global brightness scaling through YUV colorspace
 };
 
 /** Upsampling / downsampling filters. 
@@ -1040,9 +1041,21 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoReinhard05(FIBITMAP *src, double int
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoReinhard05Ex(FIBITMAP *src, double intensity FI_DEFAULT(0), double contrast FI_DEFAULT(0), double adaptation FI_DEFAULT(1), double color_correction FI_DEFAULT(0));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoFattal02(FIBITMAP *src, double color_saturation FI_DEFAULT(0.5), double attenuation FI_DEFAULT(0.85));
 /**
- * Trivial tonemapping by std::clamp. Default range is [0,255].
+ * Trivial tonemapping by diving by `2^max_bits - 1` and then applying std::clamp to range [0, 255].
+ * Floating point types are multiplied by 256 and then clamped, `max_value` is ignored.
+ * @param low_value Override divider `2^max_bits - 1` for the integral types.
  */
-DLL_API FIBITMAP* DLL_CALLCONV FreeImage_TmoClamp(FIBITMAP* src, double low_value FI_DEFAULT(0.0), double high_value FI_DEFAULT(255.0));
+DLL_API FIBITMAP* DLL_CALLCONV FreeImage_TmoClamp(FIBITMAP* src, double max_value FI_DEFAULT(0));
+/**
+ * Global tonemapping by linear scaling brightness to the range [0, 255].
+ * For greyscale images linear scaling is done.
+ * RGB images are cpnverted to YUV, where the Y component is scaled.
+ * If input image has constant color, then TmoClamp is applied using the `max_value` argument.
+ * @param max_value Is used as max possible Alpha value for RGBA images, passed to TmoClamp for constant color images
+ * @param yuv_standard YUV conversion standard for RGB images.
+ */
+DLL_API FIBITMAP* DLL_CALLCONV FreeImage_TmoLinear(FIBITMAP* src, double max_value FI_DEFAULT(0), FREE_IMAGE_CVT_COLOR_PARAM yuv_standard FI_DEFAULT(FICPARAM_YUV_STANDARD_DEFAULT));
+
 
 // ZLib interface -----------------------------------------------------------
 
@@ -1166,6 +1179,11 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_MultigridPoissonSolver(FIBITMAP *Laplac
  * For one channel images brighntess is pixel value. For RGB color brightness is compuyed according default YUV conversion.
  */
 DLL_API FIBOOL DLL_CALLCONV FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr FI_DEFAULT(NULL), void** max_ptr FI_DEFAULT(NULL));
+
+/**
+ * Sets all image pixels to 'value'. The value must be of valid type.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_Fill(FIBITMAP* dib, const void* value_ptr, size_t value_size);
 
 
 // restore the borland-specific enum size option

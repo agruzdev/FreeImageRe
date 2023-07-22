@@ -39,4 +39,5 @@ Version 0.2:
  - Added function FreeImage_ConvertToColor
  - Added function FreeImage_FindMinMax
  - Added function FreeImage_TmoClamp and corresponding enum FITMO_CLAMP
+ - Added function FreeImage_TmoLinear and corresponding enum FITMO_LINEAR
 
