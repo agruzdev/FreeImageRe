@@ -12,6 +12,9 @@
 FIBITMAP* FreeImage_ConvertToColor(FIBITMAP* dib, FREE_IMAGE_COLOR_TYPE dst_color, int64_t fisrt_param, int64_t second_param)
 {
 	(void)second_param;
+	if (!FreeImage_HasPixels(dib)) {
+		return nullptr;
+	}
 	const auto srcColorType = FreeImage_GetColorType(dib);
 	if (srcColorType == FIC_RGB || srcColorType == FIC_RGBALPHA) {
 		switch (dst_color) {

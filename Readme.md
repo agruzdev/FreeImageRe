@@ -38,3 +38,5 @@ Version 0.2:
  - Added basic support for YUV images
  - Added function FreeImage_ConvertToColor
  - Added function FreeImage_FindMinMax
+ - Added function FreeImage_TmoClamp and corresponding enum FITMO_CLAMP
+

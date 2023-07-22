@@ -100,6 +100,7 @@ void testCreateView(const char *lpszPathName, int flags);
 void testConvertToFloat();
 void testConvertToColor();
 void testFindMinMax();
+void testTmoClamp();
 
 
 #endif // TEST_FREEIMAGE_API_H

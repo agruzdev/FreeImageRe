@@ -479,7 +479,8 @@ Constants used in FreeImage_ToneMapping.
 FI_ENUM(FREE_IMAGE_TMO) {
     FITMO_DRAGO03	 = 0,	//! Adaptive logarithmic mapping (F. Drago, 2003)
 	FITMO_REINHARD05 = 1,	//! Dynamic range reduction inspired by photoreceptor physiology (E. Reinhard, 2005)
-	FITMO_FATTAL02	 = 2	//! Gradient domain high dynamic range compression (R. Fattal, 2002)
+	FITMO_FATTAL02	 = 2,	//! Gradient domain high dynamic range compression (R. Fattal, 2002)
+	FITMO_CLAMP      = 3	//! Trivial tonemapping by clamping
 };
 
 /** Upsampling / downsampling filters. 
@@ -1037,8 +1038,11 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_ToneMapping(FIBITMAP *dib, FREE_IMAGE_T
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoDrago03(FIBITMAP *src, double gamma FI_DEFAULT(2.2), double exposure FI_DEFAULT(0));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoReinhard05(FIBITMAP *src, double intensity FI_DEFAULT(0), double contrast FI_DEFAULT(0));
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoReinhard05Ex(FIBITMAP *src, double intensity FI_DEFAULT(0), double contrast FI_DEFAULT(0), double adaptation FI_DEFAULT(1), double color_correction FI_DEFAULT(0));
-
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_TmoFattal02(FIBITMAP *src, double color_saturation FI_DEFAULT(0.5), double attenuation FI_DEFAULT(0.85));
+/**
+ * Trivial tonemapping by std::clamp. Default range is [0,255].
+ */
+DLL_API FIBITMAP* DLL_CALLCONV FreeImage_TmoClamp(FIBITMAP* src, double low_value FI_DEFAULT(0.0), double high_value FI_DEFAULT(255.0));
 
 // ZLib interface -----------------------------------------------------------
 

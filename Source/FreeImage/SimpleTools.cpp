@@ -10,7 +10,7 @@
 
 FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr, void** max_ptr)
 {
-	if (!dib) {
+	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
 	}
 	std::tuple<void*, void*, double, double> res{};
