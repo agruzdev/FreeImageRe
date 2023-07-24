@@ -228,3 +228,59 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 	return TRUE;
 }
 
+
+
+FIBOOL FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION alpha, int32_t left, int32_t top)
+{
+	if (!FreeImage_HasPixels(dst) || !FreeImage_HasPixels(src)) {
+		return FALSE;
+	}
+
+	if (FreeImage_GetImageType(dst) != FIT_BITMAP || FreeImage_GetColorType2(dst) != FIC_RGBALPHA || FreeImage_GetBPP(dst) != 32 ||
+			FreeImage_GetImageType(src) != FIT_BITMAP || FreeImage_GetColorType2(src) != FIC_RGBALPHA || FreeImage_GetBPP(src) != 32) {
+		return FALSE;
+	}
+
+	const int32_t dstW = static_cast<int32_t>(FreeImage_GetWidth(dst));
+	const int32_t dstH = static_cast<int32_t>(FreeImage_GetHeight(dst));
+	const int32_t srcW = static_cast<int32_t>(FreeImage_GetWidth(src));
+	const int32_t srcH = static_cast<int32_t>(FreeImage_GetHeight(src));
+
+	if (left + srcW <= 0 || top + srcH <= 0) {
+		return TRUE;
+	}
+
+	const int32_t roiLeft   = std::max(0, left);
+	const int32_t roiTop    = std::max(0, top);
+	const int32_t roiRight  = std::min(left + srcW, dstW);
+	const int32_t roiBottom = std::min(top + srcH, dstH);
+
+	const int32_t offsetX = roiLeft - left;
+	const int32_t offsetY = roiTop - top;
+
+	if (alpha != FIAO_SrcAlpha) {
+		// not supported
+		return FALSE;
+	}
+
+	// Y axis is flipped in FI
+	for (int32_t y = roiBottom - roiTop; y > 0; --y) {
+		const auto srcLine = static_cast<const FIRGBA8*>(static_cast<const void*>(FreeImage_GetScanLine(src, srcH - y - offsetY))) + offsetX;
+		const auto dstLine = static_cast<FIRGBA8*>(static_cast<void*>(FreeImage_GetScanLine(dst, dstH - roiTop - y))) + roiLeft;
+		for (int32_t x = 0; x < roiRight - roiLeft; ++x) {
+			const uint8_t alpha = srcLine[x].alpha;
+			if (alpha == 255) {
+				dstLine[x] = srcLine[x];
+			}
+			else if (alpha > 0) {
+				const uint8_t notAlpha = ~alpha;
+				dstLine[x].red   = static_cast<uint8_t>((alpha * srcLine[x].red   + notAlpha * dstLine[x].red)   / 255);
+				dstLine[x].green = static_cast<uint8_t>((alpha * srcLine[x].green + notAlpha * dstLine[x].green) / 255);
+				dstLine[x].blue  = static_cast<uint8_t>((alpha * srcLine[x].blue  + notAlpha * dstLine[x].blue)  / 255);
+				dstLine[x].alpha = alpha;
+			}
+		}
+	}
+
+	return TRUE;
+}

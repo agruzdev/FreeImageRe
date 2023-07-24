@@ -117,17 +117,28 @@ FIBITMAP* FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_CO
     case FIT_RGBA32:
     case FIT_RGBA16:
         dstBpp = 32;
+        if (FreeImage_GetColorType2(src) != FIC_RGBALPHA) {
+            // Only RGB is supported so far
+            return nullptr;
+        }
         break;
     case FIT_RGBF:
     case FIT_RGB32:
     case FIT_RGB16:
         dstBpp = 24;
+        if (FreeImage_GetColorType2(src) != FIC_RGB) {
+            // Only RGB is supported so far
+            return nullptr;
+        }
         break;
     case FIT_DOUBLE:
     case FIT_FLOAT:
     case FIT_UINT32:
     case FIT_UINT16:
         dstBpp = 8;
+        if (FreeImage_GetColorType2(src) != FIC_MINISBLACK) {
+            return nullptr;
+        }
         break;
     default:
         return nullptr;

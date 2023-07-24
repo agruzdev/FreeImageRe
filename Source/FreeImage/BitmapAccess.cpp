@@ -691,8 +691,13 @@ FreeImage_SetThumbnail(FIBITMAP *dib, FIBITMAP *thumbnail) {
 
 // ----------------------------------------------------------
 
-FREE_IMAGE_COLOR_TYPE DLL_CALLCONV
-FreeImage_GetColorType(FIBITMAP *dib) {
+FREE_IMAGE_COLOR_TYPE
+FreeImage_GetColorType(FIBITMAP* dib) {
+	return FreeImage_GetColorType2(dib, TRUE);
+}
+
+FREE_IMAGE_COLOR_TYPE
+FreeImage_GetColorType2(FIBITMAP* dib, FIBOOL scan_alpha) {
 	FIRGBA8 *rgb;
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
@@ -809,7 +814,7 @@ FreeImage_GetColorType(FIBITMAP *dib) {
 				}
 			}
 
-			if( FreeImage_HasPixels(dib) ) {
+			if(scan_alpha && FreeImage_HasPixels(dib)) {
 				// check for fully opaque alpha layer
 				for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 					rgb = (FIRGBA8 *)FreeImage_GetScanLine(dib, y);

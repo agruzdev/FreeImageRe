@@ -774,6 +774,12 @@ FI_ENUM(FREE_IMAGE_CVT_COLOR_PARAM) {
 	FICPARAM_YUV_STANDARD_JPEG = FICPARAM_YUV_STANDARD_DEFAULT
 };
 
+// Alpha blending operation type
+FI_ENUM(FREE_IMAGE_ALPHA_OPERATION) {
+	FIAO_SrcAlpha		///< Use only src alpha, ignore dst alpha
+};
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -929,6 +935,10 @@ DLL_API void DLL_CALLCONV FreeImage_SetDotsPerMeterY(FIBITMAP *dib, unsigned res
 DLL_API FIBITMAPINFOHEADER *DLL_CALLCONV FreeImage_GetInfoHeader(FIBITMAP *dib);
 DLL_API FIBITMAPINFO *DLL_CALLCONV FreeImage_GetInfo(FIBITMAP *dib);
 DLL_API FREE_IMAGE_COLOR_TYPE DLL_CALLCONV FreeImage_GetColorType(FIBITMAP *dib);
+/**
+ * Extended version of GetColorType call. Use scan_alpha=FALSE to avoid checking all alpha values and always return FIC_RGBALPHA for 32bit images.
+ */
+DLL_API FREE_IMAGE_COLOR_TYPE DLL_CALLCONV FreeImage_GetColorType2(FIBITMAP* dib, FIBOOL scan_alpha FI_DEFAULT(FALSE));
 
 DLL_API unsigned DLL_CALLCONV FreeImage_GetRedMask(FIBITMAP *dib);
 DLL_API unsigned DLL_CALLCONV FreeImage_GetGreenMask(FIBITMAP *dib);
@@ -1162,8 +1172,14 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Copy(FIBITMAP *dib, int left, int top, 
 DLL_API FIBOOL DLL_CALLCONV FreeImage_Paste(FIBITMAP *dst, FIBITMAP *src, int left, int top, int alpha);
 DLL_API FIBITMAP *DLL_CALLCONV FreeImage_CreateView(FIBITMAP *dib, unsigned left, unsigned top, unsigned right, unsigned bottom);
 
-DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg FI_DEFAULT(FALSE), FIRGBA8 *appBkColor FI_DEFAULT(NULL), FIBITMAP *bg FI_DEFAULT(NULL));
 DLL_API FIBOOL DLL_CALLCONV FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib);
+DLL_API FIBITMAP *DLL_CALLCONV FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg FI_DEFAULT(FALSE), FIRGBA8 *appBkColor FI_DEFAULT(NULL), FIBITMAP *bg FI_DEFAULT(NULL));
+/**
+ * Draws bitmap with specified alpha blending type
+ * @param left X offset of top left corner of drawn bitmap
+ * @param top Y offset of top left corner of drawn bitmap
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION alpha, int32_t left FI_DEFAULT(0), int32_t top FI_DEFAULT(0));
 
 // background filling routines
 DLL_API FIBOOL DLL_CALLCONV FreeImage_FillBackground(FIBITMAP *dib, const void *color, int options FI_DEFAULT(0));
@@ -1184,6 +1200,9 @@ DLL_API FIBOOL DLL_CALLCONV FreeImage_FindMinMax(FIBITMAP* dib, double* min_brig
  * Sets all image pixels to 'value'. The value must be of valid type.
  */
 DLL_API FIBOOL DLL_CALLCONV FreeImage_Fill(FIBITMAP* dib, const void* value_ptr, size_t value_size);
+
+
+
 
 
 // restore the borland-specific enum size option
