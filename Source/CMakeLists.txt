@@ -3,7 +3,7 @@ project(FreeImage)
 file(GLOB freeimage_sources FreeImage/*.cpp FreeImage/*.h)
 file(GLOB freeimage_toolkit_sources FreeImageToolkit/*.cpp FreeImageToolkit/*.h)
 file(GLOB metadata_sources Metadata/*.cpp Metadata/*.h)
-file(GLOB freeimage_headers ./*.h)
+file(GLOB freeimage_headers ./*.h ./*.hpp)
 list(APPEND freeimage_all_sources ${freeimage_sources} ${freeimage_toolkit_sources} ${metadata_sources} ${freeimage_headers})
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${freeimage_all_sources})

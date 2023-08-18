@@ -64,66 +64,6 @@
 void* FreeImage_Aligned_Malloc(size_t amount, size_t alignment);
 void FreeImage_Aligned_Free(void* mem);
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-/**
-Allocate a FIBITMAP with possibly no pixel data 
-(i.e. only header data and some or all metadata)
-@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
-@param type Image type
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_AllocateT
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeaderT(FIBOOL header_only, FREE_IMAGE_TYPE type, int width, int height, int bpp FI_DEFAULT(8), unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
-
-/**
-Allocate a FIBITMAP of type FIT_BITMAP, with possibly no pixel data 
-(i.e. only header data and some or all metadata)
-@param header_only If TRUE, allocate a 'header only' FIBITMAP, otherwise allocate a full FIBITMAP
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_Allocate
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeader(FIBOOL header_only, int width, int height, int bpp, unsigned red_mask FI_DEFAULT(0), unsigned green_mask FI_DEFAULT(0), unsigned blue_mask FI_DEFAULT(0));
-
-/**
-Allocate a FIBITMAP with no pixel data and wrap a user provided pixel buffer
-@param ext_bits Pointer to external user's pixel buffer
-@param ext_pitch Pointer to external user's pixel buffer pitch
-@param type Image type
-@param width Image width
-@param height Image height
-@param bpp Number of bits per pixel
-@param red_mask Image red mask 
-@param green_mask Image green mask
-@param blue_mask Image blue mask
-@return Returns the allocated FIBITMAP
-@see FreeImage_ConvertFromRawBitsEx
-*/
-DLL_API FIBITMAP * DLL_CALLCONV FreeImage_AllocateHeaderForBits(uint8_t *ext_bits, unsigned ext_pitch, FREE_IMAGE_TYPE type, int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask);
-
-/**
-Helper for 16-bit FIT_BITMAP
-@see FreeImage_GetRGBMasks
-*/
-DLL_API FIBOOL DLL_CALLCONV FreeImage_HasRGBMasks(FIBITMAP *dib);
-
-#if defined(__cplusplus)
-}
-#endif
 
 
 // ==========================================================
@@ -356,41 +296,6 @@ AssignPixel(uint8_t* dst, const uint8_t* src, unsigned bytesperpixel) {
 			assert(FALSE);
 	}
 }
-
-/**
-Swap red and blue channels in a 24- or 32-bit dib. 
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-DLL_API FIBOOL DLL_CALLCONV SwapRedBlue32(FIBITMAP* dib);
-
-/**
-Inplace convert CMYK to RGBA.(8- and 16-bit). 
-Alpha is filled with the first extra channel if any or white otherwise.
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-DLL_API FIBOOL DLL_CALLCONV ConvertCMYKtoRGBA(FIBITMAP* dib);
-
-/**
-Inplace convert CIELab to RGBA (8- and 16-bit).
-@return Returns TRUE if successful, returns FALSE otherwise
-@see See definition in Conversion.cpp
-*/
-DLL_API FIBOOL DLL_CALLCONV ConvertLABtoRGB(FIBITMAP* dib);
-
-/**
-RGBA to RGB conversion
-@see See definition in Conversion.cpp
-*/
-DLL_API FIBITMAP* DLL_CALLCONV RemoveAlphaChannel(FIBITMAP* dib);
-
-/**
-Rotate a dib according to Exif info
-@param dib Input / Output dib to rotate
-@see Exif.cpp, PluginJPEG.cpp
-*/
-DLL_API void DLL_CALLCONV RotateExif(FIBITMAP **dib);
 
 
 // ==========================================================
