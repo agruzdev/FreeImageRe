@@ -120,21 +120,22 @@ namespace fi
 
     enum class ImageType
     {
-        eUnknown = FIT_UNKNOWN,
-        eBitmap  = FIT_BITMAP,
-        eUInt16  = FIT_UINT16,
-        eInt16   = FIT_INT16,
-        eUint32  = FIT_UINT32,
-        eInt32   = FIT_INT32,
-        eFloat   = FIT_FLOAT,
-        eDouble  = FIT_DOUBLE,
-        eComplex = FIT_COMPLEX,
-        eRgb16   = FIT_RGB16,
-        eRgba16  = FIT_RGBA16,
-        eRgbF    = FIT_RGBF,
-        eRgbaF   = FIT_RGBAF,
-        eRgb32   = FIT_RGB32,
-        eRgba32  = FIT_RGBA32
+        eUnknown  = FIT_UNKNOWN,
+        eBitmap   = FIT_BITMAP,
+        eUInt16   = FIT_UINT16,
+        eInt16    = FIT_INT16,
+        eUint32   = FIT_UINT32,
+        eInt32    = FIT_INT32,
+        eFloat    = FIT_FLOAT,
+        eDouble   = FIT_DOUBLE,
+        eComplexF = FIT_COMPLEXF,
+        eComplex  = FIT_COMPLEX,
+        eRgb16    = FIT_RGB16,
+        eRgba16   = FIT_RGBA16,
+        eRgbF     = FIT_RGBF,
+        eRgbaF    = FIT_RGBAF,
+        eRgb32    = FIT_RGB32,
+        eRgba32   = FIT_RGBA32
     };
 
     enum class ColorType

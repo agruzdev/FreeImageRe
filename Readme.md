@@ -37,6 +37,7 @@ Version 0.2:
  - Removed Windows datatypes to avoid collisions
  - Added C++ wrappers
  - Added basic support for YUV images
+ - Added basic support for Float32 complex images
  - Added function FreeImage_ConvertToColor
  - Added function FreeImage_FindMinMax
  - Added function FreeImage_TmoClamp and corresponding enum FITMO_CLAMP

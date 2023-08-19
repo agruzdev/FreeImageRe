@@ -349,6 +349,9 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		case FIT_DOUBLE:
 			bpp = 8 * sizeof(double);
 			break;
+		case FIT_COMPLEXF:
+			bpp = 8 * sizeof(FICOMPLEXF);
+			break;
 		case FIT_COMPLEX:
 			bpp = 8 * sizeof(FICOMPLEX);
 			break;
@@ -1248,6 +1251,10 @@ FreeImage_GetChannelsNumber(FIBITMAP* dib) {
 	case FIT_RGBA16:
 	case FIT_RGBAF:
 		return 4;
+
+	case FIT_COMPLEXF:
+	case FIT_COMPLEX:
+		return 2;
 
 	default:
 		return 1;

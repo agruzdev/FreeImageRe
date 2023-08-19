@@ -227,6 +227,15 @@ typedef struct tagFIRGBAF {
 	float alpha;
 } FIRGBAF;
 
+/** Data structure for COMPLEXF type (complex number)
+*/
+typedef struct tagFICOMPLEXF {
+	/// real part
+	float r;
+	/// imaginary part
+	float i;
+} FICOMPLEXF;
+
 /** Data structure for COMPLEX type (complex number)
 */
 typedef struct tagFICOMPLEX {
@@ -422,7 +431,8 @@ FI_ENUM(FREE_IMAGE_TYPE) {
 	FIT_RGBF	= 11,	//! 96-bit RGB float image	: 3 x 32-bit IEEE floating point
 	FIT_RGBAF	= 12,	//! 128-bit RGBA float image	: 4 x 32-bit IEEE floating point
 	FIT_RGB32   = 13,	//! 96-bit RGB image			: 3 x 32-bit
-	FIT_RGBA32  = 14	//! 128-bit RGBA image		: 4 x 32-bit
+	FIT_RGBA32  = 14,	//! 128-bit RGBA image		: 4 x 32-bit
+	FIT_COMPLEXF = 15,	//! array of FICOMPLEXF		: 2 x 32-bit IEEE floating point
 };
 
 /** Image color type used in FreeImage.
