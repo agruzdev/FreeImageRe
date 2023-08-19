@@ -270,14 +270,15 @@ FIBOOL FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERA
 		for (int32_t x = 0; x < roiRight - roiLeft; ++x) {
 			const uint8_t alpha = srcLine[x].alpha;
 			if (alpha == 255) {
-				dstLine[x] = srcLine[x];
+				dstLine[x].red   = srcLine[x].red;
+				dstLine[x].green = srcLine[x].green;
+				dstLine[x].blue  = srcLine[x].blue;
 			}
 			else if (alpha > 0) {
 				const uint8_t notAlpha = ~alpha;
 				dstLine[x].red   = static_cast<uint8_t>((alpha * srcLine[x].red   + notAlpha * dstLine[x].red)   / 255);
 				dstLine[x].green = static_cast<uint8_t>((alpha * srcLine[x].green + notAlpha * dstLine[x].green) / 255);
 				dstLine[x].blue  = static_cast<uint8_t>((alpha * srcLine[x].blue  + notAlpha * dstLine[x].blue)  / 255);
-				dstLine[x].alpha = alpha;
 			}
 		}
 	}
