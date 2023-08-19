@@ -24,8 +24,6 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "../Metadata/FreeImageTag.h"
-static_assert(sizeof(int64_t) == 8, "Wrong int64_t");
-static_assert(sizeof(uint64_t) == 8, "Wrong uint64_t");
 
 // ==========================================================
 // Plugin Interface
@@ -57,40 +55,40 @@ public:
 		io->seek_proc(handle, start_pos, SEEK_SET);
 	}
 
-	~LibRaw_freeimage_datastream() {
+	~LibRaw_freeimage_datastream() override {
 	}
 
-    int valid() { 
+    int valid() override {
 		return (_io && _handle);
 	}
 
-    int read(void *buffer, size_t size, size_t count) { 
+    int read(void *buffer, size_t size, size_t count) override {
 		//if(substream) return substream->read(buffer, size, count);
 		return _io->read_proc(buffer, (unsigned)size, (unsigned)count, _handle);
 	}
 
-    int seek(int64_t offset, int origin) { 
+    int seek(INT64 offset, int origin) override {
         //if(substream) return substream->seek(offset, origin);
 		return _io->seek_proc(_handle, (long)offset, origin);
 	}
 
-    int64_t tell() { 
+	INT64 tell() override {
 		//if(substream) return substream->tell();
         return _io->tell_proc(_handle);
     }
 	
-	int64_t size() {
+	INT64 size() override {
 		return _fsize;
 	}
 
-    int get_char() { 
+    int get_char() override {
 		int c = 0;
 		//if(substream) return substream->get_char();
 		if(!_io->read_proc(&c, 1, 1, _handle)) return -1;
 		return c;
    }
 	
-	char* gets(char *buffer, int length) { 
+	char* gets(char *buffer, int length) override {
 		//if (substream) return substream->gets(buffer, length);
 		memset(buffer, 0, length);
 		for(int i = 0; i < length; i++) {
@@ -102,7 +100,7 @@ public:
 		return buffer;
 	}
 
-	int scanf_one(const char *fmt, void* val) {
+	int scanf_one(const char *fmt, void* val) override {
 		std::string buffer;
 		char element = 0;
 		bool bDone = false;
@@ -128,12 +126,12 @@ public:
 		return sscanf(buffer.c_str(), fmt, val);
 	}
 
-	int eof() { 
+	int eof() override {
 		//if(substream) return substream->eof();
         return (_io->tell_proc(_handle) >= _eof);
     }
 
-	void * make_jas_stream() {
+	void * make_jas_stream() override {
 		return NULL;
 	}
 };
