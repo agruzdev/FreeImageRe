@@ -23,6 +23,8 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include <complex>
+#include "../FreeImage/SimpleTools.h"
 
 // ----------------------------------------------------------
 //   Macros + structures
@@ -441,6 +443,496 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 
 	return FALSE;
 }
+
+
+namespace
+{
+
+	class HistogramBuilderNone
+	{
+	public:
+		HistogramBuilderNone()
+		{ }
+
+		bool Discardable() const {
+			return false;
+		}
+
+		void SetZero(uint32_t) const
+		{ }
+
+		template <typename PixelType_, typename IndexFunction_>
+		void Add(const PixelType_&, IndexFunction_&&) const
+		{ }
+	};
+
+	template <typename PixelSelector_>
+	class HistogramBuilder
+		: private PixelSelector_
+	{
+	public:
+		HistogramBuilder(uint32_t* hist, uint32_t stride)
+			: mHist(hist)
+			, mStride(stride)
+		{ }
+
+		bool Discardable() const {
+			return mHist == nullptr;
+		}
+
+		void SetZero(uint32_t v) const {
+			mHist[0] = v;
+		}
+
+		template <typename PixelType_, typename IndexFunction_>
+		void Add(const PixelType_& pixel, IndexFunction_&& indexFunction) const
+		{
+			const auto i = std::forward<IndexFunction_>(indexFunction)(PixelSelector_::operator()(pixel));
+			++mHist[i * mStride];
+		}
+
+	private:
+		uint32_t* mHist;
+		uint32_t mStride;
+	};
+
+	template <typename PixelType_>
+	struct HistogramFloat
+	{
+		static_assert(std::is_floating_point<ToValueType<PixelType_>>::value, "wrong pixel type");
+
+		template <typename Builder0_, typename Builder1_, typename Builder2_, typename Builder3_>
+		bool operator()(const Builder0_& builder0, const Builder1_& builder1, const Builder2_& builder2, const Builder3_& builder3,
+			FIBITMAP* dib, int32_t binsNumber, const ToValueType<PixelType_>& minVal, const ToValueType<PixelType_>& maxVal) const
+		{
+			if (minVal > maxVal || binsNumber < 1) {
+				return false;
+			}
+			if (minVal > maxVal) {
+				return false;
+			}
+			if (minVal == maxVal) {
+				const uint32_t pixelsNumber = FreeImage_GetWidth(dib) * FreeImage_GetHeight(dib);
+				builder0.SetZero(pixelsNumber);
+				builder1.SetZero(pixelsNumber);
+				builder2.SetZero(pixelsNumber);
+				builder3.SetZero(pixelsNumber);
+				return true;
+			}
+			const ToValueType<PixelType_> div = static_cast<ToValueType<PixelType_>>(binsNumber) / (maxVal - minVal);
+
+			const auto CalculateBinIndex = [&](const ToValueType<PixelType_>& value) {
+				const int32_t i = static_cast<int32_t>((value - minVal) * div);
+				return std::clamp(i, 0, binsNumber - 1);
+			};
+
+			BitmapForEach<PixelType_>(dib, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+				builder0.Add(p, CalculateBinIndex);
+				builder1.Add(p, CalculateBinIndex);
+				builder2.Add(p, CalculateBinIndex);
+				builder3.Add(p, CalculateBinIndex);
+			});
+			return true;
+		}
+	};
+
+	template <typename PixelType_>
+	struct HistogramSInt
+	{
+		static_assert(!std::is_floating_point<ToValueType<PixelType_>>::value, "wrong pixel type");
+		static_assert(std::is_signed<ToValueType<PixelType_>>::value, "wrong pixel type");
+
+		template <typename Builder0_, typename Builder1_, typename Builder2_, typename Builder3_>
+		bool operator()(const Builder0_& builder0, const Builder1_& builder1, const Builder2_& builder2, const Builder3_& builder3,
+			FIBITMAP* dib, uint32_t binsNumber) const
+		{
+			if (binsNumber < 1) {
+				return false;
+			}
+
+			constexpr uint32_t bits = 8 * sizeof(ToValueType<PixelType_>);
+			const auto CalculateBinIndexSigned = [&](const ToValueType<PixelType_>& value) {
+				using WideValueType = ToWiderType<ToValueType<PixelType_>>;
+				const auto uvalue = static_cast<ToUnsignedType<WideValueType>>(static_cast<WideValueType>(value) - std::numeric_limits<ToValueType<PixelType_>>::min());
+				const uint32_t i = static_cast<uint32_t>((uvalue * binsNumber) >> bits);
+				return std::min(i, binsNumber - 1);
+			};
+
+			BitmapForEach<PixelType_>(dib, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+				builder0.Add(p, CalculateBinIndexSigned);
+				builder1.Add(p, CalculateBinIndexSigned);
+				builder2.Add(p, CalculateBinIndexSigned);
+				builder3.Add(p, CalculateBinIndexSigned);
+			});
+			return true;
+		}
+	};
+
+	template <typename PixelType_>
+	struct HistogramUInt
+	{
+		static_assert(!std::is_floating_point<ToValueType<PixelType_>>::value, "wrong pixel type");
+		static_assert(std::is_unsigned<ToValueType<PixelType_>>::value, "wrong pixel type");
+
+		template <typename Builder0_, typename Builder1_, typename Builder2_, typename Builder3_>
+		bool operator()(const Builder0_& builder0, const Builder1_& builder1, const Builder2_& builder2, const Builder3_& builder3, 
+			FIBITMAP* dib, uint32_t binsNumber) const
+		{
+			if (binsNumber < 1) {
+				return false;
+			}
+			constexpr uint32_t bits = 8 * sizeof(ToValueType<PixelType_>);
+			if (binsNumber == (1ULL << bits)) {
+				const auto CalculateBinIndexWithoutScale = [&](const ToValueType<PixelType_>& value) {
+					const uint32_t i = static_cast<uint32_t>(value);
+					return std::min(i, binsNumber - 1);
+				};
+
+				BitmapForEach<PixelType_>(dib, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+					builder0.Add(p, CalculateBinIndexWithoutScale);
+					builder1.Add(p, CalculateBinIndexWithoutScale);
+					builder2.Add(p, CalculateBinIndexWithoutScale);
+					builder3.Add(p, CalculateBinIndexWithoutScale);
+				});
+			}
+			else {
+				const auto CalculateBinIndexWithScale = [&](const ToValueType<PixelType_>& value) {
+					using WideValueType = ToWiderType<ToValueType<PixelType_>>;
+					const uint32_t i = static_cast<uint32_t>((static_cast<WideValueType>(value) * binsNumber) >> bits);
+					return std::min(i, binsNumber - 1);
+				};
+
+				BitmapForEach<PixelType_>(dib, [&](const PixelType_& p, uint32_t /*x*/, uint32_t /*y*/) {
+					builder0.Add(p, CalculateBinIndexWithScale);
+					builder1.Add(p, CalculateBinIndexWithScale);
+					builder2.Add(p, CalculateBinIndexWithScale);
+					builder3.Add(p, CalculateBinIndexWithScale);
+				});
+			}
+			return true;
+		}
+	};
+
+
+	template <typename Function_, typename Builder0_, typename... Args_>
+	bool InvokeWithBuilders1(Function_&& f, const Builder0_& b0, Args_&&... args)
+	{
+		if (!b0.Discardable()) {
+			return std::forward<Function_>(f)(b0, std::forward<Args_>(args)...);
+		}
+		else {
+			return std::forward<Function_>(f)(HistogramBuilderNone{}, std::forward<Args_>(args)...);
+		}
+	}
+
+	template <typename Function_, typename Builder0_, typename Builder1_, typename... Args_>
+	bool InvokeWithBuilders2(Function_&& f, const Builder0_& b0, const Builder1_& b1, Args_&&... args)
+	{
+		if (!b1.Discardable()) {
+			return InvokeWithBuilders1(std::forward<Function_>(f), b0, b1, std::forward<Args_>(args)...);
+		}
+		else {
+			return InvokeWithBuilders1(std::forward<Function_>(f), b0, HistogramBuilderNone{}, std::forward<Args_>(args)...);
+		}
+	}
+
+	template <typename Function_, typename Builder0_, typename Builder1_, typename Builder2_, typename... Args_>
+	bool InvokeWithBuilders3(Function_&& f, const Builder0_& b0, const Builder1_& b1, const Builder2_& b2, Args_&&... args)
+	{
+		if (!b2.Discardable()) {
+			return InvokeWithBuilders2(std::forward<Function_>(f), b0, b1, b2, std::forward<Args_>(args)...);
+		}
+		else {
+			return InvokeWithBuilders2(std::forward<Function_>(f), b0, b1, HistogramBuilderNone{}, std::forward<Args_>(args)...);
+		}
+	}
+
+	template <typename Function_, typename Builder0_, typename Builder1_, typename Builder2_, typename Builder3_, typename... Args_>
+	bool InvokeWithBuilders4(Function_&& f, const Builder0_& b0, const Builder1_& b1, const Builder2_& b2, const Builder3_& b3, Args_&&... args)
+	{
+		if (!b3.Discardable()) {
+			return InvokeWithBuilders3(std::forward<Function_>(f), b0, b1, b2, b3, std::forward<Args_>(args)...);
+		}
+		else {
+			return InvokeWithBuilders3(std::forward<Function_>(f), b0, b1, b2, HistogramBuilderNone{}, std::forward<Args_>(args)...);
+		}
+	}
+
+
+	struct SelectRed
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.red;
+		}
+	};
+
+	struct SelectGreen
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.green;
+		}
+	};
+
+	struct SelectBlue
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.blue;
+		}
+	};
+
+	struct SelectRgbBrightness
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return Brightness{}(p);
+		}
+	};
+
+	struct SelectReal
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.r;
+		}
+	};
+
+	struct SelectImag
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p.i;
+		}
+	};
+
+	struct SelectAbs
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return std::abs(std::complex<ToValueType<Py_>>(p.r, p.i));
+		}
+	};
+
+	struct SelectIdentity
+	{
+		template <typename Py_>
+		auto operator()(const Py_& p) const
+		{
+			return p;
+		}
+	};
+
+	template <typename Ty_>
+	void SetIntMinMax(void* outMinVal, void* outMaxVal)
+	{
+		if (outMinVal) {
+			*static_cast<Ty_*>(outMinVal) = std::numeric_limits<Ty_>::lowest();
+		}
+		if (outMaxVal) {
+			*static_cast<Ty_*>(outMaxVal) = std::numeric_limits<Ty_>::max();
+		}
+	}
+
+	void ClearHistogram(uint32_t* hist, uint32_t stride, uint32_t binsNumber) {
+		if (hist) {
+			if (stride == 1) {
+				std::memset(hist, 0, binsNumber * sizeof(uint32_t));
+			}
+			else {
+				for (uint32_t i = 0; i < binsNumber; ++i, hist += stride) {
+					*hist = 0u;
+				}
+			}
+		}
+	}
+
+	template <typename PixelType_>
+	bool FindHistogramBounds(FIBITMAP* dib, ToValueType<PixelType_>& minVal, ToValueType<PixelType_>& maxVal, void* outMinVal, void* outMaxVal)
+	{
+		PixelType_ minChannelValues, maxChannelValues;
+		if (!FreeImage_FindMinMaxValue(dib, &minChannelValues, &maxChannelValues)) {
+			return false;
+		}
+		minVal = PixelMin(StripAlpha(minChannelValues));
+		maxVal = PixelMax(StripAlpha(minChannelValues));
+		if (outMinVal) {
+			*static_cast<ToValueType<PixelType_>*>(outMinVal) = minVal;
+		}
+		if (outMaxVal) {
+			*static_cast<ToValueType<PixelType_>*>(outMaxVal) = maxVal;
+		}
+		return true;
+	}
+
+} // namespace
+
+
+FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
+{
+	if (!FreeImage_HasPixels(dib) || binsNumber < 1) {
+		return FALSE;
+	}
+	if ((histR && strideR <= 0) || (histG && strideG <= 0) || (histB && strideB <= 0) || (histL && strideL <= 0)) {
+		return FALSE;
+	}
+
+	if (!histR && !histG && !histB && !histL) {
+		return TRUE;
+	}
+
+	ClearHistogram(histR, strideR, binsNumber);
+	ClearHistogram(histG, strideG, binsNumber);
+	ClearHistogram(histB, strideB, binsNumber);
+	ClearHistogram(histL, strideL, binsNumber);
+
+	bool success = FALSE;
+	switch (FreeImage_GetImageType(dib)) {
+	case FIT_BITMAP: {
+			const auto bpp = FreeImage_GetBPP(dib);
+			const auto colorType = FreeImage_GetColorType2(dib);
+			if ((colorType == FIC_RGBALPHA || colorType == FIC_YUV) && (bpp == 32)) {
+				success = InvokeWithBuilders4(HistogramUInt<FIRGBA8>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+			}
+			else if ((colorType == FIC_RGB || colorType == FIC_YUV) && (bpp == 24)) {
+				success = InvokeWithBuilders4(HistogramUInt<FIRGB8>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+			}
+			else if (colorType == FIC_MINISBLACK && bpp == 8) {
+				success = InvokeWithBuilders1(HistogramUInt<uint8_t>{}, HistogramBuilder<SelectIdentity>(histR, strideR), HistogramBuilderNone{},
+					HistogramBuilderNone{}, HistogramBuilderNone{}, dib, binsNumber);
+			}
+			if (success) {
+				SetIntMinMax<uint8_t>(outMinVal, outMaxVal);
+			}
+		}
+		break;
+	case FIT_RGBF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FIRGBF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders4(HistogramFloat<FIRGBF>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+				HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_RGBAF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FIRGBAF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders4(HistogramFloat<FIRGBAF>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+				HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_COMPLEX: {
+			double minVal{}, maxVal{};
+			if (!FindHistogramBounds<FICOMPLEX>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders3(HistogramFloat<FICOMPLEX>{}, HistogramBuilder<SelectReal>(histR, strideR), HistogramBuilder<SelectImag>(histG, strideG),
+				HistogramBuilder<SelectAbs>(histB, strideB), HistogramBuilderNone{}, dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_COMPLEXF: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<FICOMPLEXF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders3(HistogramFloat<FICOMPLEXF>{}, HistogramBuilder<SelectReal>(histR, strideR), HistogramBuilder<SelectImag>(histG, strideG),
+				HistogramBuilder<SelectAbs>(histB, strideB), HistogramBuilderNone{}, dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_DOUBLE: {
+			double minVal{}, maxVal{};
+			if (!FindHistogramBounds<double>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders1(HistogramFloat<double>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+				HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_FLOAT: {
+			float minVal{}, maxVal{};
+			if (!FindHistogramBounds<float>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
+				break;
+			}
+			success = InvokeWithBuilders1(HistogramFloat<float>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+				HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, static_cast<int32_t>(binsNumber), minVal, maxVal);
+		}
+		break;
+	case FIT_RGBA32:
+		success = InvokeWithBuilders4(HistogramUInt<FIRGBA32>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+			HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGB32:
+		success = InvokeWithBuilders4(HistogramUInt<FIRGB32>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+			HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGBA16:
+		success = InvokeWithBuilders4(HistogramUInt<FIRGBA16>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+			HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_RGB16:
+		success = InvokeWithBuilders4(HistogramUInt<FIRGB16>{}, HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+			HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL), dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_UINT32:
+		success = InvokeWithBuilders1(HistogramUInt<uint32_t>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+			HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_INT32:
+		success = InvokeWithBuilders1(HistogramSInt<int32_t>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+			HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, binsNumber);
+		if (success) {
+			SetIntMinMax<int32_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_UINT16:
+		success = InvokeWithBuilders1(HistogramUInt<uint16_t>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+			HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, binsNumber);
+		if (success) {
+			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	case FIT_INT16:
+		success = InvokeWithBuilders1(HistogramSInt<int16_t>{}, HistogramBuilder<SelectIdentity>(histR, strideR),
+			HistogramBuilderNone{}, HistogramBuilderNone{}, HistogramBuilderNone{}, dib, binsNumber);
+		if (success) {
+			SetIntMinMax<int16_t>(outMinVal, outMaxVal);
+		}
+		break;
+	default:
+		return FALSE;
+	}
+
+	return success ? TRUE : FALSE;
+}
+
 
 // ----------------------------------------------------------
 

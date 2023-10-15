@@ -6,6 +6,7 @@
 
 #include "SimpleTools.h"
 #include <cstring>
+#include <algorithm>
 
 
 FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr, void** max_ptr)
@@ -16,7 +17,7 @@ FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_b
 	std::tuple<void*, void*, double, double> res{};
 	bool success = false;
 
-	const auto colorType = FreeImage_GetColorType(dib);
+	const auto colorType = FreeImage_GetColorType2(dib);
 	
 	switch (FreeImage_GetImageType(dib))
 	{
@@ -131,6 +132,136 @@ FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_b
 
 	return success ? TRUE : FALSE;
 }
+
+namespace
+{
+
+	template <typename PixelType_>
+	void FindMinMaxValueImpl(FIBITMAP* src, void* out_min_value, void* out_max_value)
+	{
+		PixelType_ minVal, maxVal;
+		PixelFill(minVal, std::numeric_limits<ToValueType<PixelType_>>::max());
+		PixelFill(maxVal, std::numeric_limits<ToValueType<PixelType_>>::lowest());
+
+		const unsigned width = FreeImage_GetWidth(src);
+		const unsigned height = FreeImage_GetHeight(src);
+		const unsigned src_pitch = FreeImage_GetPitch(src);
+
+		uint8_t* src_bits = FreeImage_GetBits(src);
+		for (unsigned y = 0; y < height; ++y) {
+			auto src_pixel = static_cast<PixelType_*>(static_cast<void*>(src_bits));
+			for (unsigned x = 0; x < width; ++x) {
+				const PixelType_ val = src_pixel[x];
+				SetChannel<0>(minVal, std::min(GetChannel<0>(minVal), GetChannel<0>(val)));
+				SetChannel<1>(minVal, std::min(GetChannel<1>(minVal), GetChannel<1>(val)));
+				SetChannel<2>(minVal, std::min(GetChannel<2>(minVal), GetChannel<2>(val)));
+				SetChannel<3>(minVal, std::min(GetChannel<3>(minVal), GetChannel<3>(val)));
+				SetChannel<0>(maxVal, std::max(GetChannel<0>(maxVal), GetChannel<0>(val)));
+				SetChannel<1>(maxVal, std::max(GetChannel<1>(maxVal), GetChannel<1>(val)));
+				SetChannel<2>(maxVal, std::max(GetChannel<2>(maxVal), GetChannel<2>(val)));
+				SetChannel<3>(maxVal, std::max(GetChannel<3>(maxVal), GetChannel<3>(val)));
+			}
+			src_bits += src_pitch;
+		}
+
+		if (out_min_value) {
+			*static_cast<PixelType_*>(out_min_value) = minVal;
+		}
+		if (out_max_value) {
+			*static_cast<PixelType_*>(out_max_value) = maxVal;
+		}
+	}
+
+} // namespace
+
+FIBOOL FreeImage_FindMinMaxValue(FIBITMAP* dib, void* min_value, void* max_value)
+{
+	if (!FreeImage_HasPixels(dib)) {
+		return FALSE;
+	}
+
+	switch (FreeImage_GetImageType(dib)) {
+	case FIT_BITMAP: {
+			const auto bpp = FreeImage_GetBPP(dib);
+			const auto colorType = FreeImage_GetColorType2(dib);
+			if (bpp == 32) {
+				if (colorType == FIC_RGBALPHA || colorType == FIC_YUV) {
+					FindMinMaxValueImpl<FIRGBA8>(dib, min_value, max_value);
+				}
+				else {
+					return FALSE;
+				}
+			}
+			else if (bpp == 24) {
+				if (colorType == FIC_RGB || colorType == FIC_YUV) {
+					FindMinMaxValueImpl<FIRGB8>(dib, min_value, max_value);
+				}
+				else {
+					return FALSE;
+				}
+			}
+			else if (bpp == 8) {
+				if (colorType == FIC_MINISBLACK) {
+					FindMinMaxValueImpl<uint8_t>(dib, min_value, max_value);
+				}
+				else {
+					return FALSE;
+				}
+			}
+			else {
+				return FALSE;
+			}
+		}
+		break;
+	case FIT_RGBAF:
+		FindMinMaxValueImpl<FIRGBAF>(dib, min_value, max_value);
+		break;
+	case FIT_RGBF:
+		FindMinMaxValueImpl<FIRGBF>(dib, min_value, max_value);
+		break;
+	case FIT_RGBA32:
+		FindMinMaxValueImpl<FIRGBA32>(dib, min_value, max_value);
+		break;
+	case FIT_RGB32:
+		FindMinMaxValueImpl<FIRGB32>(dib, min_value, max_value);
+		break;
+	case FIT_RGBA16:
+		FindMinMaxValueImpl<FIRGBA16>(dib, min_value, max_value);
+		break;
+	case FIT_RGB16:
+		FindMinMaxValueImpl<FIRGB16>(dib, min_value, max_value);
+		break;
+	case FIT_DOUBLE:
+		FindMinMaxValueImpl<double>(dib, min_value, max_value);
+		break;
+	case FIT_FLOAT:
+		FindMinMaxValueImpl<float>(dib, min_value, max_value);
+		break;
+	case FIT_UINT32:
+		FindMinMaxValueImpl<uint32_t>(dib, min_value, max_value);
+		break;
+	case FIT_INT32:
+		FindMinMaxValueImpl<int32_t>(dib, min_value, max_value);
+		break;
+	case FIT_UINT16:
+		FindMinMaxValueImpl<uint16_t>(dib, min_value, max_value);
+		break;
+	case FIT_INT16:
+		FindMinMaxValueImpl<uint16_t>(dib, min_value, max_value);
+		break;
+	case FIT_COMPLEX:
+		FindMinMaxValueImpl<FICOMPLEX>(dib, min_value, max_value);
+		break;
+	case FIT_COMPLEXF:
+		FindMinMaxValueImpl<FICOMPLEXF>(dib, min_value, max_value);
+		break;
+	default:
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 
 FIBOOL FreeImage_Fill(FIBITMAP* dib, const void* value_ptr, size_t value_size)
 {

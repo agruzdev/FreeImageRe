@@ -10,8 +10,26 @@
 #include "FreeImage.h"
 #include <cmath>
 #include <tuple>
+#include <type_traits>
 #include "ConversionYUV.h"
 
+
+template <typename DstPixel_, typename SrcPixel_ = DstPixel_, typename PixelVisitor_>
+void BitmapForEach(FIBITMAP* src, PixelVisitor_ vis)
+{
+    const unsigned width = FreeImage_GetWidth(src);
+    const unsigned height = FreeImage_GetHeight(src);
+    const unsigned src_pitch = FreeImage_GetPitch(src);
+
+    const uint8_t* src_bits = FreeImage_GetBits(src);
+    for (unsigned y = 0; y < height; ++y) {
+        auto src_pixel = static_cast<const SrcPixel_*>(static_cast<const void*>(src_bits));
+        for (unsigned x = 0; x < width; ++x) {
+            vis(src_pixel[x], x, y);
+        }
+        src_bits += src_pitch;
+    }
+}
 
 template <typename DstPixel_, typename SrcPixel_ = DstPixel_, typename UnaryOperation_>
 void BitmapTransform(FIBITMAP* dst, FIBITMAP* src, UnaryOperation_ unary_op)
@@ -53,6 +71,182 @@ using IsFloatPixelType = std::integral_constant<bool,
 
 template <typename Ty_>
 using IsPixelType = std::integral_constant<bool, IsIntPixelType<Ty_>::value || IsFloatPixelType<Ty_>::value>;
+
+namespace details
+{
+    template <typename PixelType_>
+    struct ToValueTypeImpl {};
+
+    template <> struct ToValueTypeImpl<FIRGBAF>    { using type = float;    };
+    template <> struct ToValueTypeImpl<FIRGBF>     { using type = float;    };
+    template <> struct ToValueTypeImpl<FIRGBA32>   { using type = uint32_t; };
+    template <> struct ToValueTypeImpl<FIRGB32>    { using type = uint32_t; };
+    template <> struct ToValueTypeImpl<FIRGBA16>   { using type = uint16_t; };
+    template <> struct ToValueTypeImpl<FIRGB16>    { using type = uint16_t; };
+    template <> struct ToValueTypeImpl<FIRGBA8>    { using type = uint8_t;  };
+    template <> struct ToValueTypeImpl<FIRGB8>     { using type = uint8_t;  };
+    template <> struct ToValueTypeImpl<FICOMPLEX>  { using type = double;   };
+    template <> struct ToValueTypeImpl<FICOMPLEXF> { using type = float;    };
+    template <> struct ToValueTypeImpl<double>     { using type = double;   };
+    template <> struct ToValueTypeImpl<float>      { using type = float;    };
+    template <> struct ToValueTypeImpl<uint32_t>   { using type = uint32_t; };
+    template <> struct ToValueTypeImpl<int32_t>    { using type = int32_t;  };
+    template <> struct ToValueTypeImpl<uint16_t>   { using type = uint16_t; };
+    template <> struct ToValueTypeImpl<int16_t>    { using type = int16_t;  };
+    template <> struct ToValueTypeImpl<uint8_t>    { using type = uint8_t;  };
+}
+
+template <typename PixelType_>
+using ToValueType = typename details::ToValueTypeImpl<PixelType_>::type;
+
+
+namespace details
+{
+    template <typename Ty_>
+    struct ToWiderTypeImpl {};
+
+    template <> struct ToWiderTypeImpl<uint64_t> { using type = uint64_t; };
+    template <> struct ToWiderTypeImpl<int64_t>  { using type = int64_t; };
+    template <> struct ToWiderTypeImpl<uint32_t> { using type = uint64_t; };
+    template <> struct ToWiderTypeImpl<int32_t>  { using type = int64_t;  };
+    template <> struct ToWiderTypeImpl<uint16_t> { using type = uint32_t; };
+    template <> struct ToWiderTypeImpl<int16_t>  { using type = int32_t;  };
+    template <> struct ToWiderTypeImpl<uint8_t>  { using type = uint32_t;  };
+    template <> struct ToWiderTypeImpl<int8_t>   { using type = int32_t; };
+}
+
+template <typename Ty_>
+using ToWiderType = typename details::ToWiderTypeImpl<Ty_>::type;
+
+
+namespace details
+{
+    template <typename Ty_>
+    struct ToUnsignedTypeImpl {};
+
+    template <> struct ToUnsignedTypeImpl<uint64_t> { using type = uint64_t; };
+    template <> struct ToUnsignedTypeImpl<int64_t>  { using type = uint64_t; };
+    template <> struct ToUnsignedTypeImpl<uint32_t> { using type = uint32_t; };
+    template <> struct ToUnsignedTypeImpl<int32_t>  { using type = uint32_t; };
+    template <> struct ToUnsignedTypeImpl<uint16_t> { using type = uint16_t; };
+    template <> struct ToUnsignedTypeImpl<int16_t>  { using type = uint16_t; };
+    template <> struct ToUnsignedTypeImpl<uint8_t>  { using type = uint8_t;  };
+    template <> struct ToUnsignedTypeImpl<int8_t>   { using type = uint8_t;  };
+}
+
+template <typename Ty_>
+using ToUnsignedType = typename details::ToUnsignedTypeImpl<Ty_>::type;
+
+
+
+template <uint32_t Value_>
+using uint32_constant = std::integral_constant<uint32_t, Value_>;
+
+template <typename PixelType_>
+struct PixelChannelsNumber : public uint32_constant<1>{};
+
+template <> struct PixelChannelsNumber<FIRGBAF>  : public uint32_constant<4> {};
+template <> struct PixelChannelsNumber<FIRGBF>   : public uint32_constant<3> {};
+template <> struct PixelChannelsNumber<FIRGBA32> : public uint32_constant<4> {};
+template <> struct PixelChannelsNumber<FIRGB32>  : public uint32_constant<3> {};
+template <> struct PixelChannelsNumber<FIRGBA16> : public uint32_constant<4> {};
+template <> struct PixelChannelsNumber<FIRGB16>  : public uint32_constant<3> {};
+template <> struct PixelChannelsNumber<FIRGBA8>  : public uint32_constant<4> {};
+template <> struct PixelChannelsNumber<FIRGB8>   : public uint32_constant<3> {};
+template <> struct PixelChannelsNumber<FICOMPLEX> : public uint32_constant<2> {};
+template <> struct PixelChannelsNumber<FICOMPLEXF> : public uint32_constant<2> {};
+
+namespace details
+{
+    template <typename PixelType_>
+    struct ToNoAlphaTypeImpl
+    {
+        using type = PixelType_;
+    };
+
+    template <> struct ToNoAlphaTypeImpl<FIRGBAF>  { using type = FIRGBF; };
+    template <> struct ToNoAlphaTypeImpl<FIRGBA32> { using type = FIRGB32; };
+    template <> struct ToNoAlphaTypeImpl<FIRGBA16> { using type = FIRGB16; };
+    template <> struct ToNoAlphaTypeImpl<FIRGBA8>  { using type = FIRGB8; };
+
+}
+
+template <typename PixelType_>
+using ToNoAlphaType = typename details::ToNoAlphaTypeImpl<PixelType_>::type;
+
+
+
+template <uint32_t ChannelIndex_, typename PixelType_>
+inline
+void SetChannel(PixelType_& p, ToValueType<PixelType_> v)
+{
+    if constexpr (ChannelIndex_ < PixelChannelsNumber<PixelType_>::value) {
+        static_cast<ToValueType<PixelType_>*>(static_cast<void*>(&p))[ChannelIndex_] = std::move(v);
+    }
+}
+
+template <uint32_t ChannelIndex_, typename PixelType_>
+inline
+ToValueType<PixelType_> GetChannel(const PixelType_& p)
+{
+    if constexpr (ChannelIndex_ < PixelChannelsNumber<PixelType_>::value) {
+        return static_cast<const ToValueType<PixelType_>*>(static_cast<const void*>(&p))[ChannelIndex_];
+    }
+    else {
+        return ToValueType<PixelType_>{};
+    }
+}
+
+template <typename PixelType_>
+inline
+void PixelFill(PixelType_& p, const ToValueType<PixelType_>& v)
+{
+    SetChannel<0>(p, v);
+    SetChannel<1>(p, v);
+    SetChannel<2>(p, v);
+    SetChannel<3>(p, v);
+}
+
+template <typename PixelType_, typename BinaryOperation_>
+inline
+auto PixelReduce(const PixelType_& p, ToValueType<PixelType_> init, BinaryOperation_&& op)
+{
+    constexpr uint32_t channelsNumber = PixelChannelsNumber<PixelType_>::value;
+    if constexpr (channelsNumber > 0) {
+        init = op(std::move(init), GetChannel<0>(p));
+    }
+    if constexpr (channelsNumber > 1) {
+        init = op(std::move(init), GetChannel<1>(p));
+    }
+    if constexpr (channelsNumber > 2) {
+        init = op(std::move(init), GetChannel<2>(p));
+    }
+    if constexpr (channelsNumber > 3) {
+        init = op(std::move(init), GetChannel<3>(p));
+    }
+    return init;
+}
+
+template <typename PixelType_>
+inline
+auto PixelMin(const PixelType_& p, ToValueType<PixelType_> init = std::numeric_limits<ToValueType<PixelType_>>::max())
+{
+    return PixelReduce(p, init, [](const auto& lhs, const auto& rhs) { return std::min(lhs, rhs); });
+}
+
+template <typename PixelType_>
+inline
+auto PixelMax(const PixelType_& p, ToValueType<PixelType_> init = std::numeric_limits<ToValueType<PixelType_>>::lowest())
+{
+    return PixelReduce(p, init, [](const auto& lhs, const auto& rhs) { return std::max(lhs, rhs); });
+}
+
+template <typename PixelType_>
+inline
+auto StripAlpha(PixelType_&& p)
+{
+    return ToNoAlphaType<PixelType_>(std::forward<PixelType_>(p));
+}
 
 
 

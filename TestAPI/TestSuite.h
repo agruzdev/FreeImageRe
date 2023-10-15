@@ -102,6 +102,7 @@ void testConvertToColor();
 void testFindMinMax();
 void testTmoClamp();
 void testTmoLinear();
+void testHistogram();
 
 
 #endif // TEST_FREEIMAGE_API_H

@@ -1163,7 +1163,16 @@ DLL_API FIBOOL DLL_CALLCONV FreeImage_AdjustGamma(FIBITMAP *dib, double gamma);
 DLL_API FIBOOL DLL_CALLCONV FreeImage_AdjustBrightness(FIBITMAP *dib, double percentage);
 DLL_API FIBOOL DLL_CALLCONV FreeImage_AdjustContrast(FIBITMAP *dib, double percentage);
 DLL_API FIBOOL DLL_CALLCONV FreeImage_Invert(FIBITMAP *dib);
-DLL_API FIBOOL DLL_CALLCONV FreeImage_GetHistogram(FIBITMAP *dib, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL channel FI_DEFAULT(FICC_BLACK));
+
+/**
+ * Computes histogram for all image channels with user defined number of bins
+ * Returns histogram bounds in `minVal` and `maxVal`. Each chanel histogram is optionally returned in histR/histG/histB.
+ * For RGB/RGBA color types optionally returns brightness histogram in histL.
+ * For Complex images optionally returns Abs histrogram in histB.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* minVal, void* maxVal, uint32_t* histR, uint32_t strideR FI_DEFAULT(1u),
+	uint32_t* histG FI_DEFAULT(NULL), uint32_t strideG  FI_DEFAULT(1u), uint32_t* histB FI_DEFAULT(NULL), uint32_t strideB  FI_DEFAULT(1u), uint32_t* histL FI_DEFAULT(NULL), uint32_t strideL FI_DEFAULT(1u));
+
 DLL_API int DLL_CALLCONV FreeImage_GetAdjustColorsLookupTable(uint8_t *LUT, double brightness, double contrast, double gamma, FIBOOL invert);
 DLL_API FIBOOL DLL_CALLCONV FreeImage_AdjustColors(FIBITMAP *dib, double brightness, double contrast, double gamma, FIBOOL invert FI_DEFAULT(FALSE));
 DLL_API unsigned DLL_CALLCONV FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolors, unsigned count, FIBOOL ignore_alpha, FIBOOL swap);
@@ -1205,6 +1214,11 @@ DLL_API FIBITMAP *DLL_CALLCONV FreeImage_MultigridPoissonSolver(FIBITMAP *Laplac
  * For one channel images brighntess is pixel value. For RGB color brightness is computed according default YUV conversion.
  */
 DLL_API FIBOOL DLL_CALLCONV FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr FI_DEFAULT(NULL), void** max_ptr FI_DEFAULT(NULL));
+/**
+ * Finds min and max value for every channel.
+ * Return using same data type as stored image.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_FindMinMaxValue(FIBITMAP* dib, void* min_value, void* max_value);
 
 /**
  * Sets all image pixels to 'value'. The value must be of valid type.

@@ -201,5 +201,110 @@ void testFindMinMax()
 		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 0 * sizeof(uint8_t));
 		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 3 * sizeof(uint8_t));
 	}
+
+	{
+		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(FreeImage_AllocateT(FIT_RGBAF, 4, 4), &::FreeImage_Unload);
+
+		FIRGBAF* ptr = reinterpret_cast<FIRGBAF*>(FreeImage_GetScanLine(bmp.get(), 0));
+		ptr[0].red = 1.0f;
+		ptr[0].green = 0.4f;
+		ptr[0].blue = 0.1f;
+		ptr[0].alpha = 0.0f;
+
+		ptr[1].red = 0.9f;
+		ptr[1].green = 0.8f;
+		ptr[1].blue = 0.5f;
+		ptr[1].alpha = 0.1f;
+
+		ptr[2].red = 0.9f;
+		ptr[2].green = 0.0f;
+		ptr[2].blue = 4.1f;
+		ptr[2].alpha = 0.0f;
+
+		ptr[3].red = 0.2f;
+		ptr[3].green = 0.3f;
+		ptr[3].blue = 0.6f;
+		ptr[3].alpha = 0.7f;
+
+		ptr = reinterpret_cast<FIRGBAF*>(FreeImage_GetScanLine(bmp.get(), 1));
+
+		ptr[0].red = 1.0f;
+		ptr[0].green = 0.5f;
+		ptr[0].blue = 0.1f;
+		ptr[0].alpha = 2.0f;
+
+		ptr[1].red = 0.3f;
+		ptr[1].green = 0.8f;
+		ptr[1].blue = 0.4f;
+		ptr[1].alpha = 0.5f;
+
+		ptr[2].red = 0.9f;
+		ptr[2].green = 0.3f;
+		ptr[2].blue = 6.1f;
+		ptr[2].alpha = 0.0f;
+
+		ptr[3].red = 0.2f;
+		ptr[3].green = 9.3f;
+		ptr[3].blue = 0.6f;
+		ptr[3].alpha = 0.7f;
+
+		ptr = reinterpret_cast<FIRGBAF*>(FreeImage_GetScanLine(bmp.get(), 2));
+
+		ptr[0].red = 11.0f;
+		ptr[0].green = 5.4f;
+		ptr[0].blue = 0.4f;
+		ptr[0].alpha = 3.0f;
+
+		ptr[1].red = 0.5f;
+		ptr[1].green = 1.4f;
+		ptr[1].blue = 5.4f;
+		ptr[1].alpha = 4.5f;
+
+		ptr[2].red = 0.1f;
+		ptr[2].green = 0.4f;
+		ptr[2].blue = 3.1f;
+		ptr[2].alpha = 1.0f;
+
+		ptr[3].red = 0.5f;
+		ptr[3].green = 8.4f;
+		ptr[3].blue = 1.6f;
+		ptr[3].alpha = 2.7f;
+
+		ptr = reinterpret_cast<FIRGBAF*>(FreeImage_GetScanLine(bmp.get(), 3));
+
+		ptr[0].red = 1.4f;
+		ptr[0].green = 0.4f;
+		ptr[0].blue = 9.2f;
+		ptr[0].alpha = 2.3f;
+
+		ptr[1].red = 3.3f;
+		ptr[1].green = 1.8f;
+		ptr[1].blue = 3.4f;
+		ptr[1].alpha = 1.5f;
+
+		ptr[2].red = 0.4f;
+		ptr[2].green = 5.3f;
+		ptr[2].blue = 6.3f;
+		ptr[2].alpha = 0.0f;
+
+		ptr[3].red = 0.3f;
+		ptr[3].green = 7.3f;
+		ptr[3].blue = 0.3f;
+		ptr[3].alpha = 45.7f;
+
+		FIRGBAF minVal, maxVal;
+		bool success = FreeImage_FindMinMaxValue(bmp.get(), &minVal, &maxVal);
+		assert(success);
+
+		assert(minVal.red == 0.1f);
+		assert(minVal.green == 0.0f);
+		assert(minVal.blue == 0.1f);
+		assert(minVal.alpha == 0.0f);
+
+		assert(maxVal.red == 11.0f);
+		assert(maxVal.green == 9.3f);
+		assert(maxVal.blue == 9.2f);
+		assert(maxVal.alpha == 45.7f);
+	}
 }
 

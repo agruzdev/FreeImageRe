@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
 	testFindMinMax();
 	testTmoClamp();
 	testTmoLinear();
+	testHistogram();
 
 	return 0;
 }

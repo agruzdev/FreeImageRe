@@ -1033,9 +1033,10 @@ namespace fi
             return *this;
         }
 
-        bool GetHistogram(uint32_t* histo, ColorChannel channel = ColorChannel::eBlack) const
+        bool MakeHistogram(uint32_t bins, void* minVal, void* maxVal, uint32_t* histR, uint32_t strideR = 1u,
+            uint32_t* histG = nullptr, uint32_t strideG = 1u, uint32_t* histB = nullptr, uint32_t strideB = 1u, uint32_t* histL = nullptr, uint32_t strideL = 1u) const
         {
-            return FreeImage_GetHistogram(NativeHandle_(), histo, static_cast<FREE_IMAGE_COLOR_CHANNEL>(channel));
+            return FreeImage_MakeHistogram(NativeHandle_(), bins, minVal, maxVal, histR, strideR, histG, strideG, histB, strideB, histL, strideL);
         }
 
         bool AdjustColors(double brightness, double contrast, double gamma, bool invert = false)

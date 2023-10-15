@@ -39,9 +39,10 @@ Version 0.2:
  - Added basic support for YUV images
  - Added basic support for Float32 complex images
  - Added function FreeImage_ConvertToColor
- - Added function FreeImage_FindMinMax
+ - Added function FreeImage_FindMinMax and FreeImage_FindMinMaxValue
  - Added function FreeImage_TmoClamp and corresponding enum FITMO_CLAMP
  - Added function FreeImage_TmoLinear and corresponding enum FITMO_LINEAR
  - Added function FreeImage_DrawBitmap
  - Added function FreeImage_GetColorType2
+ - Added function FreeImage_MakeHistogram
 
