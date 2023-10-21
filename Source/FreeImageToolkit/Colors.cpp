@@ -634,53 +634,38 @@ namespace
 		uint32_t mBinsNumber;
 	};
 
-
-	template <typename Function_, typename Builder0_, typename... Args_>
-	bool InvokeWithBuilders1(Function_&& f, const Builder0_& b0, Args_&&... args)
+	template <uint32_t BuildersNum_>
+	struct InvokeWithBuildersImpl
 	{
-		if (!b0.Discardable()) {
-			return std::forward<Function_>(f)(b0, std::forward<Args_>(args)...);
+		template <typename Function_, typename Builder0_, typename... Args_>
+		static
+		bool Apply(Function_&& f, const Builder0_& b0, Args_&&... args)
+		{
+			if (!b0.Discardable()) {
+				return InvokeWithBuildersImpl<BuildersNum_ - 1>::Apply(std::forward<Function_>(f), std::forward<Args_>(args)..., b0);
+			}
+			else {
+				return InvokeWithBuildersImpl<BuildersNum_ - 1>::Apply(std::forward<Function_>(f), std::forward<Args_>(args)...);
+			}
 		}
-		else {
+	};
+
+	template <>
+	struct InvokeWithBuildersImpl<0>
+	{
+		template <typename Function_, typename... Args_>
+		static
+		bool Apply(Function_&& f, Args_&&... args)
+		{
 			return std::forward<Function_>(f)(std::forward<Args_>(args)...);
 		}
-	}
+	};
 
-	template <typename Function_, typename Builder0_, typename Builder1_, typename... Args_>
-	bool InvokeWithBuilders2(Function_&& f, const Builder0_& b0, const Builder1_& b1, Args_&&... args)
+	template <typename Function_, typename... Builders_>
+	bool InvokeWithBuilders(Function_&& f, Builders_&&... builders)
 	{
-		if (!b1.Discardable()) {
-			return InvokeWithBuilders1(std::forward<Function_>(f), b0, b1, std::forward<Args_>(args)...);
-		}
-		else {
-			return InvokeWithBuilders1(std::forward<Function_>(f), b0, std::forward<Args_>(args)...);
-		}
+		return InvokeWithBuildersImpl<sizeof...(Builders_)>::Apply(std::forward<Function_>(f), std::forward<Builders_>(builders)...);
 	}
-
-	template <typename Function_, typename Builder0_, typename Builder1_, typename Builder2_, typename... Args_>
-	bool InvokeWithBuilders3(Function_&& f, const Builder0_& b0, const Builder1_& b1, const Builder2_& b2, Args_&&... args)
-	{
-		if (!b2.Discardable()) {
-			return InvokeWithBuilders2(std::forward<Function_>(f), b0, b1, b2, std::forward<Args_>(args)...);
-		}
-		else {
-			return InvokeWithBuilders2(std::forward<Function_>(f), b0, b1, std::forward<Args_>(args)...);
-		}
-	}
-
-	template <typename Function_, typename Builder0_, typename Builder1_, typename Builder2_, typename Builder3_, typename... Args_>
-	bool InvokeWithBuilders4(Function_&& f, const Builder0_& b0, const Builder1_& b1, const Builder2_& b2, const Builder3_& b3, Args_&&... args)
-	{
-		if (!b3.Discardable()) {
-			return InvokeWithBuilders3(std::forward<Function_>(f), b0, b1, b2, b3, std::forward<Args_>(args)...);
-		}
-		else {
-			return InvokeWithBuilders3(std::forward<Function_>(f), b0, b1, b2, std::forward<Args_>(args)...);
-		}
-	}
-
-
-
 
 	struct SelectRed
 	{
@@ -823,15 +808,15 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			const auto bpp = FreeImage_GetBPP(dib);
 			const auto colorType = FreeImage_GetColorType2(dib);
 			if ((colorType == FIC_RGBALPHA || colorType == FIC_YUV) && (bpp == 32)) {
-				success = InvokeWithBuilders4(HistogramUInt<FIRGBA8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+				success = InvokeWithBuilders(HistogramUInt<FIRGBA8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
 					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 			}
 			else if ((colorType == FIC_RGB || colorType == FIC_YUV) && (bpp == 24)) {
-				success = InvokeWithBuilders4(HistogramUInt<FIRGB8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
+				success = InvokeWithBuilders(HistogramUInt<FIRGB8>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR), HistogramBuilder<SelectGreen>(histG, strideG),
 					HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 			}
 			else if (colorType == FIC_MINISBLACK && bpp == 8) {
-				success = InvokeWithBuilders1(HistogramUInt<uint8_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+				success = InvokeWithBuilders(HistogramUInt<uint8_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
 			}
 			if (success) {
 				SetIntMinMax<uint8_t>(outMinVal, outMaxVal);
@@ -843,7 +828,7 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<FIRGBF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders4(HistogramFloat<FIRGBF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
+			success = InvokeWithBuilders(HistogramFloat<FIRGBF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
 				HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		}
 		break;
@@ -852,7 +837,7 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<FIRGBAF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders4(HistogramFloat<FIRGBAF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
+			success = InvokeWithBuilders(HistogramFloat<FIRGBAF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectRed>(histR, strideR),
 				HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		}
 		break;
@@ -861,7 +846,7 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<FICOMPLEX>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders3(HistogramFloat<FICOMPLEX>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
+			success = InvokeWithBuilders(HistogramFloat<FICOMPLEX>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
 				HistogramBuilder<SelectImag>(histG, strideG), HistogramBuilder<SelectAbs>(histB, strideB));
 		}
 		break;
@@ -870,7 +855,7 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<FICOMPLEXF>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders3(HistogramFloat<FICOMPLEXF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
+			success = InvokeWithBuilders(HistogramFloat<FICOMPLEXF>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectReal>(histR, strideR),
 				HistogramBuilder<SelectImag>(histG, strideG), HistogramBuilder<SelectAbs>(histB, strideB));
 		}
 		break;
@@ -879,7 +864,7 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<double>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders1(HistogramFloat<double>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
+			success = InvokeWithBuilders(HistogramFloat<double>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
 		}
 		break;
 	case FIT_FLOAT: {
@@ -887,57 +872,57 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 			if (!FindHistogramBounds<float>(dib, minVal, maxVal, outMinVal, outMaxVal)) {
 				break;
 			}
-			success = InvokeWithBuilders1(HistogramFloat<float>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
+			success = InvokeWithBuilders(HistogramFloat<float>(dib, binsNumber, minVal, maxVal), HistogramBuilder<SelectIdentity>(histR, strideR));
 		}
 		break;
 	case FIT_RGBA32:
-		success = InvokeWithBuilders4(HistogramUInt<FIRGBA32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+		success = InvokeWithBuilders(HistogramUInt<FIRGBA32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
 			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		if (success) {
 			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_RGB32:
-		success = InvokeWithBuilders4(HistogramUInt<FIRGB32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+		success = InvokeWithBuilders(HistogramUInt<FIRGB32>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
 			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		if (success) {
 			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_RGBA16:
-		success = InvokeWithBuilders4(HistogramUInt<FIRGBA16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+		success = InvokeWithBuilders(HistogramUInt<FIRGBA16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
 			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		if (success) {
 			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_RGB16:
-		success = InvokeWithBuilders4(HistogramUInt<FIRGB16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
+		success = InvokeWithBuilders(HistogramUInt<FIRGB16>(dib, binsNumber), HistogramBuilder<SelectRed>(histR, strideR),
 			HistogramBuilder<SelectGreen>(histG, strideG), HistogramBuilder<SelectBlue>(histB, strideB), HistogramBuilder<SelectRgbBrightness>(histL, strideL));
 		if (success) {
 			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_UINT32:
-		success = InvokeWithBuilders1(HistogramUInt<uint32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		success = InvokeWithBuilders(HistogramUInt<uint32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
 		if (success) {
 			SetIntMinMax<uint32_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_INT32:
-		success = InvokeWithBuilders1(HistogramSInt<int32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		success = InvokeWithBuilders(HistogramSInt<int32_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
 		if (success) {
 			SetIntMinMax<int32_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_UINT16:
-		success = InvokeWithBuilders1(HistogramUInt<uint16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		success = InvokeWithBuilders(HistogramUInt<uint16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
 		if (success) {
 			SetIntMinMax<uint16_t>(outMinVal, outMaxVal);
 		}
 		break;
 	case FIT_INT16:
-		success = InvokeWithBuilders1(HistogramSInt<int16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
+		success = InvokeWithBuilders(HistogramSInt<int16_t>(dib, binsNumber), HistogramBuilder<SelectIdentity>(histR, strideR));
 		if (success) {
 			SetIntMinMax<int16_t>(outMinVal, outMaxVal);
 		}
