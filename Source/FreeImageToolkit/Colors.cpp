@@ -771,7 +771,7 @@ namespace
 			return false;
 		}
 		minVal = PixelMin(StripAlpha(minChannelValues));
-		maxVal = PixelMax(StripAlpha(minChannelValues));
+		maxVal = PixelMax(StripAlpha(maxChannelValues));
 		if (outMinVal) {
 			*static_cast<ToValueType<PixelType_>*>(outMinVal) = minVal;
 		}
