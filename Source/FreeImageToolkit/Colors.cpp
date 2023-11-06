@@ -24,6 +24,7 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 #include <complex>
+#include <cstring>
 #include "../FreeImage/SimpleTools.h"
 
 // ----------------------------------------------------------
