@@ -1458,3 +1458,84 @@ FreeImage_SwapPaletteIndices(FIBITMAP *dib, uint8_t *index_a, uint8_t *index_b) 
 	return FreeImage_ApplyPaletteIndexMapping(dib, index_a, index_b, 1, TRUE);
 }
 
+
+
+namespace
+{
+	template <typename DstTy_, typename SrcTy_>
+	FIBOOL StaticCastPixelValue(void* dst_pixel, const SrcTy_* src_pixel)
+	{
+		*static_cast<DstTy_*>(dst_pixel) = static_cast<DstTy_>(*src_pixel);
+		return TRUE;
+	}
+
+	template <typename SrcTy_>
+	FIBOOL CastPixelValueImpl(const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
+	{
+		const SrcTy_* src = static_cast<const SrcTy_*>(src_pixel);
+		switch (dst_type) {
+		case FIT_COMPLEX:
+		case FIT_DOUBLE:
+			return StaticCastPixelValue<double>(dst_pixel, src);
+		case FIT_FLOAT:
+		case FIT_COMPLEXF:
+		case FIT_RGBAF:
+		case FIT_RGBF:
+			return StaticCastPixelValue<float>(dst_pixel, src);
+		case FIT_UINT32:
+		case FIT_RGBA32:
+		case FIT_RGB32:
+			return StaticCastPixelValue<uint32_t>(dst_pixel, src);
+		case FIT_INT32:
+			return StaticCastPixelValue<int32_t>(dst_pixel, src);
+		case FIT_UINT16:
+		case FIT_RGBA16:
+		case FIT_RGB16:
+			return StaticCastPixelValue<uint16_t>(dst_pixel, src);
+		case FIT_INT16:
+			return StaticCastPixelValue<int16_t>(dst_pixel, src);
+			break;
+		case FIT_BITMAP:
+			return StaticCastPixelValue<uint8_t>(dst_pixel, src);
+			break;
+		default:
+			return FALSE;
+		}
+	}
+
+} // namespace
+
+FIBOOL CastPixelValue(FREE_IMAGE_TYPE src_type, const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
+{
+	if (!src_pixel || !dst_pixel) {
+		return FALSE;
+	}
+	switch (src_type) {
+	case FIT_COMPLEX:
+	case FIT_DOUBLE:
+		return CastPixelValueImpl<double>(src_pixel, dst_type, dst_pixel);
+	case FIT_FLOAT:
+	case FIT_COMPLEXF:
+	case FIT_RGBAF:
+	case FIT_RGBF:
+		return CastPixelValueImpl<float>(src_pixel, dst_type, dst_pixel);
+	case FIT_UINT32:
+	case FIT_RGBA32:
+	case FIT_RGB32:
+		return CastPixelValueImpl<uint32_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_INT32:
+		return CastPixelValueImpl<int32_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_UINT16:
+	case FIT_RGBA16:
+	case FIT_RGB16:
+		return CastPixelValueImpl<uint16_t>(src_pixel, dst_type, dst_pixel);
+	case FIT_INT16:
+		return CastPixelValueImpl<int16_t>(src_pixel, dst_type, dst_pixel);
+		break;
+	case FIT_BITMAP:
+		return CastPixelValueImpl<uint8_t>(src_pixel, dst_type, dst_pixel);
+		break;
+	default:
+		return FALSE;
+	}
+}

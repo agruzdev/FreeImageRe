@@ -1321,6 +1321,10 @@ Rotate a dib according to Exif info
 DLL_API void DLL_CALLCONV RotateExif(FIBITMAP** dib);
 
 
+/**
+ * Cast pixel value via static_cast
+ */
+DLL_API FIBOOL DLL_CALLCONV CastPixelValue(FREE_IMAGE_TYPE src_type, const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel);
 
 // restore the borland-specific enum size option
 #if defined(__BORLANDC__)
