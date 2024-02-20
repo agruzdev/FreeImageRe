@@ -53,6 +53,8 @@ void BitmapTransform(FIBITMAP* dst, FIBITMAP* src, UnaryOperation_ unary_op)
 	}
 }
 
+#if __cplusplus >= 201703L
+
 template <typename Ty_>
 using IsIntPixelType = std::integral_constant<bool,
     std::is_same_v<Ty_, FIRGB8> ||
@@ -347,6 +349,7 @@ std::tuple<PixelTy_*, PixelTy_*, double, double> FindMinMax(FIBITMAP* src, Brigh
     return std::make_tuple(minIt, maxIt, minVal, maxVal);
 }
 
+#endif
 
 
 #endif //FREEIMAGE_SIMPLE_TOOLS_H_

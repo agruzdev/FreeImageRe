@@ -445,7 +445,7 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 	return FALSE;
 }
 
-
+#if __cplusplus >= 201703L
 namespace
 {
 
@@ -934,6 +934,12 @@ FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinV
 
 	return success ? TRUE : FALSE;
 }
+#else
+FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
+{
+	return FALSE;
+}
+#endif
 
 
 // ----------------------------------------------------------
