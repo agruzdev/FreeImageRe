@@ -12,6 +12,7 @@
 
 FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double max_value)
 {
+#if __cplusplus >= 201703L
     if (!FreeImage_HasPixels(src)) {
         return nullptr;
     }
@@ -137,4 +138,7 @@ FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double max_value)
     }
 
     return dst.release();
+#else
+	return nullptr;
+#endif
 }

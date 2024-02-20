@@ -8,7 +8,7 @@
 #include <cstring>
 #include <algorithm>
 
-
+#if __cplusplus >= 201703L
 FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr, void** max_ptr)
 {
 	if (!FreeImage_HasPixels(dib)) {
@@ -261,6 +261,17 @@ FIBOOL FreeImage_FindMinMaxValue(FIBITMAP* dib, void* min_value, void* max_value
 
 	return TRUE;
 }
+#else
+FIBOOL FreeImage_FindMinMax(FIBITMAP* dib, double* min_brightness, double* max_brightness, void** min_ptr, void** max_ptr)
+{
+	return FALSE;
+}
+
+FIBOOL FreeImage_FindMinMaxValue(FIBITMAP* dib, void* min_value, void* max_value)
+{
+	return FALSE;
+}
+#endif
 
 
 FIBOOL FreeImage_Fill(FIBITMAP* dib, const void* value_ptr, size_t value_size)
