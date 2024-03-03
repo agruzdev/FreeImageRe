@@ -11,10 +11,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME PNG
     VERBOSE_NAME "LibPNG"
-    URL "https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/libpng-1.6.37.tar.gz/download?download="
-    HASH_MD5 "6c7519f6c75939efa0ed3053197abd54"
-    FILE_NAME "libpng-1.6.37.tar.gz"
-    PREFIX "libpng-1.6.37"
+    URL "https://sourceforge.net/projects/libpng/files/libpng16/1.6.43/libpng-1.6.43.tar.gz/download?download="
+    HASH_MD5 "cee1c227d1f23c3a2a72341854b5a83f"
+    FILE_NAME "libpng-1.6.43.tar.gz"
+    PREFIX "libpng-1.6.43"
 )
 
 if(NOT TARGET png_static)
@@ -28,7 +28,7 @@ if(NOT TARGET png_static)
     set(SKIP_INSTALL_ALL ON)
 
     add_subdirectory(${PNG_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/png EXCLUDE_FROM_ALL)
-    set_property(TARGET png_static genfiles PROPERTY FOLDER "Dependencies")
+    set_property(TARGET png_static png_genfiles PROPERTY FOLDER "Dependencies")
 
     if (MSVC)
         target_compile_options(png_static PRIVATE "/w")
