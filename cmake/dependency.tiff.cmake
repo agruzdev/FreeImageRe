@@ -11,14 +11,13 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME TIFF
     VERBOSE_NAME "LibTIFF"
-    URL "http://download.osgeo.org/libtiff/tiff-4.4.0.zip"
-    HASH_MD5 "81b88f590c77dbfb9eb8e3b2c1843e77"
-    FILE_NAME "tiff-4.4.0.zip"
-    PREFIX "tiff-4.4.0"
+    URL "http://download.osgeo.org/libtiff/tiff-4.6.0.zip"
+    HASH_MD5 "fe7cf2bda082f644b2aec2eddc3f5153"
+    FILE_NAME "tiff-4.6.0.zip"
+    PREFIX "tiff-4.6.0"
 )
 
 if(NOT TARGET tiff)
-#    set(SKIP_INSTALL_ALL ON)
 
     set(zlib ON)
     set(libdeflate OFF)
@@ -31,15 +30,11 @@ if(NOT TARGET tiff)
     set(BUILD_SHARED_LIBS OFF)
     set(cxx OFF)
 
-    macro(install)
-    endmacro()
-
     add_subdirectory(${TIFF_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/tiff EXCLUDE_FROM_ALL)
     set_property(TARGET tiff PROPERTY FOLDER "Dependencies")
 
     if (MSVC)
         target_compile_options(tiff PRIVATE "/w")
-        target_compile_options(tiff PRIVATE "/FI stdlib.h")
     endif()
 endif()
 
