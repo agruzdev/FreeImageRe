@@ -11,10 +11,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME EXR
     VERBOSE_NAME "OpenEXR"
-    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.1.4.zip"
-    HASH_MD5 "eea6aad937bef40d666e29492c14ff55"
-    FILE_NAME "v3.1.4.zip"
-    PREFIX "openexr-3.1.4"
+    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.2.2.zip"
+    HASH_MD5 "0"
+    FILE_NAME "v3.2.2.zip"
+    PREFIX "openexr-3.2.2"
 )
 
 if(NOT TARGET OpenEXR)
@@ -30,7 +30,7 @@ if(NOT TARGET OpenEXR)
     set(BUILD_SHARED_LIBS OFF)
 
     add_subdirectory(${EXR_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/exr EXCLUDE_FROM_ALL)
-    set_property(TARGET OpenEXR Iex IlmThread Imath PROPERTY FOLDER "Dependencies")
+    set_property(TARGET OpenEXR OpenEXRCore Iex IlmThread Imath PROPERTY FOLDER "Dependencies")
 
     if (MSVC)
         target_compile_options(Iex PRIVATE "/w")
