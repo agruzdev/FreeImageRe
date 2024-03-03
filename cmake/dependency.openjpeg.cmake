@@ -11,10 +11,10 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME OPENJPEG
     VERBOSE_NAME "OpenJPEG"
-    URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.0.zip"
-    HASH_MD5 "19749d0ac2b4b0dbf484c8879fc624a8"
-    FILE_NAME "v2.5.0.zip"
-    PREFIX "openjpeg-2.5.0"
+    URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.2.zip"
+    HASH_MD5 "6295f52db915f7b4afd3241d3692cf00"
+    FILE_NAME "v2.5.2.zip"
+    PREFIX "openjpeg-2.5.2"
 )
 
 if(NOT TARGET openjp2)
