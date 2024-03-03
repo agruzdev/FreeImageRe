@@ -15,10 +15,10 @@ if (JPEG_REPOSITORY STREQUAL "IJG")
     dependency_find_or_download(
         NAME JPEG_IJG
         VERBOSE_NAME "JPEG"
-        URL "https://www.ijg.org/files/jpegsr9e.zip"
-        HASH_MD5 "e580b368b85f380abfdde816d37cf855"
-        FILE_NAME "jpegsr9e.zip"
-        PREFIX "jpeg-9e"
+        URL "https://www.ijg.org/files/jpegsr9f.zip"
+        HASH_MD5 "8bd2706c80ac696856a1334430a6ffd1"
+        FILE_NAME "jpegsr9f.zip"
+        PREFIX "jpeg-9f"
     )
 
     if(NOT TARGET LibJPEG)
