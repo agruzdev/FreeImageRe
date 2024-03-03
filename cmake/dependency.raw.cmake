@@ -1,5 +1,5 @@
 # LibRaw dependency
-# https://github.com/LibRaw/LibRaw/releases/tag/0.20.0
+# https://github.com/LibRaw/LibRaw
 
 # Output variables:
 # RAW_INCLUDE_DIR - includes
@@ -11,20 +11,39 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME RAW
     VERBOSE_NAME "LibRaw"
-    URL "https://github.com/LibRaw/LibRaw/archive/refs/tags/0.20.0.zip"
-    HASH_MD5 "b1de41f0cab4817e72e5e38aab3eb912"
-    FILE_NAME "rawlite.0.20.0.zip"
-    PREFIX "LibRaw-0.20.0"
+    URL "https://github.com/LibRaw/LibRaw/archive/refs/tags/0.21.2.zip"
+    HASH_MD5 "37a020696bda1f071c99ff22a5130e83"
+    FILE_NAME "rawlite.0.21.2.zip"
+    PREFIX "LibRaw-0.21.2"
 )
 
-add_library(LibRaw STATIC
-    ${RAW_FOUND_ROOT}/internal/dcraw_common.cpp 
-    ${RAW_FOUND_ROOT}/internal/dcraw_fileio.cpp 
-    ${RAW_FOUND_ROOT}/internal/demosaic_packs.cpp 
-    ${RAW_FOUND_ROOT}/src/libraw_c_api.cpp 
-    ${RAW_FOUND_ROOT}/src/libraw_cxx.cpp 
+file(GLOB LibRaw_sources 
+    ${RAW_FOUND_ROOT}/src/decoders/*
+    ${RAW_FOUND_ROOT}/src/demosaic/*
+    ${RAW_FOUND_ROOT}/src/integration/*
+    ${RAW_FOUND_ROOT}/src/metadata/*
+    ${RAW_FOUND_ROOT}/src/tables/*
+    ${RAW_FOUND_ROOT}/src/utils/*
+    ${RAW_FOUND_ROOT}/src/x3f/*
+    ${RAW_FOUND_ROOT}/src/postprocessing/aspect_ratio.cpp
+    ${RAW_FOUND_ROOT}/src/postprocessing/dcraw_process.cpp
+    ${RAW_FOUND_ROOT}/src/postprocessing/mem_image.cpp
+    ${RAW_FOUND_ROOT}/src/postprocessing/postprocessing_aux.cpp
+    ${RAW_FOUND_ROOT}/src/postprocessing/postprocessing_utils.cpp
+    ${RAW_FOUND_ROOT}/src/postprocessing/postprocessing_utils_dcrdefs.cpp
+    ${RAW_FOUND_ROOT}/src/preprocessing/ext_preprocess.cpp
+    ${RAW_FOUND_ROOT}/src/preprocessing/raw2image.cpp
+    ${RAW_FOUND_ROOT}/src/preprocessing/subtract_black.cpp
+    ${RAW_FOUND_ROOT}/src/write/apply_profile.cpp
+    ${RAW_FOUND_ROOT}/src/write/file_write.cpp
+    ${RAW_FOUND_ROOT}/src/write/tiff_writer.cpp
+    ${RAW_FOUND_ROOT}/src/libraw_c_api.cpp
     ${RAW_FOUND_ROOT}/src/libraw_datastream.cpp
 )
+
+add_library(LibRaw STATIC ${LibRaw_sources})
+
+unset(LibRaw_sources)
 
 target_include_directories(LibRaw 
     PUBLIC  ${RAW_FOUND_ROOT}

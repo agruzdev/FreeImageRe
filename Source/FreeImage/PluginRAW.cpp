@@ -130,10 +130,11 @@ public:
 		//if(substream) return substream->eof();
         return (_io->tell_proc(_handle) >= _eof);
     }
-
+#if LIBRAW_OLD_VIDEO_SUPPORT
 	void * make_jas_stream() override {
 		return NULL;
 	}
+#endif
 };
 
 // ----------------------------------------------------------
@@ -694,7 +695,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// --------------------------------------------
 
 		// (-s [0..N-1]) Select one raw image from input file
-		RawProcessor->imgdata.params.shot_select = 0;
+		RawProcessor->imgdata.rawparams.shot_select = 0;
 		// (-w) Use camera white balance, if possible (otherwise, fallback to auto_wb)
 		RawProcessor->imgdata.params.use_camera_wb = 1;
 		// (-M) Use any color matrix from the camera metadata. This option only affects Olympus, Leaf, and Phase One cameras.
