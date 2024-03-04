@@ -11,13 +11,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 dependency_find_or_download(
     NAME WEBP
     VERBOSE_NAME "WEBP"
-    URL "https://chromium.googlesource.com/webm/libwebp/+archive/0d1f12546bd803099a60c070517a552483f3790e.tar.gz"   #v1.2.4
-    HASH_MD5 "2a2c21212b3c138d9eb5c781ed700de3"
+    URL "https://chromium.googlesource.com/webm/libwebp/+archive/ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz"   #v1.3.2
+    HASH_MD5 OFF   # googlesource can't provde stable hash, so ignore hash check
     FILE_NAME "webp.tar.gz"
 )
 
-
-#set(SKIP_INSTALL_ALL ON)
 
 set(BUILD_SHARED_LIBS OFF)
 set(WEBP_BUILD_ANIM_UTILS OFF)
