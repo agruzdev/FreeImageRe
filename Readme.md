@@ -45,4 +45,12 @@ Version 0.2:
  - Added function FreeImage_DrawBitmap
  - Added function FreeImage_GetColorType2
  - Added function FreeImage_MakeHistogram
+ - Updated zlib till v1.3.1
+ - Updated OpenEXR till v3.2.2
+ - Updated OpenJPEG till v2.5.2
+ - Updaged LibJPEG till jpeg-9f
+ - Updated LibPNG till v1.6.43
+ - Updated LibTIFF till v4.6.0
+ - Updated LibWebP till v1.3.2
+ - Updated LibRaw till v0.21.2
 
