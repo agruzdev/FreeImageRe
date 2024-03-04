@@ -22,6 +22,10 @@ endfunction()
 function(file_exists STATUS_ FILE_ HASH_MD5_)
     set(${STATUS_} FALSE PARENT_SCOPE)
     if(EXISTS ${FILE_})
+        if(NOT HASH_MD5_)
+            set(${STATUS_} TRUE PARENT_SCOPE)
+            return()
+        endif()
         file(MD5 ${FILE_} hash_)
         if(${hash_} STREQUAL ${HASH_MD5_})
             set(${STATUS_} TRUE PARENT_SCOPE)
@@ -44,11 +48,18 @@ function(dependency_download_and_unzip URL_ HASH_MD5_ FILE_ UNZIPPED_DIR_ ONLY_C
             endif()
 
             message(STATUS "Downloading: ${URL_}")
-            file(DOWNLOAD ${URL_} ${FILE_}
-                SHOW_PROGRESS
-                EXPECTED_MD5 ${HASH_MD5_}
-                STATUS ret_
-            )
+            if (NOT HASH_MD5_)
+                file(DOWNLOAD ${URL_} ${FILE_}
+                    SHOW_PROGRESS
+                    STATUS ret_
+                )
+            else()
+                file(DOWNLOAD ${URL_} ${FILE_}
+                    SHOW_PROGRESS
+                    EXPECTED_MD5 ${HASH_MD5_}
+                    STATUS ret_
+                )
+            endif()
             if(NOT ret_)
                 message(SEND_ERROR "Failed to download: ${URL_}")
                 set(${RET_CODE_} FALSE PARENT_SCOPE)
