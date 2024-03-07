@@ -41,6 +41,8 @@
 #define FREEIMAGE_MINOR_VERSION   18
 #define FREEIMAGE_RELEASE_SERIAL  0
 
+#define FREEIMAGE_RESURRECTED     1
+
 // Compiler options ---------------------------------------------------------
 
 #include <inttypes.h>
