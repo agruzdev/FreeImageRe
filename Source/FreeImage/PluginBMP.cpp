@@ -476,6 +476,10 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 		unsigned used_colors	= bih.biClrUsed;
 		int width				= bih.biWidth;
 		int height				= bih.biHeight;		// WARNING: height can be < 0 => check each call using 'height' as a parameter
+		if (width < 0) {
+			throw "BMP width is negative";
+		}
+
 		unsigned bit_count		= bih.biBitCount;
 		unsigned compression	= bih.biCompression;
 		unsigned pitch			= CalculatePitch(CalculateLine(width, bit_count));
