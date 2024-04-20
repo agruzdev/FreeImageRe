@@ -54,3 +54,6 @@ Version 0.2:
  - Updated LibWebP till v1.3.2
  - Updated LibRaw till v0.21.2
 
+Version 0.3:
+ - Fixed the vulnerability CVE-2023-47993
+
