@@ -216,14 +216,14 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 	try {
 		height = abs(height);
 
-		pixels = (uint8_t*)malloc(width * height * sizeof(uint8_t));
+		pixels = (uint8_t*)malloc(width * sizeof(uint8_t) * height);
 		if(!pixels) throw(1);
-		memset(pixels, 0, width * height * sizeof(uint8_t));
+		memset(pixels, 0, width * sizeof(uint8_t) * height);
 
 		uint8_t *q = pixels;
-		uint8_t *end = pixels + height * width;
+		uint8_t *end = pixels + static_cast<size_t>(height) * width;
 
-		for (int scanline = 0; scanline < height; ) {
+		for (size_t scanline = 0; scanline < height; ) {
 			if (q < pixels || q  >= end) {
 				break;
 			}
@@ -311,8 +311,8 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 		
 		{
 			// Convert to 4-bit
+			const uint8_t *src = (uint8_t*)pixels;
 			for(int y = 0; y < height; y++) {
-				const uint8_t *src = (uint8_t*)pixels + y * width;
 				uint8_t *dst = FreeImage_GetScanLine(dib, y);
 
 				FIBOOL hinibble = TRUE;
@@ -326,6 +326,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 					hinibble = !hinibble;
 				}
+				src += width;
 			}
 		}
 
