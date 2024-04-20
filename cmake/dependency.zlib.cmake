@@ -36,5 +36,6 @@ endif()
 export(TARGETS zlibstatic FILE "${CMAKE_BINARY_DIR}/dependencies/zlib/zlibstaticTargets.cmake")
 
 set(ZLIB_INCLUDE_DIR ${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib CACHE PATH "")
+set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} CACHE PATH "") # For libpng
 set(ZLIB_LIBRARY_DIR "" CACHE PATH "")
 set(ZLIB_LIBRARY zlibstatic CACHE STRING "")
