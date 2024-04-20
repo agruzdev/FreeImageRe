@@ -522,7 +522,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				io->read_proc(FreeImage_GetPalette(dib), used_colors * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				for(int i = 0; i < used_colors; i++) {
+				for(unsigned int i = 0; i < used_colors; i++) {
 					INPLACESWAP(pal[i].red, pal[i].blue);
 				}
 #endif
