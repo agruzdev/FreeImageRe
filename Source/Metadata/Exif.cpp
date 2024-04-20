@@ -720,7 +720,15 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 
 	const uint16_t entriesCount0th = ReadUint16(msb_order, ifd0th);
 	
-	uint32_t next_offset = ReadUint32(msb_order, DIR_ENTRY_ADDR(ifd0th, entriesCount0th));
+	const uint8_t* base = DIR_ENTRY_ADDR(ifd0th, entriesCount0th);
+	{
+		const size_t remaining = (size_t)base + 4 - (size_t)tiffp;
+		if(remaining > dwLength) {
+			// bad value
+			return FALSE;
+		}
+	}
+	const uint32_t next_offset = ReadUint32(msb_order, base);
 	if((next_offset == 0) || (next_offset >= dwLength)) {
 		return TRUE; //< no thumbnail
 	}
@@ -735,7 +743,7 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 	for(int e = 0; e < entriesCount1st; e++) {
 
 		// point to the directory entry
-		const uint8_t* base = DIR_ENTRY_ADDR(ifd1st, e);
+		base = DIR_ENTRY_ADDR(ifd1st, e);
 		
 		// check for buffer overflow
 		const size_t remaining = (size_t)base + 12 - (size_t)tiffp;
