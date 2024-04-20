@@ -789,7 +789,7 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 		return TRUE;
 	}
 	
-	if(thOffset + thSize > dwLength) {
+	if(thSize > dwLength || thOffset > dwLength - thSize) {
 		return TRUE;
 	}
 	
