@@ -56,4 +56,5 @@ Version 0.2:
 
 Version 0.3:
  - Fixed the vulnerability CVE-2023-47993
+ - Added API for querying versions of compiled dependencies
 

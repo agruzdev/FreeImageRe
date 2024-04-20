@@ -38,6 +38,7 @@ extern "C" {
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jerror.h"
+#include "jversion.h"
 }
 
 #include "FreeImage.h"
@@ -1740,4 +1741,20 @@ InitJPEG(Plugin *plugin, int format_id) {
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
+}
+
+
+FIDEPENDENCY MakeJpegDependencyInfo() {
+	FIDEPENDENCY info;
+#ifdef LIBJPEG_TURBO_VERSION
+	info.name = "libjpeg (turbo)";
+	info.majorVersion = LIBJPEG_TURBO_VERSION_NUMBER;
+	info.minorVersion = 0;
+#else
+	info.name = "libjpeg (IJG)";
+	info.majorVersion = JPEG_LIB_VERSION_MAJOR;
+	info.minorVersion = JPEG_LIB_VERSION_MINOR;
+#endif
+	info.fullVersion = JVERSION;
+	return info;
 }

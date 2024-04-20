@@ -663,6 +663,15 @@ typedef void (DLL_CALLCONV *FI_InitProc)(Plugin *plugin, int format_id);
 
 #endif // PLUGINS
 
+// Dependency info struct
+
+FI_STRUCT (FIDEPENDENCY) {
+	const char* name;
+	const char* fullVersion;	// Might include more components than major and minor digits, depends on each library style
+	uint32_t majorVersion;
+	uint32_t minorVersion;
+};
+
 
 // Load / Save flag constants -----------------------------------------------
 
@@ -808,6 +817,16 @@ DLL_API const char *DLL_CALLCONV FreeImage_GetVersion(void);
 DLL_API const char *DLL_CALLCONV FreeImage_GetCopyrightMessage(void);
 DLL_API const char *DLL_CALLCONV FreeImageRe_GetVersion(void);
 DLL_API void DLL_CALLCONV FreeImageRe_GetVersionNumbers(int* major, int* minor);
+
+/**
+ * Returns number of linked dependencies
+ */
+DLL_API uint32_t DLL_CALLCONV FreeImage_GetDependenciesCount(void);
+/**
+ * Returns dependency info.
+ * The address to FIDEPENDENCY should not be released manually.
+ */
+DLL_API const FIDEPENDENCY* DLL_CALLCONV FreeImage_GetDependencyInfo(uint32_t index);
 
 // Message output functions -------------------------------------------------
 

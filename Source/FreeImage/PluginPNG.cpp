@@ -1119,3 +1119,13 @@ InitPNG(Plugin *plugin, int format_id) {
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
+
+
+FIDEPENDENCY MakePngDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "libpng";
+	info.fullVersion = PNG_LIBPNG_VER_STRING;
+	info.majorVersion = PNG_LIBPNG_VER_MAJOR;
+	info.minorVersion = PNG_LIBPNG_VER_MINOR;
+	return info;
+}

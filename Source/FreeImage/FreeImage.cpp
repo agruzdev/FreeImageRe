@@ -26,6 +26,8 @@
 #include <windows.h>
 #endif
 
+#include "zlib.h"
+
 #include "FreeImage.h"
 #include "Utilities.h"
 
@@ -78,9 +80,6 @@ void FreeImage_SO_DeInitialise() {
 
 //----------------------------------------------------------------------
 
-#define QUOTE_MACRO_(T) #T
-#define QUOTE_MACRO(T) QUOTE_MACRO_(T)
-
 const char * DLL_CALLCONV
 FreeImage_GetVersion() {
 	static char s_version[16];
@@ -95,19 +94,91 @@ FreeImage_GetCopyrightMessage() {
 
 const char* DLL_CALLCONV
 FreeImageRe_GetVersion() {
-	static const char* version = QUOTE_MACRO(FREEIMAGERE_MAJOR_VERSION) "." QUOTE_MACRO(FREEIMAGERE_MINOR_VERSION);
+	static const char* version = FI_QUOTE(FREEIMAGERE_MAJOR_VERSION) "." FI_QUOTE(FREEIMAGERE_MINOR_VERSION);
 	return version;
 }
 
 void DLL_CALLCONV
-FreeImageRe_GetVersionNumbers(int* major, int* minor)
-{
+FreeImageRe_GetVersionNumbers(int* major, int* minor) {
 	if (major) {
 		*major = FREEIMAGERE_MAJOR_VERSION;
 	}
 	if (minor) {
 		*minor = FREEIMAGERE_MINOR_VERSION;
 	}
+}
+
+// Forward declaration for version functions
+FIDEPENDENCY MakePngDependencyInfo();
+FIDEPENDENCY MakeJpegDependencyInfo();
+FIDEPENDENCY MakeJpeg2kDependencyInfo();
+FIDEPENDENCY MakeExrDependencyInfo();
+FIDEPENDENCY MakeTiffDependencyInfo();
+FIDEPENDENCY MakeRawDependencyInfo();
+FIDEPENDENCY MakeWebpDependencyInfo();
+FIDEPENDENCY MakeJxrDependencyInfo();
+
+namespace {
+	
+	FIDEPENDENCY MakeZLibDependencyInfo() {
+		FIDEPENDENCY info{};
+		info.name = "zlib";
+		info.fullVersion = ZLIB_VERSION;
+		info.majorVersion = ZLIB_VER_MAJOR;
+		info.minorVersion = ZLIB_VER_MINOR;
+		return info;
+	}
+
+	class DependenciesTable {
+	public:
+		static const DependenciesTable& GetInstance() {
+			static DependenciesTable instance;
+			return instance;
+		}
+
+		uint32_t GetSize() const {
+			assert(mEntries.size() <= UINT32_MAX);
+			return static_cast<uint32_t>(mEntries.size());
+		}
+
+		const FIDEPENDENCY* GetByIndex(uint32_t index) const {
+			return &mEntries.at(index);
+		}
+
+	private:
+		DependenciesTable() {
+			mEntries.emplace_back(MakeZLibDependencyInfo());
+			mEntries.emplace_back(MakePngDependencyInfo());
+			mEntries.emplace_back(MakeJpegDependencyInfo());
+			mEntries.emplace_back(MakeJpeg2kDependencyInfo());
+			mEntries.emplace_back(MakeExrDependencyInfo());
+			mEntries.emplace_back(MakeTiffDependencyInfo());
+			mEntries.emplace_back(MakeRawDependencyInfo());
+			mEntries.emplace_back(MakeWebpDependencyInfo());
+			mEntries.emplace_back(MakeJxrDependencyInfo());
+		}
+
+		std::vector<FIDEPENDENCY> mEntries;
+	};
+
+} // namespace
+
+uint32_t DLL_CALLCONV 
+FreeImage_GetDependenciesCount(void)
+try {
+	return DependenciesTable::GetInstance().GetSize();
+}
+catch (...) {
+	return 0;
+}
+
+const FIDEPENDENCY* DLL_CALLCONV
+FreeImage_GetDependencyInfo(uint32_t index) 
+try {
+	return DependenciesTable::GetInstance().GetByIndex(index);
+}
+catch (...) {
+	return nullptr;
 }
 
 //----------------------------------------------------------------------

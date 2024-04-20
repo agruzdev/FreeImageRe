@@ -792,3 +792,13 @@ InitRAW(Plugin *plugin, int format_id) {
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
+
+
+FIDEPENDENCY MakeRawDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "LibRaw";
+	info.fullVersion = LIBRAW_VERSION_STR;
+	info.majorVersion = LIBRAW_MAJOR_VERSION;
+	info.minorVersion = LIBRAW_MINOR_VERSION;
+	return info;
+}
