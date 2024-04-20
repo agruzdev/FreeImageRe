@@ -720,7 +720,7 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 
 	const uint16_t entriesCount0th = ReadUint16(msb_order, ifd0th);
 	
-	uint8_t* base = DIR_ENTRY_ADDR(ifd0th, entriesCount0th);
+	const uint8_t* base = DIR_ENTRY_ADDR(ifd0th, entriesCount0th);
 	{
 		const size_t remaining = (size_t)base + 4 - (size_t)tiffp;
 		if(remaining > dwLength) {
