@@ -64,7 +64,7 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	mb = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
 
 	// Allocate Qadd
-	Qadd = (uint16_t *)malloc(sizeof(uint16_t) * width * height);
+	Qadd = (uint16_t *)malloc(width * sizeof(uint16_t) * height);
 
 	if(!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
 		if(gm2)	free(gm2);
@@ -80,7 +80,7 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	memset(mr, 0, SIZE_3D * sizeof(int32_t));
 	memset(mg, 0, SIZE_3D * sizeof(int32_t));
 	memset(mb, 0, SIZE_3D * sizeof(int32_t));
-	memset(Qadd, 0, sizeof(uint16_t) * width * height);
+	memset(Qadd, 0, width * sizeof(uint16_t) * height);
 }
 
 WuQuantizer::~WuQuantizer() {

@@ -446,7 +446,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 		case TIFF_RATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			uint32_t *rvalue = (uint32_t*)malloc(2 * value_count * sizeof(uint32_t));
+			uint32_t *rvalue = (uint32_t*)malloc(2 * sizeof(uint32_t) * value_count);
 			for(uint32_t i = 0; i < value_count; i++) {
 				float *fv = (float*)raw_data;
 				FIRational rational(fv[i]);
@@ -463,7 +463,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 		case TIFF_SRATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			int32_t *rvalue = (int32_t*)malloc(2 * value_count * sizeof(int32_t));
+			int32_t *rvalue = (int32_t*)malloc(2 * sizeof(uint32_t) * value_count);
 			for(uint32_t i = 0; i < value_count; i++) {
 				float *fv = (float*)raw_data;
 				FIRational rational(fv[i]);

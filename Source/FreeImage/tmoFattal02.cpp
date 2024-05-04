@@ -194,7 +194,7 @@ static FIBITMAP* GradientLevel(FIBITMAP *H, float *avgGrad, int k) {
 			dst_pixel += pitch;
 		}
 		
-		*avgGrad = average / (width * height);
+		*avgGrad = average / (static_cast<float>(width) * height);
 
 		return G;
 

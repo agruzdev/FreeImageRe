@@ -255,7 +255,7 @@ LuminanceFromYxy(FIBITMAP *Yxy, float *maxLum, float *minLum, float *worldLum) {
 	// minimum luminance
 	*minLum = min_lum;
 	// average log luminance
-	double avgLogLum = (sum / (width * height));
+	double avgLogLum = (sum / (static_cast<double>(width) * height));
 	// world adaptation luminance
 	*worldLum = (float)exp(avgLogLum);
 
@@ -386,9 +386,9 @@ LuminanceFromY(FIBITMAP *dib, float *maxLum, float *minLum, float *Lav, float *L
 	// minimum luminance
 	*minLum = min_lum;
 	// average luminance
-	*Lav = (float)(sumLum / (width * height));
+	*Lav = (float)(sumLum / (static_cast<double>(width) * height));
 	// average log luminance, a.k.a. world adaptation luminance
-	*Llav = (float)exp(sumLogLum / (width * height));
+	*Llav = (float)exp(sumLogLum / (static_cast<double>(width) * height));
 
 	return TRUE;
 }
@@ -400,7 +400,7 @@ static void findMaxMinPercentile(FIBITMAP *Y, float minPrct, float *minLum, floa
 	int height = FreeImage_GetHeight(Y);
 	int pitch = FreeImage_GetPitch(Y);
 
-	std::vector<float> vY(width * height);
+	std::vector<float> vY(static_cast<size_t>(width) * height);
 
 	uint8_t *bits = (uint8_t*)FreeImage_GetBits(Y);
 	for(y = 0; y < height; y++) {

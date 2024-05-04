@@ -565,7 +565,7 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	}
 
 	// allocate a temporary array
-	ImageRasterArray = (double*)malloc(width * height * sizeof(double));
+	ImageRasterArray = (double*)malloc(width * sizeof(double) * height);
 	if(!ImageRasterArray) {
 		FreeImage_Unload(dst);
 		return NULL;
