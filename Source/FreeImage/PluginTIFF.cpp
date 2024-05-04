@@ -2004,6 +2004,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				else if(planar_config == PLANARCONFIG_SEPARATE) {
 					
+					if (bitspersample < 8) {
+						throw "Unsupported number of bits per sample";
+					}
+
 					const unsigned Bpc = bitspersample / 8;
 					uint8_t* dib_strip = bits;
 					// - loop for strip blocks -
