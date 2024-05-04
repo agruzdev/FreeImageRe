@@ -55,6 +55,6 @@ Version 0.2:
  - Updated LibRaw till v0.21.2
 
 Version 0.3:
- - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47996, CVE-2023-47997
+ - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47995, CVE-2023-47996, CVE-2023-47997
  - Added API for querying versions of compiled dependencies
 
