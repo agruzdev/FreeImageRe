@@ -91,8 +91,8 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 	char* ptr;
 	char* t;
 	int version = 0;
-	int raster_length, v;
-	int bytes, bytes_per_line, padding;
+	size_t bytes, bytes_per_line, raster_length;
+	int v, padding;
 	int c1, c2, value1, value2;
 	int hex_table[256];
 	FIBOOL found_declaration;

@@ -109,6 +109,7 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 		table[i] = i * i;
 
 	if (FreeImage_GetBPP(m_dib) == 24) {
+		size_t rowOffset = 0;
 		for(y = 0; y < height; y++) {
 			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
@@ -117,7 +118,7 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
 				ind = INDEX(inr, ing, inb);
-				Qadd[y*width + x] = (uint16_t)ind;
+				Qadd[rowOffset + x] = (uint16_t)ind;
 				// [inr][ing][inb]
 				vwt[ind]++;
 				vmr[ind] += bits[FI_RGBA_RED];
@@ -126,8 +127,10 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 				m2[ind] += (float)(table[bits[FI_RGBA_RED]] + table[bits[FI_RGBA_GREEN]] + table[bits[FI_RGBA_BLUE]]);
 				bits += 3;
 			}
+			rowOffset += width;
 		}
 	} else {
+		size_t rowOffset = 0;
 		for(y = 0; y < height; y++) {
 			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
@@ -136,7 +139,7 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
 				ind = INDEX(inr, ing, inb);
-				Qadd[y*width + x] = (uint16_t)ind;
+				Qadd[rowOffset + x] = (uint16_t)ind;
 				// [inr][ing][inb]
 				vwt[ind]++;
 				vmr[ind] += bits[FI_RGBA_RED];
@@ -145,6 +148,7 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 				m2[ind] += (float)(table[bits[FI_RGBA_RED]] + table[bits[FI_RGBA_GREEN]] + table[bits[FI_RGBA_BLUE]]);
 				bits += 4;
 			}
+			rowOffset += width;
 		}
 	}
 
@@ -537,12 +541,14 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette)
 
 		int npitch = FreeImage_GetPitch(new_dib);
 
+		size_t rowOffset = 0;
 		for (unsigned y = 0; y < height; y++) {
 			uint8_t *new_bits = FreeImage_GetBits(new_dib) + (y * npitch);
 
 			for (unsigned x = 0; x < width; x++) {
-				new_bits[x] = tag[Qadd[y*width + x]];
+				new_bits[x] = tag[Qadd[rowOffset + x]];
 			}
+			rowOffset += width;
 		}
 
 		// output 'new_pal' as color look-up table contents,
