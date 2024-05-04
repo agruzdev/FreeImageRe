@@ -526,7 +526,7 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	double	p;
 	double	a11, a12, a21, a22;
 	double	x0, y0, x1, y1;
-	long	x, y;
+	int		x, y;
 	long	spline;
 	bool	bResult;
 
@@ -571,13 +571,15 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 		return NULL;
 	}
 	// copy data samples
+	size_t rowOffset = 0;
 	for(y = 0; y < height; y++) {
-		double *pImage = &ImageRasterArray[y*width];
+		double *pImage = &ImageRasterArray[rowOffset];
 		uint8_t *src_bits = FreeImage_GetScanLine(dib, height-1-y);
 
 		for(x = 0; x < width; x++) {
 			pImage[x] = (double)src_bits[x];
 		}
+		rowOffset += width;
 	}
 
 	// convert between a representation based on image samples
