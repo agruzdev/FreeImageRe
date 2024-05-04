@@ -2004,6 +2004,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				else if(planar_config == PLANARCONFIG_SEPARATE) {
 					
+					if (bitspersample < 8) {
+						throw "Unsupported number of bits per sample";
+					}
+
 					const unsigned Bpc = bitspersample / 8;
 					uint8_t* dib_strip = bits;
 					// - loop for strip blocks -
@@ -2736,4 +2740,14 @@ InitTIFF(Plugin *plugin, int format_id) {
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
 	plugin->supports_no_pixels_proc = SupportsNoPixels; 
+}
+
+
+FIDEPENDENCY MakeTiffDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "LibTIFF";
+	info.fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
+	info.majorVersion = TIFFLIB_MAJOR_VERSION;
+	info.minorVersion = TIFFLIB_MINOR_VERSION;
+	return info;
 }

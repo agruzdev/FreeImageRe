@@ -326,3 +326,13 @@ InitJP2(Plugin *plugin, int format_id) {
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = NULL;
 }
+
+
+FIDEPENDENCY MakeJpeg2kDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "OpenJPEG";
+	info.fullVersion = FI_QUOTE(OPJ_VERSION_MAJOR) "." FI_QUOTE(OPJ_VERSION_MINOR) "." FI_QUOTE(OPJ_VERSION_BUILD);
+	info.majorVersion = OPJ_VERSION_MAJOR;
+	info.minorVersion = OPJ_VERSION_MINOR;
+	return info;
+}

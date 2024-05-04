@@ -27,6 +27,7 @@
 #include "webp/decode.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
+#include "dec/vp8i_dec.h"
 
 // ==========================================================
 // Plugin Interface
@@ -695,3 +696,12 @@ InitWEBP(Plugin *plugin, int format_id) {
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
 
+
+FIDEPENDENCY MakeWebpDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "LibWebP";
+	info.fullVersion = FI_QUOTE(DEC_MAJ_VERSION) "." FI_QUOTE(DEC_MIN_VERSION) "." FI_QUOTE(DEC_REV_VERSION);
+	info.majorVersion = DEC_MAJ_VERSION;
+	info.minorVersion = DEC_MIN_VERSION;
+	return info;
+}

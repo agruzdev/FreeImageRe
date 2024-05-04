@@ -771,3 +771,13 @@ InitEXR(Plugin *plugin, int format_id) {
 	plugin->supports_icc_profiles_proc = NULL;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
+
+
+FIDEPENDENCY MakeExrDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "OpenEXR";
+	info.fullVersion = OPENEXR_VERSION_STRING;
+	info.majorVersion = OPENEXR_VERSION_MAJOR;
+	info.minorVersion = OPENEXR_VERSION_MINOR;
+	return info;
+}

@@ -52,6 +52,11 @@
 #include <limits>
 #include <memory>
 
+
+#define FI_QUOTE_(T) #T
+#define FI_QUOTE(T) FI_QUOTE_(T)
+
+
 // ==========================================================
 //   Bitmap palette and pixels alignment
 // ==========================================================

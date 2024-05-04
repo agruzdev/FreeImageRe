@@ -1473,3 +1473,13 @@ InitJXR(Plugin *plugin, int format_id) {
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
 
+
+FIDEPENDENCY MakeJxrDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "LibJXR";
+	info.fullVersion = "1.0 (2013)";
+	info.majorVersion = 1;
+	info.minorVersion = 0;
+	return info;
+}
+

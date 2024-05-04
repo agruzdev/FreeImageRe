@@ -35,11 +35,7 @@ set_property(TARGET sharpyuv webp webpdecode webpencode webpdsp webputils libweb
 
 unset(BUILD_SHARED_LIBS)
 
-if (MSVC)
-    target_compile_options(tiff PRIVATE "/w")
-endif()
 
-
-set(WEBP_INCLUDE_DIR ${WEBP_FOUND_ROOT}/src CACHE PATH "")
+set(WEBP_INCLUDE_DIR ${WEBP_FOUND_ROOT};${WEBP_FOUND_ROOT}/src CACHE PATH "")
 set(WEBP_LIBRARY_DIR "" CACHE PATH "")
 set(WEBP_LIBRARY webp libwebpmux CACHE STRING "")

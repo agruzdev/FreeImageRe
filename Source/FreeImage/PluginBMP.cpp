@@ -477,6 +477,10 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 		unsigned used_colors	= bih.biClrUsed;
 		int width				= bih.biWidth;
 		int height				= bih.biHeight;		// WARNING: height can be < 0 => check each call using 'height' as a parameter
+		if (width < 0) {
+			throw "BMP width is negative";
+		}
+
 		unsigned bit_count		= bih.biBitCount;
 		unsigned compression	= bih.biCompression;
 		unsigned pitch			= CalculatePitch(CalculateLine(width, bit_count));
@@ -519,7 +523,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				io->read_proc(FreeImage_GetPalette(dib), used_colors * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				for(int i = 0; i < used_colors; i++) {
+				for(unsigned int i = 0; i < used_colors; i++) {
 					INPLACESWAP(pal[i].red, pal[i].blue);
 				}
 #endif
