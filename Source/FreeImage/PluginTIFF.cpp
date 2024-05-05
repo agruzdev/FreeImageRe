@@ -1448,7 +1448,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if(!header_only) {
 
-				raster = (uint32_t*)_TIFFmalloc(width * height * sizeof(uint32_t));
+				raster = (uint32_t*)_TIFFmalloc(width * sizeof(uint32_t) * height);
 				if (raster == NULL) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -2558,7 +2558,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 						// get the transparency table
 						uint8_t *trns = FreeImage_GetTransparencyTable(dib);
 
-						uint8_t *buffer = (uint8_t *)malloc(2 * width * sizeof(uint8_t));
+						uint8_t *buffer = (uint8_t *)malloc(width * sizeof(uint8_t) * 2);
 						if(buffer == NULL) {
 							throw FI_MSG_ERROR_MEMORY;
 						}

@@ -1403,7 +1403,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		// write the bitmap data... if RLE compression is enable, use it
 
 		if ((dst_bpp == 8) && ((flags & BMP_SAVE_RLE) == BMP_SAVE_RLE)) {
-			uint8_t *buffer = (uint8_t*)malloc(dst_pitch * 2 * sizeof(uint8_t));
+			uint8_t *buffer = (uint8_t*)malloc(dst_pitch * sizeof(uint8_t) * 2);
 
 			for (unsigned i = 0; i < dst_height; ++i) {
 				int size = RLEEncodeLine(buffer, FreeImage_GetScanLine(dib, i), FreeImage_GetLine(dib));

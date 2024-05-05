@@ -664,14 +664,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		if(pixelType == Imf::HALF) {
 			// convert from float to half
-			halfData = new(std::nothrow) half[width * height * components];
+			halfData = new(std::nothrow) half[width * static_cast<size_t>(components) * height];
 			if(!halfData) {
 				THROW (Iex::NullExc, FI_MSG_ERROR_MEMORY);
 			}
 
 			for(int y = 0; y < height; y++) {
 				float *src_bits = (float*)FreeImage_GetScanLine(dib, height - 1 - y);
-				half *dst_bits = halfData + y * width * components;
+				half *dst_bits = halfData + width * static_cast<size_t>(components) * y;
 				for(int x = 0; x < width; x++) {
 					for(int c = 0; c < components; c++) {
 						dst_bits[c] = src_bits[c];
@@ -683,7 +683,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			bits = (uint8_t*)halfData;
 			bytespc = sizeof(half);
 			bytespp = sizeof(half) * components;
-			pitch = sizeof(half) * width * components;
+			pitch = width * sizeof(half) * components;
 		} else if(pixelType == Imf::FLOAT) {
 			// invert dib scanlines
 			bIsFlipped = FreeImage_FlipVertical(dib);

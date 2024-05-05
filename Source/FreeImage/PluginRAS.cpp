@@ -316,7 +316,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					throw "Invalid palette";
 				}
 
-				r = (uint8_t*)malloc(3 * numcolors * sizeof(uint8_t));
+				r = (uint8_t*)malloc(3 * sizeof(uint8_t) * numcolors);
 				g = r + numcolors;
 				b = g + numcolors;
 
