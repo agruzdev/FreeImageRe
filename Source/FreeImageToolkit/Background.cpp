@@ -40,7 +40,7 @@ IsVisualGreyscaleImage(FIBITMAP *dib) {
 		case 4:
 		case 8: {
 			unsigned ncolors = FreeImage_GetColorsUsed(dib);
-			FIRGBA8 *rgb = FreeImage_GetPalette(dib);
+			const FIRGBA8 *rgb = FreeImage_GetPalette(dib);
 			for (unsigned i = 0; i< ncolors; i++) {
 				if ((rgb->red != rgb->green) || (rgb->red != rgb->blue)) {
 					return FALSE;
@@ -127,7 +127,7 @@ GetPaletteIndex(FIBITMAP *dib, const FIRGBA8 *color, int options, FREE_IMAGE_COL
 			//ucolor = (ucolor | (ucolor << 8) | (ucolor << 16));
 		}
 		unsigned ncolors = FreeImage_GetColorsUsed(dib);
-		unsigned *palette = (unsigned *)FreeImage_GetPalette(dib);
+		auto *palette = (const unsigned *)FreeImage_GetPalette(dib);
 		for (unsigned i = 0; i < ncolors; i++) {
 			if ((palette[i] & 0xFFFFFF) == ucolor) {
 				result = i;
@@ -137,7 +137,7 @@ GetPaletteIndex(FIBITMAP *dib, const FIRGBA8 *color, int options, FREE_IMAGE_COL
 	} else {
 		unsigned minimum = UINT_MAX;
 		unsigned ncolors = FreeImage_GetColorsUsed(dib);
-		uint8_t *palette = (uint8_t *)FreeImage_GetPalette(dib);
+		auto *palette = (const uint8_t *)FreeImage_GetPalette(dib);
 		uint8_t red, green, blue;
 		if (!IsVisualGreyscaleImage(dib)) {
 			red = color->red;
@@ -223,9 +223,9 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 	}
 	
 	const FIRGBA8 *color_intl = color;
-	unsigned bpp = FreeImage_GetBPP(dib);
-	unsigned width = FreeImage_GetWidth(dib);
-	unsigned height = FreeImage_GetHeight(dib);
+	const unsigned bpp = FreeImage_GetBPP(dib);
+	const unsigned width = FreeImage_GetWidth(dib);
+	const unsigned height = FreeImage_GetHeight(dib);
 	
 	FREE_IMAGE_COLOR_TYPE color_type = FreeImage_GetColorType(dib);
 	
@@ -237,6 +237,7 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 	
 	// Check for RGBA case if bitmap supports alpha 
 	// blending (8-bit greyscale, 24- or 32-bit images)
+	FIRGBA8 blend;
 	if (supports_alpha && (options & FI_COLOR_IS_RGBA_COLOR)) {
 		
 		if (color->alpha == 0) {
@@ -264,7 +265,6 @@ FillBackgroundBitmap(FIBITMAP *dib, const FIRGBA8 *color, int options) {
 				bgcolor.red = src_bits[FI_RGBA_RED];
 				bgcolor.alpha = 0xFF;
 			}
-			FIRGBA8 blend;
 			GetAlphaBlendedColor(&bgcolor, color_intl, &blend);
 			color_intl = &blend;
 		}
@@ -531,8 +531,8 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 			case 1: {
 				// although 1-bit implies FIT_BITMAP, better get an unsigned 
 				// color and palette
-				unsigned *urgb = (unsigned *)color;
-				unsigned *upal = (unsigned *)FreeImage_GetPalette(bitmap);
+				auto *urgb = (const unsigned *)color;
+				auto *upal = (unsigned *)FreeImage_GetPalette(bitmap);
 				FIRGBA8 rgbq = FIRGBA8();
 
 				if (palette != NULL) {
@@ -784,8 +784,8 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 		return FreeImage_Clone(src);
 	}
 
-	int width = FreeImage_GetWidth(src);
-	int height = FreeImage_GetHeight(src);
+	const int width = FreeImage_GetWidth(src);
+	const int height = FreeImage_GetHeight(src);
 
 	// Relay on FreeImage_Copy, if all parameters left, top, right and
 	// bottom are smaller than or equal zero. The color pointer may be
