@@ -747,11 +747,11 @@ FIBITMAP*
 mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, int flags = 0) {
 	uint32_t mLength = 0;
 	uint8_t mChunkName[5];
-	uint8_t *mChunk = NULL;
+	uint8_t *mChunk = nullptr, *ptrTmp = nullptr;
 	uint32_t crc_file;
 	long LastOffset;
 	long mOrigPos;
-	uint8_t *PLTE_file_chunk = NULL;	// whole PLTE chunk (lentgh, name, array, crc)
+	uint8_t *PLTE_file_chunk = nullptr;	// whole PLTE chunk (lentgh, name, array, crc)
 	uint32_t PLTE_file_size = 0;		// size of PLTE chunk
 
 	FIBOOL m_HasGlobalPalette = FALSE; // may turn to TRUE in PLTE chunk
@@ -817,11 +817,12 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 			mChunkName[4] = '\0';
 
 			if(mLength > 0) {
-				mChunk = (uint8_t*)realloc(mChunk, mLength);
-				if(!mChunk) {
+				ptrTmp = (uint8_t*)realloc(mChunk, mLength);
+				if(!ptrTmp) {
 					FreeImage_OutputMessageProc(format_id, "Error while parsing %s chunk: out of memory", mChunkName);
 					throw (const char*)NULL;
-				}				
+				}
+				mChunk = ptrTmp;
 				Offset = io->tell_proc(handle);
 				if(Offset + (long)mLength > mLOF) {
 					FreeImage_OutputMessageProc(format_id, "Error while parsing %s chunk: unexpected end of file", mChunkName);
@@ -887,19 +888,19 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 				case PLTE:	// Global
 					m_HasGlobalPalette = TRUE;
 					PLTE_file_size = mLength + 12; // (lentgh, name, array, crc) = (4, 4, mLength, 4)
-					PLTE_file_chunk = (uint8_t*)realloc(PLTE_file_chunk, PLTE_file_size);
-					if(!PLTE_file_chunk) {
+					ptrTmp = (uint8_t*)realloc(PLTE_file_chunk, PLTE_file_size);
+					if(!ptrTmp) {
 						FreeImage_OutputMessageProc(format_id, "Error while parsing %s chunk: out of memory", mChunkName);
 						throw (const char*)NULL;
-					} else {
-						mOrigPos = io->tell_proc(handle);
-						// seek to the start of the chunk
-						io->seek_proc(handle, LastOffset, SEEK_SET);
-						// load the whole chunk
-						io->read_proc(PLTE_file_chunk, 1, PLTE_file_size, handle);
-						// go to the start of the next chunk
-						io->seek_proc(handle, mOrigPos, SEEK_SET);
 					}
+					PLTE_file_chunk = ptrTmp;
+					mOrigPos = io->tell_proc(handle);
+					// seek to the start of the chunk
+					io->seek_proc(handle, LastOffset, SEEK_SET);
+					// load the whole chunk
+					io->read_proc(PLTE_file_chunk, 1, PLTE_file_size, handle);
+					// go to the start of the next chunk
+					io->seek_proc(handle, mOrigPos, SEEK_SET);
 					break;
 
 				case tRNS:	// Global
@@ -926,11 +927,12 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 					FreeImage_SeekMemory(hPngMemory, 0, SEEK_SET);
 					FreeImage_WriteMemory(g_png_signature, 1, 8, hPngMemory);
 
-					mChunk = (uint8_t*)realloc(mChunk, m_TotalBytesOfChunks);
-					if(!mChunk) {
+					ptrTmp = (uint8_t*)realloc(mChunk, m_TotalBytesOfChunks);
+					if(!ptrTmp) {
 						FreeImage_OutputMessageProc(format_id, "Error while parsing %s chunk: out of memory", mChunkName);
 						throw (const char*)NULL;
 					}
+					mChunk = ptrTmp;
 					
 					// on calling CountPNGChunks earlier, we were in Offset pos,
 					// go back there
