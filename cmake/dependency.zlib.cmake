@@ -12,7 +12,7 @@ dependency_find_or_download(
     NAME ZLIB
     VERBOSE_NAME "ZLib"
     URL "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.zip"
-    HASH_MD5 "0"
+    HASH_MD5 "127b8a71a3fb8bebe89df1080f15fdf6"
     FILE_NAME "v1.3.1.zip"
     PREFIX "zlib-1.3.1"
 )

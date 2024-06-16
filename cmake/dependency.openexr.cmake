@@ -12,7 +12,7 @@ dependency_find_or_download(
     NAME EXR
     VERBOSE_NAME "OpenEXR"
     URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.2.2.zip"
-    HASH_MD5 "0"
+    HASH_MD5 "f1a5ec77d01549dacb8954f4ccde989b"
     FILE_NAME "v3.2.2.zip"
     PREFIX "openexr-3.2.2"
 )
