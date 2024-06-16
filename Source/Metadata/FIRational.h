@@ -38,13 +38,13 @@ public:
 	FIRational();
 
 	/// Constructor with longs
-	FIRational(int32_t n, int32_t d = 1);
+	explicit FIRational(int32_t n, int32_t d = 1);
 
 	/// Constructor with FITAG
-	FIRational(const FITAG *tag);
+	explicit FIRational(const FITAG *tag);
 
 	/// Constructor with a float
-	FIRational(float value);
+	explicit FIRational(float value);
 
 	/// Copy constructor
 	FIRational (const FIRational& r);
@@ -53,7 +53,7 @@ public:
 	~FIRational();
 
 	/// Assignement operator
-	FIRational& operator=(FIRational& r);
+	FIRational& operator=(const FIRational& r);
 
 	/// Get the numerator
 	int32_t getNumerator();

@@ -52,19 +52,19 @@ ConvertAnyTag(FITAG *tag) {
 	switch(tag_type) {
 		case FIDT_BYTE:		// N x 8-bit unsigned integer 
 		{
-			uint8_t *pvalue = (uint8_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint8_t*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld",	(int32_t) pvalue[0]);
+			sprintf(format, "%d",	(int32_t) pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld",	(int32_t) pvalue[i]);
+				sprintf(format, " %d",	(int32_t) pvalue[i]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_SHORT:	// N x 16-bit unsigned integer 
 		{
-			unsigned short *pvalue = (unsigned short *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const unsigned short *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%hu", pvalue[0]);
 			buffer += format;
@@ -76,43 +76,43 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_LONG:		// N x 32-bit unsigned integer 
 		{
-			uint32_t *pvalue = (uint32_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint32_t *)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%lu", pvalue[0]);
+			sprintf(format, "%u", pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %lu",	pvalue[i]);
+				sprintf(format, " %u",	pvalue[i]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_RATIONAL: // N x 64-bit unsigned fraction 
 		{
-			uint32_t *pvalue = (uint32_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld/%ld", pvalue[0], pvalue[1]);
+			sprintf(format, "%u/%u", pvalue[0], pvalue[1]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld/%ld", pvalue[2*i], pvalue[2*i+1]);
+				sprintf(format, " %u/%u", pvalue[2*i], pvalue[2*i+1]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_SBYTE:	// N x 8-bit signed integer 
 		{
-			char *pvalue = (char*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const char*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld",	(int32_t) pvalue[0]);
+			sprintf(format, "%d",	(int32_t) pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld",	(int32_t) pvalue[i]);
+				sprintf(format, " %d",	(int32_t) pvalue[i]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_SSHORT:	// N x 16-bit signed integer 
 		{
-			short *pvalue = (short *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const short *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%hd", pvalue[0]);
 			buffer += format;
@@ -124,31 +124,31 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_SLONG:	// N x 32-bit signed integer 
 		{
-			int32_t *pvalue = (int32_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const int32_t *)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld", pvalue[0]);
+			sprintf(format, "%d", pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld",	pvalue[i]);
+				sprintf(format, " %d",	pvalue[i]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_SRATIONAL:// N x 64-bit signed fraction 
 		{
-			int32_t *pvalue = (int32_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const int32_t*)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%ld/%ld", pvalue[0], pvalue[1]);
+			sprintf(format, "%d/%d", pvalue[0], pvalue[1]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, " %ld/%ld", pvalue[2*i], pvalue[2*i+1]);
+				sprintf(format, " %d/%d", pvalue[2*i], pvalue[2*i+1]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_FLOAT:	// N x 32-bit IEEE floating point 
 		{
-			float *pvalue = (float *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const float *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%f", (double) pvalue[0]);
 			buffer += format;
@@ -160,19 +160,19 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_DOUBLE:	// N x 64-bit IEEE floating point 
 		{
-			double *pvalue = (double *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const double *)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%f", pvalue[0]);
+			sprintf(format, "%lf", pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, "%f", pvalue[i]);
+				sprintf(format, "%lf", pvalue[i]);
 				buffer += format;
 			}
 			break;
 		}
 		case FIDT_IFD:		// N x 32-bit unsigned integer (offset) 
 		{
-			uint32_t *pvalue = (uint32_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint32_t *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%X", pvalue[0]);
 			buffer += format;
@@ -184,7 +184,7 @@ ConvertAnyTag(FITAG *tag) {
 		}
 		case FIDT_PALETTE:	// N x 32-bit FIRGBA8 
 		{
-			FIRGBA8 *pvalue = (FIRGBA8 *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const FIRGBA8 *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "(%d,%d,%d,%d)", pvalue[0].red, pvalue[0].green, pvalue[0].blue, pvalue[0].alpha);
 			buffer += format;
@@ -197,12 +197,12 @@ ConvertAnyTag(FITAG *tag) {
 		
 		case FIDT_LONG8:	// N x 64-bit unsigned integer 
 		{
-			uint64_t *pvalue = (uint64_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint64_t *)FreeImage_GetTagValue(tag);
 
-			sprintf(format, "%lld", pvalue[0]);
+			sprintf(format, "%llu", pvalue[0]);
 			buffer += format;
 			for(i = 1; i < tag_count; i++) {
-				sprintf(format, "%lld", pvalue[i]);
+				sprintf(format, "%llu", pvalue[i]);
 				buffer += format;
 			}
 			break;
@@ -210,7 +210,7 @@ ConvertAnyTag(FITAG *tag) {
 
 		case FIDT_IFD8:		// N x 64-bit unsigned integer (offset)
 		{
-			uint64_t *pvalue = (uint64_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint64_t *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%llX", pvalue[0]);
 			buffer += format;
@@ -223,7 +223,7 @@ ConvertAnyTag(FITAG *tag) {
 
 		case FIDT_SLONG8:	// N x 64-bit signed integer
 		{
-			int64_t *pvalue = (int64_t *)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const int64_t *)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%lld", pvalue[0]);
 			buffer += format;
@@ -295,7 +295,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_REFERENCE_BLACK_WHITE:
 		{
-			uint32_t *pvalue = (uint32_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue(tag);
 			if(FreeImage_GetTagLength(tag) == 48) {
 				// reference black point value and reference white point value (ReferenceBlackWhite)
 				int blackR = 0, whiteR = 0, blackG = 0, whiteG = 0, blackB = 0, whiteB = 0;
@@ -322,7 +322,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_COLOR_SPACE:
 		{
-			unsigned short colorSpace = *((unsigned short *)FreeImage_GetTagValue(tag));
+			auto colorSpace = *((const unsigned short *)FreeImage_GetTagValue(tag));
 			if (colorSpace == 1) {
 				return "sRGB";
 			} else if (colorSpace == 65535) {
@@ -336,7 +336,7 @@ ConvertExifTag(FITAG *tag) {
 		case TAG_COMPONENTS_CONFIGURATION:
 		{
 			const char *componentStrings[7] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
-			uint8_t *pvalue = (uint8_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint8_t*)FreeImage_GetTagValue(tag);
 			for(uint32_t i = 0; i < MIN((uint32_t)4, FreeImage_GetTagCount(tag)); i++) {
 				int j = pvalue[i];
 				if(j > 0 && j < 7)
@@ -1005,7 +1005,7 @@ ConvertExifGPSTag(FITAG *tag) {
 		case TAG_GPS_LONGITUDE:
 		case TAG_GPS_TIME_STAMP:
 		{
-			uint32_t *pvalue = (uint32_t*)FreeImage_GetTagValue(tag);
+			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue(tag);
 			if(FreeImage_GetTagLength(tag) == 24) {
 				// dd:mm:ss or hh:mm:ss
 				int dd = 0, mm = 0;

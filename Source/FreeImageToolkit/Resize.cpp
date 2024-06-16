@@ -310,7 +310,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 			}
 			if (tmp != src) {
 				FreeImage_Unload(tmp);
-				tmp = NULL;
+				tmp = nullptr;
 			}
 		}
 
@@ -318,7 +318,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	}
 
 	FIRGBA8 pal_buffer[256];
-	FIRGBA8 *src_pal = NULL;
+	const FIRGBA8 *src_pal = nullptr;
 
 	// provide the source image's palette to the rescaler for
 	// FIC_PALETTE type images (this includes palletized greyscale
@@ -336,7 +336,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	// allocate the dst image
 	FIBITMAP *dst = FreeImage_AllocateT(image_type, dst_width, dst_height, dst_bpp, 0, 0, 0);
 	if (!dst) {
-		return NULL;
+		return nullptr;
 	}
 	
 	if (dst_bpp == 8) {
@@ -382,7 +382,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 		// xy filtering
 		// -------------
 
-		FIBITMAP *tmp = NULL;
+		FIBITMAP *tmp = nullptr;
 
 		if (src_width != dst_width) {
 			// source and destination widths are different so, we must
@@ -393,7 +393,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 				tmp = FreeImage_AllocateT(image_type, dst_width, src_height, dst_bpp_s1, 0, 0, 0);
 				if (!tmp) {
 					FreeImage_Unload(dst);
-					return NULL;
+					return nullptr;
 				}
 			} else {
 				// source and destination heights are equal so, we can directly
@@ -416,7 +416,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 			// greyscale; in that case, it is an 8-bit image with a linear
 			// palette so, the source palette is not needed or will even be
 			// mismatching, if the source palette is unordered)
-			src_pal = NULL;
+			src_pal = nullptr;
 		} else {
 			// source and destination widths are equal so, just copy the
 			// image pointer
@@ -448,7 +448,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 		// condition and more symmetric to the xy filtering case, these
 		// (src_width != dst_width) conditions are still in place.
 
-		FIBITMAP *tmp = NULL;
+		FIBITMAP *tmp = nullptr;
 
 		if (src_height != dst_height) {
 			// source and destination heights are different so, we must
@@ -459,7 +459,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 				tmp = FreeImage_AllocateT(image_type, src_width, dst_height, dst_bpp_s1, 0, 0, 0);
 				if (!tmp) {
 					FreeImage_Unload(dst);
-					return NULL;
+					return nullptr;
 				}
 			} else {
 				// source and destination widths are equal so, we can directly
@@ -482,7 +482,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 			// greyscale; in that case, it is an 8-bit image with a linear
 			// palette so, the source palette is not needed or will even be
 			// mismatching, if the source palette is unordered)
-			src_pal = NULL;
+			src_pal = nullptr;
 
 		} else {
 			// source and destination heights are equal so, just copy the

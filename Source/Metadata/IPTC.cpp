@@ -39,7 +39,7 @@ FIBOOL
 read_iptc_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	char defaultKey[16];
 	size_t length = datalen;
-	uint8_t *profile = (uint8_t*)dataptr;
+	auto *profile = (const uint8_t*)dataptr;
 
 	const char *JPEG_AdobeCM_Tag = "Adobe_CM";
 
@@ -66,7 +66,7 @@ read_iptc_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 
 	FITAG *tag = FreeImage_CreateTag();
 
-	TagLib& tag_lib = TagLib::instance();
+	const TagLib& tag_lib = TagLib::instance();
 
     // find start of the BIM portion of the binary data
     size_t offset = 0;
@@ -302,7 +302,7 @@ write_iptc_profile(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
 
 						// add as many tags as there are comma separated strings
 						for(int i = 0; i < (int)output.size(); i++) {
-							std::string& tag_value = output[i];
+							const std::string& tag_value = output[i];
 							buffer = append_iptc_tag(buffer, &buffer_size, tag_id, (uint32_t)tag_value.length(), tag_value.c_str());
 						}
 

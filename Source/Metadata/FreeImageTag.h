@@ -376,7 +376,7 @@ public:
 private:
 
 	typedef std::map<uint16_t, TagInfo*> TAGINFO;
-	typedef std::map<int, TAGINFO*>  TABLEMAP;
+	typedef std::map<int, TAGINFO>  TABLEMAP;
 
 	/// store hash tables for all known tag info tables
 	TABLEMAP _table_map;
@@ -388,6 +388,9 @@ private:
 	@see addMetadataModel
 	*/
 	TagLib();
+
+	/// Destructor
+	~TagLib();
 
 	/// Assignement operator (disabled)
 	void operator=(TagLib&);
@@ -404,13 +407,10 @@ private:
 	FIBOOL addMetadataModel(MDMODEL md_model, TagInfo *tag_table);
 
 public:
-	/// Destructor
-	~TagLib();
-
 	/**
 	@return Returns a reference to the TagLib instance
 	*/
-	static TagLib& instance();
+	static const TagLib& instance();
 
 	/**
 	Given a tag ID, returns its TagInfo descriptor
@@ -418,7 +418,7 @@ public:
 	@param tagID tag ID
 	@return Returns the TagInfo descriptor if successful, returns NULL otherwise
 	*/
-	const TagInfo* getTagInfo(MDMODEL md_model, uint16_t tagID);
+	const TagInfo* getTagInfo(MDMODEL md_model, uint16_t tagID) const;
 
 	/**
 	Given a tag ID, returns its tag field name. 
@@ -429,7 +429,7 @@ public:
 	@param defaultKey Assumed to be an array of 16 chars. If not NULL, build a key for unknown tags
 	@return Returns the tag field name if successful, returns an 'unknown tag' string contained in defaultKey otherwise
 	*/
-	const char* getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey);
+	const char* getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) const;
 
 	/**
 	Given a tag ID, returns its description. 
@@ -438,7 +438,7 @@ public:
 	@param tagID tag ID
 	@return Returns the tag description if successful, returns NULL otherwise
 	*/
-	const char* getTagDescription(MDMODEL md_model, uint16_t tagID);
+	const char* getTagDescription(MDMODEL md_model, uint16_t tagID) const;
 
 	/**
 	Given a tag field name, returns its tag ID. 
@@ -447,13 +447,13 @@ public:
 	@param key tag field name
 	@return Returns the tag ID if successful, returns -1 otherwise
 	*/
-	int getTagID(MDMODEL md_model, const char *key);
+	int getTagID(MDMODEL md_model, const char *key) const;
 
 	/**
 	Perform a conversion between internal metadata models and FreeImage public metadata models
 	@param md_model Internal metadata model
 	*/
-	FREE_IMAGE_MDMODEL getFreeImageModel(MDMODEL model);
+	FREE_IMAGE_MDMODEL getFreeImageModel(MDMODEL model) const;
 
 };
 

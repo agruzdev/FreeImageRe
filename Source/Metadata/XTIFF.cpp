@@ -128,7 +128,7 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 	const size_t tag_size = sizeof(xtiffFieldInfo) / sizeof(xtiffFieldInfo[0]);
 
-	TagLib& tag_lib = TagLib::instance();
+	const TagLib& tag_lib = TagLib::instance();
 
 	for(size_t i = 0; i < tag_size; i++) {
 
@@ -201,7 +201,7 @@ tiff_write_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 	const size_t tag_size = sizeof(xtiffFieldInfo) / sizeof(xtiffFieldInfo[0]);
 
-	TagLib& tag_lib = TagLib::instance();
+	const TagLib& tag_lib = TagLib::instance();
 
 	for(size_t i = 0; i < tag_size; i++) {
 		const TIFFFieldInfo *fieldInfo = &xtiffFieldInfo[i];
@@ -251,7 +251,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 		return TRUE;
 	}
 	
-	TagLib& tagLib = TagLib::instance();
+	const TagLib& tagLib = TagLib::instance();
 
 	// get the tag key - use NULL to avoid reading GeoTIFF tags
 	const char *key = tagLib.getTagFieldName(md_model, (uint16_t)tag_id, NULL);
@@ -448,7 +448,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			// LibTIFF converts rational to floats : reconvert floats to rationals
 			uint32_t *rvalue = (uint32_t*)malloc(2 * sizeof(uint32_t) * value_count);
 			for(uint32_t i = 0; i < value_count; i++) {
-				float *fv = (float*)raw_data;
+				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
@@ -465,7 +465,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			// LibTIFF converts rational to floats : reconvert floats to rationals
 			int32_t *rvalue = (int32_t*)malloc(2 * sizeof(uint32_t) * value_count);
 			for(uint32_t i = 0; i < value_count; i++) {
-				float *fv = (float*)raw_data;
+				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
@@ -562,7 +562,7 @@ Read all known exif tags
 FIBOOL 
 tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 
-	TagLib& tagLib = TagLib::instance();
+	const TagLib& tagLib = TagLib::instance();
 
 	const int count = TIFFGetTagListCount(tif);
 	for(int i = 0; i < count; i++) {
@@ -722,7 +722,7 @@ tiff_write_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 		return FALSE;
 	}
 	
-	TagLib& tag_lib = TagLib::instance();
+	const TagLib& tag_lib = TagLib::instance();
 	
 	for (int fi = 0, nfi = (int)tif->tif_nfields; nfi > 0; nfi--, fi++) {
 		const TIFFField *fld = tif->tif_fields[fi];

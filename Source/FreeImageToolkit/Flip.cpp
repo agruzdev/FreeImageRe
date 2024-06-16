@@ -33,11 +33,11 @@ FIBOOL DLL_CALLCONV
 FreeImage_FlipHorizontal(FIBITMAP *src) {
 	if (!FreeImage_HasPixels(src)) return FALSE;
 
-	unsigned line   = FreeImage_GetLine(src);
-	unsigned width	= FreeImage_GetWidth(src);
-	unsigned height = FreeImage_GetHeight(src);
+	const unsigned line   = FreeImage_GetLine(src);
+	const unsigned width	= FreeImage_GetWidth(src);
+	const unsigned height = FreeImage_GetHeight(src);
 
-	unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
+	const unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 
 	// copy between aligned memories
 	uint8_t *new_bits = (uint8_t*)FreeImage_Aligned_Malloc(line * sizeof(uint8_t), FIBITMAP_ALIGNMENT);
@@ -51,7 +51,7 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 
 		switch (FreeImage_GetBPP(src)) {
 			case 1 :
-			{				
+			{
 				for(unsigned x = 0; x < width; x++) {
 					// get pixel at (x, y)
 					FIBOOL value = (new_bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
@@ -76,22 +76,22 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 			break;
 
 			case 8:
-			{				
-				uint8_t *dst_data = (uint8_t*) bits; 				
-				uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp); 				
-				for(unsigned c = 0; c < width; c++) { 			
-					*dst_data++ = *src_data--;  
-				} 
+			{
+				uint8_t *dst_data = (uint8_t*) bits;
+				const uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp);
+				for(unsigned c = 0; c < width; c++) {
+					*dst_data++ = *src_data--;
+				}
 			}
 			break;
 
 			case 16:
-			{				
-				uint16_t *dst_data = (uint16_t*) bits; 				
-				uint16_t *src_data = (uint16_t*) (new_bits + line - bytespp); 				
-				for(unsigned c = 0; c < width; c++) { 			
-					*dst_data++ = *src_data--;  
-				} 
+			{
+				uint16_t *dst_data = (uint16_t*) bits;
+				const uint16_t *src_data = (uint16_t*) (new_bits + line - bytespp);
+				for(unsigned c = 0; c < width; c++) {
+					*dst_data++ = *src_data--;
+				}
 			}
 			break;
 
@@ -101,15 +101,15 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 			case 64:
 			case 96:
 			case 128:
-			{				
-				uint8_t *dst_data = (uint8_t*) bits; 				
-				uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp); 				
-				for(unsigned c = 0; c < width; c++) { 		
+			{
+				uint8_t *dst_data = (uint8_t*) bits;
+				uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp);
+				for(unsigned c = 0; c < width; c++) {
 					for(unsigned k = 0; k < bytespp; k++) {
-						*dst_data++ = src_data[k];  
+						*dst_data++ = src_data[k];
 					}
 					src_data -= bytespp;
-				} 
+				}
 			}
 			break;
 
@@ -136,8 +136,8 @@ FreeImage_FlipVertical(FIBITMAP *src) {
 
 	// swap the buffer
 
-	unsigned pitch  = FreeImage_GetPitch(src);
-	unsigned height = FreeImage_GetHeight(src);
+	const unsigned pitch  = FreeImage_GetPitch(src);
+	const unsigned height = FreeImage_GetHeight(src);
 
 	// copy between aligned memories
 	Mid = (uint8_t*)FreeImage_Aligned_Malloc(pitch * sizeof(uint8_t), FIBITMAP_ALIGNMENT);

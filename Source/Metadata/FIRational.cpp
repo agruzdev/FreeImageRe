@@ -52,14 +52,14 @@ FIRational::FIRational(const FITAG *tag) {
 	switch(FreeImage_GetTagType((FITAG*)tag)) {
 		case FIDT_RATIONAL:		// 64-bit unsigned fraction 
 		{
-			uint32_t *pvalue = (uint32_t*)FreeImage_GetTagValue((FITAG*)tag);
+			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue((FITAG*)tag);
 			initialize((int32_t)pvalue[0], (int32_t)pvalue[1]);
 			break;
 		}
 
 		case FIDT_SRATIONAL:	// 64-bit signed fraction 
 		{
-			int32_t *pvalue = (int32_t*)FreeImage_GetTagValue((FITAG*)tag);
+			auto *pvalue = (const int32_t*)FreeImage_GetTagValue((FITAG*)tag);
 			initialize((int32_t)pvalue[0], (int32_t)pvalue[1]);
 			break;
 		}
@@ -111,7 +111,7 @@ FIRational::~FIRational() {
 }
 
 /// Assignement operator
-FIRational& FIRational::operator=(FIRational& r) {
+FIRational& FIRational::operator=(const FIRational& r) {
 	if(this != &r) {
 		initialize(r._numerator, r._denominator);
 	}

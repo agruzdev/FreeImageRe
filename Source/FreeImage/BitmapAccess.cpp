@@ -1447,7 +1447,7 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 			}
 
 			// fill the tag ID if possible and if it's needed
-			TagLib& tag_lib = TagLib::instance();
+			const TagLib& tag_lib = TagLib::instance();
 			switch(model) {
 				case FIMD_IPTC:
 				{

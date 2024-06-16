@@ -1161,7 +1161,7 @@ On return, the function will return the real size of the target buffer, which sh
 @return Returns the target buffer size
 */
 static int
-RLEEncodeLine(uint8_t *target, uint8_t *source, int size) {
+RLEEncodeLine(uint8_t *target, const uint8_t *source, int size) {
 	uint8_t buffer[256];
 	int buffer_size = 0;
 	int target_pos = 0;
@@ -1452,7 +1452,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			for(unsigned y = 0; y < dst_height; y++) {
 				uint8_t *line = FreeImage_GetScanLine(dib, y);
 				for(unsigned x = 0; x < dst_width; x++) {
-					FIRGB8 *triple = ((FIRGB8 *)line)+x;
+					const FIRGB8 *triple = ((FIRGB8 *)line)+x;
 					bgr.b = triple->blue;
 					bgr.g = triple->green;
 					bgr.r = triple->red;
@@ -1471,7 +1471,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			for(unsigned y = 0; y < dst_height; y++) {
 				uint8_t *line = FreeImage_GetScanLine(dib, y);
 				for(unsigned x = 0; x < dst_width; x++) {
-					FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
+					const FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
 					bgra.b = quad->blue;
 					bgra.g = quad->green;
 					bgra.r = quad->red;

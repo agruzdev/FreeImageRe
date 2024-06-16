@@ -450,7 +450,7 @@ FreeImage_Threshold(FIBITMAP *dib, uint8_t T) {
 	// Perform the thresholding
 	//
 	for(int y = 0; y < height; y++) {
-		uint8_t *bits8 = FreeImage_GetScanLine(dib8, y);
+		const uint8_t *bits8 = FreeImage_GetScanLine(dib8, y);
 		uint8_t *bits1 = FreeImage_GetScanLine(new_dib, y);
 		for(int x = 0; x < width; x++) {
 			if(bits8[x] < T) {

@@ -446,7 +446,7 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 	}
 
 	// get the tag key
-	TagLib& s = TagLib::instance();
+	const TagLib& s = TagLib::instance();
 	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
 	if(!key) {
 		return FALSE;
@@ -643,7 +643,7 @@ static FIBOOL
 WritePropVariant(FIBITMAP *dib, uint16_t tag_id, DPKPROPVARIANT & varDst) {
 	FITAG *tag = NULL;
 
-	TagLib& s = TagLib::instance();
+	const TagLib& s = TagLib::instance();
 	
 	// clear output DPKPROPVARIANT
 	varDst.vt = DPKVT_EMPTY;

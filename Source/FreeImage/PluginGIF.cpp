@@ -157,7 +157,7 @@ FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key
 		FreeImage_SetTagLength(tag, length);
 		FreeImage_SetTagValue(tag, value);
 		if(model == FIMD_ANIMATION) {
-			TagLib& s = TagLib::instance();
+			const TagLib& s = TagLib::instance();
 			// get the tag description
 			const char *description = s.getTagDescription(TagLib::ANIMATION, id);
 			FreeImage_SetTagDescription(tag, description);
@@ -496,8 +496,8 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t GIF89a[] = { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 };	// ASCII code for "GIF89a"
-	uint8_t GIF87a[] = { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 };	// ASCII code for "GIF87a"
+	const uint8_t GIF89a[] = { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 };	// ASCII code for "GIF89a"
+	const uint8_t GIF87a[] = { 0x47, 0x49, 0x46, 0x38, 0x37, 0x61 };	// ASCII code for "GIF87a"
 	uint8_t signature[6] = { 0, 0, 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 6, handle);
@@ -764,7 +764,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			//draw each page into the logical area
 			delay_time = 0;
 			for( page = start; page <= end; page++ ) {
-				PageInfo &info = pageinfo[end - page];
+				const PageInfo &info = pageinfo[end - page];
 				//things we can skip having to decode
 				if( page != end ) {
 					if( info.disposal_method == GIF_DISPOSAL_PREVIOUS ) {
@@ -788,11 +788,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				//decode page
 				FIBITMAP *pagedib = Load(io, handle, page, GIF_LOAD256, data);
 				if( pagedib != NULL ) {
-					FIRGBA8 *pal = FreeImage_GetPalette(pagedib);
+					const FIRGBA8 *pal = FreeImage_GetPalette(pagedib);
 					have_transparent = false;
 					if( FreeImage_IsTransparent(pagedib) ) {
 						int count = FreeImage_GetTransparencyCount(pagedib);
-						uint8_t *table = FreeImage_GetTransparencyTable(pagedib);
+						const uint8_t *table = FreeImage_GetTransparencyTable(pagedib);
 						for( int i = 0; i < count; i++ ) {
 							if( table[i] == 0 ) {
 								have_transparent = true;

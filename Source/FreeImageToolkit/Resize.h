@@ -123,7 +123,7 @@ public:
 	Constructor
 	@param filter FIR /IIR filter to be used
 	*/
-	CResizeEngine(CGenericFilter* filter):m_pFilter(filter) {}
+	explicit CResizeEngine(CGenericFilter* filter):m_pFilter(filter) {}
 
 	/// Destructor
 	virtual ~CResizeEngine() {}

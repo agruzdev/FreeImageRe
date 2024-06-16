@@ -535,8 +535,8 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 		return NULL;
 	}
 	
-	int width = FreeImage_GetWidth(dib);
-	int height = FreeImage_GetHeight(dib);
+	const int width = FreeImage_GetWidth(dib);
+	const int height = FreeImage_GetHeight(dib);
 	switch(spline_degree) {
 		case ROTATE_QUADRATIC:
 			spline = 2L;	// Use splines of degree 2 (quadratic interpolation)
@@ -670,8 +670,8 @@ FreeImage_RotateEx(FIBITMAP *dib, double angle, double x_shift, double y_shift, 
 		}
 		if((bpp == 24) || (bpp == 32)) {
 			// allocate dst image
-			int width  = FreeImage_GetWidth(dib);
-			int height = FreeImage_GetHeight(dib);
+			const int width  = FreeImage_GetWidth(dib);
+			const int height = FreeImage_GetHeight(dib);
 			if( bpp == 24 ) {
 				dst = FreeImage_Allocate(width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 			} else {

@@ -191,7 +191,7 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 		case 24 :
 		case 32 :
 		{
-			int bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
+			const int bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 
 			switch(channel) {
 				case FICC_RGB :
@@ -362,9 +362,9 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 
 	if(!FreeImage_HasPixels(src) || !histo) return FALSE;
 
-	unsigned width  = FreeImage_GetWidth(src);
-	unsigned height = FreeImage_GetHeight(src);
-	unsigned bpp    = FreeImage_GetBPP(src);
+	const unsigned width  = FreeImage_GetWidth(src);
+	const unsigned height = FreeImage_GetHeight(src);
+	const unsigned bpp    = FreeImage_GetBPP(src);
 
 	if(bpp == 8) {
 		// clear histogram array
@@ -1177,7 +1177,7 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolor
 		case 8: {
 			unsigned size = FreeImage_GetColorsUsed(dib);
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
-			FIRGBA8 *a, *b;
+			const FIRGBA8 *a, *b;
 			for (unsigned x = 0; x < size; x++) {
 				for (unsigned j = 0; j < count; j++) {
 					a = srccolors;
@@ -1215,9 +1215,9 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolor
 				dst16[j] = RGBQUAD_TO_WORD(dib, (dstcolors + j));
 			}
 
-			unsigned height = FreeImage_GetHeight(dib);
-			unsigned width = FreeImage_GetWidth(dib);
-			uint16_t *a, *b;
+			const unsigned height = FreeImage_GetHeight(dib);
+			const unsigned width = FreeImage_GetWidth(dib);
+			const uint16_t *a, *b;
 			for (unsigned y = 0; y < height; y++) {
 				uint16_t *bits = (uint16_t *)FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits++) {
@@ -1242,9 +1242,9 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolor
 			return result;
 		}
 		case 24: {
-			unsigned height = FreeImage_GetHeight(dib);
-			unsigned width = FreeImage_GetWidth(dib);
-			FIRGBA8 *a, *b;
+			const unsigned height = FreeImage_GetHeight(dib);
+			const unsigned width = FreeImage_GetWidth(dib);
+			const FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
 				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 3) {
@@ -1269,9 +1269,9 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolor
 			return result;
 		}
 		case 32: {
-			unsigned height = FreeImage_GetHeight(dib);
-			unsigned width = FreeImage_GetWidth(dib);
-			FIRGBA8 *a, *b;
+			const unsigned height = FreeImage_GetHeight(dib);
+			const unsigned width = FreeImage_GetWidth(dib);
+			const FIRGBA8 *a, *b;
 			for (unsigned y = 0; y < height; y++) {
 				uint8_t *bits = FreeImage_GetScanLine(dib, y);
 				for (unsigned x = 0; x < width; x++, bits += 4) {
@@ -1371,9 +1371,9 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, uint8_t *srcindices,	uint8_t *
 		return 0;
 	}
 
-	unsigned height = FreeImage_GetHeight(dib);
-	unsigned width = FreeImage_GetLine(dib);
-	uint8_t *a, *b;
+	const unsigned height = FreeImage_GetHeight(dib);
+	const unsigned width = FreeImage_GetLine(dib);
+	const uint8_t *a, *b;
 
 	int bpp = FreeImage_GetBPP(dib);
 	switch (bpp) {
@@ -1382,7 +1382,7 @@ FreeImage_ApplyPaletteIndexMapping(FIBITMAP *dib, uint8_t *srcindices,	uint8_t *
 			return result;
 		}
 		case 4: {
-			int skip_last = (FreeImage_GetWidth(dib) & 0x01);
+			const int skip_last = (FreeImage_GetWidth(dib) & 0x01);
 			unsigned max_x = width - 1;
 			for (unsigned y = 0; y < height; y++) {
 				uint8_t *bits = FreeImage_GetScanLine(dib, y);

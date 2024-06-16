@@ -308,7 +308,7 @@ static FIBOOL
 processCanonMakerNoteTag(FIBITMAP *dib, FITAG *tag) {
 	char defaultKey[16];
 	uint32_t startIndex = 0;
-	TagLib& s = TagLib::instance();
+	const TagLib& s = TagLib::instance();
 
 	uint16_t tag_id = FreeImage_GetTagID(tag);
 
@@ -492,7 +492,7 @@ processExifTag(FIBITMAP *dib, FITAG *tag, char *pval, FIBOOL msb_order, TagLib::
 		processCanonMakerNoteTag(dib, tag);
 	}
 	else {
-		TagLib& s = TagLib::instance();
+		const TagLib& s = TagLib::instance();
 
 		uint16_t tag_id = FreeImage_GetTagID(tag);
 
@@ -1077,7 +1077,7 @@ tiff_write_ifd(FIBITMAP *dib, FREE_IMAGE_MDMODEL md_model, FIMEMORY *hmem) {
 		return FALSE;
 	}
 
-	TagLib& s = TagLib::instance();
+	const TagLib& s = TagLib::instance();
 
 	// check for supported metadata models
 	switch(md_model) {
@@ -1279,7 +1279,7 @@ psd_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned int length) {
 
 	// profile size is up to 32-bit
 	uint32_t dwProfileLength = (uint32_t)length;
-	uint8_t *pbProfile = (uint8_t*)data;
+	auto *pbProfile = (const uint8_t*)data;
 
 	// This is an Exif profile
 	// should contain a TIFF header with up to 2 IFDs (IFD stands for 'Image File Directory')

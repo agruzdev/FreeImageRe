@@ -7,11 +7,9 @@
 #ifndef FREEIMAGE_SIMPLE_TOOLS_H_
 #define FREEIMAGE_SIMPLE_TOOLS_H_
 
-#include "FreeImage.h"
+#include "ConversionYUV.h"
 #include <cmath>
 #include <tuple>
-#include <type_traits>
-#include "ConversionYUV.h"
 
 
 template <typename DstPixel_, typename SrcPixel_ = DstPixel_, typename PixelVisitor_>

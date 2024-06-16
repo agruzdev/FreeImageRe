@@ -42,17 +42,17 @@ FIBITMAP * DLL_CALLCONV
 FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP *bg) {
 	if(!FreeImage_HasPixels(fg)) return NULL;
 
-	int width  = FreeImage_GetWidth(fg);
-	int height = FreeImage_GetHeight(fg);
-	int bpp    = FreeImage_GetBPP(fg);
+	const int width  = FreeImage_GetWidth(fg);
+	const int height = FreeImage_GetHeight(fg);
+	const int bpp    = FreeImage_GetBPP(fg);
 
 	if((bpp != 8) && (bpp != 32))
 		return NULL;
 
 	if(bg) {
-		int bg_width  = FreeImage_GetWidth(bg);
-		int bg_height = FreeImage_GetHeight(bg);
-		int bg_bpp    = FreeImage_GetBPP(bg);
+		const int bg_width  = FreeImage_GetWidth(bg);
+		const int bg_height = FreeImage_GetHeight(bg);
+		const int bg_bpp    = FreeImage_GetBPP(bg);
 		if((bg_width != width) || (bg_height != height) || (bg_bpp != 24))
 			return NULL;
 	}
@@ -74,11 +74,11 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 	if(!composite) return NULL;
 
 	// get the palette
-	FIRGBA8 *pal = FreeImage_GetPalette(fg);
+	const FIRGBA8 *pal = FreeImage_GetPalette(fg);
 
 	// retrieve the alpha table from the foreground image
 	FIBOOL bIsTransparent = FreeImage_IsTransparent(fg);
-	uint8_t *trns = FreeImage_GetTransparencyTable(fg);
+	const uint8_t *trns = FreeImage_GetTransparencyTable(fg);
 
 	// retrieve the background color from the foreground image
 	FIBOOL bHasBkColor = FALSE;
@@ -200,8 +200,8 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 		return FALSE;
 	}
 
-	int width = FreeImage_GetWidth(dib);
-	int height = FreeImage_GetHeight(dib);
+	const int width = FreeImage_GetWidth(dib);
+	const int height = FreeImage_GetHeight(dib);
 
 	for(int y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);

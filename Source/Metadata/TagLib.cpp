@@ -1479,20 +1479,15 @@ TagLib::TagLib() {
 
 FIBOOL TagLib::addMetadataModel(MDMODEL md_model, TagInfo *tag_table) {
 	// check that the model doesn't already exist
-	if((_table_map.find(md_model) == _table_map.end()) && (tag_table != NULL)) {
-
-		// add the tag description table
-		TAGINFO *info_map = new(std::nothrow) TAGINFO();
-		if(!info_map) return FALSE;
-
-		for(int i = 0; ; i++) {
-			if((tag_table[i].tag == 0) && (tag_table[i].fieldname == NULL))
-				break;
-			(*info_map)[tag_table[i].tag] = &tag_table[i];
-		}
+	if((_table_map.find(md_model) == _table_map.end()) && tag_table) {
 
 		// add the metadata model
-		_table_map[md_model] = info_map;
+		TAGINFO& info_map = _table_map[md_model];
+
+		// add the tag description table
+		for(int i = 0; tag_table[i].tag || tag_table[i].fieldname; ++i) {
+			info_map[tag_table[i].tag] = &tag_table[i];
+		}
 
 		return TRUE;
 	}
@@ -1500,44 +1495,38 @@ FIBOOL TagLib::addMetadataModel(MDMODEL md_model, TagInfo *tag_table) {
 	return FALSE;
 }
 
-TagLib::~TagLib() {
-	// delete metadata models
-	for(TABLEMAP::iterator i = _table_map.begin(); i != _table_map.end(); i++) {
-		TAGINFO *info_map = (*i).second;
-		delete info_map;
-	}
-}
+TagLib::~TagLib() = default;
 
 
-TagLib& 
+const TagLib& 
 TagLib::instance() {
 	static TagLib s;
 	return s;
 }
 
 const TagInfo* 
-TagLib::getTagInfo(MDMODEL md_model, uint16_t tagID) {
+TagLib::getTagInfo(MDMODEL md_model, uint16_t tagID) const {
 
-	if(_table_map.find(md_model) != _table_map.end()) {
+	if(auto it = _table_map.find(md_model); it != _table_map.end()) {
 
-		TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
-		if(info_map->find(tagID) != info_map->end()) {
-			return (*info_map)[tagID];
+		const TAGINFO &info_map = it->second;
+		if(auto i = info_map.find(tagID); i != info_map.end()) {
+			return i->second;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 const char* 
-TagLib::getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) {
+TagLib::getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) const {
 
 	const TagInfo *info = getTagInfo(md_model, tagID);
-	if(NULL == info) {
-		if(defaultKey != NULL) {
+	if(!info) {
+		if(defaultKey) {
 			sprintf(defaultKey, "Tag 0x%04X", tagID);
-			return &defaultKey[0];
+			return defaultKey;
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	}
 
@@ -1545,23 +1534,23 @@ TagLib::getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) {
 }
 
 const char* 
-TagLib::getTagDescription(MDMODEL md_model, uint16_t tagID) {
+TagLib::getTagDescription(MDMODEL md_model, uint16_t tagID) const {
 
 	const TagInfo *info = getTagInfo(md_model, tagID);
 	if(info) {
 		return info->description;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
-int TagLib::getTagID(MDMODEL md_model, const char *key) {
+int TagLib::getTagID(MDMODEL md_model, const char *key) const {
 
-	if(_table_map.find(md_model) != _table_map.end()) {
+	if(auto it = _table_map.find(md_model); it != _table_map.end()) {
 
-		TAGINFO *info_map = (TAGINFO*)_table_map[md_model];
-		for(TAGINFO::iterator i = info_map->begin(); i != info_map->end(); i++) {
-			const TagInfo *info = (*i).second;
+		const TAGINFO &info_map = it->second;
+		for(auto i = info_map.begin(); i != info_map.end(); ++i) {
+			const TagInfo *info = i->second;
 			if(info && (strcmp(info->fieldname, key) == 0)) {
 				return (int)info->tag;
 			}
@@ -1571,7 +1560,7 @@ int TagLib::getTagID(MDMODEL md_model, const char *key) {
 }
 
 FREE_IMAGE_MDMODEL 
-TagLib::getFreeImageModel(MDMODEL model) {
+TagLib::getFreeImageModel(MDMODEL model) const {
 	switch(model) {
 		case EXIF_MAIN:
 			return FIMD_EXIF_MAIN;
