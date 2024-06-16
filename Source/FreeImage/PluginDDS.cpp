@@ -563,8 +563,9 @@ public:
 template <class DECODER> void DecodeDXTBlock (uint8_t *dstData, const uint8_t *srcBlock, long dstPitch, int bw, int bh) {
 	DECODER decoder;
 	decoder.Setup(srcBlock);
+	uint8_t *dstRow = dstData;
 	for (int y = 0; y < bh; y++) {
-		uint8_t *dst = dstData - y * dstPitch;
+		uint8_t *dst = dstRow;
 		// update scanline
 		decoder.SetY(y);
 		for (int x = 0; x < bw; x++) {
@@ -577,6 +578,7 @@ template <class DECODER> void DecodeDXTBlock (uint8_t *dstData, const uint8_t *s
 #endif 
 			dst += 4;
 		}
+		dstRow -= dstPitch;
 	}
 }
 
