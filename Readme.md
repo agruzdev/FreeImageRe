@@ -14,6 +14,33 @@ Same to the original FreeImage [dual license](https://freeimage.sourceforge.io/l
 All changes are described below in this file.
 
 
+### Python bindings
+
+To import FreeImage python package do the following steps:
+
+* On Windows make link FreeImage.pyd ==> FreeImage.dll     (a hard link is generated automatically when built from sources)
+* On Linux make link FreeImage.so ==> libFreeImage.so    (a symbolic link is generated automatically when built from sources)
+* Make sure the link and library is available on PYTHONPATH (https://docs.python.org/3/extending/building.html)
+
+```python
+
+import FreeImage as fi
+
+img = fi.load(r"myimage.jpg", fi.JPEG_EXIFROTATE) # Loads as numpy array
+...
+
+img, format = fi.loadf(r"myimage.bin") # Returns image and format enum deduced from name or file data
+...
+
+import numpy
+zero = numpy.zeros((128, 128), dtype=numpy.float32)
+fi.save(fi.FIF_EXR, zero, "zero.exr")  # Accepts 2D or 3D numpy arrays
+...
+
+
+```
+
+
 ### What's new
 
 Changes made to FreeImage v3.18:
@@ -57,4 +84,4 @@ Version 0.2:
 Version 0.3:
  - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47995, CVE-2023-47996, CVE-2023-47997
  - Added API for querying versions of compiled dependencies
-
+ - Added Python3 bindings

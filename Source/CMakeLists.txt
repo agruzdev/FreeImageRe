@@ -29,6 +29,11 @@ endif()
 add_library(FreeImage SHARED ${freeimage_all_sources})
 
 target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_COLORORDER=1")
+if (FREEIMAGE_WITH_PYTHON_BINDINGS)
+    target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+    target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")
+    target_link_directories(FreeImage PRIVATE ${Python3_LIBRARY_DIRS})
+endif()
 
 target_link_libraries(FreeImage PRIVATE
     ${ZLIB_LIBRARY}
@@ -50,3 +55,16 @@ target_include_directories(FreeImage PRIVATE
     ${WEBP_INCLUDE_DIR}
     ${RAW_INCLUDE_DIR}
 )
+
+
+if (WIN32)
+    add_custom_command(TARGET FreeImage POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E create_hardlink ".\\FreeImage.dll" "FreeImage.pyd"
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
+    )
+else()
+    add_custom_command(TARGET FreeImage POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E create_symlink "./libFreeImage.so" "FreeImage.so"
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
+    )
+endif()

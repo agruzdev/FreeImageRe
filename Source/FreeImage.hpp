@@ -270,7 +270,7 @@ namespace fi
         { }
     };
 
-#define FREEIMAGERE_CHECKED_CALL(Func_, ...) fi::ImageError::CheckedCall(#Func_, &::Func_, __VA_ARGS__)
+#define FREEIMAGERE_CHECKED_CALL(Func_, ...) fi::ImageError::CheckedCall(#Func_, &::Func_, ##__VA_ARGS__)
 
 
     inline
@@ -753,6 +753,11 @@ namespace fi
         std::add_const_t<Ty_>* GetScanLineAs(uint32_t scanline) const
         {
             return static_cast<std::add_const_t<Ty_>*>(static_cast<const void*>(GetScanLine(scanline)));
+        }
+
+        ImageType GetImageType() const
+        {
+            return static_cast<ImageType>(FreeImage_GetImageType(NativeHandle_()));
         }
 
         ColorType GetColorType(bool scanAlpha = false) const
