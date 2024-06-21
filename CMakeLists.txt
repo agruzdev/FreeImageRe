@@ -34,6 +34,12 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.tiff.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.webp.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.raw.cmake)
 
+option(FREEIMAGE_WITH_PYTHON_BINDINGS "Build pythin bindings" OFF)
+if (FREEIMAGE_WITH_PYTHON_BINDINGS)
+    find_package(Python3 COMPONENTS Development REQUIRED)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.pybind.cmake)
+endif()
+
 # Internal dependencies
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
 

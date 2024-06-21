@@ -38,6 +38,6 @@ if(NOT TARGET tiff)
     endif()
 endif()
 
-set(TIFF_INCLUDE_DIR ${TIFF_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/tiff CACHE PATH "")
+set(TIFF_INCLUDE_DIR ${TIFF_FOUND_ROOT}/libtiff ${CMAKE_BINARY_DIR}/dependencies/tiff CACHE PATH "")
 set(TIFF_LIBRARY_DIR "" CACHE PATH "")
 set(TIFF_LIBRARY tiff CACHE STRING "")
