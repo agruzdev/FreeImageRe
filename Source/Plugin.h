@@ -27,42 +27,42 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
+#include <memory>
+#include <map>
 #include "FreeImage.h"
 #include "Utilities.h"
 
-// ==========================================================
-
-struct Plugin;
 
 // =====================================================================
 //  Plugin Node
 // =====================================================================
 
-FI_STRUCT (PluginNode) {
+struct PluginNode {
 	/** FREE_IMAGE_FORMAT attached to this plugin */
-	int m_id;
+	int m_id = 0;
 	/** Handle to a user plugin DLL (NULL for standard plugins) */
-	void *m_instance;
+	void *m_instance = nullptr;
 	/** The actual plugin, holding the function pointers */
-	Plugin *m_plugin;
+	std::unique_ptr<Plugin> m_plugin = nullptr;
 	/** Enable/Disable switch */
-	FIBOOL m_enabled;
+	bool m_enabled = false;
 
 	/** Unique format string for the plugin */
-	const char *m_format;
+	const char *m_format = nullptr;
 	/** Description string for the plugin */
-	const char *m_description;
+	const char *m_description = nullptr;
 	/** Comma separated list of file extensions indicating what files this plugin can open */
-	const char *m_extension;
+	const char *m_extension = nullptr;
 	/** optional regular expression to help	software identifying a bitmap type */
-	const char *m_regexpr;
+	const char *m_regexpr = nullptr;
 };
 
 // =====================================================================
 //  Internal Plugin List
 // =====================================================================
 
-class PluginList {
+class PluginList 
+{
 public :
 	PluginList();
 	~PluginList();
@@ -73,10 +73,10 @@ public :
 	PluginNode *FindNodeFromFIF(int node_id);
 
 	int Size() const;
-	FIBOOL IsEmpty() const;
+	bool IsEmpty() const;
 
 private :
-	std::map<int, PluginNode *> m_plugin_map;
+	std::map<size_t, std::unique_ptr<PluginNode>> m_plugin_map;
 	int m_node_count;
 };
 
@@ -96,12 +96,12 @@ int FreeImage_stricmp(const char *s1, const char *s2);
 //   Internal functions
 // ==========================================================
 
-extern "C" {
-	FIBOOL DLL_CALLCONV FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle);
-    void * DLL_CALLCONV FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, FIBOOL open_for_reading);
-    void DLL_CALLCONV FreeImage_Close(PluginNode *node, FreeImageIO *io, fi_handle handle, void *data); // plugin.cpp
-    PluginList * DLL_CALLCONV FreeImage_GetPluginList(); // plugin.cpp
-}
+
+bool DLL_CALLCONV FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle);
+void * DLL_CALLCONV FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, bool open_for_reading);
+void DLL_CALLCONV FreeImage_Close(PluginNode *node, FreeImageIO *io, fi_handle handle, void *data); // plugin.cpp
+PluginList * DLL_CALLCONV FreeImage_GetPluginList(); // plugin.cpp
+
 
 // ==========================================================
 //   Internal plugins

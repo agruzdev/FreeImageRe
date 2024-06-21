@@ -54,8 +54,7 @@ s_search_list[] = {
 	"plugins\\",
 };
 
-static int s_search_list_size = sizeof(s_search_list) / sizeof(char *);
-static PluginList *s_plugins{};
+static std::unique_ptr<PluginList> s_plugins{};
 static int s_plugin_reference_count = 0;
 
 
@@ -79,74 +78,60 @@ FreeImage_stricmp(const char *s1, const char *s2) {
 //  Implementation of PluginList
 // =====================================================================
 
-PluginList::PluginList() :
-m_plugin_map(),
-m_node_count(0) {
-}
+PluginList::PluginList() 
+	: m_plugin_map()
+	, m_node_count(0) 
+{ }
 
 FREE_IMAGE_FORMAT
 PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, const char *description, const char *extension, const char *regexpr) {
 	if (init_proc) {
-		PluginNode *node = new(std::nothrow) PluginNode;
-		Plugin *plugin = new(std::nothrow) Plugin;
-		if (!node || !plugin) {
-			if (node) delete node;
-			if (plugin) delete plugin;
-			FreeImage_OutputMessageProc(FIF_UNKNOWN, FI_MSG_ERROR_MEMORY);
-			return FIF_UNKNOWN;
+		try {
+			const int curr_id = static_cast<int>(m_plugin_map.size());
+
+			auto node = std::make_unique<PluginNode>();
+			node->m_plugin = std::make_unique<Plugin>();
+			init_proc(node->m_plugin.get(), curr_id);
+
+			// get the format string (two possible ways)
+
+			const char* the_format{};
+			if (format) {
+				the_format = format;
+			}
+			else if (node->m_plugin->format_proc) {
+				the_format = node->m_plugin->format_proc();
+			}
+
+			// add the node if it wasn't there already
+
+			if (the_format) {
+				// fill-in the plugin structure
+				node->m_id = curr_id;
+				node->m_instance = instance;
+				node->m_format = format;
+				node->m_description = description;
+				node->m_extension = extension;
+				node->m_regexpr = regexpr;
+				node->m_enabled = true;
+
+				m_plugin_map.emplace(curr_id, std::move(node));
+				return static_cast<FREE_IMAGE_FORMAT>(curr_id);
+			}
 		}
-
-		memset(plugin, 0, sizeof(Plugin));
-
-		// fill-in the plugin structure
-		// note we have memset to 0, so all unset pointers should be NULL)
-
-		init_proc(plugin, (int)m_plugin_map.size());
-
-		// get the format string (two possible ways)
-
-		const char *the_format{};
-
-		if (format) {
-			the_format = format;
-		} else if (plugin->format_proc) {
-			the_format = plugin->format_proc();
-		}
-
-		// add the node if it wasn't there already
-
-		if (the_format) {
-			node->m_id = (int)m_plugin_map.size();
-			node->m_instance = instance;
-			node->m_plugin = plugin;
-			node->m_format = format;
-			node->m_description = description;
-			node->m_extension = extension;
-			node->m_regexpr = regexpr;
-			node->m_enabled = TRUE;
-
-			m_plugin_map[(const int)m_plugin_map.size()] = node;
-
-			return (FREE_IMAGE_FORMAT)node->m_id;
-		}
-
-		// something went wrong while allocating the plugin... cleanup
-
-		delete plugin;
-		delete node;
+		catch (...) { };
 	}
-
 	return FIF_UNKNOWN;
 }
 
 PluginNode *
 PluginList::FindNodeFromFormat(const char *format) {
-	for (map<int, PluginNode *>::iterator i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
+	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
 		const char *the_format = ((*i).second->m_format) ? (*i).second->m_format : (*i).second->m_plugin->format_proc();
 
 		if ((*i).second->m_enabled) {
 			if (FreeImage_stricmp(the_format, format) == 0) {
-				return (*i).second;
+				return (*i).second.get();
 			}
 		}
 	}
@@ -156,12 +141,12 @@ PluginList::FindNodeFromFormat(const char *format) {
 
 PluginNode *
 PluginList::FindNodeFromMime(const char *mime) {
-	for (map<int, PluginNode *>::iterator i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
+	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
 		const char *the_mime = ((*i).second->m_plugin->mime_proc) ? (*i).second->m_plugin->mime_proc() : "";
 
 		if ((*i).second->m_enabled) {
 			if (the_mime && (strcmp(the_mime, mime) == 0)) {
-				return (*i).second;
+				return (*i).second.get();
 			}
 		}
 	}
@@ -171,10 +156,10 @@ PluginList::FindNodeFromMime(const char *mime) {
 
 PluginNode *
 PluginList::FindNodeFromFIF(int node_id) {
-	map<int, PluginNode *>::iterator i = m_plugin_map.find(node_id);
+	const auto i = m_plugin_map.find(node_id);
 
 	if (i != m_plugin_map.end()) {
-		return (*i).second;
+		return (*i).second.get();
 	}
 
 	return nullptr;
@@ -182,23 +167,21 @@ PluginList::FindNodeFromFIF(int node_id) {
 
 int
 PluginList::Size() const {
-	return (int)m_plugin_map.size();
+	return static_cast<int>(m_plugin_map.size());
 }
 
-FIBOOL
+bool
 PluginList::IsEmpty() const {
 	return m_plugin_map.empty();
 }
 
 PluginList::~PluginList() {
-	for (map<int, PluginNode *>::iterator i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
+	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
 #ifdef _WIN32
 		if ((*i).second->m_instance) {
 			FreeLibrary((HINSTANCE)(*i).second->m_instance);
 		}
 #endif
-		delete (*i).second->m_plugin;
-		delete ((*i).second);
 	}
 }
 
@@ -208,7 +191,7 @@ PluginList::~PluginList() {
 
 PluginList * DLL_CALLCONV
 FreeImage_GetPluginList() {
-	return s_plugins;
+	return s_plugins.get();
 }
 
 // =====================================================================
@@ -229,7 +212,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 
 		// internal plugin initialization
 
-		s_plugins = new(std::nothrow) PluginList;
+		s_plugins.reset(new(std::nothrow) PluginList);
 
 		if (s_plugins) {
 			/* NOTE : 
@@ -297,7 +280,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 
 				// search for plugins
 
-				while (count < s_search_list_size) {
+				while (count < std::size(s_search_list)) {
 					_finddata_t find_data;
 					long find_handle;
 
@@ -344,7 +327,7 @@ FreeImage_DeInitialise() {
 	--s_plugin_reference_count;
 
 	if (s_plugin_reference_count == 0) {
-		delete s_plugins;
+		s_plugins.reset();
 	}
 }
 
@@ -353,9 +336,9 @@ FreeImage_DeInitialise() {
 // =====================================================================
 
 void * DLL_CALLCONV
-FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, FIBOOL open_for_reading) {
+FreeImage_Open(PluginNode *node, FreeImageIO *io, fi_handle handle, bool open_for_reading) {
 	if (node->m_plugin->open_proc) {
-       return node->m_plugin->open_proc(io, handle, open_for_reading);
+       return node->m_plugin->open_proc(io, handle, static_cast<FIBOOL>(open_for_reading));
 	}
 
 	return nullptr;
@@ -379,7 +362,7 @@ FreeImage_LoadFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handl
 		
 		if (node) {
 			if (node->m_plugin->load_proc) {
-				void *data = FreeImage_Open(node, io, handle, TRUE);
+				void *data = FreeImage_Open(node, io, handle, true);
 					
 				FIBITMAP *bitmap = node->m_plugin->load_proc(io, handle, -1, flags, data);
 					
@@ -446,7 +429,7 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 		
 		if (node) {
 			if (node->m_plugin->save_proc) {
-				void *data = FreeImage_Open(node, io, handle, FALSE);
+				void *data = FreeImage_Open(node, io, handle, false);
 					
 				FIBOOL result = node->m_plugin->save_proc(io, dib, handle, -1, flags, data);
 					
@@ -775,13 +758,19 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 FREE_IMAGE_FORMAT DLL_CALLCONV 
 FreeImage_GetFIFFromFilenameU(const wchar_t *filename) {
 #ifdef _WIN32	
-	if (!filename) return FIF_UNKNOWN;
-    	
+	if (!filename) {
+		return FIF_UNKNOWN;
+	}
 	// get the proper extension if we received a filename
 	wchar_t *place = wcsrchr((wchar_t *)filename, '.');	
-	if (!place) return FIF_UNKNOWN;
+	if (!place) {
+		return FIF_UNKNOWN;
+	}
 	// convert to single character - no national chars in extensions
 	auto *extension = (char *)malloc(wcslen(place)+1);
+	if (!extension) {
+		return FIF_UNKNOWN;
+	}
 	unsigned int i=0;
 	for (; i < wcslen(place); i++) // convert 16-bit to 8-bit
 		extension[i] = (char)(place[i] & 0x00FF);
@@ -796,7 +785,7 @@ FreeImage_GetFIFFromFilenameU(const wchar_t *filename) {
 #endif // _WIN32
 }
 
-FIBOOL DLL_CALLCONV
+bool DLL_CALLCONV
 FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle) {
 	if (s_plugins) {
 		FIBOOL validated = FALSE;
