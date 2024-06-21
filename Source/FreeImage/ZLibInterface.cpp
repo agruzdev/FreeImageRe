@@ -41,7 +41,7 @@ FreeImage_ZLibCompress(uint8_t *target, uint32_t target_size, uint8_t *source, u
 	uLongf dest_len = (uLongf)target_size;
 
 	int zerr = compress(target, &dest_len, source, source_size);
-	switch(zerr) {
+	switch (zerr) {
 		case Z_MEM_ERROR:	// not enough memory
 		case Z_BUF_ERROR:	// not enough room in the output buffer
 			FreeImage_OutputMessageProc(FIF_UNKNOWN, "Zlib error : %s", zError(zerr));
@@ -73,7 +73,7 @@ FreeImage_ZLibUncompress(uint8_t *target, uint32_t target_size, uint8_t *source,
 	uLongf dest_len = (uLongf)target_size;
 
 	int zerr = uncompress(target, &dest_len, source, source_size);
-	switch(zerr) {
+	switch (zerr) {
 		case Z_MEM_ERROR:	// not enough memory
 		case Z_BUF_ERROR:	// not enough room in the output buffer
 		case Z_DATA_ERROR:	// input data was corrupted
@@ -108,7 +108,7 @@ FreeImage_ZLibGZip(uint8_t *target, uint32_t target_size, uint8_t *source, uint3
     sprintf((char *)target, "%c%c%c%c%c%c%c%c", 0x1f, 0x8b,
          Z_DEFLATED, 0 /*flags*/, 0,0,0,0 /*time*/);
     int zerr = compress2(target + 8, &dest_len, source, source_size, Z_BEST_COMPRESSION);
-	switch(zerr) {
+	switch (zerr) {
 		case Z_MEM_ERROR:	// not enough memory
 		case Z_BUF_ERROR:	// not enough room in the output buffer
 			FreeImage_OutputMessageProc(FIF_UNKNOWN, "Zlib error : %s", zError(zerr));

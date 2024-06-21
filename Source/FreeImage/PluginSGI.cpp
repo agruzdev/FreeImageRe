@@ -134,7 +134,7 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 		int cnt = 0;
 		while (0 == cnt) {
 			uint8_t packed = 0;
-			if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
+			if (io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 				return EOF;
 			}
 			cnt = packed;
@@ -147,7 +147,7 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 			pstatus->val = -1;
 		} else {
 			uint8_t packed = 0;
-			if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
+			if (io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 				return EOF;
 			}
 			pstatus->val = packed;
@@ -156,7 +156,7 @@ get_rlechar(FreeImageIO *io, fi_handle handle, RLEStatus *pstatus) {
 	pstatus->cnt--;
 	if (pstatus->val == -1) {
 		uint8_t packed = 0;
-		if(io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
+		if (io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 			return EOF;
 		}
 		return packed;
@@ -183,7 +183,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-  return NULL;
+  return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -218,19 +218,19 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int bitcount;
 	SGIHeader sgiHeader;
 	RLEStatus my_rle_status;
-	FIBITMAP *dib = NULL;
-	int32_t *pRowIndex = NULL;
+	FIBITMAP *dib{};
+	int32_t *pRowIndex{};
 
 	try {
 		// read the header
 		memset(&sgiHeader, 0, sizeof(SGIHeader));
-		if(io->read_proc(&sgiHeader, 1, sizeof(SGIHeader), handle) < sizeof(SGIHeader)) {
+		if (io->read_proc(&sgiHeader, 1, sizeof(SGIHeader), handle) < sizeof(SGIHeader)) {
 		   throw SGI_LESS_THAN_HEADER_LENGTH;
 		}
 #ifndef FREEIMAGE_BIGENDIAN
 		SwapHeader(&sgiHeader);
 #endif
-		if(sgiHeader.magic != 474) {
+		if (sgiHeader.magic != 474) {
 			throw FI_MSG_ERROR_MAGIC_NUMBER;
 		}
 		
@@ -261,11 +261,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			height = sgiHeader.ysize;
 		}
 		
-		if(bIsRLE) {
+		if (bIsRLE) {
 			// read the Offset Tables 
 			int index_len = height * zsize;
 			pRowIndex = (int32_t*)malloc(index_len * sizeof(int32_t));
-			if(!pRowIndex) {
+			if (!pRowIndex) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 			
@@ -282,13 +282,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// Discard row size index
 			for (i = 0; i < (int)(index_len * sizeof(int32_t)); i++) {
 				uint8_t packed = 0;
-				if( io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1 ) {
+				if (io->read_proc(&packed, sizeof(uint8_t), 1, handle) < 1) {
 					throw SGI_EOF_IN_RLE_INDEX;
 				}
 			}
 		}
 		
-		switch(zsize) {
+		switch (zsize) {
 			case 1:
 				bitcount = 8;
 				break;
@@ -307,7 +307,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 		
 		dib = FreeImage_Allocate(width, height, bitcount);
-		if(!dib) {
+		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 		
@@ -385,16 +385,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			}
 		}
-		if(pRowIndex)
+		if (pRowIndex)
 			free(pRowIndex);
 
 		return dib;
 
 	} catch(const char *text) {
-		if(pRowIndex) free(pRowIndex);
-		if(dib) FreeImage_Unload(dib);
+		if (pRowIndex) free(pRowIndex);
+		if (dib) FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -410,16 +410,16 @@ InitSGI(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }
 

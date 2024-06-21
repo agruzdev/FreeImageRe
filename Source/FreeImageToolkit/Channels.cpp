@@ -31,17 +31,17 @@
 FIBITMAP * DLL_CALLCONV 
 FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 
-	if(!FreeImage_HasPixels(src)) return NULL;
+	if (!FreeImage_HasPixels(src)) return nullptr;
 
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(src);
 	unsigned bpp = FreeImage_GetBPP(src);
 
 	// 24- or 32-bit 
-	if(image_type == FIT_BITMAP && ((bpp == 24) || (bpp == 32))) {
+	if (image_type == FIT_BITMAP && ((bpp == 24) || (bpp == 32))) {
 		int c;
 
 		// select the channel to extract
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = FI_RGBA_BLUE;
 				break;
@@ -52,21 +52,21 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 				c = FI_RGBA_RED;
 				break;
 			case FICC_ALPHA:
-				if(bpp != 32) return NULL;
+				if (bpp != 32) return nullptr;
 				c = FI_RGBA_ALPHA;
 				break;
 			default:
-				return NULL;
+				return nullptr;
 		}
 
 		// allocate a 8-bit dib
 		const unsigned width  = FreeImage_GetWidth(src);
 		const unsigned height = FreeImage_GetHeight(src);
 		FIBITMAP *dst = FreeImage_Allocate(width, height, 8) ;
-		if(!dst) return NULL;
+		if (!dst) return nullptr;
 		// build a greyscale palette
 		FIRGBA8 *pal = FreeImage_GetPalette(dst);
-		for(int i = 0; i < 256; i++) {
+		for (int i = 0; i < 256; i++) {
 			pal[i].blue = pal[i].green = pal[i].red = (uint8_t)i;
 		}
 
@@ -74,10 +74,10 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 
 		int bytespp = bpp / 8;	// bytes / pixel
 
-		for(unsigned y = 0; y < height; y++) {
+		for (unsigned y = 0; y < height; y++) {
 			const uint8_t *src_bits = FreeImage_GetScanLine(src, y);
 			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < width; x++) {
+			for (unsigned x = 0; x < width; x++) {
 				dst_bits[x] = src_bits[c];
 				src_bits += bytespp;
 			}
@@ -90,11 +90,11 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	}
 
 	// 48-bit RGB or 64-bit RGBA images
-	if((image_type == FIT_RGB16) ||  (image_type == FIT_RGBA16)) {
+	if ((image_type == FIT_RGB16) ||  (image_type == FIT_RGBA16)) {
 		int c;
 
 		// select the channel to extract (always RGB[A])
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = 2;
 				break;
@@ -105,27 +105,27 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 				c = 0;
 				break;
 			case FICC_ALPHA:
-				if(bpp != 64) return NULL;
+				if (bpp != 64) return nullptr;
 				c = 3;
 				break;
 			default:
-				return NULL;
+				return nullptr;
 		}
 
 		// allocate a greyscale dib
 		const unsigned width  = FreeImage_GetWidth(src);
 		const unsigned height = FreeImage_GetHeight(src);
 		FIBITMAP *dst = FreeImage_AllocateT(FIT_UINT16, width, height) ;
-		if(!dst) return NULL;
+		if (!dst) return nullptr;
 
 		// perform extraction
 
 		int bytespp = bpp / 16;	// words / pixel
 
-		for(unsigned y = 0; y < height; y++) {
+		for (unsigned y = 0; y < height; y++) {
 			auto *src_bits = (const unsigned short*)FreeImage_GetScanLine(src, y);
 			auto *dst_bits = (unsigned short*)FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < width; x++) {
+			for (unsigned x = 0; x < width; x++) {
 				dst_bits[x] = src_bits[c];
 				src_bits += bytespp;
 			}
@@ -138,11 +138,11 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	}
 
 	// 96-bit RGBF or 128-bit RGBAF images
-	if((image_type == FIT_RGBF) ||  (image_type == FIT_RGBAF)) {
+	if ((image_type == FIT_RGBF) ||  (image_type == FIT_RGBAF)) {
 		int c;
 
 		// select the channel to extract (always RGB[A])
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = 2;
 				break;
@@ -153,27 +153,27 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 				c = 0;
 				break;
 			case FICC_ALPHA:
-				if(bpp != 128) return NULL;
+				if (bpp != 128) return nullptr;
 				c = 3;
 				break;
 			default:
-				return NULL;
+				return nullptr;
 		}
 
 		// allocate a greyscale dib
 		const unsigned width  = FreeImage_GetWidth(src);
 		const unsigned height = FreeImage_GetHeight(src);
 		FIBITMAP *dst = FreeImage_AllocateT(FIT_FLOAT, width, height) ;
-		if(!dst) return NULL;
+		if (!dst) return nullptr;
 
 		// perform extraction
 
 		int bytespp = bpp / 32;	// floats / pixel
 
-		for(unsigned y = 0; y < height; y++) {
+		for (unsigned y = 0; y < height; y++) {
 			auto *src_bits = (const float*)FreeImage_GetScanLine(src, y);
 			auto *dst_bits = (float*)FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < width; x++) {
+			for (unsigned x = 0; x < width; x++) {
 				dst_bits[x] = src_bits[c];
 				src_bits += bytespp;
 			}
@@ -185,7 +185,7 @@ FreeImage_GetChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 		return dst;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 /** @brief Insert a greyscale dib into a RGB[A] image. 
@@ -199,37 +199,37 @@ FIBOOL DLL_CALLCONV
 FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	int c;
 
-	if(!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
+	if (!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
 	
 	// src and dst images should have the same width and height
 	const unsigned src_width  = FreeImage_GetWidth(src);
 	const unsigned src_height = FreeImage_GetHeight(src);
 	const unsigned dst_width  = FreeImage_GetWidth(dst);
 	const unsigned dst_height = FreeImage_GetHeight(dst);
-	if((src_width != dst_width) || (src_height != dst_height))
+	if ((src_width != dst_width) || (src_height != dst_height))
 		return FALSE;
 
 	// src image should be grayscale, dst image should be RGB or RGBA
 	FREE_IMAGE_COLOR_TYPE src_type = FreeImage_GetColorType(src);
 	FREE_IMAGE_COLOR_TYPE dst_type = FreeImage_GetColorType(dst);
-	if((dst_type != FIC_RGB) && (dst_type != FIC_RGBALPHA) || (src_type != FIC_MINISBLACK)) {
+	if ((dst_type != FIC_RGB) && (dst_type != FIC_RGBALPHA) || (src_type != FIC_MINISBLACK)) {
 		return FALSE;
 	}
 
 	FREE_IMAGE_TYPE src_image_type = FreeImage_GetImageType(src);
 	FREE_IMAGE_TYPE dst_image_type = FreeImage_GetImageType(dst);
 
-	if((dst_image_type == FIT_BITMAP) && (src_image_type == FIT_BITMAP)) {
+	if ((dst_image_type == FIT_BITMAP) && (src_image_type == FIT_BITMAP)) {
 
 		// src image should be grayscale, dst image should be 24- or 32-bit
 		const unsigned src_bpp = FreeImage_GetBPP(src);
 		const unsigned dst_bpp = FreeImage_GetBPP(dst);
-		if((src_bpp != 8) || (dst_bpp != 24) && (dst_bpp != 32))
+		if ((src_bpp != 8) || (dst_bpp != 24) && (dst_bpp != 32))
 			return FALSE;
 
 
 		// select the channel to modify
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = FI_RGBA_BLUE;
 				break;
@@ -240,7 +240,7 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 				c = FI_RGBA_RED;
 				break;
 			case FICC_ALPHA:
-				if(dst_bpp != 32) return FALSE;
+				if (dst_bpp != 32) return FALSE;
 				c = FI_RGBA_ALPHA;
 				break;
 			default:
@@ -251,10 +251,10 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 
 		int bytespp = dst_bpp / 8;	// bytes / pixel
 
-		for(unsigned y = 0; y < dst_height; y++) {
+		for (unsigned y = 0; y < dst_height; y++) {
 			const uint8_t *src_bits = FreeImage_GetScanLine(src, y);
 			uint8_t *dst_bits = FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < dst_width; x++) {
+			for (unsigned x = 0; x < dst_width; x++) {
 				dst_bits[c] = src_bits[x];
 				dst_bits += bytespp;
 			}
@@ -263,17 +263,17 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 		return TRUE;
 	}
 
-	if(((dst_image_type == FIT_RGB16) || (dst_image_type == FIT_RGBA16)) && (src_image_type == FIT_UINT16)) {
+	if (((dst_image_type == FIT_RGB16) || (dst_image_type == FIT_RGBA16)) && (src_image_type == FIT_UINT16)) {
 
 		// src image should be grayscale, dst image should be 48- or 64-bit
 		unsigned src_bpp = FreeImage_GetBPP(src);
 		unsigned dst_bpp = FreeImage_GetBPP(dst);
-		if((src_bpp != 16) || (dst_bpp != 48) && (dst_bpp != 64))
+		if ((src_bpp != 16) || (dst_bpp != 48) && (dst_bpp != 64))
 			return FALSE;
 
 
 		// select the channel to modify (always RGB[A])
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = 2;
 				break;
@@ -284,7 +284,7 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 				c = 0;
 				break;
 			case FICC_ALPHA:
-				if(dst_bpp != 64) return FALSE;
+				if (dst_bpp != 64) return FALSE;
 				c = 3;
 				break;
 			default:
@@ -295,10 +295,10 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 
 		int bytespp = dst_bpp / 16;	// words / pixel
 
-		for(unsigned y = 0; y < dst_height; y++) {
+		for (unsigned y = 0; y < dst_height; y++) {
 			auto *src_bits = (const unsigned short*)FreeImage_GetScanLine(src, y);
 			auto *dst_bits = (unsigned short*)FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < dst_width; x++) {
+			for (unsigned x = 0; x < dst_width; x++) {
 				dst_bits[c] = src_bits[x];
 				dst_bits += bytespp;
 			}
@@ -307,17 +307,17 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 		return TRUE;
 	}
 	
-	if(((dst_image_type == FIT_RGBF) || (dst_image_type == FIT_RGBAF)) && (src_image_type == FIT_FLOAT)) {
+	if (((dst_image_type == FIT_RGBF) || (dst_image_type == FIT_RGBAF)) && (src_image_type == FIT_FLOAT)) {
 
 		// src image should be grayscale, dst image should be 96- or 128-bit
 		unsigned src_bpp = FreeImage_GetBPP(src);
 		unsigned dst_bpp = FreeImage_GetBPP(dst);
-		if((src_bpp != 32) || (dst_bpp != 96) && (dst_bpp != 128))
+		if ((src_bpp != 32) || (dst_bpp != 96) && (dst_bpp != 128))
 			return FALSE;
 
 
 		// select the channel to modify (always RGB[A])
-		switch(channel) {
+		switch (channel) {
 			case FICC_BLUE:
 				c = 2;
 				break;
@@ -328,7 +328,7 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 				c = 0;
 				break;
 			case FICC_ALPHA:
-				if(dst_bpp != 128) return FALSE;
+				if (dst_bpp != 128) return FALSE;
 				c = 3;
 				break;
 			default:
@@ -339,10 +339,10 @@ FreeImage_SetChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL chan
 
 		int bytespp = dst_bpp / 32;	// floats / pixel
 
-		for(unsigned y = 0; y < dst_height; y++) {
+		for (unsigned y = 0; y < dst_height; y++) {
 			auto *src_bits = (const float*)FreeImage_GetScanLine(src, y);
 			auto *dst_bits = (float*)FreeImage_GetScanLine(dst, y);
-			for(unsigned x = 0; x < dst_width; x++) {
+			for (unsigned x = 0; x < dst_width; x++) {
 				dst_bits[c] = src_bits[x];
 				dst_bits += bytespp;
 			}
@@ -363,47 +363,47 @@ FIBITMAP * DLL_CALLCONV
 FreeImage_GetComplexChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	unsigned x, y;
 	double mag, phase;
-	const FICOMPLEX *src_bits = nullptr;
-	double *dst_bits = nullptr;
-	FIBITMAP *dst = nullptr;
+	const FICOMPLEX *src_bits{};
+	double *dst_bits{};
+	FIBITMAP *dst{};
 
-	if(!FreeImage_HasPixels(src)) return NULL;
+	if (!FreeImage_HasPixels(src)) return nullptr;
 
-	if(FreeImage_GetImageType(src) == FIT_COMPLEX) {
+	if (FreeImage_GetImageType(src) == FIT_COMPLEX) {
 		// allocate a dib of type FIT_DOUBLE
 		const unsigned width  = FreeImage_GetWidth(src);
 		const unsigned height = FreeImage_GetHeight(src);
 		dst = FreeImage_AllocateT(FIT_DOUBLE, width, height) ;
-		if(!dst) return NULL;
+		if (!dst) return nullptr;
 
 		// perform extraction
 
-		switch(channel) {
+		switch (channel) {
 			case FICC_REAL: // real part
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = (const FICOMPLEX *)FreeImage_GetScanLine(src, y);
 					dst_bits = (double *)FreeImage_GetScanLine(dst, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						dst_bits[x] = src_bits[x].r;
 					}
 				}
 				break;
 
 			case FICC_IMAG: // imaginary part
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = (const FICOMPLEX *)FreeImage_GetScanLine(src, y);
 					dst_bits = (double *)FreeImage_GetScanLine(dst, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						dst_bits[x] = src_bits[x].i;
 					}
 				}
 				break;
 
 			case FICC_MAG: // magnitude
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = (const FICOMPLEX *)FreeImage_GetScanLine(src, y);
 					dst_bits = (double *)FreeImage_GetScanLine(dst, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						mag = src_bits[x].r * src_bits[x].r + src_bits[x].i * src_bits[x].i;
 						dst_bits[x] = sqrt(mag);
 					}
@@ -411,11 +411,11 @@ FreeImage_GetComplexChannel(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 				break;
 
 			case FICC_PHASE: // phase
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = (const FICOMPLEX *)FreeImage_GetScanLine(src, y);
 					dst_bits = (double *)FreeImage_GetScanLine(dst, y);
-					for(x = 0; x < width; x++) {
-						if((src_bits[x].r == 0) && (src_bits[x].i == 0)) {
+					for (x = 0; x < width; x++) {
+						if ((src_bits[x].r == 0) && (src_bits[x].i == 0)) {
 							phase = 0;
 						} else {
 							phase = atan2(src_bits[x].i, src_bits[x].r);
@@ -443,15 +443,15 @@ Both src and dst must have the same width and height.
 FIBOOL DLL_CALLCONV 
 FreeImage_SetComplexChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL channel) {
 	unsigned x, y;
-	const double *src_bits = nullptr;
-	FICOMPLEX *dst_bits = nullptr;
+	const double *src_bits{};
+	FICOMPLEX *dst_bits{};
 
-	if(!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
+	if (!FreeImage_HasPixels(src) || !FreeImage_HasPixels(dst)) return FALSE;
 
 	// src image should be of type FIT_DOUBLE, dst image should be of type FIT_COMPLEX
 	const FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(src);
 	const FREE_IMAGE_TYPE dst_type = FreeImage_GetImageType(dst);
-	if((src_type != FIT_DOUBLE) || (dst_type != FIT_COMPLEX))
+	if ((src_type != FIT_DOUBLE) || (dst_type != FIT_COMPLEX))
 		return FALSE;
 
 	// src and dst images should have the same width and height
@@ -459,25 +459,25 @@ FreeImage_SetComplexChannel(FIBITMAP *dst, FIBITMAP *src, FREE_IMAGE_COLOR_CHANN
 	const unsigned src_height = FreeImage_GetHeight(src);
 	const unsigned dst_width  = FreeImage_GetWidth(dst);
 	const unsigned dst_height = FreeImage_GetHeight(dst);
-	if((src_width != dst_width) || (src_height != dst_height))
+	if ((src_width != dst_width) || (src_height != dst_height))
 		return FALSE;
 
 	// select the channel to modify
-	switch(channel) {
+	switch (channel) {
 		case FICC_REAL: // real part
-			for(y = 0; y < dst_height; y++) {
+			for (y = 0; y < dst_height; y++) {
 				src_bits = (const double *)FreeImage_GetScanLine(src, y);
 				dst_bits = (FICOMPLEX *)FreeImage_GetScanLine(dst, y);
-				for(x = 0; x < dst_width; x++) {
+				for (x = 0; x < dst_width; x++) {
 					dst_bits[x].r = src_bits[x];
 				}
 			}
 			break;
 		case FICC_IMAG: // imaginary part
-			for(y = 0; y < dst_height; y++) {
+			for (y = 0; y < dst_height; y++) {
 				src_bits = (const double *)FreeImage_GetScanLine(src, y);
 				dst_bits = (FICOMPLEX *)FreeImage_GetScanLine(dst, y);
-				for(x = 0; x < dst_width; x++) {
+				for (x = 0; x < dst_width; x++) {
 					dst_bits[x].i = src_bits[x];
 				}
 			}

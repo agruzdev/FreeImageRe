@@ -186,27 +186,27 @@ FreeImage_ConvertLine8To32MapTransparency(uint8_t *target, uint8_t *source, int 
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
-	if(!FreeImage_HasPixels(dib)) return NULL;
+	if (!FreeImage_HasPixels(dib)) return nullptr;
 
 	const int bpp = FreeImage_GetBPP(dib);
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 	
-	if((image_type != FIT_BITMAP) && (image_type != FIT_RGB16) && (image_type != FIT_RGBA16)) {
-		return NULL;
+	if ((image_type != FIT_BITMAP) && (image_type != FIT_RGB16) && (image_type != FIT_RGBA16)) {
+		return nullptr;
 	}
 	
 	const int width = FreeImage_GetWidth(dib);
 	const int height = FreeImage_GetHeight(dib);
 
-	if(image_type == FIT_BITMAP) {
+	if (image_type == FIT_BITMAP) {
 
-		if(bpp == 32) {
+		if (bpp == 32) {
 			return FreeImage_Clone(dib);
 		}
 
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-		if(new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// copy metadata from src to dst
@@ -214,10 +214,10 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 		FIBOOL bIsTransparent = FreeImage_IsTransparent(dib);
 
-		switch(bpp) {
+		switch (bpp) {
 			case 1:
 			{
-				if(bIsTransparent) {
+				if (bIsTransparent) {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine1To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
@@ -232,7 +232,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 			case 4:
 			{
-				if(bIsTransparent) {
+				if (bIsTransparent) {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine4To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
@@ -247,7 +247,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 				
 			case 8:
 			{
-				if(bIsTransparent) {
+				if (bIsTransparent) {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine8To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
 					}
@@ -284,10 +284,10 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 			}
 		}
 
-	} else if(image_type == FIT_RGB16) {
+	} else if (image_type == FIT_RGB16) {
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-		if(new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// copy metadata from src to dst
@@ -300,7 +300,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGB16 *src_pixel = (FIRGB16*)src_bits;
 			FIRGBA8 *dst_pixel = (FIRGBA8*)dst_bits;
-			for(int cols = 0; cols < width; cols++) {
+			for (int cols = 0; cols < width; cols++) {
 				dst_pixel[cols].red		= (uint8_t)(src_pixel[cols].red   >> 8);
 				dst_pixel[cols].green	= (uint8_t)(src_pixel[cols].green >> 8);
 				dst_pixel[cols].blue		= (uint8_t)(src_pixel[cols].blue  >> 8);
@@ -312,10 +312,10 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 
 		return new_dib;
 
-	} else if(image_type == FIT_RGBA16) {
+	} else if (image_type == FIT_RGBA16) {
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-		if(new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// copy metadata from src to dst
@@ -328,7 +328,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 		for (int rows = 0; rows < height; rows++) {
 			const FIRGBA16 *src_pixel = (FIRGBA16*)src_bits;
 			FIRGBA8 *dst_pixel = (FIRGBA8*)dst_bits;
-			for(int cols = 0; cols < width; cols++) {
+			for (int cols = 0; cols < width; cols++) {
 				dst_pixel[cols].red		= (uint8_t)(src_pixel[cols].red   >> 8);
 				dst_pixel[cols].green	= (uint8_t)(src_pixel[cols].green >> 8);
 				dst_pixel[cols].blue		= (uint8_t)(src_pixel[cols].blue  >> 8);
@@ -341,5 +341,5 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 		return new_dib;
 	}
 	
-	return NULL;
+	return nullptr;
 }

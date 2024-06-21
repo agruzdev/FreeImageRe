@@ -140,17 +140,17 @@ FreeImage_ConvertLine32To4(uint8_t *target, uint8_t *source, int width_in_pixels
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
-	if(!FreeImage_HasPixels(dib)) return NULL;
+	if (!FreeImage_HasPixels(dib)) return nullptr;
 
 	const int bpp = FreeImage_GetBPP(dib);
 
-	if(bpp != 4) {
+	if (bpp != 4) {
 		const int width  = FreeImage_GetWidth(dib);
 		const int height = FreeImage_GetHeight(dib);
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 4);
 
-		if(new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// copy metadata from src to dst
@@ -160,16 +160,16 @@ FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
 
 		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
-		for(int i = 0; i < 16; i++) {
+		for (int i = 0; i < 16; i++) {
 			new_pal[i].red	= (uint8_t)((i << 4) + i);
 			new_pal[i].green = (uint8_t)((i << 4) + i);
 			new_pal[i].blue	= (uint8_t)((i << 4) + i);
 		}
 
-		switch(bpp) {
+		switch (bpp) {
 			case 1:
 			{
-				if(FreeImage_GetColorType(dib) == FIC_PALETTE) {
+				if (FreeImage_GetColorType(dib) == FIC_PALETTE) {
 
 					// Copy the palette
 
@@ -178,11 +178,11 @@ FreeImage_ConvertTo4Bits(FIBITMAP *dib) {
 					memcpy(&new_pal[15], &old_pal[1], sizeof(FIRGBA8));
 
 				}
-				else if(FreeImage_GetColorType(dib) == FIC_MINISWHITE) {
+				else if (FreeImage_GetColorType(dib) == FIC_MINISWHITE) {
 					
 					// Reverse the grayscale palette
 
-					for(int i = 0; i < 16; i++) {
+					for (int i = 0; i < 16; i++) {
 						new_pal[i].red = new_pal[i].green = new_pal[i].blue = (uint8_t)(255 - ((i << 4) + i));
 					}
 				}

@@ -28,23 +28,23 @@
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertToUINT16(FIBITMAP *dib) {
-	FIBITMAP *src = NULL;
-	FIBITMAP *dst = NULL;
+	FIBITMAP *src{};
+	FIBITMAP *dst{};
 
-	if(!FreeImage_HasPixels(dib)) return NULL;
+	if (!FreeImage_HasPixels(dib)) return nullptr;
 
 	const FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(dib);
 
 	// check for allowed conversions 
-	switch(src_type) {
+	switch (src_type) {
 		case FIT_BITMAP:
 		{
 			// convert to greyscale if needed
-			if((FreeImage_GetBPP(dib) == 8) && (FreeImage_GetColorType(dib) == FIC_MINISBLACK)) {
+			if ((FreeImage_GetBPP(dib) == 8) && (FreeImage_GetColorType(dib) == FIC_MINISBLACK)) {
 				src = dib;
 			} else {
 				src = FreeImage_ConvertToGreyscale(dib);
-				if(!src) return NULL;
+				if (!src) return nullptr;
 			}
 			break;
 		}
@@ -61,7 +61,7 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 			src = dib;
 			break;
 		default:
-			return NULL;
+			return nullptr;
 	}
 
 	// allocate dst image
@@ -70,11 +70,11 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 	const unsigned height = FreeImage_GetHeight(src);
 
 	dst = FreeImage_AllocateT(FIT_UINT16, width, height);
-	if(!dst) {
-		if(src != dib) {
+	if (!dst) {
+		if (src != dib) {
 			FreeImage_Unload(src);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	// copy metadata from src to dst
@@ -82,13 +82,13 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 
 	// convert from src type to UINT16
 
-	switch(src_type) {
+	switch (src_type) {
 		case FIT_BITMAP:
 		{
-			for(unsigned y = 0; y < height; y++) {
-				const uint8_t *src_bits = (uint8_t*)FreeImage_GetScanLine(src, y);
-				uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+			for (unsigned y = 0; y < height; y++) {
+				auto *src_bits = (const uint8_t*)FreeImage_GetScanLine(src, y);
+				auto *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
+				for (unsigned x = 0; x < width; x++) {
 					dst_bits[x] = src_bits[x] << 8;
 				}
 			}
@@ -97,10 +97,10 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 
 		case FIT_RGB16:
 		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGB16 *src_bits = (FIRGB16*)FreeImage_GetScanLine(src, y);
-				uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+			for (unsigned y = 0; y < height; y++) {
+				auto *src_bits = (const FIRGB16*)FreeImage_GetScanLine(src, y);
+				auto *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
+				for (unsigned x = 0; x < width; x++) {
 					// convert to grey
 					dst_bits[x] = (uint16_t)LUMA_REC709(src_bits[x].red, src_bits[x].green, src_bits[x].blue);
 				}
@@ -110,10 +110,10 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 
 		case FIT_RGBA16:
 		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGBA16 *src_bits = (FIRGBA16*)FreeImage_GetScanLine(src, y);
-				uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+			for (unsigned y = 0; y < height; y++) {
+				auto *src_bits = (const FIRGBA16*)FreeImage_GetScanLine(src, y);
+				auto *dst_bits = (uint16_t*)FreeImage_GetScanLine(dst, y);
+				for (unsigned x = 0; x < width; x++) {
 					// convert to grey
 					dst_bits[x] = (uint16_t)LUMA_REC709(src_bits[x].red, src_bits[x].green, src_bits[x].blue);
 				}
@@ -125,7 +125,7 @@ FreeImage_ConvertToUINT16(FIBITMAP *dib) {
 			break;
 	}
 
-	if(src != dib) {
+	if (src != dib) {
 		FreeImage_Unload(src);
 	}
 

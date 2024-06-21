@@ -47,9 +47,9 @@ See http://www.nezumi.demon.co.uk/consult/logx.htm
 */
 static inline double 
 pade_log(const double x) {
-	if(x < 1) {
+	if (x < 1) {
 		return (x * (6 + x) / (6 + 4 * x));
-	} else if(x < 2) {
+	} else if (x < 2) {
 		return (x * (6 + 0.7662 * x) / (5.9897 + 3.7658 * x));
 	}
 	return log(x + 1);
@@ -72,7 +72,7 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 	unsigned x, y;
 	double L;
 
-	if(FreeImage_GetImageType(dib) != FIT_RGBF)
+	if (FreeImage_GetImageType(dib) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(dib);
@@ -81,7 +81,7 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 
 
 	// arbitrary Bias Parameter 
-	if(biasParam == 0) 
+	if (biasParam == 0) 
 		biasParam = 0.85F;
 
 	// normalize maximum luminance by average luminance
@@ -96,10 +96,10 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 	Normal tone mapping of every pixel
 	further acceleration is obtained by a Padé approximation of log(x + 1)
 	*/
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(y = 0; y < height; y++) {
-		FIRGBF *pixel = (FIRGBF*)bits;
-		for(x = 0; x < width; x++) {
+	auto *bits = (uint8_t*)FreeImage_GetBits(dib);
+	for (y = 0; y < height; y++) {
+		auto *pixel = (FIRGBF*)bits;
+		for (x = 0; x < width; x++) {
 			double Yw = pixel[x].red / avgLum;
 			Yw *= exposure;
 			interpol = log(2 + biasFunction(biasP, Yw / Lmax) * 8);
@@ -127,11 +127,11 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 #define PIXEL(x, y)	image[y*fpitch + x].red
 
 	FIRGBF *image = (FIRGBF*)FreeImage_GetBits(dib);
-	for(y = 0; y < max_height; y += 3) {
-		for(x = 0; x < max_width; x += 3) {
+	for (y = 0; y < max_height; y += 3) {
+		for (x = 0; x < max_width; x += 3) {
 			double average = 0;
-			for(i = 0; i < 3; i++) {
-				for(j = 0; j < 3; j++) {
+			for (i = 0; i < 3; i++) {
+				for (j = 0; j < 3; j++) {
 					index = (y + i)*fpitch + (x + j);
 					image[index].red /= (float)avgLum;
 					image[index].red *= exposure; 
@@ -139,10 +139,10 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 				}
 			}
 			average = average / 9 - PIXEL(x, y);
-			if(average > -1 && average < 1) {
+			if (average > -1 && average < 1) {
 				interpol = log(2 + pow(PIXEL(x + 1, y + 1) / Lmax, biasP) * 8);
-				for(i = 0; i < 3; i++) {
-					for(j = 0; j < 3; j++) {
+				for (i = 0; i < 3; i++) {
+					for (j = 0; j < 3; j++) {
 						index = (y + i)*fpitch + (x + j);
 						L = pade_log(image[index].red);// log(image[index].red + 1)
 						image[index].red = (float)((L / interpol) / divider);
@@ -150,8 +150,8 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 				}
 			}
 			else {
-				for(i = 0; i < 3; i++) {
-					for(j = 0; j < 3; j++) {
+				for (i = 0; i < 3; i++) {
+					for (j = 0; j < 3; j++) {
 						index = (y + i)*fpitch + (x + j);
 						interpol = log(2 + pow(image[index].red / Lmax, biasP) * 8);
 						L = pade_log(image[index].red);// log(image[index].red + 1)
@@ -169,9 +169,9 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 
 	// right band
 	bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(y = 0; y < height; y++) {
+	for (y = 0; y < height; y++) {
 		FIRGBF *pixel = (FIRGBF*)bits;
-		for(x = max_width; x < width; x++) {
+		for (x = max_width; x < width; x++) {
 			double Yw = pixel[x].red / avgLum;
 			Yw *= exposure;
 			interpol = log(2 + biasFunction(biasP, Yw / Lmax) * 8);
@@ -183,9 +183,9 @@ ToneMappingDrago03(FIBITMAP *dib, const float maxLum, const float avgLum, float 
 	}
 	// bottom band
 	bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(y = max_height; y < height; y++) {
+	for (y = max_height; y < height; y++) {
 		FIRGBF *pixel = (FIRGBF*)bits;
-		for(x = 0; x < max_width; x++) {
+		for (x = 0; x < max_width; x++) {
 			double Yw = pixel[x].red / avgLum;
 			Yw *= exposure;
 			interpol = log(2 + biasFunction(biasP, Yw / Lmax) * 8);
@@ -209,14 +209,14 @@ Custom gamma correction based on the ITU-R BT.709 standard
 */
 static FIBOOL 
 REC709GammaCorrection(FIBITMAP *dib, const float gammaval) {
-	if(FreeImage_GetImageType(dib) != FIT_RGBF)
+	if (FreeImage_GetImageType(dib) != FIT_RGBF)
 		return FALSE;
 
 	float slope = 4.5F;
 	float start = 0.018F;
 	
 	const float fgamma = (float)((0.45 / gammaval) * 2);
-	if(gammaval >= 2.1F) {
+	if (gammaval >= 2.1F) {
 		start = (float)(0.018 / ((gammaval - 2) * 7.5));
 		slope = (float)(4.5 * ((gammaval - 2) * 7.5));
 	} else if (gammaval <= 1.9F) {
@@ -228,11 +228,11 @@ REC709GammaCorrection(FIBITMAP *dib, const float gammaval) {
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch  = FreeImage_GetPitch(dib);
 
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; y++) {
-		float *pixel = (float*)bits;
-		for(unsigned x = 0; x < width; x++) {
-			for(int i = 0; i < 3; i++) {
+	auto *bits = (uint8_t*)FreeImage_GetBits(dib);
+	for (unsigned y = 0; y < height; y++) {
+		auto *pixel = (float*)bits;
+		for (unsigned x = 0; x < width; x++) {
+			for (int i = 0; i < 3; i++) {
 				*pixel = (*pixel <= start) ? *pixel * slope : (1.099F * pow(*pixel, fgamma) - 0.099F);
 				pixel++;
 			}
@@ -258,13 +258,13 @@ FIBITMAP* DLL_CALLCONV
 FreeImage_TmoDrago03(FIBITMAP *src, double gamma, double exposure) {
 	float maxLum, minLum, avgLum;
 
-	if(!FreeImage_HasPixels(src)) return NULL;
+	if (!FreeImage_HasPixels(src)) return nullptr;
 
 	// working RGBF variable
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	dib = FreeImage_ConvertToRGBF(src);
-	if(!dib) return NULL;
+	if (!dib) return nullptr;
 
 	// default algorithm parameters
 	const float biasParam = 0.85F;
@@ -278,7 +278,7 @@ FreeImage_TmoDrago03(FIBITMAP *src, double gamma, double exposure) {
 	ToneMappingDrago03(dib, maxLum, avgLum, biasParam, expoParam);
 	// convert back to RGBF
 	ConvertInPlaceYxyToRGBF(dib);
-	if(gamma != 1) {
+	if (gamma != 1) {
 		// perform gamma correction
 		REC709GammaCorrection(dib, (float)gamma);
 	}

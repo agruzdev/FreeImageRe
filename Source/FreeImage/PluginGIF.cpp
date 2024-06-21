@@ -149,14 +149,14 @@ FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key
 {
 	FIBOOL bResult = FALSE;
 	FITAG *tag = FreeImage_CreateTag();
-	if(tag) {
+	if (tag) {
 		FreeImage_SetTagKey(tag, key);
 		FreeImage_SetTagID(tag, id);
 		FreeImage_SetTagType(tag, type);
 		FreeImage_SetTagCount(tag, count);
 		FreeImage_SetTagLength(tag, length);
 		FreeImage_SetTagValue(tag, value);
-		if(model == FIMD_ANIMATION) {
+		if (model == FIMD_ANIMATION) {
 			const TagLib& s = TagLib::instance();
 			// get the tag description
 			const char *description = s.getTagDescription(TagLib::ANIMATION, id);
@@ -172,8 +172,8 @@ FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key
 static FIBOOL 
 FreeImage_GetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, FREE_IMAGE_MDTYPE type, FITAG **tag)
 {
-	if( FreeImage_GetMetadata(model, dib, key, tag) ) {
-		if( FreeImage_GetTagType(*tag) == type ) {
+	if (FreeImage_GetMetadata(model, dib, key, tag)) {
+		if (FreeImage_GetTagType(*tag) == type) {
 			return TRUE;
 		}
 	}
@@ -182,7 +182,7 @@ FreeImage_GetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key
 
 StringTable::StringTable()
 {
-	m_buffer = NULL;
+	m_buffer = nullptr;
 	firstPixelPassed = 0; // Still no pixel read
 	// Maximum number of entries in the map is MAX_LZW_CODE * 256 
 	// (aka 2**12 * 2**8 => a 20 bits key)
@@ -192,12 +192,12 @@ StringTable::StringTable()
 
 StringTable::~StringTable()
 {
-	if( m_buffer != NULL ) {
+	if (m_buffer) {
 		delete [] m_buffer;
 	}
-	if( m_strmap != NULL ) {
+	if (m_strmap) {
 		delete [] m_strmap;
-		m_strmap = NULL;
+		m_strmap = nullptr;
 	}
 }
 
@@ -208,7 +208,7 @@ void StringTable::Initialize(int minCodeSize)
 	m_bpp = 8;
 	m_minCodeSize = minCodeSize;
 	m_clearCode = 1 << m_minCodeSize;
-	if(m_clearCode > MAX_LZW_CODE) {
+	if (m_clearCode > MAX_LZW_CODE) {
 		m_clearCode = MAX_LZW_CODE;
 	}
 	m_endCode = m_clearCode + 1;
@@ -223,10 +223,10 @@ void StringTable::Initialize(int minCodeSize)
 
 uint8_t *StringTable::FillInputBuffer(int len)
 {
-	if( m_buffer == NULL ) {
+	if (!m_buffer) {
 		m_buffer = new(std::nothrow) uint8_t[len];
 		m_bufferRealSize = len;
-	} else if( len > m_bufferRealSize ) {
+	} else if (len > m_bufferRealSize) {
 		delete [] m_buffer;
 		m_buffer = new(std::nothrow) uint8_t[len];
 		m_bufferRealSize = len;
@@ -254,7 +254,7 @@ int StringTable::CompressEnd(uint8_t *buf)
 	//output code for remaining prefix
 	m_partial |= m_prefix << m_partialSize;
 	m_partialSize += m_codeSize;
-	while( m_partialSize >= 8 ) {
+	while (m_partialSize >= 8) {
 		*buf++ = (uint8_t)m_partial;
 		m_partial >>= 8;
 		m_partialSize -= 8;
@@ -264,7 +264,7 @@ int StringTable::CompressEnd(uint8_t *buf)
 	//add the end of information code and flush the entire buffer out
 	m_partial |= m_endCode << m_partialSize;
 	m_partialSize += m_codeSize;
-	while( m_partialSize > 0 ) {
+	while (m_partialSize > 0) {
 		*buf++ = (uint8_t)m_partial;
 		m_partial >>= 8;
 		m_partialSize -= 8;
@@ -278,28 +278,28 @@ int StringTable::CompressEnd(uint8_t *buf)
 
 bool StringTable::Compress(uint8_t *buf, int *len)
 {
-	if( m_bufferSize == 0 || m_done ) {
+	if (m_bufferSize == 0 || m_done) {
 		return false;
 	}
 
 	int mask = (1 << m_bpp) - 1;
 	uint8_t *bufpos = buf;
-	while( m_bufferPos < m_bufferSize ) {
+	while (m_bufferPos < m_bufferSize) {
 		//get the current pixel value
 		char ch = (char)((m_buffer[m_bufferPos] >> m_bufferShift) & mask);
 
 		// The next prefix is : 
 		// <the previous LZW code (on 12 bits << 8)> | <the code of the current pixel (on 8 bits)>
 		int nextprefix = (((m_prefix)<<8)&0xFFF00) + (ch & 0x000FF);
-		if(firstPixelPassed) {
+		if (firstPixelPassed) {
 			
-			if( m_strmap[nextprefix] > 0) {
+			if (m_strmap[nextprefix] > 0) {
 				m_prefix = m_strmap[nextprefix];
 			} else {
 				m_partial |= m_prefix << m_partialSize;
 				m_partialSize += m_codeSize;
 				//grab full bytes for the output buffer
-				while( m_partialSize >= 8 && bufpos - buf < *len ) {
+				while (m_partialSize >= 8 && bufpos - buf < *len) {
 					*bufpos++ = (uint8_t)m_partial;
 					m_partial >>= 8;
 					m_partialSize -= 8;
@@ -309,13 +309,13 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 				m_strmap[nextprefix] = m_nextCode;
 
 				//increment the next highest valid code, increase the code size
-				if( m_nextCode == (1 << m_codeSize) ) {
+				if (m_nextCode == (1 << m_codeSize)) {
 					m_codeSize++;
 				}
 				m_nextCode++;
 
 				//if we're out of codes, restart the string table
-				if( m_nextCode == MAX_LZW_CODE ) {
+				if (m_nextCode == MAX_LZW_CODE) {
 					m_partial |= m_clearCode << m_partialSize;
 					m_partialSize += m_codeSize;
 					ClearCompressorTable();
@@ -326,7 +326,7 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 			}
 
 			//increment to the next pixel
-			if( m_bufferShift > 0 && !(m_bufferPos + 1 == m_bufferSize && m_bufferShift <= m_slack) ) {
+			if (m_bufferShift > 0 && !(m_bufferPos + 1 == m_bufferSize && m_bufferShift <= m_slack)) {
 				m_bufferShift -= m_bpp;
 			} else {
 				m_bufferPos++;
@@ -334,7 +334,7 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 			}
 
 			//jump out here if the output buffer is full
-			if( bufpos - buf == *len ) {
+			if (bufpos - buf == *len) {
 				return true;
 			}
 		
@@ -346,7 +346,7 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 			m_prefix = ch & 0x000FF;
 
 			//increment to the next pixel
-			if( m_bufferShift > 0 && !(m_bufferPos + 1 == m_bufferSize && m_bufferShift <= m_slack) ) {
+			if (m_bufferShift > 0 && !(m_bufferPos + 1 == m_bufferSize && m_bufferShift <= m_slack)) {
 				m_bufferShift -= m_bpp;
 			} else {
 				m_bufferPos++;
@@ -354,7 +354,7 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 			}
 
 			//jump out here if the output buffer is full
-			if( bufpos - buf == *len ) {
+			if (bufpos - buf == *len) {
 				return true;
 			}
 		}
@@ -368,35 +368,35 @@ bool StringTable::Compress(uint8_t *buf, int *len)
 
 bool StringTable::Decompress(uint8_t *buf, int *len)
 {
-	if( m_bufferSize == 0 || m_done ) {
+	if (m_bufferSize == 0 || m_done) {
 		return false;
 	}
 
 	uint8_t *bufpos = buf;
-	for( ; m_bufferPos < m_bufferSize; m_bufferPos++ ) {
+	for ( ; m_bufferPos < m_bufferSize; m_bufferPos++ ) {
 		m_partial |= (int)m_buffer[m_bufferPos] << m_partialSize;
 		m_partialSize += 8;
-		while( m_partialSize >= m_codeSize ) {
+		while (m_partialSize >= m_codeSize) {
 			int code = m_partial & m_codeMask;
 			m_partial >>= m_codeSize;
 			m_partialSize -= m_codeSize;
 
-			if( code > m_nextCode || /*(m_nextCode == MAX_LZW_CODE && code != m_clearCode) || */code == m_endCode ) {
+			if (code > m_nextCode || /*(m_nextCode == MAX_LZW_CODE && code != m_clearCode) || */code == m_endCode) {
 				m_done = true;
 				*len = (int)(bufpos - buf);
 				return true;
 			}
-			if( code == m_clearCode ) {
+			if (code == m_clearCode) {
 				ClearDecompressorTable();
 				continue;
 			}
 
 			//add new string to string table, if not the first pass since a clear code
-			if( m_oldCode != MAX_LZW_CODE && m_nextCode < MAX_LZW_CODE) {
+			if (m_oldCode != MAX_LZW_CODE && m_nextCode < MAX_LZW_CODE) {
 				m_strings[m_nextCode] = m_strings[m_oldCode] + m_strings[code == m_nextCode ? m_oldCode : code][0];
 			}
 
-			if( (int)m_strings[code].size() > *len - (bufpos - buf) ) {
+			if ((int)m_strings[code].size() > *len - (bufpos - buf)) {
 				//out of space, stuff the code back in for next time
 				m_partial <<= m_codeSize;
 				m_partialSize += m_codeSize;
@@ -411,9 +411,9 @@ bool StringTable::Decompress(uint8_t *buf, int *len)
 			bufpos += m_strings[code].size();
 
 			//increment the next highest valid code, add a bit to the mask if we need to increase the code size
-			if( m_oldCode != MAX_LZW_CODE && m_nextCode < MAX_LZW_CODE ) {
-				if( ++m_nextCode < MAX_LZW_CODE ) {
-					if( (m_nextCode & m_codeMask) == 0 ) {
+			if (m_oldCode != MAX_LZW_CODE && m_nextCode < MAX_LZW_CODE) {
+				if (++m_nextCode < MAX_LZW_CODE) {
+					if ((m_nextCode & m_codeMask) == 0) {
 						m_codeSize++;
 						m_codeMask |= m_nextCode;
 					}
@@ -437,7 +437,7 @@ void StringTable::Done(void)
 
 void StringTable::ClearCompressorTable(void)
 {
-	if(m_strmap) {
+	if (m_strmap) {
 		memset(m_strmap, 0xFF, sizeof(unsigned int)*(1<<20));
 	}
 	m_nextCode = m_endCode + 1;
@@ -448,7 +448,7 @@ void StringTable::ClearCompressorTable(void)
 
 void StringTable::ClearDecompressorTable(void)
 {
-	for( int i = 0; i < m_clearCode; i++ ) {
+	for (int i = 0; i < m_clearCode; i++) {
 		m_strings[i].resize(1);
 		m_strings[i][0] = (char)i;
 	}
@@ -527,33 +527,33 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 static void *DLL_CALLCONV 
 Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	GIFinfo *info = new(std::nothrow) GIFinfo;
-	if( info == NULL ) {
-		return NULL;
+	if (!info) {
+		return nullptr;
 	}
 
 	// set Read/Write mode
 	info->read = read;
 
-	if( read ) {
+	if (read) {
 		try {
 			// read Header (6 bytes)
-			if( !Validate(io, handle) ) {
+			if (!Validate(io, handle)) {
 				throw FI_MSG_ERROR_MAGIC_NUMBER;
 			}
 
 			//Logical Screen Descriptor
 			io->seek_proc(handle, 4, SEEK_CUR);
 			uint8_t packed;
-			if( io->read_proc(&packed, 1, 1, handle) < 1 ) {
+			if (io->read_proc(&packed, 1, 1, handle) < 1) {
 				throw "EOF reading Logical Screen Descriptor";
 			}
-			if( io->read_proc(&info->background_color, 1, 1, handle) < 1 ) {
+			if (io->read_proc(&info->background_color, 1, 1, handle) < 1) {
 				throw "EOF reading Logical Screen Descriptor";
 			}
 			io->seek_proc(handle, 1, SEEK_CUR);
 
 			//Global Color Table
-			if( packed & GIF_PACKED_LSD_HAVEGCT ) {
+			if (packed & GIF_PACKED_LSD_HAVEGCT) {
 				info->global_color_table_offset = io->tell_proc(handle);
 				info->global_color_table_size = 2 << (packed & GIF_PACKED_LSD_GCTSIZE);
 				io->seek_proc(handle, 3 * info->global_color_table_size, SEEK_CUR);
@@ -562,43 +562,43 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 			//Scan through all the rest of the blocks, saving offsets
 			size_t gce_offset = 0;
 			uint8_t block = 0;
-			while( block != GIF_BLOCK_TRAILER ) {
-				if( io->read_proc(&block, 1, 1, handle) < 1 ) {
+			while (block != GIF_BLOCK_TRAILER) {
+				if (io->read_proc(&block, 1, 1, handle) < 1) {
 					throw "EOF reading blocks";
 				}
-				if( block == GIF_BLOCK_IMAGE_DESCRIPTOR ) {
+				if (block == GIF_BLOCK_IMAGE_DESCRIPTOR) {
 					info->image_descriptor_offsets.push_back(io->tell_proc(handle));
 					//GCE may be 0, meaning no GCE preceded this ID
 					info->graphic_control_extension_offsets.push_back(gce_offset);
 					gce_offset = 0;
 
 					io->seek_proc(handle, 8, SEEK_CUR);
-					if( io->read_proc(&packed, 1, 1, handle) < 1 ) {
+					if (io->read_proc(&packed, 1, 1, handle) < 1) {
 						throw "EOF reading Image Descriptor";
 					}
 
 					//Local Color Table
-					if( packed & GIF_PACKED_ID_HAVELCT ) {
+					if (packed & GIF_PACKED_ID_HAVELCT) {
 						io->seek_proc(handle, 3 * (2 << (packed & GIF_PACKED_ID_LCTSIZE)), SEEK_CUR);
 					}
 
 					//LZW Minimum Code Size
 					io->seek_proc(handle, 1, SEEK_CUR);
-				} else if( block == GIF_BLOCK_EXTENSION ) {
+				} else if (block == GIF_BLOCK_EXTENSION) {
 					uint8_t ext;
-					if( io->read_proc(&ext, 1, 1, handle) < 1 ) {
+					if (io->read_proc(&ext, 1, 1, handle) < 1) {
 						throw "EOF reading extension";
 					}
 
-					if( ext == GIF_EXT_GRAPHIC_CONTROL ) {
+					if (ext == GIF_EXT_GRAPHIC_CONTROL) {
 						//overwrite previous offset if more than one GCE found before an ID
 						gce_offset = io->tell_proc(handle);
-					} else if( ext == GIF_EXT_COMMENT ) {
+					} else if (ext == GIF_EXT_COMMENT) {
 						info->comment_extension_offsets.push_back(io->tell_proc(handle));
-					} else if( ext == GIF_EXT_APPLICATION ) {
+					} else if (ext == GIF_EXT_APPLICATION) {
 						info->application_extension_offsets.push_back(io->tell_proc(handle));
 					}
-				} else if( block == GIF_BLOCK_TRAILER ) {
+				} else if (block == GIF_BLOCK_TRAILER) {
 					continue;
 				} else {
 					throw "Invalid GIF block found";
@@ -606,12 +606,12 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 
 				//Data Sub-blocks
 				uint8_t len;
-				if( io->read_proc(&len, 1, 1, handle) < 1 ) {
+				if (io->read_proc(&len, 1, 1, handle) < 1) {
 					throw "EOF reading sub-block";
 				}
-				while( len != 0 ) {
+				while (len != 0) {
 					io->seek_proc(handle, len, SEEK_CUR);
-					if( io->read_proc(&len, 1, 1, handle) < 1 ) {
+					if (io->read_proc(&len, 1, 1, handle) < 1) {
 						throw "EOF reading sub-block";
 					}
 				}
@@ -619,7 +619,7 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 		} catch (const char *msg) {
 			FreeImage_OutputMessageProc(s_format_id, msg);
 			delete info;
-			return NULL;
+			return nullptr;
 		}
 	} else {
 		//Header
@@ -631,12 +631,12 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 
 static void DLL_CALLCONV 
 Close(FreeImageIO *io, fi_handle handle, void *data) {
-	if( data == NULL ) {
+	if (!data) {
 		return;
 	}
 	GIFinfo *info = (GIFinfo *)data;
 
-	if( !info->read ) {
+	if (!info->read) {
 		//Trailer
 		uint8_t b = GIF_BLOCK_TRAILER;
 		io->write_proc(&b, 1, 1, handle);
@@ -647,29 +647,29 @@ Close(FreeImageIO *io, fi_handle handle, void *data) {
 
 static int DLL_CALLCONV
 PageCount(FreeImageIO *io, fi_handle handle, void *data) {
-	if( data == NULL ) {
+	if (!data) {
 		return 0;
 	}
-	GIFinfo *info = (GIFinfo *)data;
+	auto *info = (GIFinfo *)data;
 
 	return (int) info->image_descriptor_offsets.size();
 }
 
 static FIBITMAP * DLL_CALLCONV 
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	if( data == NULL ) {
-		return NULL;
+	if (!data) {
+		return nullptr;
 	}
 	GIFinfo *info = (GIFinfo *)data;
 
-	if( page == -1 ) {
+	if (page == -1) {
 		page = 0;
 	}
-	if( page < 0 || page >= (int)info->image_descriptor_offsets.size() ) {
-		return NULL;
+	if (page < 0 || page >= (int)info->image_descriptor_offsets.size()) {
+		return nullptr;
 	}
 
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	try {
 		bool have_transparent = false, no_local_palette = false, interlaced = false;
 		int disposal_method = GIF_DISPOSAL_LEAVE, delay_time = 0, transparent_color = 0;
@@ -678,7 +678,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		uint16_t w;
 
 		//playback pages to generate what the user would see for this frame
-		if( (flags & GIF_PLAYBACK) == GIF_PLAYBACK ) {
+		if ((flags & GIF_PLAYBACK) == GIF_PLAYBACK) {
 			//Logical Screen Descriptor
 			io->seek_proc(handle, 6, SEEK_SET);
 			uint16_t logicalwidth, logicalheight;
@@ -690,7 +690,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #endif
 			//set the background color with 0 alpha
 			FIRGBA8 background;
-			if( info->global_color_table_offset != 0 && info->background_color < info->global_color_table_size ) {
+			if (info->global_color_table_offset != 0 && info->background_color < info->global_color_table_size) {
 				io->seek_proc(handle, (long)(info->global_color_table_offset + (info->background_color * 3)), SEEK_SET);
 				io->read_proc(&background.red, 1, 1, handle);
 				io->read_proc(&background.green, 1, 1, handle);
@@ -704,16 +704,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//allocate entire logical area
 			dib = FreeImage_Allocate(logicalwidth, logicalheight, 32);
-			if( dib == NULL ) {
+			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 
 			//fill with background color to start
 			int x, y;
 			FIRGBA8 *scanline;
-			for( y = 0; y < logicalheight; y++ ) {
+			for (y = 0; y < logicalheight; y++) {
 				scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, y);
-				for( x = 0; x < logicalwidth; x++ ) {
+				for (x = 0; x < logicalwidth; x++) {
 					*scanline++ = background;
 				}
 			}
@@ -721,7 +721,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			//cache some info about each of the pages so we can avoid decoding as many of them as possible
 			std::vector<PageInfo> pageinfo;
 			int start = page, end = page;
-			while( start >= 0 ) {
+			while (start >= 0) {
 				//Graphic Control Extension
 				io->seek_proc(handle, (long)(info->graphic_control_extension_offsets[start] + 1), SEEK_SET);
 				io->read_proc(&packed, 1, 1, handle);
@@ -742,14 +742,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				pageinfo.push_back(PageInfo(disposal_method, left, top, width, height));
 
-				if( start != end ) {
-					if( left == 0 && top == 0 && width == logicalwidth && height == logicalheight ) {
-						if( disposal_method == GIF_DISPOSAL_BACKGROUND ) {
+				if (start != end) {
+					if (left == 0 && top == 0 && width == logicalwidth && height == logicalheight) {
+						if (disposal_method == GIF_DISPOSAL_BACKGROUND) {
 							pageinfo.pop_back();
 							start++;
 							break;
-						} else if( disposal_method != GIF_DISPOSAL_PREVIOUS ) {
-							if( !have_transparent ) {
+						} else if (disposal_method != GIF_DISPOSAL_PREVIOUS) {
+							if (!have_transparent) {
 								break;
 							}
 						}
@@ -757,27 +757,27 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				start--;
 			}
-			if( start < 0 ) {
+			if (start < 0) {
 				start = 0;
 			}
 
 			//draw each page into the logical area
 			delay_time = 0;
-			for( page = start; page <= end; page++ ) {
+			for (page = start; page <= end; page++) {
 				const PageInfo &info = pageinfo[end - page];
 				//things we can skip having to decode
-				if( page != end ) {
-					if( info.disposal_method == GIF_DISPOSAL_PREVIOUS ) {
+				if (page != end) {
+					if (info.disposal_method == GIF_DISPOSAL_PREVIOUS) {
 						continue;
 					}
-					if( info.disposal_method == GIF_DISPOSAL_BACKGROUND ) {
-						for( y = 0; y < info.height; y++ ) {
+					if (info.disposal_method == GIF_DISPOSAL_BACKGROUND) {
+						for (y = 0; y < info.height; y++) {
 							const int scanidx = logicalheight - (y + info.top) - 1;
-							if ( scanidx < 0 ) {
+							if (scanidx < 0) {
 								break;  // If data is corrupt, don't calculate in invalid scanline
 							}
 							scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
-							for( x = 0; x < info.width; x++ ) {
+							for (x = 0; x < info.width; x++) {
 								*scanline++ = background;
 							}
 						}
@@ -787,14 +787,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				//decode page
 				FIBITMAP *pagedib = Load(io, handle, page, GIF_LOAD256, data);
-				if( pagedib != NULL ) {
+				if (pagedib) {
 					const FIRGBA8 *pal = FreeImage_GetPalette(pagedib);
 					have_transparent = false;
-					if( FreeImage_IsTransparent(pagedib) ) {
+					if (FreeImage_IsTransparent(pagedib)) {
 						int count = FreeImage_GetTransparencyCount(pagedib);
 						const uint8_t *table = FreeImage_GetTransparencyTable(pagedib);
-						for( int i = 0; i < count; i++ ) {
-							if( table[i] == 0 ) {
+						for (int i = 0; i < count; i++) {
+							if (table[i] == 0) {
 								have_transparent = true;
 								transparent_color = i;
 								break;
@@ -802,15 +802,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 					//copy page data into logical buffer, with full alpha opaqueness
-					for( y = 0; y < info.height; y++ ) {
+					for (y = 0; y < info.height; y++) {
 						const int scanidx = logicalheight - (y + info.top) - 1;
-						if ( scanidx < 0 ) {
+						if (scanidx < 0) {
 							break;  // If data is corrupt, don't calculate in invalid scanline
 						}
 						scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
 						uint8_t *pageline = FreeImage_GetScanLine(pagedib, info.height - y - 1);
-						for( x = 0; x < info.width; x++ ) {
-							if( !have_transparent || *pageline != transparent_color ) {
+						for (x = 0; x < info.width; x++) {
+							if (!have_transparent || *pageline != transparent_color) {
 								*scanline = pal[*pageline];
 								scanline->alpha = 255;
 							}
@@ -819,9 +819,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 					//copy frame time
-					if( page == end ) {
+					if (page == end) {
 						FITAG *tag;
-						if( FreeImage_GetMetadataEx(FIMD_ANIMATION, pagedib, "FrameTime", FIDT_LONG, &tag) ) {
+						if (FreeImage_GetMetadataEx(FIMD_ANIMATION, pagedib, "FrameTime", FIDT_LONG, &tag)) {
 							delay_time = *(int32_t *)FreeImage_GetTagValue(tag);
 						}
 					}
@@ -853,18 +853,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		no_local_palette = (packed & GIF_PACKED_ID_HAVELCT) ? false : true;
 
 		int bpp = 8;
-		if( (flags & GIF_LOAD256) == 0 ) {
-			if( !no_local_palette ) {
+		if ((flags & GIF_LOAD256) == 0) {
+			if (!no_local_palette) {
 				int size = 2 << (packed & GIF_PACKED_ID_LCTSIZE);
-				if( size <= 2 ) bpp = 1;
-				else if( size <= 16 ) bpp = 4;
-			} else if( info->global_color_table_offset != 0 ) {
-				if( info->global_color_table_size <= 2 ) bpp = 1;
-				else if( info->global_color_table_size <= 16 ) bpp = 4;
+				if (size <= 2) bpp = 1;
+				else if (size <= 16) bpp = 4;
+			} else if (info->global_color_table_offset != 0) {
+				if (info->global_color_table_size <= 2) bpp = 1;
+				else if (info->global_color_table_size <= 16) bpp = 4;
 			}
 		}
 		dib = FreeImage_Allocate(width, height, bpp);
-		if( dib == NULL ) {
+		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
@@ -877,22 +877,22 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		//Palette
 		FIRGBA8 *pal = FreeImage_GetPalette(dib);
-		if( !no_local_palette ) {
+		if (!no_local_palette) {
 			int size = 2 << (packed & GIF_PACKED_ID_LCTSIZE);
 
 			int i = 0;
-			while( i < size ) {
+			while (i < size) {
 				io->read_proc(&pal[i].red, 1, 1, handle);
 				io->read_proc(&pal[i].green, 1, 1, handle);
 				io->read_proc(&pal[i].blue, 1, 1, handle);
 				i++;
 			}
-		} else if( info->global_color_table_offset != 0 ) {
+		} else if (info->global_color_table_offset != 0) {
 			long pos = io->tell_proc(handle);
 			io->seek_proc(handle, (long)info->global_color_table_offset, SEEK_SET);
 
 			int i = 0;
-			while( i < info->global_color_table_size ) {
+			while (i < info->global_color_table_size) {
 				io->read_proc(&pal[i].red, 1, 1, handle);
 				io->read_proc(&pal[i].green, 1, 1, handle);
 				io->read_proc(&pal[i].blue, 1, 1, handle);
@@ -902,7 +902,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			io->seek_proc(handle, pos, SEEK_SET);
 		} else {
 			//its legal to have no palette, but we're going to generate *something*
-			for( int i = 0; i < 256; i++ ) {
+			for (int i = 0; i < 256; i++) {
 				pal[i].red   = (uint8_t)i;
 				pal[i].green = (uint8_t)i;
 				pal[i].blue  = (uint8_t)i;
@@ -919,28 +919,28 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		uint8_t *scanline = FreeImage_GetScanLine(dib, height - 1);
 		uint8_t buf[4096];
 		io->read_proc(&b, 1, 1, handle);
-		while( b ) {
+		while (b) {
 			io->read_proc(stringtable->FillInputBuffer(b), b, 1, handle);
 			int size = sizeof(buf);
-			while( stringtable->Decompress(buf, &size) ) {
-				for( int i = 0; i < size; i++ ) {
+			while (stringtable->Decompress(buf, &size)) {
+				for ( int i = 0; i < size; i++ ) {
 					scanline[xpos] |= (buf[i] & mask) << shift;
-					if( shift > 0 ) {
+					if (shift > 0) {
 						shift -= bpp;
 					} else {
 						xpos++;
 						shift = 8 - bpp;
 					}
-					if( ++x >= width ) {
-						if( interlaced ) {
+					if (++x >= width) {
+						if (interlaced) {
 							y += g_GifInterlaceIncrement[interlacepass];
-							if( y >= height && ++interlacepass < GIF_INTERLACE_PASSES ) {
+							if (y >= height && ++interlacepass < GIF_INTERLACE_PASSES) {
 								y = g_GifInterlaceOffset[interlacepass];
 							} 						
 						} else {
 							y++;
 						}
-						if( y >= height ) {
+						if (y >= height) {
 							stringtable->Done();
 							break;
 						}
@@ -954,7 +954,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			io->read_proc(&b, 1, 1, handle);
 		}
 
-		if( page == 0 ) {
+		if (page == 0) {
 			size_t idx;
 
 			//Logical Screen Descriptor
@@ -970,11 +970,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "LogicalHeight", ANIMTAG_LOGICALHEIGHT, FIDT_SHORT, 1, 2, &logicalheight);
 
 			//Global Color Table
-			if( info->global_color_table_offset != 0 ) {
+			if (info->global_color_table_offset != 0) {
 				FIRGBA8 globalpalette[256];
 				io->seek_proc(handle, (long)info->global_color_table_offset, SEEK_SET);
 				int i = 0;
-				while( i < info->global_color_table_size ) {
+				while (i < info->global_color_table_size) {
 					io->read_proc(&globalpalette[i].red, 1, 1, handle);
 					io->read_proc(&globalpalette[i].green, 1, 1, handle);
 					io->read_proc(&globalpalette[i].blue, 1, 1, handle);
@@ -983,29 +983,29 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", ANIMTAG_GLOBALPALETTE, FIDT_PALETTE, info->global_color_table_size, info->global_color_table_size * 4, globalpalette);
 				//background color
-				if( info->background_color < info->global_color_table_size ) {
+				if (info->background_color < info->global_color_table_size) {
 					FreeImage_SetBackgroundColor(dib, &globalpalette[info->background_color]);
 				}
 			}
 
 			//Application Extension
 			int32_t loop = 1; //If no AE with a loop count is found, the default must be 1
-			for( idx = 0; idx < info->application_extension_offsets.size(); idx++ ) {
+			for (idx = 0; idx < info->application_extension_offsets.size(); idx++) {
 				io->seek_proc(handle, (long)info->application_extension_offsets[idx], SEEK_SET);
 				io->read_proc(&b, 1, 1, handle);
-				if( b == 11 ) { //All AEs start with an 11 byte sub-block to determine what type of AE it is
+				if (b == 11) { //All AEs start with an 11 byte sub-block to determine what type of AE it is
 					char buf[11];
 					io->read_proc(buf, 11, 1, handle);
-					if( !memcmp(buf, "NETSCAPE2.0", 11) || !memcmp(buf, "ANIMEXTS1.0", 11) ) { //Not everybody recognizes ANIMEXTS1.0 but it is valid
+					if (!memcmp(buf, "NETSCAPE2.0", 11) || !memcmp(buf, "ANIMEXTS1.0", 11)) { //Not everybody recognizes ANIMEXTS1.0 but it is valid
 						io->read_proc(&b, 1, 1, handle);
-						if( b == 3 ) { //we're supposed to have a 3 byte sub-block now
+						if (b == 3) { //we're supposed to have a 3 byte sub-block now
 							io->read_proc(&b, 1, 1, handle); //this should be 0x01 but isn't really important
 							io->read_proc(&w, 2, 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
 							SwapShort(&w);
 #endif
 							loop = w;
-							if( loop > 0 ) loop++;
+							if (loop > 0) loop++;
 							break;
 						}
 					}
@@ -1014,12 +1014,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "Loop", ANIMTAG_LOOP, FIDT_LONG, 1, 4, &loop);
 
 			//Comment Extension
-			for( idx = 0; idx < info->comment_extension_offsets.size(); idx++ ) {
+			for (idx = 0; idx < info->comment_extension_offsets.size(); idx++) {
 				io->seek_proc(handle, (long)info->comment_extension_offsets[idx], SEEK_SET);
 				std::string comment;
 				char buf[255];
 				io->read_proc(&b, 1, 1, handle);
-				while( b ) {
+				while (b) {
 					io->read_proc(buf, b, 1, handle);
 					comment.append(buf, b);
 					io->read_proc(&b, 1, 1, handle);
@@ -1032,7 +1032,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		//Graphic Control Extension
-		if( info->graphic_control_extension_offsets[page] != 0 ) {
+		if (info->graphic_control_extension_offsets[page] != 0) {
 			io->seek_proc(handle, (long)(info->graphic_control_extension_offsets[page] + 1), SEEK_SET);
 			io->read_proc(&packed, 1, 1, handle);
 			io->read_proc(&w, 2, 1, handle);
@@ -1044,9 +1044,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			disposal_method = (packed & GIF_PACKED_GCE_DISPOSAL) >> 2;
 			delay_time = w * 10; //convert cs to ms
 			transparent_color = b;
-			if( have_transparent ) {
+			if (have_transparent) {
 				int size = 1 << bpp;
-				if( transparent_color <= size ) {
+				if (transparent_color <= size) {
 					uint8_t table[256];
 					memset(table, 0xFF, size);
 					table[transparent_color] = 0;
@@ -1061,11 +1061,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		delete stringtable;
 
 	} catch (const char *msg) {
-		if( dib != NULL ) {
+		if (dib) {
 			FreeImage_Unload(dib);
 		}
 		FreeImage_OutputMessageProc(s_format_id, msg);
-		return NULL;
+		return nullptr;
 	}
 
 	return dib;
@@ -1073,12 +1073,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 static FIBOOL DLL_CALLCONV 
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	if( data == NULL ) {
+	if (!data) {
 		return FALSE;
 	}
 	//GIFinfo *info = (GIFinfo *)data;
 
-	if( page == -1 ) {
+	if (page == -1) {
 		page = 0;
 	}
 
@@ -1088,7 +1088,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		FITAG *tag;
 
 		int bpp = FreeImage_GetBPP(dib);
-		if( bpp != 1 && bpp != 4 && bpp != 8 ) {
+		if (bpp != 1 && bpp != 4 && bpp != 8) {
 			throw "Only 1, 4, or 8 bpp images supported";
 		}
 
@@ -1096,22 +1096,22 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		int disposal_method = GIF_DISPOSAL_BACKGROUND, delay_time = 100, transparent_color = 0;
 		uint16_t left = 0, top = 0, width = (uint16_t)FreeImage_GetWidth(dib), height = (uint16_t)FreeImage_GetHeight(dib);
 		uint16_t output_height = height;
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameLeft", FIDT_SHORT, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameLeft", FIDT_SHORT, &tag)) {
 			left = *(uint16_t *)FreeImage_GetTagValue(tag);
 		}
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameTop", FIDT_SHORT, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameTop", FIDT_SHORT, &tag)) {
 			top = *(uint16_t *)FreeImage_GetTagValue(tag);
 		}
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "NoLocalPalette", FIDT_BYTE, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "NoLocalPalette", FIDT_BYTE, &tag)) {
 			no_local_palette = *(uint8_t *)FreeImage_GetTagValue(tag) ? true : false;
 		}
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "Interlaced", FIDT_BYTE, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "Interlaced", FIDT_BYTE, &tag)) {
 			interlaced = *(uint8_t *)FreeImage_GetTagValue(tag) ? true : false;
 		}
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameTime", FIDT_LONG, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "FrameTime", FIDT_LONG, &tag)) {
 			delay_time = *(int32_t *)FreeImage_GetTagValue(tag);
 		}
-		if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "DisposalMethod", FIDT_BYTE, &tag) ) {
+		if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "DisposalMethod", FIDT_BYTE, &tag)) {
 			disposal_method = *(uint8_t *)FreeImage_GetTagValue(tag);
 		}
 
@@ -1123,27 +1123,27 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		SwapShort(&height);
 #endif
 
-		if( page == 0 ) {
+		if (page == 0) {
 			//gather some info
 			uint16_t logicalwidth = width; // width has already been swapped...
-			if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "LogicalWidth", FIDT_SHORT, &tag) ) {
+			if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "LogicalWidth", FIDT_SHORT, &tag)) {
 				logicalwidth = *(uint16_t *)FreeImage_GetTagValue(tag);
 #ifdef FREEIMAGE_BIGENDIAN
 				SwapShort(&logicalwidth);
 #endif
 			}
 			uint16_t logicalheight = height; // height has already been swapped...
-			if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "LogicalHeight", FIDT_SHORT, &tag) ) {
+			if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "LogicalHeight", FIDT_SHORT, &tag)) {
 				logicalheight = *(uint16_t *)FreeImage_GetTagValue(tag);
 #ifdef FREEIMAGE_BIGENDIAN
 				SwapShort(&logicalheight);
 #endif
 			}
-			FIRGBA8 *globalpalette = NULL;
+			FIRGBA8 *globalpalette{};
 			int globalpalette_size = 0;
-			if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", FIDT_PALETTE, &tag) ) {
+			if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", FIDT_PALETTE, &tag)) {
 				globalpalette_size = FreeImage_GetTagCount(tag);
-				if( globalpalette_size >= 2 ) {
+				if (globalpalette_size >= 2) {
 					globalpalette = (FIRGBA8 *)FreeImage_GetTagValue(tag);
 				}
 			}
@@ -1154,38 +1154,38 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			packed = GIF_PACKED_LSD_COLORRES;
 			b = 0;
 			FIRGBA8 background_color;
-			if( globalpalette != NULL ) {
+			if (globalpalette) {
 				packed |= GIF_PACKED_LSD_HAVEGCT;
-				if( globalpalette_size < 4 ) {
+				if (globalpalette_size < 4) {
 					globalpalette_size = 2;
 					packed |= 0 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 8 ) {
+				} else if (globalpalette_size < 8) {
 					globalpalette_size = 4;
 					packed |= 1 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 16 ) {
+				} else if (globalpalette_size < 16) {
 					globalpalette_size = 8;
 					packed |= 2 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 32 ) {
+				} else if (globalpalette_size < 32) {
 					globalpalette_size = 16;
 					packed |= 3 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 64 ) {
+				} else if (globalpalette_size < 64) {
 					globalpalette_size = 32;
 					packed |= 4 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 128 ) {
+				} else if (globalpalette_size < 128) {
 					globalpalette_size = 64;
 					packed |= 5 & GIF_PACKED_LSD_GCTSIZE;
-				} else if( globalpalette_size < 256 ) {
+				} else if (globalpalette_size < 256) {
 					globalpalette_size = 128;
 					packed |= 6 & GIF_PACKED_LSD_GCTSIZE;
 				} else {
 					globalpalette_size = 256;
 					packed |= 7 & GIF_PACKED_LSD_GCTSIZE;
 				}
-				if( FreeImage_GetBackgroundColor(dib, &background_color) ) {
-					for( int i = 0; i < globalpalette_size; i++ ) {
-						if( background_color.red == globalpalette[i].red &&
+				if (FreeImage_GetBackgroundColor(dib, &background_color)) {
+					for (int i = 0; i < globalpalette_size; i++) {
+						if (background_color.red == globalpalette[i].red &&
 							background_color.green == globalpalette[i].green &&
-							background_color.blue == globalpalette[i].blue ) {
+							background_color.blue == globalpalette[i].blue) {
 
 							b = (uint8_t)i;
 							break;
@@ -1201,9 +1201,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			io->write_proc(&b, 1, 1, handle);
 
 			//Global Color Table
-			if( globalpalette != NULL ) {
+			if (globalpalette) {
 				int i = 0;
-				while( i < globalpalette_size ) {
+				while (i < globalpalette_size) {
 					io->write_proc(&globalpalette[i].red, 1, 1, handle);
 					io->write_proc(&globalpalette[i].green, 1, 1, handle);
 					io->write_proc(&globalpalette[i].blue, 1, 1, handle);
@@ -1213,13 +1213,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			//Application Extension
 			int32_t loop = 0;
-			if( FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "Loop", FIDT_LONG, &tag) ) {
+			if (FreeImage_GetMetadataEx(FIMD_ANIMATION, dib, "Loop", FIDT_LONG, &tag)) {
 				loop = *(int32_t *)FreeImage_GetTagValue(tag);
 			}
-			if( loop != 1 ) {
+			if (loop != 1) {
 				//the Netscape extension is really "repeats" not "loops"
-				if( loop > 1 ) loop--;
-				if( loop > 0xFFFF ) loop = 0xFFFF;
+				if (loop > 1) loop--;
+				if (loop > 0xFFFF) loop = 0xFFFF;
 				w = (uint16_t)loop;
 #ifdef FREEIMAGE_BIGENDIAN
 				SwapShort(&w);
@@ -1231,16 +1231,15 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			}
 
 			//Comment Extension
-			FIMETADATA *mdhandle = NULL;
-			FITAG *tag = NULL;
-			mdhandle = FreeImage_FindFirstMetadata(FIMD_COMMENTS, dib, &tag);
-			if( mdhandle ) {
+			FITAG *tag{};
+			FIMETADATA *mdhandle = FreeImage_FindFirstMetadata(FIMD_COMMENTS, dib, &tag);
+			if (mdhandle) {
 				do {
-					if( FreeImage_GetTagType(tag) == FIDT_ASCII ) {
+					if (FreeImage_GetTagType(tag) == FIDT_ASCII) {
 						int length = FreeImage_GetTagLength(tag) - 1;
 						char *value = (char *)FreeImage_GetTagValue(tag);
 						io->write_proc((void *)"\x21\xFE", 2, 1, handle);
-						while( length > 0 ) {
+						while (length > 0) {
 							b = (uint8_t)(length >= 255 ? 255 : length);
 							io->write_proc(&b, 1, 1, handle);
 							io->write_proc(value, b, 1, handle);
@@ -1250,18 +1249,18 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						b = 0;
 						io->write_proc(&b, 1, 1, handle);
 					}
-				} while(FreeImage_FindNextMetadata(mdhandle, &tag));
+				} while (FreeImage_FindNextMetadata(mdhandle, &tag));
 
 				FreeImage_FindCloseMetadata(mdhandle);
 			}
 		}
 
 		//Graphic Control Extension
-		if( FreeImage_IsTransparent(dib) ) {
-			int count = FreeImage_GetTransparencyCount(dib);
+		if (FreeImage_IsTransparent(dib)) {
+			const int count = FreeImage_GetTransparencyCount(dib);
 			uint8_t *table = FreeImage_GetTransparencyTable(dib);
-			for( int i = 0; i < count; i++ ) {
-				if( table[i] == 0 ) {
+			for (int i = 0; i < count; i++) {
+				if (table[i] == 0) {
 					have_transparent = true;
 					transparent_color = i;
 					break;
@@ -1270,7 +1269,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		}
 		io->write_proc((void *)"\x21\xF9\x04", 3, 1, handle);
 		b = (uint8_t)((disposal_method << 2) & GIF_PACKED_GCE_DISPOSAL);
-		if( have_transparent ) b |= GIF_PACKED_GCE_HAVETRANS;
+		if (have_transparent) b |= GIF_PACKED_GCE_HAVETRANS;
 		io->write_proc(&b, 1, 1, handle);
 		//Notes about delay time for GIFs:
 		//IE5/IE6 have a minimum and default of 100ms
@@ -1294,14 +1293,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		io->write_proc(&width, 2, 1, handle);
 		io->write_proc(&height, 2, 1, handle);
 		packed = 0;
-		if( !no_local_palette ) packed |= GIF_PACKED_ID_HAVELCT | ((bpp - 1) & GIF_PACKED_ID_LCTSIZE);
-		if( interlaced ) packed |= GIF_PACKED_ID_INTERLACED;
+		if (!no_local_palette) packed |= GIF_PACKED_ID_HAVELCT | ((bpp - 1) & GIF_PACKED_ID_LCTSIZE);
+		if (interlaced) packed |= GIF_PACKED_ID_INTERLACED;
 		io->write_proc(&packed, 1, 1, handle);
 
 		//Local Color Table
-		if( !no_local_palette ) {
+		if (!no_local_palette) {
 			int palsize = 1 << bpp;
-			for( int i = 0; i < palsize; i++ ) {
+			for (int i = 0; i < palsize; i++) {
 				io->write_proc(&pal[i].red, 1, 1, handle);
 				io->write_proc(&pal[i].green, 1, 1, handle);
 				io->write_proc(&pal[i].blue, 1, 1, handle);
@@ -1321,11 +1320,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		uint8_t buf[255], *bufptr = buf; //255 is the max sub-block length
 		int size = sizeof(buf);
 		b = sizeof(buf);
-		while( y < output_height ) {
+		while (y < output_height) {
 			memcpy(stringtable->FillInputBuffer(line), FreeImage_GetScanLine(dib, output_height - y - 1), line);
-			while( stringtable->Compress(bufptr, &size) ) {
+			while (stringtable->Compress(bufptr, &size)) {
 				bufptr += size;
-				if( bufptr - buf == sizeof(buf) ) {
+				if ( bufptr - buf == sizeof(buf)) {
 					io->write_proc(&b, 1, 1, handle);
 					io->write_proc(buf, sizeof(buf), 1, handle);
 					size = sizeof(buf);
@@ -1334,9 +1333,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					size = (int)(sizeof(buf) - (bufptr - buf));
 				}
 			}
-			if( interlaced ) {
+			if (interlaced) {
 				y += g_GifInterlaceIncrement[interlacepass];
-				if( y >= output_height && ++interlacepass < GIF_INTERLACE_PASSES ) {
+				if (y >= output_height && ++interlacepass < GIF_INTERLACE_PASSES) {
 					y = g_GifInterlaceOffset[interlacepass];
 				}		
 			} else {
@@ -1346,14 +1345,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		size = (int)(bufptr - buf);
 		uint8_t last[4];
 		w = (uint16_t)stringtable->CompressEnd(last);
-		if( size + w >= sizeof(buf) ) {
+		if (size + w >= sizeof(buf)) {
 			//one last full size sub-block
 			io->write_proc(&b, 1, 1, handle);
 			io->write_proc(buf, size, 1, handle);
 			io->write_proc(last, sizeof(buf) - size, 1, handle);
 			//and possibly a tiny additional sub-block
 			b = (uint8_t)(w - (sizeof(buf) - size));
-			if( b > 0 ) {
+			if (b > 0) {
 				io->write_proc(&b, 1, 1, handle);
 				io->write_proc(last + w - b, b, 1, handle);
 			}
@@ -1394,12 +1393,12 @@ InitGIF(Plugin *plugin, int format_id) {
 	plugin->open_proc = Open;
 	plugin->close_proc = Close;
 	plugin->pagecount_proc = PageCount;
-	plugin->pagecapability_proc = NULL;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }

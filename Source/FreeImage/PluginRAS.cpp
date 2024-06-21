@@ -99,7 +99,7 @@ ReadData(FreeImageIO *io, fi_handle handle, uint8_t *buf, uint32_t length, FIBOO
 	if (rle) {
 		// Run-length encoded read
 
-		while(length--) {
+		while (length--) {
 			if (remaining) {
 				remaining--;
 				*(buf++)= repchar;
@@ -155,7 +155,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -199,12 +199,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBOOL isRGB;			// TRUE if file type is RT_FORMAT_RGB
 	uint8_t fillchar;
 
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	uint8_t *bits;			// Pointer to dib data
 	uint16_t x, y;
 
-	if(!handle) {
-		return NULL;
+	if (!handle) {
+		return nullptr;
 	}
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -235,7 +235,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// Allocate a new DIB
 
-		switch(header.depth) {
+		switch (header.depth) {
 			case 1:
 			case 8:
 				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth);
@@ -250,7 +250,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				break;
 		}
 
-		if (dib == NULL) {
+		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
@@ -259,7 +259,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		rle = FALSE;
 		isRGB = FALSE;
 
-		switch(header.type) {
+		switch (header.type) {
 			case RT_OLD:
 			case RT_STANDARD:
 			case RT_FORMAT_TIFF: // I don't even know what these format are...
@@ -282,7 +282,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// set up the colormap if needed
 
-		switch(header.maptype) {
+		switch (header.maptype) {
 			case RMT_NONE :
 			{				
 				if (header.depth < 24) {
@@ -309,7 +309,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// Read SUN raster colormap
 
 				int numcolors = 1 << header.depth;
-				if((uint32_t)(3 * numcolors) > header.maplength) {
+				if ((uint32_t)(3 * numcolors) > header.maplength) {
 					// some RAS may have less colors than the full palette
 					numcolors = header.maplength / 3;
 				} else {
@@ -336,11 +336,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case RMT_RAW:
 			{
-				uint8_t *colormap;
-
 				// Read (skip) SUN raster colormap.
 
-				colormap = (uint8_t *)malloc(header.maplength * sizeof(uint8_t));
+				auto *colormap = (uint8_t *)malloc(header.maplength * sizeof(uint8_t));
 
 				io->read_proc(colormap, header.maplength, 1, handle);
 
@@ -349,7 +347,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 
-		if(header_only) {
+		if (header_only) {
 			// header only mode
 			return dib;
 		}
@@ -369,7 +367,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// Read the image data
 		
-		switch(header.depth) {
+		switch (header.depth) {
 			case 1:
 			case 8:
 			{
@@ -390,16 +388,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 24:
 			{
-				uint8_t *buf, *bp;
-
-				buf = (uint8_t*)malloc(header.width * 3);
+				auto *buf = (uint8_t*)malloc(header.width * 3);
 
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
 
 					ReadData(io, handle, buf, header.width * 3, rle);
 
-					bp = buf;
+					auto *bp = buf;
 
 					if (isRGB) {
 						for (x = 0; x < header.width; x++) {
@@ -430,16 +426,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 32:
 			{
-				uint8_t *buf, *bp;
-
-				buf = (uint8_t*)malloc(header.width * 4);
+				auto *buf = (uint8_t*)malloc(header.width * 4);
 
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
 
 					ReadData(io, handle, buf, header.width * 4, rle);
 
-					bp = buf;
+					auto *bp = buf;
 
 					if (isRGB) {
 						for (x = 0; x < header.width; x++) {
@@ -476,13 +470,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return dib;
 
 	} catch (const char *text) {
-		if(dib) {
+		if (dib) {
 			FreeImage_Unload(dib);
 		}
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -497,16 +491,16 @@ InitRAS(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

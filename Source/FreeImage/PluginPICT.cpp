@@ -593,8 +593,8 @@ Unpack32Bits( FreeImageIO *io, fi_handle handle, FIBITMAP* dib, MacRect* bounds,
 		rowBytes = (uint16_t)( width * 4 );
 	}
 	
-	uint8_t* pLineBuf = (uint8_t*)malloc( rowBytes ); // Let's allocate enough for 4 bit planes
-	if ( pLineBuf )	{
+	auto *pLineBuf = (uint8_t*)malloc( rowBytes ); // Let's allocate enough for 4 bit planes
+	if (pLineBuf)	{
 		try	{
 			for ( int i = 0; i < height; i++ ) { 
 				// for each line do...
@@ -913,11 +913,11 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	if(io->seek_proc(handle, 522, SEEK_SET) == 0) {
+	if (io->seek_proc(handle, 522, SEEK_SET) == 0) {
 		uint8_t pict_signature[] = { 0x00, 0x11, 0x02, 0xFF, 0x0C, 0X00 };
 		uint8_t signature[6];
 
-		if(io->read_proc(signature, 1, sizeof(pict_signature), handle)) {
+		if (io->read_proc(signature, 1, sizeof(pict_signature), handle)) {
 			// v1.0 files have 0x11 (version operator) followed by 0x01 (version number)
 			// v2.0 files have 0x0011 (version operator) followed by 0x02ff (version number)
 			//   and additionally 0x0c00 as a header opcode
@@ -955,11 +955,11 @@ These elements are ignored.
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char outputMessage[ outputMessageSize ] = "";
-	FIBITMAP* dib = NULL;
+	FIBITMAP* dib{};
 	try {		
 		// Skip empty 512 byte header.
 		if ( !io->seek_proc(handle, 512, SEEK_CUR) == 0 )
-			return NULL;
+			return nullptr;
 		
 		// Read PICT header
 		Read16( io, handle ); // Skip version 1 picture size
@@ -1036,7 +1036,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						
 						patType = Read16( io, handle );
 						
-						switch( patType ) {
+						switch (patType) {
 							case 2:
 								io->seek_proc(handle, 8, SEEK_CUR);
 								io->seek_proc(handle, 5, SEEK_CUR);
@@ -1169,7 +1169,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 //					io->seek_proc( handle, 122, SEEK_CUR );
 //					found = TRUE;
 					uint8_t data[ 2 ];
-					if( io->read_proc( data, 2, 1, handle ) ) {
+					if ( io->read_proc( data, 2, 1, handle ) ) {
 						io->seek_proc( handle, -2, SEEK_CUR );
 						
 						if ( data[0] == 0xFF && data[1] == 0xD8 ) {
@@ -1211,7 +1211,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				throw outputMessage;
 			}
 
-			if(currentPos == io->tell_proc(handle)) {
+			if (currentPos == io->tell_proc(handle)) {
 				// we probaly reached the end of file as we can no longer move forward ... 
 				throw "Invalid PICT file";
 			}
@@ -1289,7 +1289,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			FreeImage_SetDotsPerMeterX( dib, (int32_t)hres_ppm );
 			FreeImage_SetDotsPerMeterY( dib, (int32_t)vres_ppm );			
 			
-			switch( pictType ) {
+			switch (pictType) {
 				case op9a:
 					DecodeOp9a( io, handle, dib, &pixMap );
 					break;
@@ -1314,7 +1314,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		FreeImage_OutputMessageProc(s_format_id, message);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -1328,13 +1328,13 @@ InitPICT(Plugin *plugin, int format_id) {
 	plugin->format_proc = Format;
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
-	plugin->regexpr_proc = NULL;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->regexpr_proc = nullptr;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;

@@ -95,7 +95,7 @@ GetPaletteIndex(FIBITMAP *dib, const FIRGBA8 *color, int options, FREE_IMAGE_COL
 	
 	if (bpp == 8) {
 		FREE_IMAGE_COLOR_TYPE ct =
-			(color_type == NULL || *color_type < 0) ?
+			(!color_type || *color_type < 0) ?
 				FreeImage_GetColorType(dib) : *color_type;
 		if (ct == FIC_MINISBLACK) {
 			return GREY(color->red, color->green, color->blue);
@@ -522,7 +522,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 		return bitmap;
 	}
 
-	if (bitmap != NULL) {
+	if (bitmap) {
 		
 		// Only fill the new bitmap if the specified color
 		// differs from "black", that is not all bytes of the
@@ -535,7 +535,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 				auto *upal = (unsigned *)FreeImage_GetPalette(bitmap);
 				FIRGBA8 rgbq = FIRGBA8();
 
-				if (palette != NULL) {
+				if (palette) {
 					// clone the specified palette
 					memcpy(FreeImage_GetPalette(bitmap), palette, 2 * sizeof(FIRGBA8));
 				} else if (options & FI_COLOR_ALPHA_IS_INDEX) {
@@ -570,7 +570,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 				FIRGBA8 *pal = FreeImage_GetPalette(bitmap);
 				FIRGBA8 rgbq = FIRGBA8();
 				
-				if (palette != NULL) {
+				if (palette) {
 					// clone the specified palette
 					memcpy(pal, palette, 16 * sizeof(FIRGBA8));
 				} else if (options & FI_COLOR_ALPHA_IS_INDEX) {
@@ -601,7 +601,7 @@ FreeImage_AllocateExT(FREE_IMAGE_TYPE type, int width, int height, int bpp, cons
 				FIRGBA8 *pal = FreeImage_GetPalette(bitmap);
 				FIRGBA8 rgbq;
 
-				if (palette != NULL) {
+				if (palette) {
 					// clone the specified palette
 					memcpy(pal, palette, 256 * sizeof(FIRGBA8));
 				} else if (options & FI_COLOR_ALPHA_IS_INDEX) {
@@ -776,7 +776,7 @@ FreeImage_AllocateEx(int width, int height, int bpp, const FIRGBA8 *color, int o
 FIBITMAP * DLL_CALLCONV
 FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom, const void *color, int options) {
 
-	if(!FreeImage_HasPixels(src)) return NULL;
+	if (!FreeImage_HasPixels(src)) return nullptr;
 
 	// Just return a clone of the image, if left, top, right and bottom are
 	// all zero.
@@ -797,12 +797,12 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 	// From here, we need a valid color, since the image will be enlarged on
 	// at least one side. So, fail if we don't have a valid color pointer.
 	if (!color) {
-		return NULL;
+		return nullptr;
 	}
 
 	if (((left < 0) && (-left >= width)) || ((right < 0) && (-right >= width)) ||
 		((top < 0) && (-top >= height)) || ((bottom < 0) && (-bottom >= height))) {
-		return NULL;
+		return nullptr;
 	}
 
 	unsigned newWidth = width + left + right;
@@ -819,7 +819,7 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 		FreeImage_GetBlueMask(src));
 
 	if (!dst) {
-		return NULL;
+		return nullptr;
 	}
 
 	if ((type == FIT_BITMAP) && (bpp <= 4)) {
@@ -831,7 +831,7 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 		
 		if (!copy) {
 			FreeImage_Unload(dst);
-			return NULL;
+			return nullptr;
 		}
 
 		if (!FreeImage_Paste(dst, copy,
@@ -839,7 +839,7 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 				((top <= 0) ? 0 : top), 256)) {
 			FreeImage_Unload(copy);
 			FreeImage_Unload(dst);
-			return NULL;
+			return nullptr;
 		}
 
 		FreeImage_Unload(copy);
@@ -877,7 +877,7 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 	
 	// copy background color 
 	FIRGBA8 bkcolor; 
-	if( FreeImage_GetBackgroundColor(src, &bkcolor) ) {
+	if (FreeImage_GetBackgroundColor(src, &bkcolor)) {
 		FreeImage_SetBackgroundColor(dst, &bkcolor); 
 	}
 	

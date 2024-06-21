@@ -311,7 +311,7 @@ struct YuvBrightness
 template <typename PixelTy_, typename BrightnessOp_ = Brightness>
 std::tuple<PixelTy_*, PixelTy_*, double, double> FindMinMax(FIBITMAP* src, BrightnessOp_ brightnessOp = BrightnessOp_{})
 {
-    PixelTy_* minIt = nullptr, * maxIt = nullptr;
+    PixelTy_* minIt{}, * maxIt{};
     double minVal = 0.0, maxVal = 0.0;
     if (src) {
         const unsigned h = FreeImage_GetHeight(src);
@@ -325,7 +325,7 @@ std::tuple<PixelTy_*, PixelTy_*, double, double> FindMinMax(FIBITMAP* src, Brigh
                     continue;
                 }
                 const auto b = static_cast<double>(brightnessOp(*pixIt));
-                if (minIt == nullptr || maxIt == nullptr) {
+                if (!minIt || !maxIt) {
                     minIt  = maxIt = pixIt;
                     minVal = maxVal = b;
                 }

@@ -63,12 +63,12 @@
 // Utility functions declared in Utilities.h
 
 FIBOOL SwapRedBlue32(FIBITMAP* dib) {
-	if(FreeImage_GetImageType(dib) != FIT_BITMAP) {
+	if (FreeImage_GetImageType(dib) != FIT_BITMAP) {
 		return FALSE;
 	}
 		
 	const unsigned bytesperpixel = FreeImage_GetBPP(dib) / 8;
-	if(bytesperpixel > 4 || bytesperpixel < 3) {
+	if (bytesperpixel > 4 || bytesperpixel < 3) {
 		return FALSE;
 	}
 		
@@ -77,8 +77,8 @@ FIBOOL SwapRedBlue32(FIBITMAP* dib) {
 	const unsigned lineSize = FreeImage_GetLine(dib);
 	
 	uint8_t* line = FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; ++y, line += pitch) {
-		for(uint8_t* pixel = line; pixel < line + lineSize ; pixel += bytesperpixel) {
+	for (unsigned y = 0; y < height; ++y, line += pitch) {
+		for (uint8_t* pixel = line; pixel < line + lineSize ; pixel += bytesperpixel) {
 			INPLACESWAP(pixel[0], pixel[2]);
 		}
 	}
@@ -136,11 +136,11 @@ _convertCMYKtoRGBA(unsigned width, unsigned height, uint8_t* line_start, unsigne
 	const T MAX_VAL = std::numeric_limits<T>::max();
 		
 	T K = 0;
-	for(unsigned y = 0; y < height; y++) {
+	for (unsigned y = 0; y < height; y++) {
 		T *line = (T*)line_start;
 
-		for(unsigned x = 0; x < width; x++) {
-			if(hasBlack) {
+		for (unsigned x = 0; x < width; x++) {
+			if (hasBlack) {
 				K = line[FI_RGBA_ALPHA];			
 				line[FI_RGBA_ALPHA] = MAX_VAL; // TODO write the first extra channel as alpha!
 			}			
@@ -155,7 +155,7 @@ _convertCMYKtoRGBA(unsigned width, unsigned height, uint8_t* line_start, unsigne
 
 FIBOOL 
 ConvertCMYKtoRGBA(FIBITMAP* dib) {
-	if(!FreeImage_HasPixels(dib)) {
+	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
 	}
 		
@@ -176,7 +176,7 @@ ConvertCMYKtoRGBA(FIBITMAP* dib) {
 	
 	unsigned samplesperpixel = FreeImage_GetLine(dib) / width / channelSize;
 
-	if(channelSize == sizeof(uint16_t)) {
+	if (channelSize == sizeof(uint16_t)) {
 		_convertCMYKtoRGBA<uint16_t>(width, height, line_start, pitch, samplesperpixel);
 	} else {
 		_convertCMYKtoRGBA<uint8_t>(width, height, line_start, pitch, samplesperpixel);
@@ -201,19 +201,19 @@ CIELabToXYZ(float L, float a, float b, float *X, float *Y, float *Z) {
 	float var_Z = var_Y - b / 200.F;
 
 	pow_3 = powf(var_Y, 3);
-	if(pow_3 > 0.008856F) {
+	if (pow_3 > 0.008856F) {
 		var_Y = pow_3;
 	} else {
 		var_Y = ( var_Y - 16.F / 116.F ) / 7.787F;
 	}
 	pow_3 = powf(var_X, 3);
-	if(pow_3 > 0.008856F) {
+	if (pow_3 > 0.008856F) {
 		var_X = pow_3;
 	} else {
 		var_X = ( var_X - 16.F / 116.F ) / 7.787F;
 	}
 	pow_3 = powf(var_Z, 3);
-	if(pow_3 > 0.008856F) {
+	if (pow_3 > 0.008856F) {
 		var_Z = pow_3;
 	} else {
 		var_Z = ( var_Z - 16.F / 116.F ) / 7.787F;
@@ -243,17 +243,17 @@ XYZToRGB(float X, float Y, float Z, float *R, float *G, float *B) {
 
 	float exponent = 1.F / 2.4F;
 
-	if(var_R > 0.0031308F) {
+	if (var_R > 0.0031308F) {
 		var_R = 1.055F * powf(var_R, exponent) - 0.055F;
 	} else {
 		var_R = 12.92F * var_R;
 	}
-	if(var_G > 0.0031308F) {
+	if (var_G > 0.0031308F) {
 		var_G = 1.055F * powf(var_G, exponent) - 0.055F;
 	} else {
 		var_G = 12.92F * var_G;
 	}
-	if(var_B > 0.0031308F) {
+	if (var_B > 0.0031308F) {
 		var_B = 1.055F * powf(var_B, exponent) - 0.055F;
 	} else {
 		var_B = 12.92F * var_B;
@@ -290,10 +290,10 @@ _convertLABtoRGB(unsigned width, unsigned height, uint8_t* line_start, unsigned 
 	const float sa = 256.F / max_val;
 	const float sb = 256.F / max_val;
 	
-	for(unsigned y = 0; y < height; y++) {
+	for (unsigned y = 0; y < height; y++) {
 		T *line = (T*)line_start;
 
-		for(unsigned x = 0; x < width; x++) {
+		for (unsigned x = 0; x < width; x++) {
 			CIELabToRGB(line[0]* sL, line[1]* sa - 128.F, line[2]* sb - 128.F, line);
 			
 			line += samplesperpixel;
@@ -304,7 +304,7 @@ _convertLABtoRGB(unsigned width, unsigned height, uint8_t* line_start, unsigned 
 
 FIBOOL
 ConvertLABtoRGB(FIBITMAP* dib) {
-	if(!FreeImage_HasPixels(dib)) {
+	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
 	}
 		
@@ -325,7 +325,7 @@ ConvertLABtoRGB(FIBITMAP* dib) {
 	
 	unsigned samplesperpixel = FreeImage_GetLine(dib) / width / channelSize;
 			
-	if(channelSize == 1) {
+	if (channelSize == 1) {
 		_convertLABtoRGB<uint8_t>(width, height, line_start, pitch, samplesperpixel);
 	}
 	else {
@@ -340,15 +340,15 @@ ConvertLABtoRGB(FIBITMAP* dib) {
 FIBITMAP* 
 RemoveAlphaChannel(FIBITMAP* src) { 
 
-	if(!FreeImage_HasPixels(src)) {
-		return NULL;
+	if (!FreeImage_HasPixels(src)) {
+		return nullptr;
 	}
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(src);
 		
-	switch(image_type) {
+	switch (image_type) {
 		case FIT_BITMAP:
-			if(FreeImage_GetBPP(src) == 32) {
+			if (FreeImage_GetBPP(src) == 32) {
 				// convert to 24-bit
 				return FreeImage_ConvertTo24Bits(src);
 			}
@@ -361,10 +361,10 @@ RemoveAlphaChannel(FIBITMAP* src) {
 			return FreeImage_ConvertToRGBF(src);
 		default:
 			// unsupported image type
-			return NULL;
+			return nullptr;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -377,26 +377,26 @@ FreeImage_ColorQuantize(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize) {
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette) {
-	if( PaletteSize < 2 ) PaletteSize = 2;
-	if( PaletteSize > 256 ) PaletteSize = 256;
-	if( ReserveSize < 0 ) ReserveSize = 0;
-	if( ReserveSize > PaletteSize ) ReserveSize = PaletteSize;
+	if (PaletteSize < 2) PaletteSize = 2;
+	if (PaletteSize > 256) PaletteSize = 256;
+	if (ReserveSize < 0) ReserveSize = 0;
+	if (ReserveSize > PaletteSize) ReserveSize = PaletteSize;
 	if (FreeImage_HasPixels(dib)) {
 		const unsigned bpp = FreeImage_GetBPP(dib);
-		if((FreeImage_GetImageType(dib) == FIT_BITMAP) && (bpp == 24 || bpp == 32)) {
-			switch(quantize) {
+		if ((FreeImage_GetImageType(dib) == FIT_BITMAP) && (bpp == 24 || bpp == 32)) {
+			switch (quantize) {
 				case FIQ_WUQUANT :
 				{
 					try {
 						WuQuantizer Q (dib);
 						FIBITMAP *dst = Q.Quantize(PaletteSize, ReserveSize, ReservePalette);
-						if(dst) {
+						if (dst) {
 							// copy metadata from src to dst
 							FreeImage_CloneMetadata(dst, dib);
 						}
 						return dst;
 					} catch (const char *) {
-						return NULL;
+						return nullptr;
 					}
 					break;
 				}
@@ -404,7 +404,7 @@ FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int Palet
 				{
 					if (bpp == 32) {
 						// 32-bit images not supported by NNQUANT
-						return NULL;
+						return nullptr;
 					}
 					// sampling factor in range 1..30. 
 					// 1 => slower (but better), 30 => faster. Default value is 1
@@ -412,7 +412,7 @@ FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int Palet
 
 					NNQuantizer Q(PaletteSize);
 					FIBITMAP *dst = Q.Quantize(dib, ReserveSize, ReservePalette, sampling);
-					if(dst) {
+					if (dst) {
 						// copy metadata from src to dst
 						FreeImage_CloneMetadata(dst, dib);
 					}
@@ -422,7 +422,7 @@ FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int Palet
 				{
 					LFPQuantizer Q(PaletteSize);
 					FIBITMAP *dst = Q.Quantize(dib, ReserveSize, ReservePalette);
-					if(dst) {
+					if (dst) {
 						// copy metadata from src to dst
 						FreeImage_CloneMetadata(dst, dib);
 					}
@@ -432,41 +432,41 @@ FreeImage_ColorQuantizeEx(FIBITMAP *dib, FREE_IMAGE_QUANTIZE quantize, int Palet
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertFromRawBitsEx(FIBOOL copySource, uint8_t *bits, FREE_IMAGE_TYPE type, int width, int height, int pitch, unsigned bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask, FIBOOL topdown) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
-	if(copySource) {
+	if (copySource) {
 		// allocate a FIBITMAP with internally managed pixel buffer
 		dib = FreeImage_AllocateT(type, width, height, bpp, red_mask, green_mask, blue_mask);
-		if(!dib) {
-			return NULL;
+		if (!dib) {
+			return nullptr;
 		}
 		// copy user provided pixel buffer into the dib
 		const unsigned linesize = FreeImage_GetLine(dib);
-		for(int y = 0; y < height; y++) {
+		for (int y = 0; y < height; y++) {
 			memcpy(FreeImage_GetScanLine(dib, y), bits, linesize);
 			// next line in user's buffer
 			bits += pitch;
 		}
 		// flip pixels vertically if needed
-		if(topdown) {
+		if (topdown) {
 			FreeImage_FlipVertical(dib);
 		}
 	}
 	else {
 		// allocate a FIBITMAP using a wrapper to user provided pixel buffer
 		dib = FreeImage_AllocateHeaderForBits(bits, pitch, type, width, height, bpp, red_mask, green_mask, blue_mask);
-		if(!dib) {
-			return NULL;
+		if (!dib) {
+			return nullptr;
 		}
 		// flip pixels vertically if needed
-		if(topdown) {
+		if (topdown) {
 			FreeImage_FlipVertical(dib);
 		}
 	}
@@ -481,7 +481,7 @@ FreeImage_ConvertFromRawBits(uint8_t *bits, int width, int height, int pitch, un
 
 void DLL_CALLCONV
 FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask, FIBOOL topdown) {
-	if (FreeImage_HasPixels(dib) && (bits != NULL)) {
+	if (FreeImage_HasPixels(dib) && (bits != nullptr)) {
 		for (unsigned i = 0; i < FreeImage_GetHeight(dib); ++i) {
 			uint8_t *scanline = FreeImage_GetScanLine(dib, topdown ? (FreeImage_GetHeight(dib) - i - 1) : i);
 
@@ -503,9 +503,9 @@ FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp
 				}
 			} else if (FreeImage_GetBPP(dib) != bpp) {
                 FIBOOL bIsTransparent = FreeImage_IsTransparent(dib);
-				switch(FreeImage_GetBPP(dib)) {
+				switch (FreeImage_GetBPP(dib)) {
 					case 1 :
-						switch(bpp) {
+						switch (bpp) {
 							CONVERT(1, 8)
 							CONVERTTO16WITHPALETTE(1)
 							CONVERTWITHPALETTE(1, 24)
@@ -515,7 +515,7 @@ FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp
 						break;
 
 					case 4 :
-						switch(bpp) {
+						switch (bpp) {
 							CONVERT(4, 8)
 							CONVERTTO16WITHPALETTE(4)
 							CONVERTWITHPALETTE(4, 24)
@@ -525,7 +525,7 @@ FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp
 						break;
 
 					case 8 :
-						switch(bpp) {
+						switch (bpp) {
 							CONVERTTO16WITHPALETTE(8)
 							CONVERTWITHPALETTE(8, 24)
                             CONVERTTO32WITHPALETTE(8)
@@ -534,7 +534,7 @@ FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp
 						break;
 
 					case 24 :
-						switch(bpp) {
+						switch (bpp) {
 							CONVERT(24, 8)
 							CONVERTTO16(24)
 							CONVERT(24, 32)
@@ -543,7 +543,7 @@ FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp
 						break;
 
 					case 32 :
-						switch(bpp) {
+						switch (bpp) {
 							CONVERT(32, 8)
 							CONVERTTO16(32)
 							CONVERT(32, 24)

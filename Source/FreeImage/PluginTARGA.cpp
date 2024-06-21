@@ -110,13 +110,13 @@ public:
 	TargaThumbnail() : _w(0), _h(0), _depth(0), _data(NULL) { 
 	}
 	~TargaThumbnail() { 
-		if(_data) {
+		if (_data) {
 			free(_data); 
 		}
 	}
 
 	FIBOOL isNull() const { 
-		return (_data == NULL); 
+		return !_data; 
 	}
 	
 	FIBOOL read(FreeImageIO *io, fi_handle handle, size_t size) {
@@ -125,7 +125,7 @@ public:
 		
 		const size_t sizeofData = size - 2;
 		_data = (uint8_t*)malloc(sizeofData);
-		if(_data) {
+		if (_data) {
 			return (io->read_proc(_data, 1, (unsigned)sizeofData, handle) == sizeofData);
 		}
 		return FALSE;
@@ -147,12 +147,12 @@ private:
 #ifdef FREEIMAGE_BIGENDIAN
 static void 
 swapShortPixels(FIBITMAP* dib) {
-	if(FreeImage_GetImageType(dib) != FIT_BITMAP) {
+	if (FreeImage_GetImageType(dib) != FIT_BITMAP) {
 		return;
 	}
 		
 	const unsigned Bpp = FreeImage_GetBPP(dib)/8;
-	if(Bpp != 2) {
+	if (Bpp != 2) {
 		return;
 	}
 		
@@ -161,8 +161,8 @@ swapShortPixels(FIBITMAP* dib) {
 	const unsigned pitch = FreeImage_GetPitch(dib);
 	
 	uint8_t* line = bits;
-	for(unsigned y = 0; y < height; y++, line += pitch) {
-		for(uint8_t* pixel = line; pixel < line + pitch ; pixel += Bpp) {
+	for (unsigned y = 0; y < height; y++, line += pitch) {
+		for (uint8_t* pixel = line; pixel < line + pitch ; pixel += Bpp) {
 			SwapShort((uint16_t*)pixel);
 		}
 	}
@@ -170,14 +170,14 @@ swapShortPixels(FIBITMAP* dib) {
 #endif // FREEIMAGE_BIGENDIAN
 
 FIBITMAP* TargaThumbnail::toFIBITMAP() {
-	if(isNull() || _depth == 0) {
-		return NULL;
+	if (isNull() || _depth == 0) {
+		return nullptr;
 	}
 		
 	const unsigned line_size = _depth * _w / 8;
 	FIBITMAP* dib = FreeImage_Allocate(_w, _h, _depth);
-	if(!dib) {
-		return NULL;
+	if (!dib) {
+		return nullptr;
 	}
 
 	const uint8_t* line = _data;
@@ -219,12 +219,12 @@ public:
 	}
 	
 	~IOCache() {
-		if (_begin != NULL) {
+		if (_begin) {
 			free(_begin);
 		}	
 	}
 		
-	FIBOOL isNull() { return _begin == NULL;}
+	FIBOOL isNull() { return !_begin;}
 	
 	inline
 	uint8_t getByte() {
@@ -347,7 +347,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -380,7 +380,7 @@ isTARGA20(FreeImageIO *io, fi_handle handle) {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) { 
-	if(isTARGA20(io, handle)) {
+	if (isTARGA20(io, handle)) {
 		return TRUE;
 	}
 		
@@ -400,33 +400,33 @@ Validate(FreeImageIO *io, fi_handle handle) {
 		io->seek_proc(handle, start_offset, SEEK_SET);
 
 		// the color map type should be a 0 or a 1...
-		if(header.color_map_type != 0 && header.color_map_type != 1) {
+		if (header.color_map_type != 0 && header.color_map_type != 1) {
 			return FALSE;
 		}
 		// if the color map type is 1 then we validate the map entry information...
-		if(header.color_map_type == 1) {
+		if (header.color_map_type == 1) {
 			// it doesn't make any sense if the first entry is larger than the color map table
-			if(header.cm_first_entry >= header.cm_length) {
+			if (header.cm_first_entry >= header.cm_length) {
 				return FALSE;
 			}
 			// check header.cm_size, don't allow 0 or anything bigger than 32
-			if(header.cm_size == 0 || header.cm_size > 32) {
+			if (header.cm_size == 0 || header.cm_size > 32) {
 				return FALSE;
 			}
 		}
 		// the width/height shouldn't be 0, right ?
-		if(header.is_width == 0 || header.is_height == 0) {
+		if (header.is_width == 0 || header.is_height == 0) {
 			return FALSE;
 		}
 		// let's now verify all the types that are supported by FreeImage (this is our final verification)
-		switch(header.image_type) {
+		switch (header.image_type) {
 			case TGA_CMAP:
 			case TGA_RGB:
 			case TGA_MONO:
 			case TGA_RLECMAP:
 			case TGA_RLERGB:
 			case TGA_RLEMONO:
-				switch(header.is_pixel_depth) {
+				switch (header.is_pixel_depth) {
 					case 8	:
 					case 16:
 					case 24:
@@ -472,7 +472,7 @@ loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeIma
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
 
 	// input line cache
-	uint8_t* file_line = (uint8_t*)malloc( width * file_pixel_size);
+	auto* file_line = (uint8_t*)malloc( width * file_pixel_size);
 
 	if (!file_line) {
 		throw FI_MSG_ERROR_MEMORY;
@@ -592,9 +592,9 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 	// ...and allocate cache of this size (yields good results)
 	IOCache cache(io, handle, sz);
-	if(cache.isNull()) {
+	if (cache.isNull()) {
 		FreeImage_Unload(dib);
-		dib = NULL;
+		dib = nullptr;
 		return;
 	}
 		
@@ -662,10 +662,10 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	if (!handle) {
-		return NULL;
+		return nullptr;
 	}
 
 	try {
@@ -683,7 +683,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// read and process the bitmap's footer
 
 		TargaThumbnail thumbnail;
-		if(isTARGA20(io, handle)) {
+		if (isTARGA20(io, handle)) {
 			TGAFOOTER footer;
 			const long footer_offset = start_offset + eof - sizeof(footer);
 			
@@ -694,7 +694,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			SwapFooter(&footer);
 #endif
 			FIBOOL hasExtensionArea = footer.extension_offset > 0;
-			if(hasExtensionArea) { 
+			if (hasExtensionArea) { 
 				TGAEXTENSIONAREA extensionarea;
 				io->seek_proc(handle, footer.extension_offset, SEEK_SET);
 				io->read_proc(&extensionarea, sizeof(extensionarea), 1, handle);
@@ -705,7 +705,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				uint32_t postage_stamp_offset = extensionarea.postage_stamp_offset;
 				FIBOOL hasThumbnail = (postage_stamp_offset > 0) && (postage_stamp_offset < (uint32_t)footer_offset);
-				if(hasThumbnail) {
+				if (hasThumbnail) {
 					io->seek_proc(handle, postage_stamp_offset, SEEK_SET);
 					thumbnail.read(io, handle, footer_offset - postage_stamp_offset);
 				}
@@ -739,7 +739,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			case 8 : {
 				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, 8);
 				
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 					
@@ -754,8 +754,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					csize = header.cm_length * header.cm_size / 8;
 					
 					// read the color map
-					uint8_t *cmap = (uint8_t*)malloc(csize * sizeof(uint8_t));
-					if (cmap == NULL) {
+					auto *cmap = (uint8_t*)malloc(csize * sizeof(uint8_t));
+					if (!cmap) {
 						throw FI_MSG_ERROR_DIB_MEMORY;
 					}
 					io->read_proc(cmap, sizeof(uint8_t), csize, handle);
@@ -815,7 +815,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						break;
 
-					} // switch(header.cm_size)
+					} // switch (header.cm_size)
 
 					free(cmap);
 				}
@@ -823,11 +823,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// handle thumbnail
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if(th) {
+				if (th) {
 					FIRGBA8* pal = FreeImage_GetPalette(dib);
 					FIRGBA8* dst_pal = FreeImage_GetPalette(th);
-					if(dst_pal && pal) {
-						for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
+					if (dst_pal && pal) {
+						for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
 							dst_pal[i] = pal[i];
 						}
 					}
@@ -838,7 +838,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					FreeImage_Unload(th);				
 				}
 
-				if(header_only) {
+				if (header_only) {
 					return dib;
 				}
 					
@@ -847,7 +847,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_CMAP:
 					case TGA_MONO: {
-						uint8_t *bits = NULL;
+						uint8_t *bits{};
 
 						for (unsigned count = 0; count < header.is_height; count++) {
 							bits = FreeImage_GetScanLine(dib, count);
@@ -864,7 +864,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					default :
 						FreeImage_Unload(dib);
-						return NULL;
+						return nullptr;
 				}
 			}
 			break; // header.is_pixel_depth == 8
@@ -884,15 +884,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 				
 				// handle thumbnail
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if(th) {
-					if(TARGA_LOAD_RGB888 & flags) {
+				if (th) {
+					if (TARGA_LOAD_RGB888 & flags) {
 						FIBITMAP* t = FreeImage_ConvertTo24Bits(th);
 						FreeImage_Unload(th);
 						th = t;
@@ -902,7 +902,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					FreeImage_Unload(th);
 				}
 						
-				if(header_only) {
+				if (header_only) {
 					return dib;
 				}
 
@@ -931,7 +931,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_RGB: { //(16 bit)
 						// input line cache
-						uint8_t *in_line = (uint8_t*)malloc(header.is_width * sizeof(uint16_t));
+						auto *in_line = (uint8_t*)malloc(header.is_width * sizeof(uint16_t));
 
 						if (!in_line)
 							throw FI_MSG_ERROR_MEMORY;
@@ -963,7 +963,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					default :
 						FreeImage_Unload(dib);
-						return NULL;
+						return nullptr;
 				}
 			}
 			break; // header.is_pixel_depth == 15 or 16
@@ -972,17 +972,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if(th) {
+				if (th) {
 					FreeImage_SetThumbnail(dib, th);
 					FreeImage_Unload(th);
 				}
 				
-				if(header_only) {
+				if (header_only) {
 					return dib;
 				}
 					
@@ -1002,7 +1002,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					default :
 						FreeImage_Unload(dib);
-						return NULL;
+						return nullptr;
 				}
 			}
 			break;	// header.is_pixel_depth == 24
@@ -1016,15 +1016,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 				
 				// handle thumbnail
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if(th) {
-					if(TARGA_LOAD_RGB888 & flags) {
+				if (th) {
+					if (TARGA_LOAD_RGB888 & flags) {
 						FIBITMAP* t = FreeImage_ConvertTo24Bits(th);
 						FreeImage_Unload(th);
 						th = t;
@@ -1033,7 +1033,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					FreeImage_Unload(th);
 				}
 
-				if(header_only) {
+				if (header_only) {
 					return dib;
 				}
 					
@@ -1053,12 +1053,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					default :
 						FreeImage_Unload(dib);
-						return NULL;
+						return nullptr;
 				}
 			}
 			break; // header.is_pixel_depth == 32
 
-		} // switch(header.is_pixel_depth)
+		} // switch (header.is_pixel_depth)
 
 		if (flipvert) {
 			FreeImage_FlipVertical(dib);
@@ -1077,7 +1077,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		FreeImage_OutputMessageProc(s_format_id, message);
 
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -1204,7 +1204,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 	// packet (compressed or not) to be written to line
 
-	uint8_t* const packet_begin = (uint8_t*)malloc(max_packet_size * pixel_size);
+	auto* const packet_begin = (uint8_t*)malloc(max_packet_size * pixel_size);
 	uint8_t* packet = packet_begin;
 
 	// line to be written to disk
@@ -1216,32 +1216,32 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 	// add extra space for anti-commpressed lines
 	size_t extra_space = (size_t)ceil(width / 3.0);
-	uint8_t* const line_begin = (uint8_t*)malloc(width * pixel_size + extra_space);
+	auto* const line_begin = (uint8_t*)malloc(width * pixel_size + extra_space);
 	uint8_t* line = line_begin;
 
-	uint8_t *current = (uint8_t*)malloc(pixel_size);
-	uint8_t *next    = (uint8_t*)malloc(pixel_size);
+	auto *current = (uint8_t*)malloc(pixel_size);
+	auto *next    = (uint8_t*)malloc(pixel_size);
 
-	for(unsigned y = 0; y < height; y++) {
+	for (unsigned y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		// rewind line pointer
 		line = line_begin;
 
-		for(unsigned x = 0; x < line_size; x += pixel_size) {
+		for (unsigned x = 0; x < line_size; x += pixel_size) {
 
 			AssignPixel(current, (bits + x), pixel_size);
 
 			// read next pixel from dib
 
-			if( x + 1*pixel_size < line_size) {
+			if (x + 1*pixel_size < line_size) {
 				AssignPixel(next, (bits + x + 1*pixel_size), pixel_size);
 
 			} else {
 				// last pixel in line
 
 				// include current pixel and flush
-				if(!has_rle) {
+				if (!has_rle) {
 
 					writeToPacket(packet, current, pixel_size);
 					packet += pixel_size;
@@ -1258,11 +1258,11 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 				break;
 			}
 
-			if(isEqualPixel(current, next, pixel_size)) {
+			if (isEqualPixel(current, next, pixel_size)) {
 
 				// has rle
 
-				if(!has_rle) {
+				if (!has_rle) {
 					// flush non rle packet
 
 					flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
@@ -1281,7 +1281,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 				// no rle
 
-				if(has_rle) {
+				if (has_rle) {
 					// flush rle packet
 
 					// include current pixel first
@@ -1305,7 +1305,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 			++packet_count;
 
-			if(packet_count == max_packet_size) {
+			if (packet_count == max_packet_size) {
 				flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
 			}
 
@@ -1324,7 +1324,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	if ((dib == NULL) || (handle == NULL)) {
+	if (!dib || !handle) {
 		return FALSE;
 	}
 
@@ -1378,7 +1378,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	if (palette) {
 		if (FreeImage_IsTransparent(dib)) {
-			FILE_BGRA *bgra_pal = (FILE_BGRA*)malloc(header.cm_length * sizeof(FILE_BGRA));
+			auto *bgra_pal = (FILE_BGRA*)malloc(header.cm_length * sizeof(FILE_BGRA));
 
 			// get the transparency table
 			uint8_t *trns = FreeImage_GetTransparencyTable(dib);
@@ -1395,7 +1395,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			free(bgra_pal);
 
 		} else {
-			FILE_BGR *bgr_pal = (FILE_BGR*)malloc(header.cm_length * sizeof(FILE_BGR));
+			auto *bgr_pal = (FILE_BGR*)malloc(header.cm_length * sizeof(FILE_BGR));
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
 				bgr_pal[i].b = palette[i].blue;
@@ -1424,14 +1424,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		const unsigned height = header.is_height;
 		const unsigned pixel_size = bpp/8;
 
-		uint8_t *line, *const line_begin = (uint8_t*)malloc(width * pixel_size);
+		auto *const line_begin = (uint8_t*)malloc(width * pixel_size);
 		uint8_t *line_source = line_begin;
 
 		for (unsigned y = 0; y < height; y++) {
 			uint8_t *scanline = FreeImage_GetScanLine(dib, y);
 
 			// rewind the line pointer
-			line = line_begin;
+			auto *line = line_begin;
 
 			switch (bpp) {
 				case 8: {
@@ -1489,7 +1489,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				}
 				break;
 
-			}//switch(bpp)
+			}//switch (bpp)
 
 			// write line to disk
 
@@ -1502,7 +1502,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	
 	long extension_offset = 0 ;
-	if(hasValidThumbnail(dib)) {
+	if (hasValidThumbnail(dib)) {
 		// write extension area
 		
 		extension_offset = io->tell_proc(handle);
@@ -1581,16 +1581,16 @@ InitTARGA(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

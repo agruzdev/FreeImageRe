@@ -40,21 +40,21 @@ For colour images, the computation is done separately for R, G, and B samples.
 */
 FIBITMAP * DLL_CALLCONV
 FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITMAP *bg) {
-	if(!FreeImage_HasPixels(fg)) return NULL;
+	if (!FreeImage_HasPixels(fg)) return nullptr;
 
 	const int width  = FreeImage_GetWidth(fg);
 	const int height = FreeImage_GetHeight(fg);
 	const int bpp    = FreeImage_GetBPP(fg);
 
-	if((bpp != 8) && (bpp != 32))
-		return NULL;
+	if ((bpp != 8) && (bpp != 32))
+		return nullptr;
 
-	if(bg) {
+	if (bg) {
 		const int bg_width  = FreeImage_GetWidth(bg);
 		const int bg_height = FreeImage_GetHeight(bg);
 		const int bg_bpp    = FreeImage_GetBPP(bg);
-		if((bg_width != width) || (bg_height != height) || (bg_bpp != 24))
-			return NULL;
+		if ((bg_width != width) || (bg_height != height) || (bg_bpp != 24))
+			return nullptr;
 	}
 
 	int bytespp = (bpp == 8) ? 1 : 4;
@@ -71,7 +71,7 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 
 	// allocate the composite image
 	FIBITMAP *composite = FreeImage_Allocate(width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-	if(!composite) return NULL;
+	if (!composite) return nullptr;
 
 	// get the palette
 	const FIRGBA8 *pal = FreeImage_GetPalette(fg);
@@ -83,23 +83,23 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 	// retrieve the background color from the foreground image
 	FIBOOL bHasBkColor = FALSE;
 
-	if(useFileBkg && FreeImage_HasBackgroundColor(fg)) {
+	if (useFileBkg && FreeImage_HasBackgroundColor(fg)) {
 		FreeImage_GetBackgroundColor(fg, &bkc);
 		bHasBkColor = TRUE;
 	} else {
 		// no file background color
 		// use application background color ?
-		if(appBkColor) {
+		if (appBkColor) {
 			memcpy(&bkc, appBkColor, sizeof(FIRGBA8));
 			bHasBkColor = TRUE;
 		}
 		// use background image ?
-		else if(bg) {
+		else if (bg) {
 			bHasBkColor = FALSE;
 		}
 	}
 
-	for(y = 0; y < height; y++) {
+	for (y = 0; y < height; y++) {
 		// foreground
 		uint8_t *fg_bits = FreeImage_GetScanLine(fg, y);
 		// background
@@ -107,22 +107,22 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 		// composite image
 		uint8_t *cp_bits = FreeImage_GetScanLine(composite, y);
 
-		for(x = 0; x < width; x++) {
+		for (x = 0; x < width; x++) {
 
 			// foreground color + alpha
 
-			if(bpp == 8) {
+			if (bpp == 8) {
 				// get the foreground color
 				index = fg_bits[0];
 				memcpy(&fgc, &pal[index], sizeof(FIRGBA8));
 				// get the alpha
-				if(bIsTransparent) {
+				if (bIsTransparent) {
 					alpha = trns[index];
 				} else {
 					alpha = 255;
 				}
 			}
-			else if(bpp == 32) {
+			else if (bpp == 32) {
 				// get the foreground color
 				fgc.blue  = fg_bits[FI_RGBA_BLUE];
 				fgc.green = fg_bits[FI_RGBA_GREEN];
@@ -133,8 +133,8 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 
 			// background color
 
-			if(!bHasBkColor) {
-				if(bg) {
+			if (!bHasBkColor) {
+				if (bg) {
 					// get the background color from the background image
 					bkc.blue  = bg_bits[FI_RGBA_BLUE];
 					bkc.green = bg_bits[FI_RGBA_GREEN];
@@ -152,13 +152,13 @@ FreeImage_Composite(FIBITMAP *fg, FIBOOL useFileBkg, FIRGBA8 *appBkColor, FIBITM
 
 			// composition
 
-			if(alpha == 0) {
+			if (alpha == 0) {
 				// output = background
 				cp_bits[FI_RGBA_BLUE] = bkc.blue;
 				cp_bits[FI_RGBA_GREEN] = bkc.green;
 				cp_bits[FI_RGBA_RED] = bkc.red;
 			}
-			else if(alpha == 255) {
+			else if (alpha == 255) {
 				// output = foreground
 				cp_bits[FI_RGBA_BLUE] = fgc.blue;
 				cp_bits[FI_RGBA_GREEN] = fgc.green;
@@ -203,18 +203,18 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 	const int width = FreeImage_GetWidth(dib);
 	const int height = FreeImage_GetHeight(dib);
 
-	for(int y = 0; y < height; y++) {
+	for (int y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 		for (int x = 0; x < width; x++, bits += 4) {
 			const uint8_t alpha = bits[FI_RGBA_ALPHA];
 			// slightly faster: care for two special cases
-			if(alpha == 0x00) {
+			if (alpha == 0x00) {
 				// special case for alpha == 0x00
 				// color * 0x00 / 0xFF = 0x00
 				bits[FI_RGBA_BLUE] = 0x00;
 				bits[FI_RGBA_GREEN] = 0x00;
 				bits[FI_RGBA_RED] = 0x00;
-			} else if(alpha == 0xFF) {
+			} else if (alpha == 0xFF) {
 				// nothing to do for alpha == 0xFF
 				// color * 0xFF / 0xFF = color
 				continue;

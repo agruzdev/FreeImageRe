@@ -23,6 +23,7 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "ToneMapping.h"
+#include <algorithm>
 
 // ----------------------------------------------------------
 // Global and/or local tone mapping operator
@@ -59,14 +60,14 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 
 	// check input parameters 
 
-	if((FreeImage_GetImageType(dib) != FIT_RGBF) || (FreeImage_GetImageType(Y) != FIT_FLOAT)) {
+	if ((FreeImage_GetImageType(dib) != FIT_RGBF) || (FreeImage_GetImageType(Y) != FIT_FLOAT)) {
 		return FALSE;
 	}
 
-	if(f < -8) f = -8; if(f > 8) f = 8;
-    if(m < 0)  m = 0;  if(m > 1) m = 1;
-    if(a < 0)  a = 0;  if(a > 1) a = 1;
-    if(c < 0)  c = 0;  if(c > 1) c = 1;
+	f = std::clamp(f, -8.f, 8.f);
+	m = std::clamp(m, 0.f, 1.f);
+	a = std::clamp(a, 0.f, 1.f);
+	c = std::clamp(c, 0.f, 1.f);
 
 	const unsigned width  = FreeImage_GetWidth(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
@@ -76,21 +77,21 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 
 	int i;
 	unsigned x, y;
-	uint8_t *bits = NULL, *Ybits = NULL;
+	uint8_t *bits{}, *Ybits{};
 
 	// get statistics about the data (but only if its really needed)
 
 	f = exp(-f);
-	if((m == 0) || (a != 1) && (c != 1)) {
+	if ((m == 0) || (a != 1) && (c != 1)) {
 		// avoid these calculations if its not needed after ...
 		LuminanceFromY(Y, &maxLum, &minLum, &Lav, &Llav);
 		k = (log(maxLum) - Llav) / (log(maxLum) - log(minLum));
-		if(k < 0) {
+		if (k < 0) {
 			// pow(k, 1.4F) is undefined ...
 			// there's an ambiguity about the calculation of Llav between Reinhard papers and the various implementations  ...
 			// try another world adaptation luminance formula using instead 'worldLum = log(Llav)'
 			k = (log(maxLum) - log(Llav)) / (log(maxLum) - log(minLum));
-			if(k < 0) m = 0.3F;
+			if (k < 0) m = 0.3F;
 		}
 	}
 	m = (m > 0) ? m : (float)(0.3 + 0.7 * pow(k, 1.4F));
@@ -103,14 +104,14 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 	bits  = (uint8_t*)FreeImage_GetBits(dib);
 	Ybits = (uint8_t*)FreeImage_GetBits(Y);
 
-	if((a == 1) && (c == 0)) {
+	if ((a == 1) && (c == 0)) {
 		// when using default values, use a fastest code
 
-		for(y = 0; y < height; y++) {
+		for (y = 0; y < height; y++) {
 			float *Y     = (float*)Ybits;
 			float *color = (float*)bits;
 
-			for(x = 0; x < width; x++) {
+			for (x = 0; x < width; x++) {
 				I_a = Y[x];	// luminance(x, y)
 				for (i = 0; i < 3; i++) {
 					*color /= ( *color + pow(f * I_a, m) );
@@ -131,13 +132,13 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 		// channel averages
 
 		Cav[0] = Cav[1] = Cav[2] = 0;
-		if((a != 1) && (c != 0)) {
+		if ((a != 1) && (c != 0)) {
 			// channel averages are not needed when (a == 1) or (c == 0)
 			bits = (uint8_t*)FreeImage_GetBits(dib);
-			for(y = 0; y < height; y++) {
-				float *color = (float*)bits;
-				for(x = 0; x < width; x++) {
-					for(i = 0; i < 3; i++) {
+			for (y = 0; y < height; y++) {
+				auto *color = (const float*)bits;
+				for (x = 0; x < width; x++) {
+					for (i = 0; i < 3; i++) {
 						Cav[i] += *color;
 						color++;
 					}
@@ -146,7 +147,7 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 				bits += dib_pitch;
 			}
 			const float image_size = (float)width * height;
-			for(i = 0; i < 3; i++) {
+			for (i = 0; i < 3; i++) {
 				Cav[i] /= image_size;
 			}
 		}
@@ -154,11 +155,11 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 		// perform tone mapping
 
 		bits = (uint8_t*)FreeImage_GetBits(dib);
-		for(y = 0; y < height; y++) {
+		for (y = 0; y < height; y++) {
 			const float *Y     = (float*)Ybits;
-			float *color = (float*)bits;
+			auto *color = (float*)bits;
 
-			for(x = 0; x < width; x++) {
+			for (x = 0; x < width; x++) {
 				L = Y[x];	// luminance(x, y)
 				for (i = 0; i < 3; i++) {
 					I_l = c * *color + (1-c) * L;
@@ -180,13 +181,13 @@ ToneMappingReinhard05(FIBITMAP *dib, FIBITMAP *Y, float f, float m, float a, flo
 
 	// normalize intensities
 
-	if(max_color != min_color) {
+	if (max_color != min_color) {
 		bits = (uint8_t*)FreeImage_GetBits(dib);
 		const float range = max_color - min_color;
-		for(y = 0; y < height; y++) {
-			float *color = (float*)bits;
+		for (y = 0; y < height; y++) {
+			auto *color = (float*)bits;
 			for(x = 0; x < width; x++) {
-				for(i = 0; i < 3; i++) {
+				for (i = 0; i < 3; i++) {
 					*color = (*color - min_color) / range;
 					color++;
 				}
@@ -215,19 +216,19 @@ User parameters control intensity, contrast, and level of adaptation
 */
 FIBITMAP* DLL_CALLCONV 
 FreeImage_TmoReinhard05Ex(FIBITMAP *src, double intensity, double contrast, double adaptation, double color_correction) {
-	if(!FreeImage_HasPixels(src)) return NULL;
+	if (!FreeImage_HasPixels(src)) return nullptr;
 
 	// working RGBF variable
-	FIBITMAP *dib = NULL, *Y = NULL;
+	FIBITMAP *dib{}, *Y{};
 
 	dib = FreeImage_ConvertToRGBF(src);
-	if(!dib) return NULL;
+	if (!dib) return nullptr;
 
 	// get the Luminance channel
 	Y = ConvertRGBFToY(dib);
-	if(!Y) {
+	if (!Y) {
 		FreeImage_Unload(dib);
-		return NULL;
+		return nullptr;
 	}
 
 	// perform the tone mapping

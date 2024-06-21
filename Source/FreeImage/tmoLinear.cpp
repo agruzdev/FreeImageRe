@@ -144,7 +144,7 @@ FIBITMAP* FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_CO
         return nullptr;
     }
 
-    void* minPixel = nullptr, * maxPixel = nullptr;
+    void* minPixel{}, * maxPixel{};
     double minBrightness = 0.0, maxBrightness = 0.0;
     if (!FreeImage_FindMinMax(src, &minBrightness, &maxBrightness, &minPixel, &maxPixel)) {
         return nullptr;

@@ -67,18 +67,18 @@ _MemoryReadProc(void *buffer, unsigned size, unsigned count, fi_handle handle) {
 
 	auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
 
-	for(x = 0; x < count; x++) {
+	for (x = 0; x < count; x++) {
 		long remaining_bytes = mem_header->file_length - mem_header->current_position;
 		//if there isn't size bytes left to read, set pos to eof and return a short count
-		if( remaining_bytes < (long)size ) {
-			if(remaining_bytes > 0) {
+		if (remaining_bytes < (long)size) {
+			if (remaining_bytes > 0) {
 				memcpy( buffer, (char *)mem_header->data + mem_header->current_position, remaining_bytes );
 			}
 			mem_header->current_position = mem_header->file_length;
 			break;
 		}
 		//copy size bytes count times
-		memcpy( buffer, (char *)mem_header->data + mem_header->current_position, size );
+		memcpy(buffer, (char *)mem_header->data + mem_header->current_position, size);
 		mem_header->current_position += size;
 		buffer = (char *)buffer + size;
 	}
@@ -93,15 +93,15 @@ _MemoryWriteProc(void *buffer, unsigned size, unsigned count, fi_handle handle) 
 	auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
 
 	//double the data block size if we need to
-	while( (mem_header->current_position + (long)(size * count)) >= mem_header->data_length ) {
+	while ((mem_header->current_position + (long)(size * count)) >= mem_header->data_length) {
 		//if we are at or above 1G, we cant double without going negative
-		if( mem_header->data_length & 0x40000000 ) {
+		if (mem_header->data_length & 0x40000000) {
 			//max 2G
-			if( mem_header->data_length == 0x7FFFFFFF ) {
+			if (mem_header->data_length == 0x7FFFFFFF) {
 				return 0;
 			}
 			newdatalen = 0x7FFFFFFF;
-		} else if( mem_header->data_length == 0 ) {
+		} else if (mem_header->data_length == 0) {
 			//default to 4K if nothing yet
 			newdatalen = 4096;
 		} else {
@@ -109,7 +109,7 @@ _MemoryWriteProc(void *buffer, unsigned size, unsigned count, fi_handle handle) 
 			newdatalen = mem_header->data_length << 1;
 		}
 		newdata = realloc( mem_header->data, newdatalen );
-		if( !newdata ) {
+		if (!newdata) {
 			return 0;
 		}
 		mem_header->data = newdata;
@@ -117,7 +117,7 @@ _MemoryWriteProc(void *buffer, unsigned size, unsigned count, fi_handle handle) 
 	}
 	memcpy( (char *)mem_header->data + mem_header->current_position, buffer, size * count );
 	mem_header->current_position += size * count;
-	if( mem_header->current_position > mem_header->file_length ) {
+	if (mem_header->current_position > mem_header->file_length) {
 		mem_header->file_length = mem_header->current_position;
 	}
 	return count;
@@ -130,24 +130,24 @@ _MemorySeekProc(fi_handle handle, long offset, int origin) {
 	// you can use _MemorySeekProc to reposition the pointer anywhere in a file
 	// the pointer can also be positioned beyond the end of the file
 
-	switch(origin) { //0 to filelen-1 are 'inside' the file
+	switch (origin) { //0 to filelen-1 are 'inside' the file
 		default:
 		case SEEK_SET: //can fseek() to 0-7FFFFFFF always
-			if( offset >= 0 ) {
+			if (offset >= 0) {
 				mem_header->current_position = offset;
 				return 0;
 			}
 			break;
 
 		case SEEK_CUR:
-			if( mem_header->current_position + offset >= 0 ) {
+			if (mem_header->current_position + offset >= 0) {
 				mem_header->current_position += offset;
 				return 0;
 			}
 			break;
 
 		case SEEK_END:
-			if( mem_header->file_length + offset >= 0 ) {
+			if (mem_header->file_length + offset >= 0) {
 				mem_header->current_position = mem_header->file_length + offset;
 				return 0;
 			}

@@ -121,7 +121,7 @@ GetRGBAPalette(FIBITMAP *dib, FIRGBA8 * const buffer) {
 	// clone the palette
 	const unsigned ncolors = FreeImage_GetColorsUsed(dib);
 	if (ncolors == 0) {
-		return NULL;
+		return nullptr;
 	}
 	memcpy(buffer, FreeImage_GetPalette(dib), ncolors * sizeof(FIRGBA8));
 	// merge the transparency table
@@ -146,7 +146,7 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 	// scale factor
 	const double dScale = double(uDstSize) / double(uSrcSize);
 
-	if(dScale < 1.0) {
+	if (dScale < 1.0) {
 		// minification
 		dWidth = dFilterWidth / dScale; 
 		dFScale = dScale; 
@@ -165,7 +165,7 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 
 	 // allocate list of contributions 
 	m_WeightTable = (Contribution*)malloc(m_LineLength * sizeof(Contribution));
-	for(unsigned u = 0; u < m_LineLength; u++) {
+	for (unsigned u = 0; u < m_LineLength; u++) {
 		// allocate contributions for every pixel
 		m_WeightTable[u].Weights = (double*)malloc(m_WindowSize * sizeof(double));
 	}
@@ -173,7 +173,7 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 	// offset for discrete to continuous coordinate conversion
 	const double dOffset = (0.5 / dScale);
 
-	for(unsigned u = 0; u < m_LineLength; u++) {
+	for (unsigned u = 0; u < m_LineLength; u++) {
 		// scan through line of contributions
 
 		// inverse mapping (discrete dst 'u' to continous src 'dCenter')
@@ -187,16 +187,16 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 		m_WeightTable[u].Right = iRight;
 
 		double dTotalWeight = 0;  // sum of weights (initialized to zero)
-		for(int iSrc = iLeft; iSrc < iRight; iSrc++) {
+		for (int iSrc = iLeft; iSrc < iRight; iSrc++) {
 			// calculate weights
 			const double weight = dFScale * pFilter->Filter(dFScale * ((double)iSrc + 0.5 - dCenter));
 			// assert((iSrc-iLeft) < m_WindowSize);
 			m_WeightTable[u].Weights[iSrc-iLeft] = weight;
 			dTotalWeight += weight;
 		}
-		if((dTotalWeight > 0) && (dTotalWeight != 1)) {
+		if ((dTotalWeight > 0) && (dTotalWeight != 1)) {
 			// normalize weight of neighbouring points
-			for(int iSrc = iLeft; iSrc < iRight; iSrc++) {
+			for (int iSrc = iLeft; iSrc < iRight; iSrc++) {
 				// normalize point
 				m_WeightTable[u].Weights[iSrc-iLeft] /= dTotalWeight; 
 			}
@@ -205,10 +205,10 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 		// simplify the filter, discarding null weights at the right
 		{			
 			int iTrailing = iRight - iLeft - 1;
-			while(m_WeightTable[u].Weights[iTrailing] == 0) {
+			while (m_WeightTable[u].Weights[iTrailing] == 0) {
 				m_WeightTable[u].Right--;
 				iTrailing--;
-				if(m_WeightTable[u].Right == m_WeightTable[u].Left) {
+				if (m_WeightTable[u].Right == m_WeightTable[u].Left) {
 					break;
 				}
 			}
@@ -219,7 +219,7 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 }
 
 CWeightsTable::~CWeightsTable() {
-	for(unsigned u = 0; u < m_LineLength; u++) {
+	for (unsigned u = 0; u < m_LineLength; u++) {
 		// free contributions for every pixel
 		free(m_WeightTable[u].Weights);
 	}
@@ -318,7 +318,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	}
 
 	FIRGBA8 pal_buffer[256];
-	const FIRGBA8 *src_pal = nullptr;
+	const FIRGBA8 *src_pal{};
 
 	// provide the source image's palette to the rescaler for
 	// FIC_PALETTE type images (this includes palletized greyscale
@@ -364,14 +364,14 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 	Decide which filtering order (xy or yx) is faster for this mapping. 
 	--- The theory ---
 	Try to minimize calculations by counting the number of convolution multiplies
-	if(dst_width*src_height <= src_width*dst_height) {
+	if (dst_width*src_height <= src_width*dst_height) {
 		// xy filtering
 	} else {
 		// yx filtering
 	}
 	--- The practice ---
 	Try to minimize calculations by counting the number of vertical convolutions (the most time consuming task)
-	if(dst_width*dst_height <= src_width*dst_height) {
+	if (dst_width*dst_height <= src_width*dst_height) {
 		// xy filtering
 	} else {
 		// yx filtering
@@ -382,7 +382,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 		// xy filtering
 		// -------------
 
-		FIBITMAP *tmp = nullptr;
+		FIBITMAP *tmp{};
 
 		if (src_width != dst_width) {
 			// source and destination widths are different so, we must
@@ -448,7 +448,7 @@ FIBITMAP* CResizeEngine::scale(FIBITMAP *src, unsigned dst_width, unsigned dst_h
 		// condition and more symmetric to the xy filtering case, these
 		// (src_width != dst_width) conditions are still in place.
 
-		FIBITMAP *tmp = nullptr;
+		FIBITMAP *tmp{};
 
 		if (src_height != dst_height) {
 			// source and destination heights are different so, we must
@@ -511,13 +511,13 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 	CWeightsTable weightsTable(m_pFilter, dst_width, src_width);
 
 	// step through rows
-	switch(FreeImage_GetImageType(src)) {
+	switch (FreeImage_GetImageType(src)) {
 		case FIT_BITMAP:
 		{
-			switch(FreeImage_GetBPP(src)) {
+			switch (FreeImage_GetBPP(src)) {
 				case 1:
 				{
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// transparently convert the 1-bit non-transparent greyscale image to 8 bpp
@@ -688,7 +688,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 
 				case 4:
 				{
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// transparently convert the non-transparent 4-bit greyscale image to 8 bpp; 
@@ -803,7 +803,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 
 				case 8:
 				{
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// scale the 8-bit non-transparent greyscale image
@@ -822,7 +822,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										const uint8_t * const pixel = src_bits + iLeft;
 										double value = 0;
 
-										// for(i = iLeft to iRight)
+										// for (i = iLeft to iRight)
 										for (unsigned i = 0; i < iLimit; i++) {
 											// scan between boundaries
 											// accumulate weighted effect of each neighboring pixel
@@ -847,7 +847,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										const uint8_t * const pixel = src_bits + iLeft;
 										double value = 0;
 
-										// for(i = iLeft to iRight)
+										// for (i = iLeft to iRight)
 										for (unsigned i = 0; i < iLimit; i++) {
 											// scan between boundaries
 											// accumulate weighted effect of each neighboring pixel
@@ -879,7 +879,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										const uint8_t * const pixel = src_bits + iLeft;
 										double r = 0, g = 0, b = 0;
 
-										// for(i = iLeft to iRight)
+										// for (i = iLeft to iRight)
 										for (unsigned i = 0; i < iLimit; i++) {
 											// scan between boundaries
 											// accumulate weighted effect of each neighboring pixel
@@ -911,7 +911,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										const uint8_t * const pixel = src_bits + iLeft;
 										double value = 0;
 
-										// for(i = iLeft to iRight)
+										// for (i = iLeft to iRight)
 										for (unsigned i = 0; i < iLimit; i++) {
 											// scan between boundaries
 											// accumulate weighted effect of each neighboring pixel
@@ -947,7 +947,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									const uint8_t * const pixel = src_bits + iLeft;
 									double r = 0, g = 0, b = 0, a = 0;
 
-									// for(i = iLeft to iRight)
+									// for (i = iLeft to iRight)
 									for (unsigned i = 0; i < iLimit; i++) {
 										// scan between boundaries
 										// accumulate weighted effect of each neighboring pixel
@@ -990,7 +990,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 								const uint16_t *pixel = src_bits + iLeft;
 								double r = 0, g = 0, b = 0;
 
-								// for(i = iLeft to iRight)
+								// for (i = iLeft to iRight)
 								for (unsigned i = 0; i < iLimit; i++) {
 									// scan between boundaries
 									// accumulate weighted effect of each neighboring pixel
@@ -1022,7 +1022,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 								const uint16_t *pixel = src_bits + iLeft;
 								double r = 0, g = 0, b = 0;
 
-								// for(i = iLeft to iRight)
+								// for (i = iLeft to iRight)
 								for (unsigned i = 0; i < iLimit; i++) {
 									// scan between boundaries
 									// accumulate weighted effect of each neighboring pixel
@@ -1059,7 +1059,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 							const uint8_t * pixel = src_bits + iLeft * 3;
 							double r = 0, g = 0, b = 0;
 
-							// for(i = iLeft to iRight)
+							// for (i = iLeft to iRight)
 							for (unsigned i = 0; i < iLimit; i++) {
 								// scan between boundaries
 								// accumulate weighted effect of each neighboring pixel
@@ -1095,7 +1095,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 							const uint8_t *pixel = src_bits + iLeft * 4;
 							double r = 0, g = 0, b = 0, a = 0;
 
-							// for(i = iLeft to iRight)
+							// for (i = iLeft to iRight)
 							for (unsigned i = 0; i < iLimit; i++) {
 								// scan between boundaries
 								// accumulate weighted effect of each neighboring pixel
@@ -1138,7 +1138,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					const uint16_t *pixel = src_bits + iLeft * wordspp;
 					double value = 0;
 
-					// for(i = iLeft to iRight)
+					// for (i = iLeft to iRight)
 					for (unsigned i = 0; i < iLimit; i++) {
 						// scan between boundaries
 						// accumulate weighted effect of each neighboring pixel
@@ -1172,7 +1172,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					const uint16_t *pixel = src_bits + iLeft * wordspp;
 					double r = 0, g = 0, b = 0;
 
-					// for(i = iLeft to iRight)
+					// for (i = iLeft to iRight)
 					for (unsigned i = 0; i < iLimit; i++) {
 						// scan between boundaries
 						// accumulate weighted effect of each neighboring pixel
@@ -1210,7 +1210,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					const uint16_t *pixel = src_bits + iLeft * wordspp;
 					double r = 0, g = 0, b = 0, a = 0;
 
-					// for(i = iLeft to iRight)
+					// for (i = iLeft to iRight)
 					for (unsigned i = 0; i < iLimit; i++) {
 						// scan between boundaries
 						// accumulate weighted effect of each neighboring pixel
@@ -1240,18 +1240,18 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 			// Calculate the number of floats per pixel (1 for 32-bit, 3 for 96-bit or 4 for 128-bit)
 			const unsigned floatspp = (FreeImage_GetLine(src) / src_width) / sizeof(float);
 
-			for(unsigned y = 0; y < height; y++) {
+			for (unsigned y = 0; y < height; y++) {
 				// scale each row
-				const float *src_bits = (float*)FreeImage_GetScanLine(src, y + src_offset_y) + src_offset_x / sizeof(float);
-				float *dst_bits = (float*)FreeImage_GetScanLine(dst, y);
+				auto *src_bits = (const float*)FreeImage_GetScanLine(src, y + src_offset_y) + src_offset_x / sizeof(float);
+				auto *dst_bits = (float*)FreeImage_GetScanLine(dst, y);
 
-				for(unsigned x = 0; x < dst_width; x++) {
+				for (unsigned x = 0; x < dst_width; x++) {
 					// loop through row
 					const unsigned iLeft = weightsTable.getLeftBoundary(x);    // retrieve left boundary
 					const unsigned iRight = weightsTable.getRightBoundary(x);  // retrieve right boundary
 					double value[4] = {0, 0, 0, 0};                            // 4 = 128 bpp max
 
-					for(unsigned i = iLeft; i < iRight; i++) {
+					for (unsigned i = iLeft; i < iRight; i++) {
 						// scan between boundaries
 						// accumulate weighted effect of each neighboring pixel
 						const double weight = weightsTable.getWeight(x, i-iLeft);
@@ -1282,19 +1282,19 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 	CWeightsTable weightsTable(m_pFilter, dst_height, src_height);
 
 	// step through columns
-	switch(FreeImage_GetImageType(src)) {
+	switch (FreeImage_GetImageType(src)) {
 		case FIT_BITMAP:
 		{
 			const unsigned dst_pitch = FreeImage_GetPitch(dst);
 			uint8_t * const dst_base = FreeImage_GetBits(dst);
 
-			switch(FreeImage_GetBPP(src)) {
+			switch (FreeImage_GetBPP(src)) {
 				case 1:
 				{
 					const unsigned src_pitch = FreeImage_GetPitch(src);
 					const uint8_t * const src_base = FreeImage_GetBits(src) + src_offset_y * src_pitch + (src_offset_x >> 3);
 
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// transparently convert the 1-bit non-transparent greyscale image to 8 bpp
@@ -1485,7 +1485,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 					const unsigned src_pitch = FreeImage_GetPitch(src);
 					const uint8_t *const src_base = FreeImage_GetBits(src) + src_offset_y * src_pitch + (src_offset_x >> 1);
 
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// transparently convert the non-transparent 4-bit greyscale image to 8 bpp; 
@@ -1607,7 +1607,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 					const unsigned src_pitch = FreeImage_GetPitch(src);
 					const uint8_t *const src_base = FreeImage_GetBits(src) + src_offset_y * src_pitch + src_offset_x;
 
-					switch(FreeImage_GetBPP(dst)) {
+					switch (FreeImage_GetBPP(dst)) {
 						case 8:
 						{
 							// scale the 8-bit non-transparent greyscale image into an 8 bpp destination image

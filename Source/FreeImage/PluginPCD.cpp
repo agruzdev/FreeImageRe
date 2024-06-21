@@ -87,7 +87,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -114,14 +114,14 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	unsigned width;
 	unsigned height;
 	const unsigned bpp = 24;
 	int scan_line_add   = 1;
 	int start_scan_line = 0;
 	
-	uint8_t *y1 = NULL, *y2 = NULL, *cbcr = NULL;
+	uint8_t *y1{}, *y2{}, *cbcr{};
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
@@ -155,9 +155,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	try {
 		// allocate the dib and write out the header
 		dib = FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-		if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
+		if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
-		if(header_only) {
+		if (header_only) {
 			return dib;
 		}
 
@@ -170,10 +170,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// temporary stuff to load PCD
 
-		uint8_t *y1 = (uint8_t*)malloc(width * sizeof(uint8_t));
-		uint8_t *y2 = (uint8_t*)malloc(width * sizeof(uint8_t));
-		uint8_t *cbcr = (uint8_t*)malloc(width * sizeof(uint8_t));
-		if(!y1 || !y2 || !cbcr) throw FI_MSG_ERROR_MEMORY;
+		auto *y1 = (uint8_t*)malloc(width * sizeof(uint8_t));
+		auto *y2 = (uint8_t*)malloc(width * sizeof(uint8_t));
+		auto *cbcr = (uint8_t*)malloc(width * sizeof(uint8_t));
+		if (!y1 || !y2 || !cbcr) throw FI_MSG_ERROR_MEMORY;
 
 		uint8_t *yl[] = { y1, y2 };
 
@@ -213,14 +213,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return dib;
 
 	} catch(const char *text) {
-		if(dib) FreeImage_Unload(dib);
-		if(cbcr) free(cbcr);
-		if(y2) free(y2);
-		if(y1) free(y1);
+		if (dib) FreeImage_Unload(dib);
+		if (cbcr) free(cbcr);
+		if (y2) free(y2);
+		if (y1) free(y1);
 
 		FreeImage_OutputMessageProc(s_format_id, text);
 
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -236,16 +236,16 @@ InitPCD(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
-	plugin->validate_proc = NULL;
+	plugin->save_proc = nullptr;
+	plugin->validate_proc = nullptr;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

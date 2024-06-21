@@ -59,8 +59,8 @@ FreeImage_Invert(FIBITMAP *src) {
 
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(src);
 
-	if(image_type == FIT_BITMAP) {
-		switch(bpp) {
+	if (image_type == FIT_BITMAP) {
+		switch (bpp) {
 			case 1 :
 			case 4 :
 			case 8 :
@@ -71,13 +71,13 @@ FreeImage_Invert(FIBITMAP *src) {
 				if (FreeImage_GetColorType(src) == FIC_PALETTE) {
 					FIRGBA8 *pal = FreeImage_GetPalette(src);
 
-					for(i = 0; i < FreeImage_GetColorsUsed(src); i++) {
+					for (i = 0; i < FreeImage_GetColorsUsed(src); i++) {
 						pal[i].red	= 255 - pal[i].red;
 						pal[i].green = 255 - pal[i].green;
 						pal[i].blue	= 255 - pal[i].blue;
 					}
 				} else {
-					for(y = 0; y < height; y++) {
+					for (y = 0; y < height; y++) {
 						uint8_t *bits = FreeImage_GetScanLine(src, y);
 
 						for (x = 0; x < FreeImage_GetLine(src); x++) {
@@ -95,10 +95,10 @@ FreeImage_Invert(FIBITMAP *src) {
 				// Calculate the number of bytes per pixel (3 for 24-bit or 4 for 32-bit)
 				const unsigned bytespp = FreeImage_GetLine(src) / width;
 
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					uint8_t *bits = FreeImage_GetScanLine(src, y);
-					for(x = 0; x < width; x++) {
-						for(k = 0; k < bytespp; k++) {
+					for (x = 0; x < width; x++) {
+						for (k = 0; k < bytespp; k++) {
 							bits[k] = ~bits[k];
 						}
 						bits += bytespp;
@@ -111,14 +111,14 @@ FreeImage_Invert(FIBITMAP *src) {
 				return FALSE;
 		}
 	}
-	else if((image_type == FIT_UINT16) || (image_type == FIT_RGB16) || (image_type == FIT_RGBA16)) {
+	else if ((image_type == FIT_UINT16) || (image_type == FIT_RGB16) || (image_type == FIT_RGBA16)) {
 		// Calculate the number of words per pixel (1 for 16-bit, 3 for 48-bit or 4 for 64-bit)
 		const unsigned wordspp = (FreeImage_GetLine(src) / width) / sizeof(uint16_t);
 
-		for(y = 0; y < height; y++) {
-			uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(src, y);
-			for(x = 0; x < width; x++) {
-				for(k = 0; k < wordspp; k++) {
+		for (y = 0; y < height; y++) {
+			auto *bits = (uint16_t*)FreeImage_GetScanLine(src, y);
+			for (x = 0; x < width; x++) {
+				for (k = 0; k < wordspp; k++) {
 					bits[k] = ~bits[k];
 				}
 				bits += wordspp;
@@ -150,24 +150,24 @@ plane (R,G, and B). Otherwise, the LUT is applied to the specified channel only.
 FIBOOL DLL_CALLCONV 
 FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL channel) {
 	unsigned x, y;
-	uint8_t *bits = NULL;
+	uint8_t *bits{};
 
-	if(!FreeImage_HasPixels(src) || !LUT || (FreeImage_GetImageType(src) != FIT_BITMAP))
+	if (!FreeImage_HasPixels(src) || !LUT || (FreeImage_GetImageType(src) != FIT_BITMAP))
 		return FALSE;
 
 	int bpp = FreeImage_GetBPP(src);
-	if((bpp != 8) && (bpp != 24) && (bpp != 32))
+	if ((bpp != 8) && (bpp != 24) && (bpp != 32))
 		return FALSE;
 
 	// apply the LUT
-	switch(bpp) {
+	switch (bpp) {
 
 		case 8 :
 		{
 			// if the dib has a colormap, apply the LUT to it
 			// else, apply the LUT to pixel values
 
-			if(FreeImage_GetColorType(src) == FIC_PALETTE) {
+			if (FreeImage_GetColorType(src) == FIC_PALETTE) {
 				FIRGBA8 *rgb = FreeImage_GetPalette(src);
 				for (unsigned pal = 0; pal < FreeImage_GetColorsUsed(src); pal++) {
 					rgb->red   = LUT[rgb->red];
@@ -177,9 +177,9 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 				}
 			}
 			else {
-				for(y = 0; y < FreeImage_GetHeight(src); y++) {
+				for (y = 0; y < FreeImage_GetHeight(src); y++) {
 					bits =  FreeImage_GetScanLine(src, y);
-					for(x = 0; x < FreeImage_GetWidth(src); x++) {
+					for (x = 0; x < FreeImage_GetWidth(src); x++) {
 						bits[x] = LUT[ bits[x] ];
 					}
 				}
@@ -193,11 +193,11 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 		{
 			const int bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 
-			switch(channel) {
+			switch (channel) {
 				case FICC_RGB :
-					for(y = 0; y < FreeImage_GetHeight(src); y++) {
+					for (y = 0; y < FreeImage_GetHeight(src); y++) {
 						bits =  FreeImage_GetScanLine(src, y);
-						for(x = 0; x < FreeImage_GetWidth(src); x++) {
+						for (x = 0; x < FreeImage_GetWidth(src); x++) {
 							bits[FI_RGBA_BLUE]	= LUT[ bits[FI_RGBA_BLUE] ];	// B
 							bits[FI_RGBA_GREEN] = LUT[ bits[FI_RGBA_GREEN] ];	// G
 							bits[FI_RGBA_RED]	= LUT[ bits[FI_RGBA_RED] ];		// R
@@ -208,9 +208,9 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 					break;
 
 				case FICC_BLUE :
-					for(y = 0; y < FreeImage_GetHeight(src); y++) {
+					for (y = 0; y < FreeImage_GetHeight(src); y++) {
 						bits =  FreeImage_GetScanLine(src, y);
-						for(x = 0; x < FreeImage_GetWidth(src); x++) {
+						for (x = 0; x < FreeImage_GetWidth(src); x++) {
 							bits[FI_RGBA_BLUE] = LUT[ bits[FI_RGBA_BLUE] ];		// B
 							
 							bits += bytespp;
@@ -219,9 +219,9 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 					break;
 
 				case FICC_GREEN :
-					for(y = 0; y < FreeImage_GetHeight(src); y++) {
+					for (y = 0; y < FreeImage_GetHeight(src); y++) {
 						bits =  FreeImage_GetScanLine(src, y);
-						for(x = 0; x < FreeImage_GetWidth(src); x++) {
+						for (x = 0; x < FreeImage_GetWidth(src); x++) {
 							bits[FI_RGBA_GREEN] = LUT[ bits[FI_RGBA_GREEN] ];	// G
 							
 							bits += bytespp;
@@ -230,9 +230,9 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 					break;
 
 				case FICC_RED :
-					for(y = 0; y < FreeImage_GetHeight(src); y++) {
+					for (y = 0; y < FreeImage_GetHeight(src); y++) {
 						bits =  FreeImage_GetScanLine(src, y);
-						for(x = 0; x < FreeImage_GetWidth(src); x++) {
+						for (x = 0; x < FreeImage_GetWidth(src); x++) {
 							bits[FI_RGBA_RED] = LUT[ bits[FI_RGBA_RED] ];		// R
 							
 							bits += bytespp;
@@ -241,10 +241,10 @@ FreeImage_AdjustCurve(FIBITMAP *src, uint8_t *LUT, FREE_IMAGE_COLOR_CHANNEL chan
 					break;
 					
 				case FICC_ALPHA :
-					if(32 == bpp) {
-						for(y = 0; y < FreeImage_GetHeight(src); y++) {
+					if (32 == bpp) {
+						for (y = 0; y < FreeImage_GetHeight(src); y++) {
 							bits =  FreeImage_GetScanLine(src, y);
-							for(x = 0; x < FreeImage_GetWidth(src); x++) {
+							for (x = 0; x < FreeImage_GetWidth(src); x++) {
 								bits[FI_RGBA_ALPHA] = LUT[ bits[FI_RGBA_ALPHA] ];	// A
 								
 								bits += bytespp;
@@ -274,16 +274,16 @@ FIBOOL DLL_CALLCONV
 FreeImage_AdjustGamma(FIBITMAP *src, double gamma) {
 	uint8_t LUT[256];		// Lookup table
 
-	if(!FreeImage_HasPixels(src) || (gamma <= 0))
+	if (!FreeImage_HasPixels(src) || (gamma <= 0))
 		return FALSE;
 	
 	// Build the lookup table
 
 	double exponent = 1 / gamma;
 	double v = 255.0 * (double)pow((double)255, -exponent);
-	for(int i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		double color = (double)pow((double)i, exponent) * v;
-		if(color > 255)
+		if (color > 255)
 			color = 255;
 		LUT[i] = (uint8_t)floor(color + 0.5);
 	}
@@ -305,12 +305,12 @@ FreeImage_AdjustBrightness(FIBITMAP *src, double percentage) {
 	uint8_t LUT[256];		// Lookup table
 	double value;
 
-	if(!FreeImage_HasPixels(src))
+	if (!FreeImage_HasPixels(src))
 		return FALSE;
 	
 	// Build the lookup table
 	const double scale = (100 + percentage) / 100;
-	for(int i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		value = i * scale;
 		value = MAX(0.0, MIN(value, 255.0));
 		LUT[i] = (uint8_t)floor(value + 0.5);
@@ -331,12 +331,12 @@ FreeImage_AdjustContrast(FIBITMAP *src, double percentage) {
 	uint8_t LUT[256];		// Lookup table
 	double value;
 
-	if(!FreeImage_HasPixels(src))
+	if (!FreeImage_HasPixels(src))
 		return FALSE;
 	
 	// Build the lookup table
 	const double scale = (100 + percentage) / 100;
-	for(int i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		value = 128 + (i - 128) * scale;
 		value = MAX(0.0, MIN(value, 255.0));
 		LUT[i] = (uint8_t)floor(value + 0.5);
@@ -357,22 +357,22 @@ bit depth is not supported (nothing is done).
 FIBOOL DLL_CALLCONV 
 FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL channel) {
 	uint8_t pixel;
-	uint8_t *bits = NULL;
+	uint8_t *bits{};
 	unsigned x, y;
 
-	if(!FreeImage_HasPixels(src) || !histo) return FALSE;
+	if (!FreeImage_HasPixels(src) || !histo) return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(src);
 	const unsigned height = FreeImage_GetHeight(src);
 	const unsigned bpp    = FreeImage_GetBPP(src);
 
-	if(bpp == 8) {
+	if (bpp == 8) {
 		// clear histogram array
 		memset(histo, 0, 256 * sizeof(uint32_t));
 		// compute histogram for black channel
-		for(y = 0; y < height; y++) {
+		for (y = 0; y < height; y++) {
 			bits = FreeImage_GetScanLine(src, y);
-			for(x = 0; x < width; x++) {
+			for (x = 0; x < width; x++) {
 				// get pixel value
 				pixel = bits[x];
 				histo[pixel]++;
@@ -380,18 +380,18 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 		}
 		return TRUE;
 	}
-	else if((bpp == 24) || (bpp == 32)) {
+	else if ((bpp == 24) || (bpp == 32)) {
 		int bytespp = bpp / 8;	// bytes / pixel
 
 		// clear histogram array
 		memset(histo, 0, 256 * sizeof(uint32_t));
 
-		switch(channel) {
+		switch (channel) {
 			case FICC_RED:
 				// compute histogram for red channel
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					bits =  FreeImage_GetScanLine(src, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						pixel = bits[FI_RGBA_RED];	// R
 						histo[pixel]++;
 						bits += bytespp;
@@ -401,9 +401,9 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 
 			case FICC_GREEN:
 				// compute histogram for green channel
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					bits =  FreeImage_GetScanLine(src, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						pixel = bits[FI_RGBA_GREEN];	// G
 						histo[pixel]++;
 						bits += bytespp;
@@ -413,9 +413,9 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 
 			case FICC_BLUE:
 				// compute histogram for blue channel
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					bits =  FreeImage_GetScanLine(src, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						pixel = bits[FI_RGBA_BLUE];	// B
 						histo[pixel]++;
 						bits += bytespp;
@@ -426,9 +426,9 @@ FreeImage_GetHistogram(FIBITMAP *src, uint32_t *histo, FREE_IMAGE_COLOR_CHANNEL 
 			case FICC_BLACK:
 			case FICC_RGB:
 				// compute histogram for black channel
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					bits =  FreeImage_GetScanLine(src, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						// RGB to GREY conversion
 						pixel = GREY(bits[FI_RGBA_RED], bits[FI_RGBA_GREEN], bits[FI_RGBA_BLUE]);
 						histo[pixel]++;
@@ -460,7 +460,7 @@ namespace
 		{ }
 
 		bool Discardable() const {
-			return mHist == nullptr;
+			return !mHist;
 		}
 
 		void SetZero(uint32_t v) const {
@@ -1199,13 +1199,13 @@ FreeImage_ApplyColorMapping(FIBITMAP *dib, FIRGBA8 *srccolors, FIRGBA8 *dstcolor
 			return result;
 		}
 		case 16: {
-			uint16_t *src16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
-			if (NULL == src16) {
+			auto *src16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
+			if (!src16) {
 				return 0;
 			}
 
-			uint16_t *dst16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
-			if (NULL == dst16) {
+			auto *dst16 = (uint16_t *)malloc(sizeof(uint16_t) * count);
+			if (!dst16) {
 				free(src16);
 				return 0;
 			}

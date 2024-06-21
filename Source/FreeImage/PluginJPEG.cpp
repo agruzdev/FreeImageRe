@@ -146,7 +146,7 @@ jpeg_error_exit (j_common_ptr cinfo) {
 	error_ptr->pub.output_message(cinfo);
 
 	// allow JPEG with unknown markers
-	if(error_ptr->pub.msg_code != JERR_UNKNOWN_MARKER) {
+	if (error_ptr->pub.msg_code != JERR_UNKNOWN_MARKER) {
 	
 		// let the memory manager delete any temp files before we die
 		jpeg_destroy(cinfo);
@@ -374,7 +374,7 @@ jpeg_freeimage_src (j_decompress_ptr cinfo, fi_handle infile, FreeImageIO *io) {
 
 	// allocate memory for the buffer. is released automatically in the end
 
-	if (cinfo->src == NULL) {
+	if (!cinfo->src) {
 		cinfo->src = (struct jpeg_source_mgr *) (*cinfo->mem->alloc_small)
 			((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(SourceManager));
 
@@ -395,7 +395,7 @@ jpeg_freeimage_src (j_decompress_ptr cinfo, fi_handle infile, FreeImageIO *io) {
 	src->infile = infile;
 	src->m_io = io;
 	src->pub.bytes_in_buffer = 0;		// forces fill_input_buffer on first read 
-	src->pub.next_input_byte = NULL;	// until buffer loaded 
+	src->pub.next_input_byte = nullptr;	// until buffer loaded 
 }
 
 /**
@@ -407,7 +407,7 @@ GLOBAL(void)
 jpeg_freeimage_dst (j_compress_ptr cinfo, fi_handle outfile, FreeImageIO *io) {
 	freeimage_dst_ptr dest;
 
-	if (cinfo->dest == NULL) {
+	if (!cinfo->dest) {
 		cinfo->dest = (struct jpeg_destination_mgr *)(*cinfo->mem->alloc_small)
 			((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(DestinationManager));
 	}
@@ -433,14 +433,14 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	uint8_t *profile = (uint8_t*)dataptr;
 
 	// read the comment
-	char *value = (char*)malloc((length + 1) * sizeof(char));
-	if(value == NULL) return FALSE;
+	auto *value = (char*)malloc((length + 1) * sizeof(char));
+	if (!value) return FALSE;
 	memcpy(value, profile, length);
 	value[length] = '\0';
 
 	// create a tag
 	FITAG *tag = FreeImage_CreateTag();
-	if(tag) {
+	if (tag) {
 		unsigned int count = (unsigned int)length + 1;	// includes the null value
 
 		FreeImage_SetTagID(tag, JPEG_COM);
@@ -474,10 +474,10 @@ marker_is_icc(jpeg_saved_marker_ptr marker) {
     // marker identifying string "ICC_PROFILE" (null-terminated)
 	const uint8_t icc_signature[12] = { 0x49, 0x43, 0x43, 0x5F, 0x50, 0x52, 0x4F, 0x46, 0x49, 0x4C, 0x45, 0x00 };
 
-	if(marker->marker == ICC_MARKER) {
+	if (marker->marker == ICC_MARKER) {
 		// verify the identifying string
-		if(marker->data_length >= ICC_HEADER_SIZE) {
-			if(memcmp(icc_signature, marker->data, sizeof(icc_signature)) == 0) {
+		if (marker->data_length >= ICC_HEADER_SIZE) {
+			if (memcmp(icc_signature, marker->data, sizeof(icc_signature)) == 0) {
 				return TRUE;
 			}
 		}
@@ -518,7 +518,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	unsigned data_length[MAX_SEQ_NO+1];	// size of profile data in marker
 	unsigned data_offset[MAX_SEQ_NO+1];	// offset for data in marker
 	
-	*icc_data_ptr = NULL;		// avoid confusion if FALSE return
+	*icc_data_ptr = nullptr;		// avoid confusion if FALSE return
 	*icc_data_len = 0;
 	
 	/**
@@ -528,7 +528,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	
 	memset(marker_present, 0, (MAX_SEQ_NO + 1));
 	
-	for(marker = cinfo->marker_list; marker != NULL; marker = marker->next) {
+	for (marker = cinfo->marker_list; marker; marker = marker->next) {
 		if (marker_is_icc(marker)) {
 			if (num_markers == 0) {
 				// number of markers
@@ -559,7 +559,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	*/
 	
 	total_length = 0;
-	for(seq_no = 1; seq_no <= num_markers; seq_no++) {
+	for (seq_no = 1; seq_no <= num_markers; seq_no++) {
 		if (marker_present[seq_no] == 0) {
 			return FALSE;		// missing sequence number
 		}
@@ -572,11 +572,11 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	
 	// allocate space for assembled data 
 	icc_data = (JOCTET *) malloc(total_length * sizeof(JOCTET));
-	if (icc_data == NULL)
+	if (!icc_data)
 		return FALSE;		// out of memory
 	
 	// and fill it in
-	for (marker = cinfo->marker_list; marker != NULL; marker = marker->next) {
+	for (marker = cinfo->marker_list; marker; marker = marker->next) {
 		if (marker_is_icc(marker)) {
 			JOCTET FAR *src_ptr;
 			JOCTET *dst_ptr;
@@ -623,14 +623,14 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 	size_t length = datalen;
 	uint8_t *profile = (uint8_t*)dataptr;
 
-	if(length <= xmp_signature_size) {
+	if (length <= xmp_signature_size) {
 		// avoid reading corrupted or empty data 
 		return FALSE;
 	}
 
 	// verify the identifying string
 
-	if(memcmp(xmp_signature, profile, strlen(xmp_signature)) == 0) {
+	if (memcmp(xmp_signature, profile, strlen(xmp_signature)) == 0) {
 		// XMP profile
 
 		profile += xmp_signature_size;
@@ -638,7 +638,7 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 
 		// create a tag
 		FITAG *tag = FreeImage_CreateTag();
-		if(tag) {
+		if (tag) {
 			FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
 			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 			FreeImage_SetTagLength(tag, (uint32_t)length);
@@ -668,7 +668,7 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 */
 static FIBOOL 
 jpeg_read_jfxx(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
-	if(datalen < 6) {
+	if (datalen < 6) {
 		return FALSE;
 	}
 	
@@ -679,7 +679,7 @@ jpeg_read_jfxx(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	const uint8_t type = *data;
 	++data, --remaining;
 
-	switch(type) {
+	switch (type) {
 		case JFXX_TYPE_JPEG:
 		{
 			// load the thumbnail
@@ -713,15 +713,15 @@ static FIBOOL
 read_markers(j_decompress_ptr cinfo, FIBITMAP *dib) {
 	jpeg_saved_marker_ptr marker;
 
-	for(marker = cinfo->marker_list; marker != NULL; marker = marker->next) {
-		switch(marker->marker) {
+	for (marker = cinfo->marker_list; marker; marker = marker->next) {
+		switch (marker->marker) {
 			case JPEG_APP0:
 				// JFIF is handled by libjpeg already, handle JFXX
-				if(memcmp(marker->data, "JFIF" , 5) == 0) {
+				if (memcmp(marker->data, "JFIF" , 5) == 0) {
 					continue;
 				}
-				if(memcmp(marker->data, "JFXX" , 5) == 0) {
-					if(!cinfo->saw_JFIF_marker || cinfo->JFIF_minor_version < 2) {
+				if (memcmp(marker->data, "JFXX" , 5) == 0) {
+					if (!cinfo->saw_JFIF_marker || cinfo->JFIF_minor_version < 2) {
 						FreeImage_OutputMessageProc(s_format_id, "Warning: non-standard JFXX segment");
 					}					
 					jpeg_read_jfxx(dib, marker->data, marker->data_length);
@@ -746,10 +746,10 @@ read_markers(j_decompress_ptr cinfo, FIBITMAP *dib) {
 	}
 
 	// ICC profile
-	uint8_t *icc_profile = NULL;
+	uint8_t *icc_profile{};
 	unsigned icc_length = 0;
 
-	if( jpeg_read_icc_profile(cinfo, &icc_profile, &icc_length) ) {
+	if (jpeg_read_icc_profile(cinfo, &icc_profile, &icc_length)) {
 		// copy ICC profile data
 		FreeImage_CreateICCProfile(dib, icc_profile, icc_length);
 		// clean up
@@ -768,15 +768,15 @@ read_markers(j_decompress_ptr cinfo, FIBITMAP *dib) {
 */
 static FIBOOL 
 jpeg_write_comment(j_compress_ptr cinfo, FIBITMAP *dib) {
-	FITAG *tag = NULL;
+	FITAG *tag{};
 
 	// write user comment as a JPEG_COM marker
 	FreeImage_GetMetadata(FIMD_COMMENTS, dib, "Comment", &tag);
-	if(tag) {
+	if (tag) {
 		const char *tag_value = (char*)FreeImage_GetTagValue(tag);
 
-		if(NULL != tag_value) {
-			for(long i = 0; i < (long)strlen(tag_value); i+= MAX_BYTES_IN_MARKER) {
+		if (tag_value) {
+			for (long i = 0; i < (long)strlen(tag_value); i+= MAX_BYTES_IN_MARKER) {
 				jpeg_write_marker(cinfo, JPEG_COM, (uint8_t*)tag_value + i, MIN((long)strlen(tag_value + i), MAX_BYTES_IN_MARKER));
 			}
 			return TRUE;
@@ -798,11 +798,11 @@ jpeg_write_icc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 	if (iccProfile->size && iccProfile->data) {
 		// ICC_HEADER_SIZE: ICC signature is 'ICC_PROFILE' + 2 bytes
 
-		uint8_t *profile = (uint8_t*)malloc((iccProfile->size + ICC_HEADER_SIZE) * sizeof(uint8_t));
-		if(profile == NULL) return FALSE;
+		auto *profile = (uint8_t*)malloc((iccProfile->size + ICC_HEADER_SIZE) * sizeof(uint8_t));
+		if (!profile) return FALSE;
 		memcpy(profile, icc_signature, 12);
 
-		for(long i = 0; i < (long)iccProfile->size; i += MAX_DATA_BYTES_IN_MARKER) {
+		for (long i = 0; i < (long)iccProfile->size; i += MAX_DATA_BYTES_IN_MARKER) {
 			unsigned length = MIN((long)(iccProfile->size - i), MAX_DATA_BYTES_IN_MARKER);
 			// sequence number
 			profile[12] = (uint8_t) ((i / MAX_DATA_BYTES_IN_MARKER) + 1);
@@ -830,19 +830,19 @@ jpeg_write_iptc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 	//const char *ps_header = "Photoshop 3.0\x08BIM\x04\x04\x0\x0\x0\x0";
 	const unsigned tag_length = 26;
 
-	if(FreeImage_GetMetadataCount(FIMD_IPTC, dib)) {
-		uint8_t *profile = NULL;
+	if (FreeImage_GetMetadataCount(FIMD_IPTC, dib)) {
+		uint8_t *profile{};
 		unsigned profile_size = 0;
 
 		// create a binary profile
-		if(write_iptc_profile(dib, &profile, &profile_size)) {
+		if (write_iptc_profile(dib, &profile, &profile_size)) {
 
 			// write the profile
-			for(long i = 0; i < (long)profile_size; i += 65517L) {
+			for (long i = 0; i < (long)profile_size; i += 65517L) {
 				unsigned length = MIN((long)profile_size - i, 65517L);
 				unsigned roundup = length & 0x01;	// needed for Photoshop
-				uint8_t *iptc_profile = (uint8_t*)malloc(length + roundup + tag_length);
-				if(iptc_profile == NULL) break;
+				auto *iptc_profile = (uint8_t*)malloc(length + roundup + tag_length);
+				if (!iptc_profile) break;
 				// Photoshop identification string
 				memcpy(&iptc_profile[0], "Photoshop 3.0\x0", 14);
 				// 8BIM segment type
@@ -852,7 +852,7 @@ jpeg_write_iptc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 				iptc_profile[25] = (uint8_t)(length & 0xFF);
 				// segment data
 				memcpy(&iptc_profile[tag_length], &profile[i], length);
-				if(roundup)
+				if (roundup)
 					iptc_profile[length + tag_length] = 0;
 				jpeg_write_marker(cinfo, IPTC_MARKER, iptc_profile, length + roundup + tag_length);
 				free(iptc_profile);
@@ -877,23 +877,23 @@ jpeg_write_xmp_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 	// marker identifying string for XMP (null terminated)
 	const char *xmp_signature = "http://ns.adobe.com/xap/1.0/";
 
-	FITAG *tag_xmp = NULL;
+	FITAG *tag_xmp{};
 	FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag_xmp);
 
-	if(tag_xmp) {
-		const uint8_t *tag_value = (uint8_t*)FreeImage_GetTagValue(tag_xmp);
+	if (tag_xmp) {
+		auto *tag_value = (const uint8_t*)FreeImage_GetTagValue(tag_xmp);
 
-		if(NULL != tag_value) {
+		if (tag_value) {
 			// XMP signature is 29 bytes long
 			unsigned int xmp_header_size = (unsigned int)strlen(xmp_signature) + 1;
 
 			uint32_t tag_length = FreeImage_GetTagLength(tag_xmp);
 
-			uint8_t *profile = (uint8_t*)malloc((tag_length + xmp_header_size) * sizeof(uint8_t));
-			if(profile == NULL) return FALSE;
+			auto *profile = (uint8_t*)malloc((tag_length + xmp_header_size) * sizeof(uint8_t));
+			if (!profile) return FALSE;
 			memcpy(profile, xmp_signature, xmp_header_size);
 
-			for(uint32_t i = 0; i < tag_length; i += 65504L) {
+			for (uint32_t i = 0; i < tag_length; i += 65504L) {
 				unsigned length = MIN((long)(tag_length - i), 65504L);
 				
 				memcpy(profile + xmp_header_size, tag_value + i, length);
@@ -918,25 +918,25 @@ jpeg_write_exif_profile_raw(j_compress_ptr cinfo, FIBITMAP *dib) {
     // marker identifying string for Exif = "Exif\0\0"
     uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
-	FITAG *tag_exif = NULL;
+	FITAG *tag_exif{};
 	FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &tag_exif);
 
-	if(tag_exif) {
-		const uint8_t *tag_value = (uint8_t*)FreeImage_GetTagValue(tag_exif);
+	if (tag_exif) {
+		auto *tag_value = (const uint8_t*)FreeImage_GetTagValue(tag_exif);
 		
 		// verify the identifying string
-		if(memcmp(exif_signature, tag_value, sizeof(exif_signature)) != 0) {
+		if (memcmp(exif_signature, tag_value, sizeof(exif_signature)) != 0) {
 			// not an Exif profile
 			return FALSE;
 		}
 
-		if(NULL != tag_value) {
+		if (tag_value) {
 			uint32_t tag_length = FreeImage_GetTagLength(tag_exif);
 
-			uint8_t *profile = (uint8_t*)malloc(tag_length * sizeof(uint8_t));
-			if(profile == NULL) return FALSE;
+			auto *profile = (uint8_t*)malloc(tag_length * sizeof(uint8_t));
+			if (!profile) return FALSE;
 
-			for(uint32_t i = 0; i < tag_length; i += 65504L) {
+			for (uint32_t i = 0; i < tag_length; i += 65504L) {
 				unsigned length = MIN((long)(tag_length - i), 65504L);
 				
 				memcpy(profile, tag_value + i, length);
@@ -959,11 +959,11 @@ static FIBOOL
 jpeg_write_jfxx(j_compress_ptr cinfo, FIBITMAP *dib) {
 	// get the thumbnail to be stored
 	FIBITMAP* thumbnail = FreeImage_GetThumbnail(dib);
-	if(!thumbnail) {
+	if (!thumbnail) {
 		return TRUE;
 	}
 	// check for a compatible output format
-	if((FreeImage_GetImageType(thumbnail) != FIT_BITMAP) || (FreeImage_GetBPP(thumbnail) != 8) && (FreeImage_GetBPP(thumbnail) != 24)) {
+	if ((FreeImage_GetImageType(thumbnail) != FIT_BITMAP) || (FreeImage_GetBPP(thumbnail) != 8) && (FreeImage_GetBPP(thumbnail) != 24)) {
 		FreeImage_OutputMessageProc(s_format_id, FI_MSG_WARNING_INVALID_THUMBNAIL);
 		return FALSE;
 	}
@@ -972,11 +972,11 @@ jpeg_write_jfxx(j_compress_ptr cinfo, FIBITMAP *dib) {
 	// return the memory block only if its size is within JFXX marker size limit!
 	FIMEMORY *stream = FreeImage_OpenMemory();
 	
-	if(FreeImage_SaveToMemory(FIF_JPEG, thumbnail, stream, JPEG_BASELINE)) {
+	if (FreeImage_SaveToMemory(FIF_JPEG, thumbnail, stream, JPEG_BASELINE)) {
 		// check that the memory block size is within JFXX marker size limit
 		FreeImage_SeekMemory(stream, 0, SEEK_END);
 		const long eof = FreeImage_TellMemory(stream);
-		if(eof > MAX_JFXX_THUMB_SIZE) {
+		if (eof > MAX_JFXX_THUMB_SIZE) {
 			FreeImage_OutputMessageProc(s_format_id, "Warning: attached thumbnail is %d bytes larger than maximum supported size - Thumbnail saving aborted", eof - MAX_JFXX_THUMB_SIZE);
 			FreeImage_CloseMemory(stream);
 			return FALSE;
@@ -986,7 +986,7 @@ jpeg_write_jfxx(j_compress_ptr cinfo, FIBITMAP *dib) {
 		return FALSE;
 	}
 
-	uint8_t* thData = NULL;
+	uint8_t* thData{};
 	uint32_t thSize = 0;
 	
 	FreeImage_AcquireMemory(stream, &thData, &thSize);	
@@ -1015,7 +1015,7 @@ jpeg_write_jfxx(j_compress_ptr cinfo, FIBITMAP *dib) {
 	
 	const uint8_t *thData_end = thData + thSize;
 
-	while(thData < thData_end) {
+	while (thData < thData_end) {
 		*(out)++ = *(thData)++;
 		if (--bufRemain == 0) {	
 			// buffer full - flush
@@ -1064,7 +1064,7 @@ store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 	char buffer[256];
 	// create a tag
 	FITAG *tag = FreeImage_CreateTag();
-	if(tag) {
+	if (tag) {
 		size_t length = 0;
 		// set the original width
 		sprintf(buffer, "%d", (int)width);
@@ -1157,7 +1157,7 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (handle) {
-		FIBITMAP *dib = NULL;
+		FIBITMAP *dib{};
 
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
@@ -1180,7 +1180,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// If we get here, the JPEG code has signaled an error.
 				// We need to clean up the JPEG object, close the input file, and return.
 				jpeg_destroy_decompress(&cinfo);
-				throw (const char*)NULL;
+				throw (const char*)nullptr;
 			}
 
 			jpeg_create_decompress(&cinfo);
@@ -1192,7 +1192,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// step 2b: save special markers for later reading
 			
 			jpeg_save_markers(&cinfo, JPEG_COM, 0xFFFF);
-			for(int m = 0; m < 16; m++) {
+			for (int m = 0; m < 16; m++) {
 				jpeg_save_markers(&cinfo, JPEG_APP0 + m, 0xFFFF);
 			}
 
@@ -1208,15 +1208,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			unsigned int scale_denom = 1;		// fraction by which to scale image
 			int	requested_size = flags >> 16;	// requested user size in pixels
-			if(requested_size > 0) {
+			if (requested_size > 0) {
 				// the JPEG codec can perform x2, x4 or x8 scaling on loading
 				// try to find the more appropriate scaling according to user's need
 				double scale = MAX((double)cinfo.image_width, (double)cinfo.image_height) / (double)requested_size;
-				if(scale >= 8) {
+				if (scale >= 8) {
 					scale_denom = 8;
-				} else if(scale >= 4) {
+				} else if (scale >= 4) {
 					scale_denom = 4;
-				} else if(scale >= 2) {
+				} else if (scale >= 2) {
 					scale_denom = 2;
 				}
 			}
@@ -1239,22 +1239,22 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// step 5b: allocate dib and init header
 
-			if((cinfo.output_components == 4) && (cinfo.out_color_space == JCS_CMYK)) {
+			if ((cinfo.output_components == 4) && (cinfo.out_color_space == JCS_CMYK)) {
 				// CMYK image
-				if((flags & JPEG_CMYK) == JPEG_CMYK) {
+				if ((flags & JPEG_CMYK) == JPEG_CMYK) {
 					// load as CMYK
 					dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-					if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
+					if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 					FreeImage_GetICCProfile(dib)->flags |= FIICC_COLOR_IS_CMYK;
 				} else {
 					// load as CMYK and convert to RGB
 					dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-					if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
+					if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 			} else {
 				// RGB or greyscale image
 				dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 8 * cinfo.output_components, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-				if(!dib) throw FI_MSG_ERROR_DIB_MEMORY;
+				if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
 				if (cinfo.output_components == 1) {
 					// build a greyscale palette
@@ -1267,7 +1267,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-			if(scale_denom != 1) {
+			if (scale_denom != 1) {
 				// store original size info if a scaling was requested
 				store_size_info(dib, cinfo.image_width, cinfo.image_height);
 			}
@@ -1299,7 +1299,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// step 7a: while (scan lines remain to be read) jpeg_read_scanlines(...);
 
-			if((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) != JPEG_CMYK)) {
+			if ((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) != JPEG_CMYK)) {
 				// convert from CMYK to RGB
 
 				JSAMPARRAY buffer;		// output row buffer
@@ -1316,7 +1316,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					jpeg_read_scanlines(&cinfo, buffer, 1);
 
-					for(unsigned x = 0; x < cinfo.output_width; x++) {
+					for (unsigned x = 0; x < cinfo.output_width; x++) {
 						uint16_t K = (uint16_t)src[3];
 						dst[FI_RGBA_RED]   = (uint8_t)((K * src[0]) / 255);	// C -> R
 						dst[FI_RGBA_GREEN] = (uint8_t)((K * src[1]) / 255);	// M -> G
@@ -1329,7 +1329,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// if original image is CMYK but is converted to RGB, remove ICC profile from Exif-TIFF metadata
 				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", NULL);
 
-			} else if((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) == JPEG_CMYK)) {
+			} else if ((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) == JPEG_CMYK)) {
 				// convert from LibJPEG CMYK to standard CMYK
 
 				JSAMPARRAY buffer;		// output row buffer
@@ -1346,7 +1346,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					jpeg_read_scanlines(&cinfo, buffer, 1);
 
-					for(unsigned x = 0; x < cinfo.output_width; x++) {
+					for (unsigned x = 0; x < cinfo.output_width; x++) {
 						// CMYK pixels are inverted
 						dst[0] = ~src[0];	// C
 						dst[1] = ~src[1];	// M
@@ -1384,7 +1384,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			jpeg_destroy_decompress(&cinfo);
 
 			// check for automatic Exif rotation
-			if(!header_only && ((flags & JPEG_EXIFROTATE) == JPEG_EXIFROTATE)) {
+			if (!header_only && ((flags & JPEG_EXIFROTATE) == JPEG_EXIFROTATE)) {
 				RotateExif(&dib);
 			}
 
@@ -1394,16 +1394,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		} catch (const char *text) {
 			jpeg_destroy_decompress(&cinfo);
-			if(NULL != dib) {
+			if (dib) {
 				FreeImage_Unload(dib);
 			}
-			if(NULL != text) {
+			if (text) {
 				FreeImage_OutputMessageProc(s_format_id, text);
 			}
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ----------------------------------------------------------
@@ -1423,7 +1423,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				throw sError;
 			}
 
-			if(bpp == 8) {
+			if (bpp == 8) {
 				// allow grey, reverse grey and palette 
 				if ((color_type != FIC_MINISBLACK) && (color_type != FIC_MINISWHITE) && (color_type != FIC_PALETTE)) {
 					throw sError;
@@ -1446,7 +1446,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				// If we get here, the JPEG code has signaled an error.
 				// We need to clean up the JPEG object, close the input file, and return.
 				jpeg_destroy_compress(&cinfo);
-				throw (const char*)NULL;
+				throw (const char*)nullptr;
 			}
 
 			// Now we can initialize the JPEG compression object
@@ -1462,7 +1462,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			cinfo.image_width = FreeImage_GetWidth(dib);
 			cinfo.image_height = FreeImage_GetHeight(dib);
 
-			switch(color_type) {
+			switch (color_type) {
 				case FIC_MINISBLACK :
 				case FIC_MINISWHITE :
 					cinfo.in_color_space = JCS_GRAYSCALE;
@@ -1481,12 +1481,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			jpeg_set_defaults(&cinfo);
 
 		    // progressive-JPEG support
-			if((flags & JPEG_PROGRESSIVE) == JPEG_PROGRESSIVE) {
+			if ((flags & JPEG_PROGRESSIVE) == JPEG_PROGRESSIVE) {
 				jpeg_simple_progression(&cinfo);
 			}
 			
 			// compute optimal Huffman coding tables for the image
-			if((flags & JPEG_OPTIMIZE) == JPEG_OPTIMIZE) {
+			if ((flags & JPEG_OPTIMIZE) == JPEG_OPTIMIZE) {
 				cinfo.optimize_coding = TRUE;
 			}
 
@@ -1497,7 +1497,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			cinfo.density_unit = 1;	// dots / inch
 
 			// thumbnail support (JFIF 1.02 extension markers)
-			if(FreeImage_GetThumbnail(dib) != NULL) {
+			if (FreeImage_GetThumbnail(dib)) {
 				cinfo.write_JFIF_header = static_cast<boolean>(1); //<### force it, though when color is CMYK it will be incorrect
 				cinfo.JFIF_minor_version = 2;
 			}
@@ -1510,8 +1510,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// set subsampling options if required
 
-			if(cinfo.in_color_space == JCS_RGB) {
-				if((flags & JPEG_SUBSAMPLING_411) == JPEG_SUBSAMPLING_411) { 
+			if (cinfo.in_color_space == JCS_RGB) {
+				if ((flags & JPEG_SUBSAMPLING_411) == JPEG_SUBSAMPLING_411) { 
 					// 4:1:1 (4x1 1x1 1x1) - CrH 25% - CbH 25% - CrV 100% - CbV 100%
 					// the horizontal color resolution is quartered
 					cinfo.comp_info[0].h_samp_factor = 4;	// Y 
@@ -1520,7 +1520,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					cinfo.comp_info[1].v_samp_factor = 1; 
 					cinfo.comp_info[2].h_samp_factor = 1;	// Cr 
 					cinfo.comp_info[2].v_samp_factor = 1; 
-				} else if((flags & JPEG_SUBSAMPLING_420) == JPEG_SUBSAMPLING_420) {
+				} else if ((flags & JPEG_SUBSAMPLING_420) == JPEG_SUBSAMPLING_420) {
 					// 4:2:0 (2x2 1x1 1x1) - CrH 50% - CbH 50% - CrV 50% - CbV 50%
 					// the chrominance resolution in both the horizontal and vertical directions is cut in half
 					cinfo.comp_info[0].h_samp_factor = 2;	// Y
@@ -1529,7 +1529,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					cinfo.comp_info[1].v_samp_factor = 1; 
 					cinfo.comp_info[2].h_samp_factor = 1;	// Cr
 					cinfo.comp_info[2].v_samp_factor = 1; 
-				} else if((flags & JPEG_SUBSAMPLING_422) == JPEG_SUBSAMPLING_422){ //2x1 (low) 
+				} else if ((flags & JPEG_SUBSAMPLING_422) == JPEG_SUBSAMPLING_422){ //2x1 (low) 
 					// 4:2:2 (2x1 1x1 1x1) - CrH 50% - CbH 50% - CrV 100% - CbV 100%
 					// half of the horizontal resolution in the chrominance is dropped (Cb & Cr), 
 					// while the full resolution is retained in the vertical direction, with respect to the luminance
@@ -1540,7 +1540,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					cinfo.comp_info[2].h_samp_factor = 1;	// Cr 
 					cinfo.comp_info[2].v_samp_factor = 1; 
 				} 
-				else if((flags & JPEG_SUBSAMPLING_444) == JPEG_SUBSAMPLING_444){ //1x1 (no subsampling) 
+				else if ((flags & JPEG_SUBSAMPLING_444) == JPEG_SUBSAMPLING_444){ //1x1 (no subsampling) 
 					// 4:4:4 (1x1 1x1 1x1) - CrH 100% - CbH 100% - CrV 100% - CbV 100%
 					// the resolution of chrominance information (Cb & Cr) is preserved 
 					// at the same rate as the luminance (Y) information
@@ -1591,11 +1591,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// Step 7: while (scan lines remain to be written) 
 
-			if(color_type == FIC_RGB) {
+			if (color_type == FIC_RGB) {
 				// 24-bit RGB image : need to swap red and blue channels
 				unsigned pitch = FreeImage_GetPitch(dib);
-				uint8_t *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
-				if (target == NULL) {
+				auto *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
+				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 
@@ -1605,7 +1605,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// swap R and B channels
 					uint8_t *target_p = target;
-					for(unsigned x = 0; x < cinfo.image_width; x++) {
+					for (unsigned x = 0; x < cinfo.image_width; x++) {
 						INPLACESWAP(target_p[0], target_p[2]);
 						target_p += 3;
 					}
@@ -1615,10 +1615,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				}
 				free(target);
 			}
-			else if(color_type == FIC_CMYK) {
+			else if (color_type == FIC_CMYK) {
 				unsigned pitch = FreeImage_GetPitch(dib);
-				uint8_t *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
-				if (target == NULL) {
+				auto *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
+				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 				
@@ -1627,7 +1627,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					memcpy(target, FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - cinfo.next_scanline - 1), pitch);
 					
 					uint8_t *target_p = target;
-					for(unsigned x = 0; x < cinfo.image_width; x++) {
+					for (unsigned x = 0; x < cinfo.image_width; x++) {
 						// CMYK pixels are inverted
 						target_p[0] = ~target_p[0];	// C
 						target_p[1] = ~target_p[1];	// M
@@ -1642,7 +1642,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				}
 				free(target);
 			}
-			else if(color_type == FIC_MINISBLACK) {
+			else if (color_type == FIC_MINISBLACK) {
 				// 8-bit standard greyscale images
 				while (cinfo.next_scanline < cinfo.image_height) {
 					JSAMPROW b = FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - cinfo.next_scanline - 1);
@@ -1650,11 +1650,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					jpeg_write_scanlines(&cinfo, &b, 1);
 				}
 			}
-			else if(color_type == FIC_PALETTE) {
+			else if (color_type == FIC_PALETTE) {
 				// 8-bit palettized images are converted to 24-bit images
 				FIRGBA8 *palette = FreeImage_GetPalette(dib);
-				uint8_t *target = (uint8_t*)malloc(cinfo.image_width * 3);
-				if (target == NULL) {
+				auto *target = (uint8_t*)malloc(cinfo.image_width * 3);
+				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 
@@ -1665,7 +1665,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// swap R and B channels
 					uint8_t *target_p = target;
-					for(unsigned x = 0; x < cinfo.image_width; x++) {
+					for (unsigned x = 0; x < cinfo.image_width; x++) {
 						INPLACESWAP(target_p[0], target_p[2]);
 						target_p += 3;
 					}
@@ -1677,22 +1677,22 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 				free(target);
 			}
-			else if(color_type == FIC_MINISWHITE) {
+			else if (color_type == FIC_MINISWHITE) {
 				// reverse 8-bit greyscale image, so reverse grey value on the fly
 				unsigned i;
 				uint8_t reverse[256];
-				uint8_t *target = (uint8_t *)malloc(cinfo.image_width);
-				if (target == NULL) {
+				auto *target = (uint8_t *)malloc(cinfo.image_width);
+				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 
-				for(i = 0; i < 256; i++) {
+				for (i = 0; i < 256; i++) {
 					reverse[i] = (uint8_t)(255 - i);
 				}
 
-				while(cinfo.next_scanline < cinfo.image_height) {
+				while (cinfo.next_scanline < cinfo.image_height) {
 					uint8_t *source = FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - cinfo.next_scanline - 1);
-					for(i = 0; i < cinfo.image_width; i++) {
+					for (i = 0; i < cinfo.image_width; i++) {
 						target[i] = reverse[ source[i] ];
 					}
 					jpeg_write_scanlines(&cinfo, &target, 1);
@@ -1712,7 +1712,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			return TRUE;
 
 		} catch (const char *text) {
-			if(text) {
+			if (text) {
 				FreeImage_OutputMessageProc(s_format_id, text);
 			}
 			return FALSE;
@@ -1734,10 +1734,10 @@ InitJPEG(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;

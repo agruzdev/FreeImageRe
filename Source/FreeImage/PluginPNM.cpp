@@ -37,7 +37,7 @@ GetInt(FreeImageIO *io, fi_handle handle) {
 
     // skip forward to start of next number
 
-	if(!io->read_proc(&c, 1, 1, handle)) {
+	if (!io->read_proc(&c, 1, 1, handle)) {
 		throw FI_MSG_ERROR_PARSING;
 	}
 
@@ -50,7 +50,7 @@ GetInt(FreeImageIO *io, fi_handle handle) {
             bFirstChar = TRUE;
 
             while (1) {
-				if(!io->read_proc(&c, 1, 1, handle)) {
+				if (!io->read_proc(&c, 1, 1, handle)) {
 					throw FI_MSG_ERROR_PARSING;
 				}
 
@@ -68,7 +68,7 @@ GetInt(FreeImageIO *io, fi_handle handle) {
             break;
 		}
 
-		if(!io->read_proc(&c, 1, 1, handle)) {
+		if (!io->read_proc(&c, 1, 1, handle)) {
 			throw FI_MSG_ERROR_PARSING;
 		}
     }
@@ -80,7 +80,7 @@ GetInt(FreeImageIO *io, fi_handle handle) {
     while (1) {
         i = (i * 10) + (c - '0');
 
-		if(!io->read_proc(&c, 1, 1, handle)) {
+		if (!io->read_proc(&c, 1, 1, handle)) {
 			throw FI_MSG_ERROR_PARSING;
 		}
 
@@ -145,7 +145,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -215,12 +215,12 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char id_one = 0, id_two = 0;
 	int x, y;
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	FIRGBA8 *pal;	// pointer to dib palette
 	int i;
 
 	if (!handle) {
-		return NULL;
+		return nullptr;
 	}
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -246,11 +246,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		int height = GetInt(io, handle);
 		int maxval = 1;
 
-		if((id_two == '2') || (id_two == '5') || (id_two == '3') || (id_two == '6')) {
+		if ((id_two == '2') || (id_two == '5') || (id_two == '3') || (id_two == '6')) {
 			maxval = GetInt(io, handle);
-			if((maxval <= 0) || (maxval > 65535)) {
+			if ((maxval <= 0) || (maxval > 65535)) {
 				FreeImage_OutputMessageProc(s_format_id, "Invalid max value : %d", maxval);
-				throw (const char*)NULL;
+				throw (const char*)nullptr;
 			}
 		}
 
@@ -265,7 +265,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case '2':
 			case '5':
-				if(maxval > 255) {
+				if (maxval > 255) {
 					// 16-bit greyscale
 					image_type = FIT_UINT16;
 					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
@@ -277,7 +277,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case '3':
 			case '6':
-				if(maxval > 255) {
+				if (maxval > 255) {
 					// 48-bit RGB
 					image_type = FIT_RGB16;
 					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
@@ -288,14 +288,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				break;
 		}
 
-		if (dib == NULL) {
+		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
 		// Build a greyscale palette if needed
 
-		if(image_type == FIT_BITMAP) {
-			switch(id_two)  {
+		if (image_type == FIT_BITMAP) {
+			switch (id_two)  {
 				case '1':
 				case '4':
 					pal = FreeImage_GetPalette(dib);
@@ -318,14 +318,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 
-		if(header_only) {
+		if (header_only) {
 			// header only mode
 			return dib;
 		}
 
 		// Read the image...
 
-		switch(id_two)  {
+		switch (id_two)  {
 			case '1':
 			case '4':
 				// write the bitmap data
@@ -359,10 +359,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case '2':
 			case '5':
-				if(image_type == FIT_BITMAP) {
+				if (image_type == FIT_BITMAP) {
 					// write the bitmap data
 
-					if(id_two == '2') {		// ASCII greymap
+					if (id_two == '2') {		// ASCII greymap
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
@@ -386,14 +386,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 				}
-				else if(image_type == FIT_UINT16) {
+				else if (image_type == FIT_UINT16) {
 					// write the bitmap data
 
-					if(id_two == '2') {		// ASCII greymap
+					if (id_two == '2') {		// ASCII greymap
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -404,7 +404,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint16_t level = 0;
 
 						for (y = 0; y < height; y++) {		
-							uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = ReadWord(io, handle);
@@ -418,7 +418,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case '3':
 			case '6':
-				if(image_type == FIT_BITMAP) {
+				if (image_type == FIT_BITMAP) {
 					// write the bitmap data
 
 					if (id_two == '3') {		// ASCII pixmap
@@ -459,14 +459,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 				}
-				else if(image_type == FIT_RGB16) {
+				else if (image_type == FIT_RGB16) {
 					// write the bitmap data
 
 					if (id_two == '3') {		// ASCII pixmap
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							FIRGB16 *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -481,7 +481,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint16_t level = 0;
 
 						for (y = 0; y < height; y++) {	
-							FIRGB16 *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = ReadWord(io, handle);
@@ -499,10 +499,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 	} catch (const char *text)  {
-		if(dib) FreeImage_Unload(dib);
+		if (dib) FreeImage_Unload(dib);
 
-		if(NULL != text) {
-			switch(id_two)  {
+		if (text) {
+			switch (id_two)  {
 				case '1':
 				case '4':
 					FreeImage_OutputMessageProc(s_format_id, text);
@@ -521,7 +521,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 	}
 		
-	return NULL;
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
@@ -546,7 +546,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	char buffer[256];	// temporary buffer whose size should be enough for what we need
 
-	if(!dib || !handle) return FALSE;
+	if (!dib || !handle) return FALSE;
 	
 	FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 
@@ -559,7 +559,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	int magic = 0;
 	int maxval = 255;
 
-	switch(image_type) {
+	switch (image_type) {
 		case FIT_BITMAP:
 			switch (bpp) {
 				case 1 :
@@ -609,8 +609,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	// Write the image data
 	///////////////////////
 
-	if(image_type == FIT_BITMAP) {
-		switch(bpp)  {
+	if (image_type == FIT_BITMAP) {
+		switch (bpp)  {
 			case 24 :            // 24-bit RGB, 3 bytes per pixel
 			{
 				if (flags == PNM_SAVE_RAW)  {
@@ -640,7 +640,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 							length += 12;
 
-							if(length > 58) {
+							if (length > 58) {
 								// No line should be longer than 70 characters
 								sprintf(buffer, "\n");
 								io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
@@ -697,11 +697,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				int color;
 
 				if (flags == PNM_SAVE_RAW)  {
-					for(y = 0; y < height; y++) {
+					for (y = 0; y < height; y++) {
 						// write the scanline to disc
 						uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 
-						for(x = 0; x < (int)FreeImage_GetLine(dib); x++)
+						for (x = 0; x < (int)FreeImage_GetLine(dib); x++)
 							io->write_proc(&bits[x], 1, 1, handle);
 					}
 				} else  {
@@ -733,9 +733,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			
 			break;
 		}
-	} // if(FIT_BITMAP)
+	} // if (FIT_BITMAP)
 
-	else if(image_type == FIT_UINT16) {		// 16-bit greyscale
+	else if (image_type == FIT_UINT16) {		// 16-bit greyscale
 		if (flags == PNM_SAVE_RAW)  {
 			for (y = 0; y < height; y++) {
 				// write the scanline to disc
@@ -770,7 +770,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		}
 	}
 
-	else if(image_type == FIT_RGB16) {		// 48-bit RGB
+	else if (image_type == FIT_RGB16) {		// 48-bit RGB
 		if (flags == PNM_SAVE_RAW)  {
 			for (y = 0; y < height; y++) {
 				// write the scanline to disc
@@ -796,7 +796,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 					length += 18;
 
-					if(length > 52) {
+					if (length > 52) {
 						// No line should be longer than 70 characters
 						sprintf(buffer, "\n");
 						io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
@@ -823,16 +823,16 @@ InitPNM(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

@@ -28,23 +28,23 @@
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertToRGB16(FIBITMAP *dib) {
-	FIBITMAP *src = NULL;
-	FIBITMAP *dst = NULL;
+	FIBITMAP *src{};
+	FIBITMAP *dst{};
 
-	if(!FreeImage_HasPixels(dib)) return NULL;
+	if (!FreeImage_HasPixels(dib)) return nullptr;
 
 	const FREE_IMAGE_TYPE src_type = FreeImage_GetImageType(dib);
 
 	// check for allowed conversions 
-	switch(src_type) {
+	switch (src_type) {
 		case FIT_BITMAP:
 		{
 			// convert to 24-bit if needed
-			if((FreeImage_GetBPP(dib) == 24) || (FreeImage_GetBPP(dib) == 32)) {
+			if ((FreeImage_GetBPP(dib) == 24) || (FreeImage_GetBPP(dib) == 32)) {
 				src = dib;
 			} else {
 				src = FreeImage_ConvertTo24Bits(dib);
-				if(!src) return NULL;
+				if (!src) return nullptr;
 			}
 			break;
 		}
@@ -61,7 +61,7 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 			src = dib;
 			break;
 		default:
-			return NULL;
+			return nullptr;
 	}
 
 	// allocate dst image
@@ -70,11 +70,11 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 	const unsigned height = FreeImage_GetHeight(src);
 
 	dst = FreeImage_AllocateT(FIT_RGB16, width, height);
-	if(!dst) {
-		if(src != dib) {
+	if (!dst) {
+		if (src != dib) {
 			FreeImage_Unload(src);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	// copy metadata from src to dst
@@ -82,16 +82,16 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 
 	// convert from src type to RGB16
 
-	switch(src_type) {
+	switch (src_type) {
 		case FIT_BITMAP:
 		{
 			// Calculate the number of bytes per pixel (1 for 8-bit, 3 for 24-bit or 4 for 32-bit)
 			const unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 
-			for(unsigned y = 0; y < height; y++) {
+			for (unsigned y = 0; y < height; y++) {
 				const uint8_t *src_bits = (uint8_t*)FreeImage_GetScanLine(src, y);
 				FIRGB16 *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+				for (unsigned x = 0; x < width; x++) {
 					dst_bits[x].red   = src_bits[FI_RGBA_RED] << 8;
 					dst_bits[x].green = src_bits[FI_RGBA_GREEN] << 8;
 					dst_bits[x].blue  = src_bits[FI_RGBA_BLUE] << 8;
@@ -103,10 +103,10 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 
 		case FIT_UINT16:
 		{
-			for(unsigned y = 0; y < height; y++) {
-				const uint16_t *src_bits = (uint16_t*)FreeImage_GetScanLine(src, y);
-				FIRGB16 *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+			for (unsigned y = 0; y < height; y++) {
+				auto *src_bits = (const uint16_t*)FreeImage_GetScanLine(src, y);
+				auto *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
+				for (unsigned x = 0; x < width; x++) {
 					// convert by copying greyscale channel to each R, G, B channels
 					dst_bits[x].red   = src_bits[x];
 					dst_bits[x].green = src_bits[x];
@@ -118,10 +118,10 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 
 		case FIT_RGBA16:
 		{
-			for(unsigned y = 0; y < height; y++) {
-				const FIRGBA16 *src_bits = (FIRGBA16*)FreeImage_GetScanLine(src, y);
-				FIRGB16 *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
-				for(unsigned x = 0; x < width; x++) {
+			for (unsigned y = 0; y < height; y++) {
+				auto *src_bits = (const FIRGBA16*)FreeImage_GetScanLine(src, y);
+				auto *dst_bits = (FIRGB16*)FreeImage_GetScanLine(dst, y);
+				for (unsigned x = 0; x < width; x++) {
 					// convert and skip alpha channel
 					dst_bits[x].red   = src_bits[x].red;
 					dst_bits[x].green = src_bits[x].green;
@@ -135,7 +135,7 @@ FreeImage_ConvertToRGB16(FIBITMAP *dib) {
 			break;
 	}
 
-	if(src != dib) {
+	if (src != dib) {
 		FreeImage_Unload(src);
 	}
 

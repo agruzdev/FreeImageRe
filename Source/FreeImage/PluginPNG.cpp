@@ -64,7 +64,7 @@ static void
 _ReadProc(png_structp png_ptr, unsigned char *data, png_size_t size) {
     pfi_ioStructure pfio = (pfi_ioStructure)png_get_io_ptr(png_ptr);
 	unsigned n = pfio->s_io->read_proc(data, (unsigned int)size, 1, pfio->s_handle);
-	if(size && (n == 0)) {
+	if (size && (n == 0)) {
 		throw "Read error: invalid or corrupted PNG file";
 	}
 }
@@ -104,17 +104,17 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	// XMP keyword
 	const char *g_png_xmp_keyword = "XML:com.adobe.xmp";
 
-	FITAG *tag = NULL;
-	png_textp text_ptr = NULL;
-	png_timep mod_time = NULL;
+	FITAG *tag{};
+	png_textp text_ptr{};
+	png_timep mod_time{};
 	int num_text = 0;
 
 	// iTXt/tEXt/zTXt chuncks
-	if(png_get_text(png_ptr, info_ptr, &text_ptr, &num_text) > 0) {
-		for(int i = 0; i < num_text; i++) {
+	if (png_get_text(png_ptr, info_ptr, &text_ptr, &num_text) > 0) {
+		for (int i = 0; i < num_text; i++) {
 			// create a tag
 			tag = FreeImage_CreateTag();
-			if(!tag) return FALSE;
+			if (!tag) return FALSE;
 
 			uint32_t tag_length = (uint32_t) MAX(text_ptr[i].text_length, text_ptr[i].itxt_length);
 
@@ -123,7 +123,7 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 			FreeImage_SetTagType(tag, FIDT_ASCII);
 			FreeImage_SetTagValue(tag, text_ptr[i].text);
 
-			if(strcmp(text_ptr[i].key, g_png_xmp_keyword) == 0) {
+			if (strcmp(text_ptr[i].key, g_png_xmp_keyword) == 0) {
 				// store the tag as XMP
 				FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
@@ -139,11 +139,11 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	}
 
 	// timestamp chunk
-	if(png_get_tIME(png_ptr, info_ptr, &mod_time)) {
+	if (png_get_tIME(png_ptr, info_ptr, &mod_time)) {
 		char timestamp[32];
 		// create a tag
 		tag = FreeImage_CreateTag();
-		if(!tag) return FALSE;
+		if (!tag) return FALSE;
 
 		// convert as 'yyyy:MM:dd hh:mm:ss'
 		sprintf(timestamp, "%4d:%02d:%02d %2d:%02d:%02d", mod_time->year, mod_time->month, mod_time->day, mod_time->hour, mod_time->minute, mod_time->second);
@@ -171,8 +171,8 @@ WriteMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	// XMP keyword
 	const char *g_png_xmp_keyword = "XML:com.adobe.xmp";
 
-	FITAG *tag = NULL;
-	FIMETADATA *mdhandle = NULL;
+	FITAG *tag{};
+	FIMETADATA *mdhandle{};
 	FIBOOL bResult = TRUE;
 
 	png_text text_metadata;
@@ -182,7 +182,7 @@ WriteMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 
 	mdhandle = FreeImage_FindFirstMetadata(FIMD_COMMENTS, dib, &tag);
 
-	if(mdhandle) {
+	if (mdhandle) {
 		do {
 			memset(&text_metadata, 0, sizeof(png_text));
 			text_metadata.compression = 1;							// iTXt, none
@@ -196,16 +196,16 @@ WriteMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 			// set the tag 
 			png_set_text(png_ptr, info_ptr, &text_metadata, 1);
 
-		} while(FreeImage_FindNextMetadata(mdhandle, &tag));
+		} while (FreeImage_FindNextMetadata(mdhandle, &tag));
 
 		FreeImage_FindCloseMetadata(mdhandle);
 		bResult &= TRUE;
 	}
 
 	// set the 'XMP' metadata as iTXt chuncks
-	tag = NULL;
+	tag = nullptr;
 	FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag);
-	if(tag && FreeImage_GetTagLength(tag)) {
+	if (tag && FreeImage_GetTagLength(tag)) {
 		memset(&text_metadata, 0, sizeof(png_text));
 		text_metadata.compression = 1;							// iTXt, none
 		text_metadata.key = (char*)g_png_xmp_keyword;			// keyword, 1-79 character description of "text"
@@ -221,12 +221,12 @@ WriteMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	}
 
 	// set the Exif-TIFF 'DateTime' metadata as a tIME chunk
-	tag = NULL;
+	tag = nullptr;
 	FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, "DateTime", &tag);
-	if(tag && FreeImage_GetTagLength(tag)) {
+	if (tag && FreeImage_GetTagLength(tag)) {
 		int year, month, day, hour, minute, second;
 		const char *value = (char*)FreeImage_GetTagValue(tag);
-		if(sscanf(value, "%4d:%02d:%02d %2d:%02d:%02d", &year, &month, &day, &hour, &minute, &second) == 6) {
+		if (sscanf(value, "%4d:%02d:%02d %2d:%02d:%02d", &year, &month, &day, &hour, &minute, &second) == 6) {
 			mod_time.year	= (png_uint_16)year;
 			mod_time.month	= (png_byte)month;
 			mod_time.day	= (png_byte)day;
@@ -337,9 +337,9 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 	// check allowed combinations of colour type and bit depth
 	// then get converted FreeImage type
 
-	switch(color_type) {
+	switch (color_type) {
 		case PNG_COLOR_TYPE_GRAY:		// color type '0', bitdepth = 1, 2, 4, 8, 16
-			switch(bit_depth) {
+			switch (bit_depth) {
 				case 1:
 				case 2:
 				case 4:
@@ -379,7 +379,7 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 			break;
 
 		case PNG_COLOR_TYPE_RGB:		// color type '2', bitdepth = 8, 16
-			switch(bit_depth) {
+			switch (bit_depth) {
 				case 8:
 					image_type = (pixel_depth == 24) ? FIT_BITMAP : FIT_UNKNOWN;
 					break;
@@ -401,7 +401,7 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 			break;
 
 		case PNG_COLOR_TYPE_PALETTE:	// color type '3', bitdepth = 1, 2, 4, 8
-			switch(bit_depth) {
+			switch (bit_depth) {
 				case 1:
 				case 2:
 				case 4:
@@ -425,7 +425,7 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 			break;
 
 		case PNG_COLOR_TYPE_GRAY_ALPHA:	// color type '4', bitdepth = 8, 16
-			switch(bit_depth) {
+			switch (bit_depth) {
 				case 8:
 					// 8-bit grayscale + 8-bit alpha => convert to 32-bit RGBA
 					image_type = (pixel_depth == 16) ? FIT_BITMAP : FIT_UNKNOWN;
@@ -444,7 +444,7 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 			break;
 
 		case PNG_COLOR_TYPE_RGB_ALPHA:	// color type '6', bitdepth = 8, 16
-			switch(bit_depth) {
+			switch (bit_depth) {
 				case 8:
 					break;
 				case 16:
@@ -458,20 +458,20 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 	}
 
 	// check for unknown or invalid formats
-	if(image_type == FIT_UNKNOWN) {
+	if (image_type == FIT_UNKNOWN) {
 		*output_image_type = image_type;
 		return FALSE;
 	}
 
 #ifndef FREEIMAGE_BIGENDIAN
-	if((image_type == FIT_UINT16) || (image_type == FIT_RGB16) || (image_type == FIT_RGBA16)) {
+	if ((image_type == FIT_UINT16) || (image_type == FIT_RGB16) || (image_type == FIT_RGBA16)) {
 		// turn on 16-bit byte swapping
 		png_set_swap(png_ptr);
 	}
 #endif						
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-	if((image_type == FIT_BITMAP) && ((color_type == PNG_COLOR_TYPE_RGB) || (color_type == PNG_COLOR_TYPE_RGB_ALPHA))) {
+	if ((image_type == FIT_BITMAP) && ((color_type == PNG_COLOR_TYPE_RGB) || (color_type == PNG_COLOR_TYPE_RGB_ALPHA))) {
 		// flip the RGB pixels to BGR (or RGBA to BGRA)
 		png_set_bgr(png_ptr);
 	}
@@ -502,15 +502,15 @@ ConfigureDecoder(png_structp png_ptr, png_infop info_ptr, int flags, FREE_IMAGE_
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	png_structp png_ptr = NULL;
-	png_infop info_ptr = NULL;
+	png_structp png_ptr{};
+	png_infop info_ptr{};
 	png_uint_32 width, height;
 	int color_type;
 	int bit_depth;
 	int pixel_depth = 0;	// pixel_depth = bit_depth * channels
 
-	FIBITMAP *dib = NULL;
-	png_bytepp row_pointers = NULL;
+	FIBITMAP *dib{};
+	png_bytepp row_pointers{};
 
     fi_ioStructure fio;
     fio.s_handle = handle;
@@ -527,7 +527,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			io->read_proc(png_check, PNG_BYTES_TO_CHECK, 1, handle);
 
 			if (png_sig_cmp(png_check, (png_size_t)0, PNG_BYTES_TO_CHECK) != 0) {
-				return NULL;	// Bad signature
+				return nullptr;	// Bad signature
 			}
 			
 			// create the chunk manage structure
@@ -535,7 +535,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, error_handler, warning_handler);
 
 			if (!png_ptr) {
-				return NULL;			
+				return nullptr;			
 			}
 
 			// create the info structure
@@ -544,7 +544,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (!info_ptr) {
 				png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-				return NULL;
+				return nullptr;
 			}
 
 			// init the IO
@@ -571,7 +571,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			FREE_IMAGE_TYPE image_type = FIT_BITMAP;
 
-			if(!ConfigureDecoder(png_ptr, info_ptr, flags, &image_type)) {
+			if (!ConfigureDecoder(png_ptr, info_ptr, flags, &image_type)) {
 				throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
 			}
 
@@ -592,8 +592,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				case PNG_COLOR_TYPE_PALETTE:
 					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, pixel_depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-					if(dib) {
-						png_colorp png_palette = NULL;
+					if (dib) {
+						png_colorp png_palette = nullptr;
 						int palette_entries = 0;
 
 						png_get_PLTE(png_ptr,info_ptr, &png_palette, &palette_entries);
@@ -603,7 +603,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						// store the palette
 
 						FIRGBA8 *palette = FreeImage_GetPalette(dib);
-						for(int i = 0; i < palette_entries; i++) {
+						for (int i = 0; i < palette_entries; i++) {
 							palette[i].red   = png_palette[i].red;
 							palette[i].green = png_palette[i].green;
 							palette[i].blue  = png_palette[i].blue;
@@ -614,11 +614,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				case PNG_COLOR_TYPE_GRAY:
 					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, pixel_depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 
-					if(dib && (pixel_depth <= 8)) {
+					if (dib && (pixel_depth <= 8)) {
 						FIRGBA8 *palette = FreeImage_GetPalette(dib);
 						const int palette_entries = 1 << pixel_depth;
 
-						for(int i = 0; i < palette_entries; i++) {
+						for (int i = 0; i < palette_entries; i++) {
 							palette[i].red   =
 							palette[i].green =
 							palette[i].blue  = (uint8_t)((i * 255) / (palette_entries - 1));
@@ -630,7 +630,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
 			}
 
-			if(!dib) {
+			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 
@@ -638,15 +638,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
 				// array of alpha (transparency) entries for palette
-				png_bytep trans_alpha = NULL;
+				png_bytep trans_alpha = nullptr;
 				// number of transparent entries
 				int num_trans = 0;						
 				// graylevel or color sample values of the single transparent color for non-paletted images
-				png_color_16p trans_color = NULL;
+				png_color_16p trans_color = nullptr;
 
 				png_get_tRNS(png_ptr, info_ptr, &trans_alpha, &num_trans, &trans_color);
 
-				if((color_type == PNG_COLOR_TYPE_GRAY) && trans_color) {
+				if ((color_type == PNG_COLOR_TYPE_GRAY) && trans_color) {
 					// single transparent color
 					if (trans_color->gray < 256) { 
 						uint8_t table[256]; 
@@ -659,7 +659,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						FreeImage_SetTransparencyTable(dib, (uint8_t *)trans_alpha, num_trans);
 					}
 
-				} else if((color_type == PNG_COLOR_TYPE_PALETTE) && trans_alpha) {
+				} else if ((color_type == PNG_COLOR_TYPE_PALETTE) && trans_alpha) {
 					// transparency table
 					FreeImage_SetTransparencyTable(dib, (uint8_t *)trans_alpha, num_trans);
 				}
@@ -672,7 +672,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// Note that even if the PNG file supplies a background, you are not required to
 				// use it - you should use the (solid) application background if it has one.
 
-				png_color_16p image_background = NULL;
+				png_color_16p image_background = nullptr;
 				FIRGBA8 rgbBkColor;
 
 				if (png_get_bKGD(png_ptr, info_ptr, &image_background)) {
@@ -706,8 +706,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// get possible ICC profile
 
 			if (png_get_valid(png_ptr, info_ptr, PNG_INFO_iCCP)) {
-				png_charp profile_name = NULL;
-				png_bytep profile_data = NULL;
+				png_charp profile_name = nullptr;
+				png_bytep profile_data = nullptr;
 				png_uint_32 profile_length = 0;
 				int  compression_type;
 
@@ -737,7 +737,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (!row_pointers) {
 				png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 				FreeImage_Unload(dib);
-				return NULL;
+				return nullptr;
 			}
 
 			// read in the bitmap bits via the pointer table
@@ -764,7 +764,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (row_pointers) {
 				free(row_pointers);
-				row_pointers = NULL;
+				row_pointers = nullptr;
 			}
 
 			// read the rest of the file, getting any additional chunks in info_ptr
@@ -792,15 +792,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (dib) {
 				FreeImage_Unload(dib);
 			}
-			if (NULL != text) {
+			if (text) {
 				FreeImage_OutputMessageProc(s_format_id, text);
 			}
 			
-			return NULL;
+			return nullptr;
 		}
-	}			
+	}
 
-	return NULL;
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------
@@ -809,7 +809,7 @@ static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	png_structp png_ptr;
 	png_infop info_ptr;
-	png_colorp palette = NULL;
+	png_colorp palette{};
 	png_uint_32 width, height;
 	FIBOOL has_alpha_channel = FALSE;
 
@@ -878,7 +878,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			pixel_depth = FreeImage_GetBPP(dib);
 
 			FIBOOL bInterlaced = FALSE;
-			if( (flags & PNG_INTERLACED) == PNG_INTERLACED) {
+			if ((flags & PNG_INTERLACED) == PNG_INTERLACED) {
 				interlace_type = PNG_INTERLACE_ADAM7;
 				bInterlaced = TRUE;
 			} else {
@@ -887,14 +887,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// set the ZLIB compression level or default to PNG default compression level (ZLIB level = 6)
 			int zlib_level = flags & 0x0F;
-			if((zlib_level >= 1) && (zlib_level <= 9)) {
+			if ((zlib_level >= 1) && (zlib_level <= 9)) {
 				png_set_compression_level(png_ptr, zlib_level);
-			} else if((flags & PNG_Z_NO_COMPRESSION) == PNG_Z_NO_COMPRESSION) {
+			} else if ((flags & PNG_Z_NO_COMPRESSION) == PNG_Z_NO_COMPRESSION) {
 				png_set_compression_level(png_ptr, Z_NO_COMPRESSION);
 			}
 
 			// filtered strategy works better for high color images
-			if(pixel_depth >= 16){
+			if (pixel_depth >= 16){
 				png_set_compression_strategy(png_ptr, Z_FILTERED);
 				png_set_filter(png_ptr, 0, PNG_FILTER_NONE|PNG_FILTER_SUB|PNG_FILTER_PAETH);
 			} else {
@@ -902,7 +902,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			}
 
 			FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
-			if(image_type == FIT_BITMAP) {
+			if (image_type == FIT_BITMAP) {
 				// standard image type
 				bit_depth = (pixel_depth > 8) ? 8 : pixel_depth;
 			} else {
@@ -916,14 +916,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			switch (FreeImage_GetColorType(dib)) {
 				case FIC_MINISWHITE:
-					if(!bIsTransparent) {
+					if (!bIsTransparent) {
 						// Invert monochrome files to have 0 as black and 1 as white (no break here)
 						png_set_invert_mono(png_ptr);
 					}
 					// (fall through)
 
 				case FIC_MINISBLACK:
-					if(!bIsTransparent) {
+					if (!bIsTransparent) {
 						png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
 							PNG_COLOR_TYPE_GRAY, interlace_type, 
 							PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
@@ -968,7 +968,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// flip BGR pixels to RGB
-					if(image_type == FIT_BITMAP) {
+					if (image_type == FIT_BITMAP) {
 						png_set_bgr(png_ptr);
 					}
 #endif
@@ -981,7 +981,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// flip BGR pixels to RGB
-					if(image_type == FIT_BITMAP) {
+					if (image_type == FIT_BITMAP) {
 						png_set_bgr(png_ptr);
 					}
 #endif
@@ -1016,7 +1016,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// set the background color
 
-			if(FreeImage_HasBackgroundColor(dib)) {
+			if (FreeImage_HasBackgroundColor(dib)) {
 				png_color_16 image_background;
 				FIRGBA8 rgbBkColor;
 
@@ -1049,7 +1049,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			}
 
 			if ((pixel_depth == 32) && (!has_alpha_channel)) {
-				uint8_t *buffer = (uint8_t *)malloc(width * 3);
+				auto *buffer = (uint8_t *)malloc(width * 3);
 
 				// transparent conversion to 24-bit
 				// the number of passes is either 1 for non-interlaced images, or 7 for interlaced images
@@ -1084,7 +1084,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			return TRUE;
 
 		} catch (const char *text) {
-			if(png_ptr) {
+			if (png_ptr) {
 				png_destroy_write_struct(&png_ptr, &info_ptr);
 			}
 			FreeImage_OutputMessageProc(s_format_id, text);
@@ -1106,10 +1106,10 @@ InitPNG(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;

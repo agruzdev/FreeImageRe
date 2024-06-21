@@ -23,6 +23,7 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "ToneMapping.h"
+#include <algorithm>
 
 // ----------------------------------------------------------
 // Convert RGB to and from Yxy, same as in Reinhard et al. SIGGRAPH 2002
@@ -132,17 +133,17 @@ FIBOOL
 ConvertInPlaceRGBFToYxy(FIBITMAP *dib) {
 	float result[3];
 
-	if(FreeImage_GetImageType(dib) != FIT_RGBF)
+	if (FreeImage_GetImageType(dib) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch  = FreeImage_GetPitch(dib);
 	
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; y++) {
-		FIRGBF *pixel = (FIRGBF*)bits;
-		for(unsigned x = 0; x < width; x++) {
+	auto *bits = (uint8_t*)FreeImage_GetBits(dib);
+	for (unsigned y = 0; y < height; y++) {
+		auto *pixel = (FIRGBF*)bits;
+		for (unsigned x = 0; x < width; x++) {
 			result[0] = result[1] = result[2] = 0;
 			for (int i = 0; i < 3; i++) {
 				result[i] += RGB2XYZ[i][0] * pixel[x].red;
@@ -151,7 +152,7 @@ ConvertInPlaceRGBFToYxy(FIBITMAP *dib) {
 			}
 			const float W = result[0] + result[1] + result[2];
 			const float Y = result[1];
-			if(W > 0) { 
+			if (W > 0) { 
 				pixel[x].red   = Y;			    // Y 
 				pixel[x].green = result[0] / W;	// x 
 				pixel[x].blue  = result[1] / W;	// y 	
@@ -177,17 +178,17 @@ ConvertInPlaceYxyToRGBF(FIBITMAP *dib) {
 	float result[3];
 	float X, Y, Z;
 
-	if(FreeImage_GetImageType(dib) != FIT_RGBF)
+	if (FreeImage_GetImageType(dib) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch  = FreeImage_GetPitch(dib);
 
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; y++) {
-		FIRGBF *pixel = (FIRGBF*)bits;
-		for(unsigned x = 0; x < width; x++) {
+	auto *bits = (uint8_t*)FreeImage_GetBits(dib);
+	for (unsigned y = 0; y < height; y++) {
+		auto *pixel = (FIRGBF*)bits;
+		for (unsigned x = 0; x < width; x++) {
 			Y = pixel[x].red;	        // Y 
 			result[1] = pixel[x].green;	// x 
 			result[2] = pixel[x].blue;	// y 
@@ -228,7 +229,7 @@ On input, pixel->red == Y, pixel->green == x, pixel->blue == y
 */
 FIBOOL 
 LuminanceFromYxy(FIBITMAP *Yxy, float *maxLum, float *minLum, float *worldLum) {
-	if(FreeImage_GetImageType(Yxy) != FIT_RGBF)
+	if (FreeImage_GetImageType(Yxy) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(Yxy);
@@ -238,10 +239,10 @@ LuminanceFromYxy(FIBITMAP *Yxy, float *maxLum, float *minLum, float *worldLum) {
 	float max_lum = 0, min_lum = 0;
 	double sum = 0;
 
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(Yxy);
-	for(unsigned y = 0; y < height; y++) {
-		const FIRGBF *pixel = (FIRGBF*)bits;
-		for(unsigned x = 0; x < width; x++) {
+	auto *bits = (const uint8_t*)FreeImage_GetBits(Yxy);
+	for (unsigned y = 0; y < height; y++) {
+		auto *pixel = (const FIRGBF*)bits;
+		for (unsigned x = 0; x < width; x++) {
 			const float Y = MAX(0.0F, pixel[x].red);// avoid negative values
 			max_lum = (max_lum < Y) ? Y : max_lum;	// max Luminance in the scene
 			min_lum = (min_lum < Y) ? min_lum : Y;	// min Luminance in the scene
@@ -268,25 +269,25 @@ then convert to 24-bit RGB
 */
 FIBITMAP* 
 ClampConvertRGBFTo24(FIBITMAP *src) {
-	if(FreeImage_GetImageType(src) != FIT_RGBF)
+	if (FreeImage_GetImageType(src) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(src);
 	const unsigned height = FreeImage_GetHeight(src);
 
 	FIBITMAP *dst = FreeImage_Allocate(width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-	if(!dst) return NULL;
+	if (!dst) return nullptr;
 
 	const unsigned src_pitch  = FreeImage_GetPitch(src);
 	const unsigned dst_pitch  = FreeImage_GetPitch(dst);
 
-	uint8_t *src_bits = (uint8_t*)FreeImage_GetBits(src);
-	uint8_t *dst_bits = (uint8_t*)FreeImage_GetBits(dst);
+	auto *src_bits = (const uint8_t*)FreeImage_GetBits(src);
+	auto *dst_bits = (uint8_t*)FreeImage_GetBits(dst);
 
-	for(unsigned y = 0; y < height; y++) {
-		const FIRGBF *src_pixel = (FIRGBF*)src_bits;
-		uint8_t *dst_pixel = (uint8_t*)dst_bits;
-		for(unsigned x = 0; x < width; x++) {
+	for (unsigned y = 0; y < height; y++) {
+		auto *src_pixel = (const FIRGBF*)src_bits;
+		auto *dst_pixel = dst_bits;
+		for (unsigned x = 0; x < width; x++) {
 			const float red   = (src_pixel[x].red > 1)   ? 1 : src_pixel[x].red;
 			const float green = (src_pixel[x].green > 1) ? 1 : src_pixel[x].green;
 			const float blue  = (src_pixel[x].blue > 1)  ? 1 : src_pixel[x].blue;
@@ -314,26 +315,26 @@ A Standard Default Color Space for the Internet - sRGB.
 */
 FIBITMAP*  
 ConvertRGBFToY(FIBITMAP *src) {
-	if(FreeImage_GetImageType(src) != FIT_RGBF)
+	if (FreeImage_GetImageType(src) != FIT_RGBF)
 		return FALSE;
 
 	const unsigned width  = FreeImage_GetWidth(src);
 	const unsigned height = FreeImage_GetHeight(src);
 
 	FIBITMAP *dst = FreeImage_AllocateT(FIT_FLOAT, width, height);
-	if(!dst) return NULL;
+	if (!dst) return nullptr;
 
 	const unsigned src_pitch  = FreeImage_GetPitch(src);
 	const unsigned dst_pitch  = FreeImage_GetPitch(dst);
 
 	
-	uint8_t *src_bits = (uint8_t*)FreeImage_GetBits(src);
-	uint8_t *dst_bits = (uint8_t*)FreeImage_GetBits(dst);
+	auto *src_bits = (const uint8_t*)FreeImage_GetBits(src);
+	auto *dst_bits = (uint8_t*)FreeImage_GetBits(dst);
 
-	for(unsigned y = 0; y < height; y++) {
-		const FIRGBF *src_pixel = (FIRGBF*)src_bits;
-		float  *dst_pixel = (float*)dst_bits;
-		for(unsigned x = 0; x < width; x++) {
+	for (unsigned y = 0; y < height; y++) {
+		auto *src_pixel = (const FIRGBF*)src_bits;
+		auto *dst_pixel = (float*)dst_bits;
+		for (unsigned x = 0; x < width; x++) {
 			const float L = LUMA_REC709(src_pixel[x].red, src_pixel[x].green, src_pixel[x].blue);
 			dst_pixel[x] = (L > 0) ? L : 0;
 		}
@@ -357,7 +358,7 @@ Get the maximum, minimum, average luminance and log average luminance from a Y i
 */
 FIBOOL 
 LuminanceFromY(FIBITMAP *dib, float *maxLum, float *minLum, float *Lav, float *Llav) {
-	if(FreeImage_GetImageType(dib) != FIT_FLOAT)
+	if (FreeImage_GetImageType(dib) != FIT_FLOAT)
 		return FALSE;
 
 	unsigned width  = FreeImage_GetWidth(dib);
@@ -367,10 +368,10 @@ LuminanceFromY(FIBITMAP *dib, float *maxLum, float *minLum, float *Lav, float *L
 	float max_lum = -1e20F, min_lum = 1e20F;
 	double sumLum = 0, sumLogLum = 0;
 
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(dib);
-	for(unsigned y = 0; y < height; y++) {
-		const float *pixel = (float*)bits;
-		for(unsigned x = 0; x < width; x++) {
+	auto *bits = (const uint8_t*)FreeImage_GetBits(dib);
+	for (unsigned y = 0; y < height; y++) {
+		auto *pixel = (const float*)bits;
+		for (unsigned x = 0; x < width; x++) {
 			const float Y = pixel[x];
 			max_lum = (max_lum < Y) ? Y : max_lum;				// max Luminance in the scene
 			min_lum = ((Y > 0) && (min_lum < Y)) ? min_lum : Y;	// min Luminance in the scene
@@ -396,17 +397,17 @@ LuminanceFromY(FIBITMAP *dib, float *maxLum, float *minLum, float *Lav, float *L
 
 static void findMaxMinPercentile(FIBITMAP *Y, float minPrct, float *minLum, float maxPrct, float *maxLum) {
 	int x, y;
-	int width = FreeImage_GetWidth(Y);
-	int height = FreeImage_GetHeight(Y);
-	int pitch = FreeImage_GetPitch(Y);
+	const int width = FreeImage_GetWidth(Y);
+	const int height = FreeImage_GetHeight(Y);
+	const int pitch = FreeImage_GetPitch(Y);
 
 	std::vector<float> vY(static_cast<size_t>(width) * height);
 
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(Y);
-	for(y = 0; y < height; y++) {
-		float *pixel = (float*)bits;
-		for(x = 0; x < width; x++) {
-			if(pixel[x] != 0) {
+	auto *bits = (const uint8_t*)FreeImage_GetBits(Y);
+	for (y = 0; y < height; y++) {
+		auto *pixel = (const float*)bits;
+		for (x = 0; x < width; x++) {
+			if (pixel[x] != 0) {
 				vY.push_back(pixel[x]);
 			}
 		}
@@ -432,46 +433,46 @@ NormalizeY(FIBITMAP *Y, float minPrct, float maxPrct) {
 	int x, y;
 	float maxLum, minLum;
 
-	if(minPrct > maxPrct) {
+	if (minPrct > maxPrct) {
 		// swap values
 		float t = minPrct; minPrct = maxPrct; maxPrct = t;
 	}
-	if(minPrct < 0) minPrct = 0;
-	if(maxPrct > 1) maxPrct = 1;
+	if (minPrct < 0) minPrct = 0;
+	if (maxPrct > 1) maxPrct = 1;
 
-	int width = FreeImage_GetWidth(Y);
-	int height = FreeImage_GetHeight(Y);
-	int pitch = FreeImage_GetPitch(Y);
+	const int width = FreeImage_GetWidth(Y);
+	const int height = FreeImage_GetHeight(Y);
+	const int pitch = FreeImage_GetPitch(Y);
 
 	// find max & min luminance values
-	if((minPrct > 0) || (maxPrct < 1)) {
+	if ((minPrct > 0) || (maxPrct < 1)) {
 		maxLum = 0, minLum = 0;
 		findMaxMinPercentile(Y, minPrct, &minLum, maxPrct, &maxLum);
 	} else {
 		maxLum = -1e20F, minLum = 1e20F;
-		uint8_t *bits = (uint8_t*)FreeImage_GetBits(Y);
-		for(y = 0; y < height; y++) {
-			const float *pixel = (float*)bits;
-			for(x = 0; x < width; x++) {
+		auto *bits = (const uint8_t*)FreeImage_GetBits(Y);
+		for (y = 0; y < height; y++) {
+			auto *pixel = (const float*)bits;
+			for (x = 0; x < width; x++) {
 				const float value = pixel[x];
-				maxLum = (maxLum < value) ? value : maxLum;	// max Luminance in the scene
-				minLum = (minLum < value) ? minLum : value;	// min Luminance in the scene
+				maxLum = std::max(maxLum, value);	// max Luminance in the scene
+				minLum = std::min(minLum, value);	// min Luminance in the scene
 			}
 			// next line
 			bits += pitch;
 		}
 	}
-	if(maxLum == minLum) return;
+	if (maxLum == minLum) return;
 
 	// normalize to range 0..1 
 	const float divider = maxLum - minLum;
-	uint8_t *bits = (uint8_t*)FreeImage_GetBits(Y);
-	for(y = 0; y < height; y++) {
-		float *pixel = (float*)bits;
-		for(x = 0; x < width; x++) {
+	auto *bits = (uint8_t*)FreeImage_GetBits(Y);
+	for (y = 0; y < height; y++) {
+		auto *pixel = (float*)bits;
+		for (x = 0; x < width; x++) {
 			pixel[x] = (pixel[x] - minLum) / divider;
-			if(pixel[x] <= 0) pixel[x] = EPSILON;
-			if(pixel[x] > 1) pixel[x] = 1;
+			if (pixel[x] <= 0) pixel[x] = EPSILON;
+			if (pixel[x] > 1) pixel[x] = 1;
 		}
 		// next line
 		bits += pitch;

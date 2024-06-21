@@ -39,24 +39,24 @@ ConvertAnyTag(FITAG *tag) {
 	static std::string buffer;
 	uint32_t i;
 
-	if(!tag)
-		return NULL;
+	if (!tag)
+		return nullptr;
 
 	buffer.erase();
 	
 	// convert the tag value to a string buffer
 
-	FREE_IMAGE_MDTYPE tag_type = FreeImage_GetTagType(tag);
+	const FREE_IMAGE_MDTYPE tag_type = FreeImage_GetTagType(tag);
 	uint32_t tag_count = FreeImage_GetTagCount(tag);
 
-	switch(tag_type) {
+	switch (tag_type) {
 		case FIDT_BYTE:		// N x 8-bit unsigned integer 
 		{
 			auto *pvalue = (const uint8_t*)FreeImage_GetTagValue(tag);
 
 			sprintf(format, "%d",	(int32_t) pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %d",	(int32_t) pvalue[i]);
 				buffer += format;
 			}
@@ -68,7 +68,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%hu", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %hu",	pvalue[i]);
 				buffer += format;
 			}
@@ -80,7 +80,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%u", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %u",	pvalue[i]);
 				buffer += format;
 			}
@@ -92,7 +92,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%u/%u", pvalue[0], pvalue[1]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %u/%u", pvalue[2*i], pvalue[2*i+1]);
 				buffer += format;
 			}
@@ -104,7 +104,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%d",	(int32_t) pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %d",	(int32_t) pvalue[i]);
 				buffer += format;
 			}
@@ -116,7 +116,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%hd", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %hd",	pvalue[i]);
 				buffer += format;
 			}
@@ -128,7 +128,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%d", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %d",	pvalue[i]);
 				buffer += format;
 			}
@@ -140,7 +140,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%d/%d", pvalue[0], pvalue[1]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %d/%d", pvalue[2*i], pvalue[2*i+1]);
 				buffer += format;
 			}
@@ -152,7 +152,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%f", (double) pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, "%f", (double) pvalue[i]);
 				buffer += format;
 			}
@@ -164,7 +164,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%lf", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, "%lf", pvalue[i]);
 				buffer += format;
 			}
@@ -176,7 +176,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%X", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " %X",	pvalue[i]);
 				buffer += format;
 			}
@@ -188,7 +188,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "(%d,%d,%d,%d)", pvalue[0].red, pvalue[0].green, pvalue[0].blue, pvalue[0].alpha);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, " (%d,%d,%d,%d)", pvalue[i].red, pvalue[i].green, pvalue[i].blue, pvalue[i].alpha);
 				buffer += format;
 			}
@@ -201,7 +201,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%llu", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, "%llu", pvalue[i]);
 				buffer += format;
 			}
@@ -214,7 +214,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%llX", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, "%llX", pvalue[i]);
 				buffer += format;
 			}
@@ -227,7 +227,7 @@ ConvertAnyTag(FITAG *tag) {
 
 			sprintf(format, "%lld", pvalue[0]);
 			buffer += format;
-			for(i = 1; i < tag_count; i++) {
+			for (i = 1; i < tag_count; i++) {
 				sprintf(format, "%lld", pvalue[i]);
 				buffer += format;
 			}
@@ -239,7 +239,7 @@ ConvertAnyTag(FITAG *tag) {
 		default:
 		{
 			int max_size = MIN((int)FreeImage_GetTagLength(tag), (int)MAX_TEXT_EXTENT);
-			if(max_size == MAX_TEXT_EXTENT)
+			if (max_size == MAX_TEXT_EXTENT)
 				max_size--;
 			memcpy(format, (char*)FreeImage_GetTagValue(tag), max_size);
 			format[max_size] = '\0';
@@ -259,14 +259,14 @@ ConvertExifTag(FITAG *tag) {
 	char format[MAX_TEXT_EXTENT];
 	static std::string buffer;
 
-	if(!tag)
-		return NULL;
+	if (!tag)
+		return nullptr;
 
 	buffer.erase();
 
 	// convert the tag value to a string buffer
 
-	switch(FreeImage_GetTagID(tag)) {
+	switch (FreeImage_GetTagID(tag)) {
 		case TAG_ORIENTATION:
 		{
 			unsigned short orientation = *((unsigned short *)FreeImage_GetTagValue(tag));
@@ -296,20 +296,20 @@ ConvertExifTag(FITAG *tag) {
 		case TAG_REFERENCE_BLACK_WHITE:
 		{
 			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue(tag);
-			if(FreeImage_GetTagLength(tag) == 48) {
+			if (FreeImage_GetTagLength(tag) == 48) {
 				// reference black point value and reference white point value (ReferenceBlackWhite)
 				int blackR = 0, whiteR = 0, blackG = 0, whiteG = 0, blackB = 0, whiteB = 0;
-				if(pvalue[1])
+				if (pvalue[1])
 					blackR = (int)(pvalue[0] / pvalue[1]);
-				if(pvalue[3])
+				if (pvalue[3])
 					whiteR = (int)(pvalue[2] / pvalue[3]);
-				if(pvalue[5])
+				if (pvalue[5])
 					blackG = (int)(pvalue[4] / pvalue[5]);
-				if(pvalue[7])
+				if (pvalue[7])
 					whiteG = (int)(pvalue[6] / pvalue[7]);
-				if(pvalue[9])
+				if (pvalue[9])
 					blackB = (int)(pvalue[8] / pvalue[9]);
-				if(pvalue[11])
+				if (pvalue[11])
 					whiteB = (int)(pvalue[10] / pvalue[11]);
 
 				sprintf(format, "[%d,%d,%d] [%d,%d,%d]", blackR, blackG, blackB, whiteR, whiteG, whiteB);
@@ -322,7 +322,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_COLOR_SPACE:
 		{
-			auto colorSpace = *((const unsigned short *)FreeImage_GetTagValue(tag));
+			const auto colorSpace = *((unsigned short *)FreeImage_GetTagValue(tag));
 			if (colorSpace == 1) {
 				return "sRGB";
 			} else if (colorSpace == 65535) {
@@ -337,9 +337,9 @@ ConvertExifTag(FITAG *tag) {
 		{
 			const char *componentStrings[7] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
 			auto *pvalue = (const uint8_t*)FreeImage_GetTagValue(tag);
-			for(uint32_t i = 0; i < MIN((uint32_t)4, FreeImage_GetTagCount(tag)); i++) {
+			for (uint32_t i = 0; i < MIN((uint32_t)4, FreeImage_GetTagCount(tag)); i++) {
 				int j = pvalue[i];
-				if(j > 0 && j < 7)
+				if (j > 0 && j < 7)
 					buffer += componentStrings[j];
 			}
 			return buffer.c_str();
@@ -350,7 +350,7 @@ ConvertExifTag(FITAG *tag) {
 		{
 			FIRational r(tag);
 			buffer = r.toString();
-			if(buffer == "1")
+			if (buffer == "1")
 				buffer += " bit/pixel";
 			else 
 				buffer += " bits/pixel";
@@ -374,7 +374,7 @@ ConvertExifTag(FITAG *tag) {
 		case TAG_RESOLUTION_UNIT:
 		case TAG_FOCAL_PLANE_UNIT:
 		{
-			unsigned short resolutionUnit = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto resolutionUnit = *((unsigned short *)FreeImage_GetTagValue(tag));
 			switch (resolutionUnit) {
 				case 1:
 					return "(No unit)";
@@ -390,7 +390,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_YCBCR_POSITIONING:
 		{
-			unsigned short yCbCrPosition = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto yCbCrPosition = *((unsigned short *)FreeImage_GetTagValue(tag));
 			switch (yCbCrPosition) {
 				case 1:
 					return "Center of pixel array";
@@ -457,7 +457,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_FOCAL_LENGTH_IN_35MM_FILM:
 		{
-			unsigned short focalLength = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto focalLength = *((unsigned short *)FreeImage_GetTagValue(tag));
 			sprintf(format, "%hu mm", focalLength);
 			buffer += format;
 			return buffer.c_str();
@@ -466,8 +466,8 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_FLASH:
 		{
-			unsigned short flash = *((unsigned short *)FreeImage_GetTagValue(tag));
-			switch(flash) {
+			const auto flash = *((unsigned short *)FreeImage_GetTagValue(tag));
+			switch (flash) {
 				case 0x0000:
 					return "Flash did not fire";
 				case 0x0001:
@@ -522,7 +522,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SCENE_TYPE:
 		{
-			uint8_t sceneType = *((uint8_t*)FreeImage_GetTagValue(tag));
+			const auto sceneType = *((uint8_t*)FreeImage_GetTagValue(tag));
 			if (sceneType == 1) {
 				return "Directly photographed image";
 			} else {
@@ -536,9 +536,9 @@ ConvertExifTag(FITAG *tag) {
 		case TAG_SUBJECT_DISTANCE:
 		{
 			FIRational r(tag);
-			if(r.getNumerator() == 0xFFFFFFFF) {
+			if (r.getNumerator() == 0xFFFFFFFF) {
 				return "Infinity";
-			} else if(r.getNumerator() == 0) {
+			} else if (r.getNumerator() == 0) {
 				return "Distance unknown";
 			} else {
 				double distance = r.doubleValue();
@@ -551,7 +551,7 @@ ConvertExifTag(FITAG *tag) {
 			
 		case TAG_METERING_MODE:
 		{
-			unsigned short meteringMode = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto meteringMode = *((unsigned short *)FreeImage_GetTagValue(tag));
 			switch (meteringMode) {
 				case 0:
 					return "Unknown";
@@ -577,7 +577,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_LIGHT_SOURCE:
 		{
-			unsigned short lightSource = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto lightSource = *((unsigned short *)FreeImage_GetTagValue(tag));
 			switch (lightSource) {
 				case 0:
 					return "Unknown";
@@ -629,7 +629,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SENSING_METHOD:
 		{
-			unsigned short sensingMethod = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto sensingMethod = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (sensingMethod) {
 				case 1:
@@ -654,7 +654,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_FILE_SOURCE:
 		{
-			uint8_t fileSource = *((uint8_t*)FreeImage_GetTagValue(tag));
+			const auto fileSource = *((uint8_t*)FreeImage_GetTagValue(tag));
 			if (fileSource == 3) {
 				return "Digital Still Camera (DSC)";
 			} else {
@@ -667,7 +667,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_EXPOSURE_PROGRAM:
 		{
-			unsigned short exposureProgram = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto exposureProgram = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (exposureProgram) {
 				case 1:
@@ -696,7 +696,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_CUSTOM_RENDERED:
 		{
-			unsigned short customRendered = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto customRendered = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (customRendered) {
 				case 0:
@@ -713,7 +713,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_EXPOSURE_MODE:
 		{
-			unsigned short exposureMode = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto exposureMode = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (exposureMode) {
 				case 0:
@@ -732,7 +732,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_WHITE_BALANCE:
 		{
-			unsigned short whiteBalance = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto whiteBalance = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (whiteBalance) {
 				case 0:
@@ -749,7 +749,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SCENE_CAPTURE_TYPE:
 		{
-			unsigned short sceneType = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto sceneType = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (sceneType) {
 				case 0:
@@ -770,7 +770,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_GAIN_CONTROL:
 		{
-			unsigned short gainControl = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto gainControl = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (gainControl) {
 				case 0:
@@ -793,7 +793,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_CONTRAST:
 		{
-			unsigned short contrast = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto contrast = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (contrast) {
 				case 0:
@@ -812,7 +812,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SATURATION:
 		{
-			unsigned short saturation = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto saturation = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (saturation) {
 				case 0:
@@ -831,7 +831,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SHARPNESS:
 		{
-			unsigned short sharpness = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto sharpness = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (sharpness) {
 				case 0:
@@ -850,7 +850,7 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_SUBJECT_DISTANCE_RANGE:
 		{
-			unsigned short distanceRange = *((unsigned short *)FreeImage_GetTagValue(tag));
+			const auto distanceRange = *((unsigned short *)FreeImage_GetTagValue(tag));
 
 			switch (distanceRange) {
 				case 0:
@@ -885,8 +885,8 @@ ConvertExifTag(FITAG *tag) {
 		{
 			// first 8 bytes are used to define an ID code
 			// we assume this is an ASCII string
-			const uint8_t *userComment = (uint8_t*)FreeImage_GetTagValue(tag);
-			for(uint32_t i = 8; i < FreeImage_GetTagLength(tag); i++) {
+			auto *userComment = (const uint8_t*)FreeImage_GetTagValue(tag);
+			for (uint32_t i = 8; i < FreeImage_GetTagLength(tag); i++) {
 				buffer += userComment[i];
 			}
 			buffer += '\0';
@@ -896,8 +896,8 @@ ConvertExifTag(FITAG *tag) {
 
 		case TAG_COMPRESSION:
 		{
-			uint16_t compression = *((uint16_t*)FreeImage_GetTagValue(tag));
-			switch(compression) {
+			const auto compression = *((uint16_t*)FreeImage_GetTagValue(tag));
+			switch (compression) {
 				case TAG_COMPRESSION_NONE:
 					sprintf(format, "dump mode (%d)", compression);
 					break;
@@ -993,30 +993,30 @@ ConvertExifGPSTag(FITAG *tag) {
 	char format[MAX_TEXT_EXTENT];
 	static std::string buffer;
 
-	if(!tag)
-		return NULL;
+	if (!tag)
+		return nullptr;
 
 	buffer.erase();
 
 	// convert the tag value to a string buffer
 
-	switch(FreeImage_GetTagID(tag)) {
+	switch (FreeImage_GetTagID(tag)) {
 		case TAG_GPS_LATITUDE:
 		case TAG_GPS_LONGITUDE:
 		case TAG_GPS_TIME_STAMP:
 		{
 			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue(tag);
-			if(FreeImage_GetTagLength(tag) == 24) {
+			if (FreeImage_GetTagLength(tag) == 24) {
 				// dd:mm:ss or hh:mm:ss
 				int dd = 0, mm = 0;
 				double ss = 0;
 
 				// convert to seconds
-				if(pvalue[1])
+				if (pvalue[1])
 					ss += ((double)pvalue[0] / (double)pvalue[1]) * 3600;
-				if(pvalue[3])
+				if (pvalue[3])
 					ss += ((double)pvalue[2] / (double)pvalue[3]) * 60;
-				if(pvalue[5])
+				if (pvalue[5])
 					ss += ((double)pvalue[4] / (double)pvalue[5]);
 				
 				// convert to dd:mm:ss.ss
@@ -1071,7 +1071,7 @@ ConvertExifGPSTag(FITAG *tag) {
 
 const char* DLL_CALLCONV 
 FreeImage_TagToString(FREE_IMAGE_MDMODEL model, FITAG *tag, char *Make) {
-	switch(model) {
+	switch (model) {
 		case FIMD_EXIF_MAIN:
 		case FIMD_EXIF_EXIF:
 			return ConvertExifTag(tag);
