@@ -505,7 +505,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 1:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
+						const uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[x];
 							index++;
@@ -515,7 +515,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 3:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
+						const uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[FI_RGBA_RED];
 							image->comps[1].data[index] = bits[FI_RGBA_GREEN];
@@ -528,7 +528,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 4:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
+						const uint8_t *bits = FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[FI_RGBA_RED];
 							image->comps[1].data[index] = bits[FI_RGBA_GREEN];
@@ -546,7 +546,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 1:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(dib, h - 1 - y);
+						const uint16_t *bits = (const uint16_t*)FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[x];
 							index++;
@@ -556,7 +556,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 3:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						FIRGB16 *bits = (FIRGB16*)FreeImage_GetScanLine(dib, h - 1 - y);
+						const FIRGB16 *bits = (const FIRGB16*)FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[x].red;
 							image->comps[1].data[index] = bits[x].green;
@@ -568,7 +568,7 @@ opj_image_t* FIBITMAPToJ2KImage(int format_id, FIBITMAP *dib, const opj_cparamet
 				case 4:
 					index = 0;
 					for(y = 0; y < h; y++) {
-						FIRGBA16 *bits = (FIRGBA16*)FreeImage_GetScanLine(dib, h - 1 - y);
+						const FIRGBA16 *bits = (const FIRGBA16*)FreeImage_GetScanLine(dib, h - 1 - y);
 						for(x = 0; x < w; x++) {
 							image->comps[0].data[index] = bits[x].red;
 							image->comps[1].data[index] = bits[x].green;

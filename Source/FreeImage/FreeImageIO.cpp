@@ -65,7 +65,7 @@ unsigned DLL_CALLCONV
 _MemoryReadProc(void *buffer, unsigned size, unsigned count, fi_handle handle) {
 	unsigned x;
 
-	FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
+	auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
 
 	for(x = 0; x < count; x++) {
 		long remaining_bytes = mem_header->file_length - mem_header->current_position;
@@ -90,7 +90,7 @@ _MemoryWriteProc(void *buffer, unsigned size, unsigned count, fi_handle handle) 
 	void *newdata;
 	long newdatalen;
 
-	FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
+	auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
 
 	//double the data block size if we need to
 	while( (mem_header->current_position + (long)(size * count)) >= mem_header->data_length ) {
@@ -125,7 +125,7 @@ _MemoryWriteProc(void *buffer, unsigned size, unsigned count, fi_handle handle) 
 
 int DLL_CALLCONV 
 _MemorySeekProc(fi_handle handle, long offset, int origin) {
-	FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
+	auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
 
 	// you can use _MemorySeekProc to reposition the pointer anywhere in a file
 	// the pointer can also be positioned beyond the end of the file
@@ -159,7 +159,7 @@ _MemorySeekProc(fi_handle handle, long offset, int origin) {
 
 long DLL_CALLCONV 
 _MemoryTellProc(fi_handle handle) {
-	FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)handle)->data);
+	auto *mem_header = (const FIMEMORYHEADER*)(((const FIMEMORY*)handle)->data);
 
 	return mem_header->current_position;
 }

@@ -89,8 +89,8 @@ FreeImage_CloneTag(FITAG *tag) {
 
 	try {
 		// copy the tag
-		FITAGHEADER *src_tag = (FITAGHEADER *)tag->data;
-		FITAGHEADER *dst_tag = (FITAGHEADER *)clone->data;
+		auto *src_tag = (const FITAGHEADER *)tag->data;
+		auto *dst_tag = (FITAGHEADER *)clone->data;
 
 		// tag ID
 		dst_tag->id = src_tag->id;
@@ -268,8 +268,8 @@ FreeImage_SetTagValue(FITAG *tag, const void *value) {
 				if(!tag_header->value) {
 					return FALSE;
 				}
-				char *src_data = (char*)value;
-				char *dst_data = (char*)tag_header->value;
+				auto *src_data = (const char*)value;
+				auto *dst_data = (char*)tag_header->value;
 				for(uint32_t i = 0; i < tag_header->length; i++) {
 					dst_data[i] = src_data[i];
 				}
@@ -327,7 +327,7 @@ size_t
 FreeImage_GetTagMemorySize(FITAG *tag) {
 	size_t size = 0;
 	if (tag) {
-		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
+		auto *tag_header = (const FITAGHEADER *)tag->data;
 		size += sizeof(FITAG);
 		size += sizeof(FITAGHEADER);
 		if (tag_header->key) {

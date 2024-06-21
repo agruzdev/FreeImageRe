@@ -107,8 +107,8 @@ Combine4(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsigned 
 	}
 
 	// get src and dst palettes
-	FIRGBA8 *src_pal = FreeImage_GetPalette(src_dib);
-	FIRGBA8 *dst_pal = FreeImage_GetPalette(dst_dib);
+	const FIRGBA8 *src_pal = FreeImage_GetPalette(src_dib);
+	const FIRGBA8 *dst_pal = FreeImage_GetPalette(dst_dib);
 	if (src_pal == NULL || dst_pal == NULL) {
 		return FALSE;
 	}
@@ -137,14 +137,14 @@ Combine4(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsigned 
 	}
 
 	uint8_t *dst_bits = FreeImage_GetBits(dst_dib) + ((FreeImage_GetHeight(dst_dib) - FreeImage_GetHeight(src_dib) - y) *	FreeImage_GetPitch(dst_dib)) + (x >> 1);
-	uint8_t *src_bits = FreeImage_GetBits(src_dib);    
+	const uint8_t *src_bits = FreeImage_GetBits(src_dib);    
 
 	// combine images
 
 	// allocate space for our temporary row
-	unsigned src_line   = FreeImage_GetLine(src_dib);
-	unsigned src_width  = FreeImage_GetWidth(src_dib);
-	unsigned src_height = FreeImage_GetHeight(src_dib);
+	const unsigned src_line   = FreeImage_GetLine(src_dib);
+	const unsigned src_width  = FreeImage_GetWidth(src_dib);
+	const unsigned src_height = FreeImage_GetHeight(src_dib);
 
 	uint8_t *buffer = (uint8_t *)malloc(src_line * sizeof(uint8_t));
 	if (buffer == NULL) {
@@ -264,7 +264,7 @@ Combine16_555(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsi
 				FIRGB8 color_t;
 				
 				uint16_t *tmp1 = (uint16_t *)&dst_bits[cols];
-				uint16_t *tmp2 = (uint16_t *)&src_bits[cols];
+				const uint16_t *tmp2 = (uint16_t *)&src_bits[cols];
 
 				// convert 16-bit colors to 24-bit
 
@@ -324,7 +324,7 @@ Combine16_565(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y, unsi
 				FIRGB8 color_t;
 				
 				uint16_t *tmp1 = (uint16_t *)&dst_bits[cols];
-				uint16_t *tmp2 = (uint16_t *)&src_bits[cols];
+				const uint16_t *tmp2 = (uint16_t *)&src_bits[cols];
 
 				// convert 16-bit colors to 24-bit
 
@@ -450,13 +450,13 @@ CombineSameType(FIBITMAP *dst_dib, FIBITMAP *src_dib, unsigned x, unsigned y) {
 		return FALSE;
 	}
 
-	unsigned src_width  = FreeImage_GetWidth(src_dib);
-	unsigned src_height = FreeImage_GetHeight(src_dib);
-	unsigned src_pitch  = FreeImage_GetPitch(src_dib);
-	unsigned src_line   = FreeImage_GetLine(src_dib);
-	unsigned dst_width  = FreeImage_GetWidth(dst_dib);
-	unsigned dst_height = FreeImage_GetHeight(dst_dib);
-	unsigned dst_pitch  = FreeImage_GetPitch(dst_dib);
+	const unsigned src_width  = FreeImage_GetWidth(src_dib);
+	const unsigned src_height = FreeImage_GetHeight(src_dib);
+	const unsigned src_pitch  = FreeImage_GetPitch(src_dib);
+	const unsigned src_line   = FreeImage_GetLine(src_dib);
+	const unsigned dst_width  = FreeImage_GetWidth(dst_dib);
+	const unsigned dst_height = FreeImage_GetHeight(dst_dib);
+	const unsigned dst_pitch  = FreeImage_GetPitch(dst_dib);
 	
 	// check the size of src image
 	if((x + src_width > dst_width) || (y + src_height > dst_height)) {
@@ -504,16 +504,16 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 		INPLACESWAP(top, bottom);
 	}
 	// check the size of the sub image
-	int src_width  = FreeImage_GetWidth(src);
-	int src_height = FreeImage_GetHeight(src);
+	const int src_width  = FreeImage_GetWidth(src);
+	const int src_height = FreeImage_GetHeight(src);
 	if((left < 0) || (right > src_width) || (top < 0) || (bottom > src_height)) {
 		return NULL;
 	}
 
 	// allocate the sub image
-	unsigned bpp = FreeImage_GetBPP(src);
-	int dst_width = (right - left);
-	int dst_height = (bottom - top);
+	const unsigned bpp = FreeImage_GetBPP(src);
+	const int dst_width = (right - left);
+	const int dst_height = (bottom - top);
 
 	FIBITMAP *dst = 
 		FreeImage_AllocateT(FreeImage_GetImageType(src), 
@@ -525,13 +525,13 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 	if(NULL == dst) return NULL;
 
 	// get the dimensions
-	int dst_line = FreeImage_GetLine(dst);
-	int dst_pitch = FreeImage_GetPitch(dst);
-	int src_pitch = FreeImage_GetPitch(src);
+	const int dst_line = FreeImage_GetLine(dst);
+	const int dst_pitch = FreeImage_GetPitch(dst);
+	const int src_pitch = FreeImage_GetPitch(src);
 
 	// get the pointers to the bits and such
 
-	uint8_t *src_bits = FreeImage_GetScanLine(src, src_height - top - dst_height);
+	const uint8_t *src_bits = FreeImage_GetScanLine(src, src_height - top - dst_height);
 	switch(bpp) {
 		case 1:
 			// point to x = 0
@@ -544,7 +544,7 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 		default:
 		{
 			// calculate the number of bytes per pixel
-			unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
+			const unsigned bytespp = FreeImage_GetLine(src) / FreeImage_GetWidth(src);
 			// point to x = left
 			src_bits += left * bytespp;
 		}
@@ -797,13 +797,13 @@ FreeImage_CreateView(FIBITMAP *dib, unsigned left, unsigned top, unsigned right,
 	}
 
 	// check the size of the sub image
-	unsigned width = FreeImage_GetWidth(dib);
-	unsigned height = FreeImage_GetHeight(dib);
+	const unsigned width = FreeImage_GetWidth(dib);
+	const unsigned height = FreeImage_GetHeight(dib);
 	if (left < 0 || right > width || top < 0 || bottom > height) {
 		return NULL;
 	}
 
-	unsigned bpp = FreeImage_GetBPP(dib);
+	const unsigned bpp = FreeImage_GetBPP(dib);
 	uint8_t *bits = FreeImage_GetScanLine(dib, height - bottom);
 	switch (bpp) {
 		case 1:

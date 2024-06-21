@@ -86,9 +86,9 @@ public:
 	Default fixed width = 0.5
 	*/
     CBoxFilter() : CGenericFilter(0.5) {}
-    virtual ~CBoxFilter() {}
+    ~CBoxFilter() override {}
 
-    double Filter (double dVal) { return (fabs(dVal) <= m_dWidth ? 1.0 : 0.0); }
+    double Filter (double dVal) override { return (fabs(dVal) <= m_dWidth ? 1.0 : 0.0); }
 };
 
 /** Bilinear filter
@@ -98,9 +98,9 @@ class CBilinearFilter : public CGenericFilter
 public:
 
     CBilinearFilter () : CGenericFilter(1) {}
-    virtual ~CBilinearFilter() {}
+    ~CBilinearFilter() override {}
 
-    double Filter (double dVal) {
+    double Filter (double dVal) override {
 		dVal = fabs(dVal); 
 		return (dVal < m_dWidth ? m_dWidth - dVal : 0.0); 
 	}
@@ -143,9 +143,9 @@ public:
 		q2 = (6*b + 30*c) / 6;
 		q3 = (-b - 6*c) / 6;
 	}
-    virtual ~CBicubicFilter() {}
+    ~CBicubicFilter() override {}
 
-    double Filter(double dVal) { 
+    double Filter(double dVal) override {
 		dVal = fabs(dVal);
 		if(dVal < 1)
 			return (p0 + dVal*dVal*(p2 + dVal*p3));
@@ -183,9 +183,9 @@ public:
 	Default fixed width = 2
 	*/
 	CCatmullRomFilter() : CGenericFilter(2) {}
-    virtual ~CCatmullRomFilter() {}
+    ~CCatmullRomFilter() override {}
 
-    double Filter(double dVal) { 
+    double Filter(double dVal) override {
 		if(dVal < -2) return 0;
 		if(dVal < -1) return (0.5*(4 + dVal*(8 + dVal*(5 + dVal))));
 		if(dVal < 0)  return (0.5*(2 + dVal*dVal*(-5 - 3*dVal)));
@@ -210,9 +210,9 @@ public:
 	Default fixed width = 3
 	*/
 	CLanczos3Filter() : CGenericFilter(3) {}
-    virtual ~CLanczos3Filter() {}
+    ~CLanczos3Filter() override {}
 
-    double Filter(double dVal) { 
+    double Filter(double dVal) override {
 		dVal = fabs(dVal); 
 		if(dVal < m_dWidth)	{
 			return (sinc(dVal) * sinc(dVal / m_dWidth));
@@ -243,9 +243,9 @@ public:
 	Default fixed width = 2
 	*/
 	CBSplineFilter() : CGenericFilter(2) {}
-    virtual ~CBSplineFilter() {}
+    ~CBSplineFilter() override {}
 
-    double Filter(double dVal) { 
+    double Filter(double dVal) override {
 
 		dVal = fabs(dVal);
 		if(dVal < 1) return (4 + dVal*dVal*(-6 + 3*dVal)) / 6;
@@ -272,9 +272,9 @@ public:
 	Default width = 0.5
 	*/
     CBlackmanFilter (double dWidth = double(0.5)) : CGenericFilter(dWidth) {}
-    virtual ~CBlackmanFilter() {}
+    ~CBlackmanFilter() override {}
 
-    double Filter (double dVal) {
+    double Filter (double dVal) override {
 		if(fabs (dVal) > m_dWidth) {
 			return 0; 
         }

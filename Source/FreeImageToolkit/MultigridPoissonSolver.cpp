@@ -466,8 +466,8 @@ FIBITMAP* DLL_CALLCONV
 FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle) {
 	if(!FreeImage_HasPixels(Laplacian)) return NULL;
 
-	int width = FreeImage_GetWidth(Laplacian);
-	int height = FreeImage_GetHeight(Laplacian);
+	const int width = FreeImage_GetWidth(Laplacian);
+	const int height = FreeImage_GetHeight(Laplacian);
 
 	// get nearest larger dimension length that is acceptable by the algorithm
 	int n = MAX(width, height);

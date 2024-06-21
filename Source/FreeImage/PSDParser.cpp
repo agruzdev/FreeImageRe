@@ -322,7 +322,7 @@ bool psdHeaderInfo::Read(FreeImageIO *io, fi_handle handle) {
 		if (1 == nVersion || 2 == nVersion) {
 			_Version = nVersion;
 			// header.Reserved must be zero
-			uint8_t psd_reserved[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+			const uint8_t psd_reserved[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 			if(memcmp(header.Reserved, psd_reserved, 6) != 0) {
 				FreeImage_OutputMessageProc(FIF_PSD, "Warning: file header reserved member is not equal to zero");
 			}
@@ -1307,7 +1307,7 @@ void psdParser::ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSiz
 	}
 }
 
-void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, uint8_t* line_end, unsigned srcSize) {
+void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t* line_end, unsigned srcSize) {
 	while (srcSize > 0) {
 
 		int len = *rle_line++;

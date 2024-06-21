@@ -100,8 +100,8 @@ FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
 
 	if(!FreeImage_HasPixels(dib) || (max_pixel_size <= 0)) return NULL;
 
-	int width	= FreeImage_GetWidth(dib);
-	int height = FreeImage_GetHeight(dib);
+	const int width	= FreeImage_GetWidth(dib);
+	const int height = FreeImage_GetHeight(dib);
 
 	if(max_pixel_size == 0) max_pixel_size = 1;
 

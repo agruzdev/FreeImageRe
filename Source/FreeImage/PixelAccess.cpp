@@ -43,7 +43,7 @@ FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, uint8_t *value) {
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		uint8_t *bits = FreeImage_GetScanLine(dib, y);
+		const uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 1:
@@ -72,13 +72,13 @@ FreeImage_GetPixelColor(FIBITMAP *dib, unsigned x, unsigned y, FIRGBA8 *value) {
 		return FALSE;
 
 	if((x < FreeImage_GetWidth(dib)) && (y < FreeImage_GetHeight(dib))) {
-		uint8_t *bits = FreeImage_GetScanLine(dib, y);
+		const uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		switch(FreeImage_GetBPP(dib)) {
 			case 16:
 			{
 				bits += 2*x;
-				uint16_t *pixel = (uint16_t *)bits;
+				const uint16_t *pixel = (const uint16_t *)bits;
 				if((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
 					value->blue		= (uint8_t)((((*pixel & FI16_565_BLUE_MASK) >> FI16_565_BLUE_SHIFT) * 0xFF) / 0x1F);
 					value->green		= (uint8_t)((((*pixel & FI16_565_GREEN_MASK) >> FI16_565_GREEN_SHIFT) * 0xFF) / 0x3F);

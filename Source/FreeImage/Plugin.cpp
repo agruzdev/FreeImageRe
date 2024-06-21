@@ -225,7 +225,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 		*/
 
 		// initialise the TagLib singleton
-		TagLib& s = TagLib::instance();
+		const TagLib& s = TagLib::instance();
 
 		// internal plugin initialization
 

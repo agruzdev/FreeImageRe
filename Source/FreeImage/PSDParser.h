@@ -316,7 +316,7 @@ private:
 	/**	Actually ignore it */
 	bool ReadLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle);
 	void ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned dstBpp, unsigned bytes);
-	void UnpackRLE(uint8_t* dst, const uint8_t* src, uint8_t* dst_end, unsigned srcSize);
+	void UnpackRLE(uint8_t* dst, const uint8_t* src, const uint8_t* dst_end, unsigned srcSize);
 	FIBITMAP* ReadImageData(FreeImageIO *io, fi_handle handle);
 	bool WriteLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle);
 	void WriteImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSize, unsigned srcBpp, unsigned bytes);
