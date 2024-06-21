@@ -7,7 +7,7 @@
 // - Martin Weber (martweb@gmx.net)
 // - Machiel ten Brinke (brinkem@uni-one.nl)
 // - Peter Lemmens (peter.lemmens@planetinternet.be)
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 // - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 //
 // This file is part of FreeImage 3

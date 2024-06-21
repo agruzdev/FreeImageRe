@@ -2,9 +2,9 @@
 // DDS Loader
 //
 // Design and implementation by
-// - Volker Gärtner (volkerg@gmx.at)
+// - Volker Gertner (volkerg@gmx.at)
 // - Sherman Wilcox
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //

@@ -3,7 +3,7 @@
 //
 // Design and implementation by
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 // - Jani Kajala (janik@remedy.fi)
 // - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 // - Carsten Klein (cklein05@users.sourceforge.net)
@@ -223,7 +223,7 @@ CIELabToXYZ(float L, float a, float b, float *X, float *Y, float *Z) {
 	static const float ref_Y = 100.000F;
 	static const float ref_Z = 108.883F;
 
-	*X = ref_X * var_X;	// ref_X = 95.047 (Observer= 2°, Illuminant= D65)
+	*X = ref_X * var_X;	// ref_X = 95.047 (Observer= 2 deg, Illuminant= D65)
 	*Y = ref_Y * var_Y;	// ref_Y = 100.000
 	*Z = ref_Z * var_Z;	// ref_Z = 108.883
 }
@@ -233,7 +233,7 @@ XYZ -> RGB conversion from http://www.easyrgb.com/
 */
 static void 
 XYZToRGB(float X, float Y, float Z, float *R, float *G, float *B) {
-	float var_X = X / 100; // X from 0 to  95.047 (Observer = 2°, Illuminant = D65)
+	float var_X = X / 100; // X from 0 to  95.047 (Observer = 2 deg, Illuminant = D65)
 	float var_Y = Y / 100; // Y from 0 to 100.000
 	float var_Z = Z / 100; // Z from 0 to 108.883
 

@@ -3,7 +3,7 @@
 // Extended TIFF Directory GEO Tag Support
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 // - Thorsten Radde (support@IdealSoftware.com)
 // - Berend Engelbrecht (softwarecave@users.sourceforge.net)
 // - Mihail Naydenov (mnaydenov@users.sourceforge.net)

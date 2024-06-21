@@ -3,7 +3,7 @@
 //
 // Design and implementation by 
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 // - Markus Loibl (markus.loibl@epost.de)
 // - Luca Piergentili (l.pierge@terra.es)
 // - Detlev Vendt (detlev.vendt@brillit.de)

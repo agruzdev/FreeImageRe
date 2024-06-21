@@ -2,7 +2,7 @@
 // Photoshop Loader
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herve Drolon (drolon@infonie.fr)
 // - Mihail Naydenov (mnaydenov@users.sourceforge.net)
 // - Garrick Meeker (garrickmeeker@users.sourceforge.net)
 //
@@ -1330,7 +1330,7 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 		else if ( len > 128 ) { //< MSB is set
 			// RLE compressed packet
 
-			// One byte of data is repeated (–len + 1) times
+			// One byte of data is repeated (-len + 1) times
 
 			len ^= 0xFF; // same as (-len + 1) & 0xFF
 			len += 2;    //
