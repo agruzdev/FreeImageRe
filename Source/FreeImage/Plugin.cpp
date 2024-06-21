@@ -358,9 +358,8 @@ FreeImage_Close(PluginNode *node, FreeImageIO *io, fi_handle handle, void *data)
 FIBITMAP * DLL_CALLCONV
 FreeImage_LoadFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
 	if ((fif >= 0) && (fif < FreeImage_GetFIFCount())) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
-		
-		if (node) {
+
+		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			if (node->m_plugin->load_proc) {
 				void *data = FreeImage_Open(node, io, handle, true);
 					
@@ -425,9 +424,8 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 	}
 
 	if ((fif >= 0) && (fif < FreeImage_GetFIFCount())) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
-		
-		if (node) {
+
+		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			if (node->m_plugin->save_proc) {
 				void *data = FreeImage_Open(node, io, handle, false);
 					
@@ -518,9 +516,8 @@ FreeImage_RegisterExternalPlugin(const char *path, const char *format, const cha
 int DLL_CALLCONV
 FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
 
-		if (node) {
+		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			FIBOOL previous_state = node->m_enabled;
 
 			node->m_enabled = enable;
@@ -535,7 +532,7 @@ FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 int DLL_CALLCONV
 FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? node->m_enabled : FALSE;
 	}
@@ -577,7 +574,7 @@ FreeImage_GetFIFFromMime(const char *mime) {
 const char * DLL_CALLCONV
 FreeImage_GetFormatFromFIF(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? (node->m_format ? node->m_format : node->m_plugin->format_proc()) : nullptr;
 	}
@@ -588,7 +585,7 @@ FreeImage_GetFormatFromFIF(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV 
 FreeImage_GetFIFMimeType(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? (node->m_plugin ? ( node->m_plugin->mime_proc ? node->m_plugin->mime_proc() : nullptr) : nullptr) : nullptr;
 	}
@@ -599,7 +596,7 @@ FreeImage_GetFIFMimeType(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFExtensionList(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? (node->m_extension ? node->m_extension : (node->m_plugin->extension_proc ? node->m_plugin->extension_proc() : nullptr)) : nullptr;
 	}
@@ -610,7 +607,7 @@ FreeImage_GetFIFExtensionList(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFDescription(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? (node->m_description ? node->m_description : (node->m_plugin->description_proc ? node->m_plugin->description_proc() : nullptr)) : nullptr;
 	}
@@ -621,7 +618,7 @@ FreeImage_GetFIFDescription(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFRegExpr(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? (node->m_regexpr ? node->m_regexpr : (node->m_plugin->regexpr_proc ? node->m_plugin->regexpr_proc() : nullptr)) : nullptr;
 	}
@@ -632,7 +629,7 @@ FreeImage_GetFIFRegExpr(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? node->m_plugin->load_proc != nullptr : FALSE;
 	}
@@ -643,7 +640,7 @@ FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? node->m_plugin->save_proc != nullptr : FALSE ;
 	}
@@ -654,7 +651,7 @@ FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? 
 			(node->m_plugin->supports_export_bpp_proc ? 
@@ -667,7 +664,7 @@ FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? 
 			(node->m_plugin->supports_export_type_proc ? 
@@ -680,7 +677,7 @@ FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? 
 			(node->m_plugin->supports_icc_profiles_proc ? 
@@ -693,7 +690,7 @@ FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsNoPixels(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
+		auto *node = s_plugins->FindNodeFromFIF(fif);
 
 		return node ? 
 			(node->m_plugin->supports_no_pixels_proc ? 
@@ -790,9 +787,7 @@ FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle) 
 	if (s_plugins) {
 		FIBOOL validated = FALSE;
 
-		PluginNode *node = s_plugins->FindNodeFromFIF(fif);
-
-		if (node) {
+		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			long tell = io->tell_proc(handle);
 
 			validated = node ? (node->m_enabled ? (node->m_plugin->validate_proc ? node->m_plugin->validate_proc(io, handle) : FALSE) : FALSE) : FALSE;
