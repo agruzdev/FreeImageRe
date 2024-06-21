@@ -88,11 +88,11 @@ ConvertToInterpolationCoefficients(double *c, long DataLength, double *z, long N
 	long	n, k;
 
 	// special case required by mirror boundaries
-	if(DataLength == 1L) {
+	if (DataLength == 1L) {
 		return;
 	}
 	// compute the overall gain
-	for(k = 0L; k < NbPoles; k++) {
+	for (k = 0L; k < NbPoles; k++) {
 		Lambda = Lambda * (1.0 - z[k]) * (1.0 - 1.0 / z[k]);
 	}
 	// apply the gain 
@@ -132,10 +132,10 @@ InitialCausalCoefficient(double	*c, long DataLength, double	z, double Tolerance)
 
 	// this initialization corresponds to mirror boundaries 
 	Horizon = DataLength;
-	if(Tolerance > 0) {
+	if (Tolerance > 0) {
 		Horizon = (long)ceil(log(Tolerance) / log(fabs(z)));
 	}
-	if(Horizon < DataLength) {
+	if (Horizon < DataLength) {
 		// accelerated loop
 		zn = z;
 		Sum = c[0];
@@ -175,7 +175,7 @@ GetColumn(double *Image, long Width, long x, double *Line, long Height) {
 	long y;
 
 	Image = Image + x;
-	for(y = 0L; y < Height; y++) {
+	for (y = 0L; y < Height; y++) {
 		Line[y] = (double)*Image;
 		Image += Width;
 	}
@@ -194,7 +194,7 @@ GetRow(double *Image, long y, double *Line, long Width) {
 	long	x;
 
 	Image = Image + (y * Width);
-	for(x = 0L; x < Width; x++) {
+	for (x = 0L; x < Width; x++) {
 		Line[x] = (double)*Image++;
 	}
 }
@@ -227,7 +227,7 @@ PutColumn(double *Image, long Width, long x, double *Line, long Height) {
 	long	y;
 
 	Image = Image + x;
-	for(y = 0L; y < Height; y++) {
+	for (y = 0L; y < Height; y++) {
 		*Image = (double)Line[y];
 		Image += Width;
 	}
@@ -246,7 +246,7 @@ PutRow(double *Image, long y, double *Line, long Width) {
 	long	x;
 
 	Image = Image + (y * Width);
-	for(x = 0L; x < Width; x++) {
+	for (x = 0L; x < Width; x++) {
 		*Image++ = (double)Line[x];
 	}
 }
@@ -303,7 +303,7 @@ SamplesToCoefficients(double *Image, long Width, long Height, long spline_degree
 
 	// in-place separable process, along x 
 	Line = (double *)malloc(Width * sizeof(double));
-	if (Line == NULL) {
+	if (!Line) {
 		// Row allocation failed
 		return false;
 	}
@@ -316,7 +316,7 @@ SamplesToCoefficients(double *Image, long Width, long Height, long spline_degree
 
 	// in-place separable process, along y 
 	Line = (double *)malloc(Height * sizeof(double));
-	if (Line == NULL) {
+	if (!Line) {
 		// Column allocation failed
 		return false;
 	}
@@ -362,7 +362,7 @@ InterpolatedValue(double *Bcoeff, long Width, long Height, double x, double y, l
 	if (spline_degree & 1L) {
 		i = (long)floor(x) - spline_degree / 2L;
 		j = (long)floor(y) - spline_degree / 2L;
-		for(k = 0; k <= spline_degree; k++) {
+		for (k = 0; k <= spline_degree; k++) {
 			xIndex[k] = i++;
 			yIndex[k] = j++;
 		}
@@ -474,7 +474,7 @@ InterpolatedValue(double *Bcoeff, long Width, long Height, double x, double y, l
 	}
 
 	// apply the mirror boundary conditions
-	for(k = 0; k <= spline_degree; k++) {
+	for (k = 0; k <= spline_degree; k++) {
 		xIndex[k] = (Width == 1L) ? (0L) : ((xIndex[k] < 0L) ?
 			(-xIndex[k] - Width2 * ((-xIndex[k]) / Width2))
 			: (xIndex[k] - Width2 * (xIndex[k] / Width2)));
@@ -491,10 +491,10 @@ InterpolatedValue(double *Bcoeff, long Width, long Height, double x, double y, l
 
 	// perform interpolation
 	interpolated = 0.0;
-	for(j = 0; j <= spline_degree; j++) {
+	for (j = 0; j <= spline_degree; j++) {
 		p = Bcoeff + (yIndex[j] * Width);
 		w = 0.0;
-		for(i = 0; i <= spline_degree; i++) {
+		for (i = 0; i <= spline_degree; i++) {
 			w += xWeight[i] * p[xIndex[i]];
 		}
 		interpolated += yWeight[j] * w;
@@ -530,14 +530,14 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	long	spline;
 	bool	bResult;
 
-	int bpp = FreeImage_GetBPP(dib);
-	if(bpp != 8) {
-		return NULL;
+	const int bpp = FreeImage_GetBPP(dib);
+	if (bpp != 8) {
+		return nullptr;
 	}
 	
 	const int width = FreeImage_GetWidth(dib);
 	const int height = FreeImage_GetHeight(dib);
-	switch(spline_degree) {
+	switch (spline_degree) {
 		case ROTATE_QUADRATIC:
 			spline = 2L;	// Use splines of degree 2 (quadratic interpolation)
 			break;
@@ -556,27 +556,27 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 
 	// allocate output image
 	FIBITMAP *dst = FreeImage_Allocate(width, height, bpp);
-	if(!dst)
-		return NULL;
+	if (!dst)
+		return nullptr;
 	// buid a grey scale palette
 	FIRGBA8 *pal = FreeImage_GetPalette(dst);
-	for(int i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		pal[i].red = pal[i].green = pal[i].blue = (uint8_t)i;
 	}
 
 	// allocate a temporary array
 	ImageRasterArray = (double*)malloc(width * sizeof(double) * height);
-	if(!ImageRasterArray) {
+	if (!ImageRasterArray) {
 		FreeImage_Unload(dst);
-		return NULL;
+		return nullptr;
 	}
 	// copy data samples
 	size_t rowOffset = 0;
-	for(y = 0; y < height; y++) {
+	for (y = 0; y < height; y++) {
 		double *pImage = &ImageRasterArray[rowOffset];
 		uint8_t *src_bits = FreeImage_GetScanLine(dib, height-1-y);
 
-		for(x = 0; x < width; x++) {
+		for (x = 0; x < width; x++) {
 			pImage[x] = (double)src_bits[x];
 		}
 		rowOffset += width;
@@ -585,10 +585,10 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	// convert between a representation based on image samples
 	// and a representation based on image B-spline coefficients
 	bResult = SamplesToCoefficients(ImageRasterArray, width, height, spline);
-	if(!bResult) {
+	if (!bResult) {
 		FreeImage_Unload(dst);
 		free(ImageRasterArray);
-		return NULL;
+		return nullptr;
 	}
 
 	// prepare the geometry
@@ -603,17 +603,17 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 	y_shift = y_origin - y0;
 
 	// visit all pixels of the output image and assign their value
-	for(y = 0; y < height; y++) {
+	for (y = 0; y < height; y++) {
 		uint8_t *dst_bits = FreeImage_GetScanLine(dst, height-1-y);
 		
 		x0 = a12 * (double)y + x_shift;
 		y0 = a22 * (double)y + y_shift;
 
-		for(x = 0; x < width; x++) {
+		for (x = 0; x < width; x++) {
 			x1 = x0 + a11 * (double)x;
 			y1 = y0 + a21 * (double)x;
-			if(use_mask) {
-				if((x1 <= -0.5) || (((double)width - 0.5) <= x1) || (y1 <= -0.5) || (((double)height - 0.5) <= y1)) {
+			if (use_mask) {
+				if ((x1 <= -0.5) || (((double)width - 0.5) <= x1) || (y1 <= -0.5) || (((double)height - 0.5) <= y1)) {
 					p = 0;
 				}
 				else {
@@ -652,47 +652,47 @@ FreeImage_RotateEx(FIBITMAP *dib, double angle, double x_shift, double y_shift, 
 	int x, y, bpp;
 	int channel, nb_channels;
 	uint8_t *src_bits, *dst_bits;
-	FIBITMAP *src8 = NULL, *dst8 = NULL, *dst = NULL;
+	FIBITMAP *src8{}, *dst8{}, *dst{};
 
-	if(!FreeImage_HasPixels(dib)) return NULL;
+	if (!FreeImage_HasPixels(dib)) return nullptr;
 
 	try {
 
 		bpp = FreeImage_GetBPP(dib);
 
-		if(bpp == 8) {
+		if (bpp == 8) {
 			FIBITMAP *dst_8 = Rotate8Bit(dib, angle, x_shift, y_shift, x_origin, y_origin, ROTATE_CUBIC, use_mask);
-			if(dst_8) {
+			if (dst_8) {
 				// copy metadata from src to dst
 				FreeImage_CloneMetadata(dst_8, dib);
 			}
 			return dst_8;
 		}
-		if((bpp == 24) || (bpp == 32)) {
+		if ((bpp == 24) || (bpp == 32)) {
 			// allocate dst image
 			const int width  = FreeImage_GetWidth(dib);
 			const int height = FreeImage_GetHeight(dib);
-			if( bpp == 24 ) {
+			if (bpp == 24) {
 				dst = FreeImage_Allocate(width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 			} else {
 				dst = FreeImage_Allocate(width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 			}
-			if(!dst) throw(1);
+			if (!dst) throw(1);
 
 			// allocate a temporary 8-bit dib (no need to build a palette)
 			src8 = FreeImage_Allocate(width, height, 8);
-			if(!src8) throw(1);
+			if (!src8) throw(1);
 
 			// process each channel separately
 			// -------------------------------
 			nb_channels = (bpp / 8);
 
-			for(channel = 0; channel < nb_channels; channel++) {
+			for (channel = 0; channel < nb_channels; channel++) {
 				// extract channel from source dib
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = FreeImage_GetScanLine(dib, y);
 					dst_bits = FreeImage_GetScanLine(src8, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						dst_bits[x] = src_bits[channel];
 						src_bits += nb_channels;
 					}
@@ -700,13 +700,13 @@ FreeImage_RotateEx(FIBITMAP *dib, double angle, double x_shift, double y_shift, 
 
 				// process channel
 				dst8 = Rotate8Bit(src8, angle, x_shift, y_shift, x_origin, y_origin, ROTATE_CUBIC, use_mask);
-				if(!dst8) throw(1);
+				if (!dst8) throw(1);
 
 				// insert channel to destination dib
-				for(y = 0; y < height; y++) {
+				for (y = 0; y < height; y++) {
 					src_bits = FreeImage_GetScanLine(dst8, y);
 					dst_bits = FreeImage_GetScanLine(dst, y);
-					for(x = 0; x < width; x++) {
+					for (x = 0; x < width; x++) {
 						dst_bits[channel] = src_bits[x];
 						dst_bits += nb_channels;
 					}
@@ -723,10 +723,10 @@ FreeImage_RotateEx(FIBITMAP *dib, double angle, double x_shift, double y_shift, 
 			return dst;
 		}
 	} catch(int) {
-		if(src8) FreeImage_Unload(src8);
-		if(dst8) FreeImage_Unload(dst8);
-		if(dst)  FreeImage_Unload(dst);
+		if (src8) FreeImage_Unload(src8);
+		if (dst8) FreeImage_Unload(dst8);
+		if (dst)  FreeImage_Unload(dst);
 	}
 
-	return NULL;
+	return nullptr;
 }

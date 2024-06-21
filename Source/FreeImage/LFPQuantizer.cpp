@@ -35,7 +35,7 @@ LFPQuantizer::~LFPQuantizer() {
 
 FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette) {
 
-	if (ReserveSize > 0 && ReservePalette != NULL) {
+	if (ReserveSize > 0 && ReservePalette) {
 		AddReservePalette(ReservePalette, ReserveSize);
 	}
 
@@ -43,8 +43,8 @@ FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserv
 	const unsigned height = FreeImage_GetHeight(dib);
 
 	FIBITMAP *dib8 = FreeImage_Allocate(width, height, 8);
-	if (dib8 == NULL) {
-		return NULL;
+	if (!dib8) {
+		return nullptr;
 	}
 
 	const unsigned src_pitch = FreeImage_GetPitch(dib);
@@ -75,7 +75,7 @@ FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserv
 					last_index = GetIndexForColor(color);
 					if (last_index == -1) {
 						FreeImage_Unload(dib8);
-						return NULL;
+						return nullptr;
 					}
 				}
 				dst_line[x] = last_index;
@@ -93,7 +93,7 @@ FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserv
 				last_index = GetIndexForColor(color);
 				if (last_index == -1) {
 					FreeImage_Unload(dib8);
-					return NULL;
+					return nullptr;
 				}
 			}
 			dst_line[x] = last_index;
@@ -109,7 +109,7 @@ FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserv
 			last_index = GetIndexForColor(color);
 			if (last_index == -1) {
 				FreeImage_Unload(dib8);
-				return NULL;
+				return nullptr;
 			}
 		}
 		dst_line[width - 1] = last_index;
@@ -125,7 +125,7 @@ FIBITMAP* LFPQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserv
 					last_index = GetIndexForColor(color);
 					if (last_index == -1) {
 						FreeImage_Unload(dib8);
-						return NULL;
+						return nullptr;
 					}
 				}
 				dst_line[x] = last_index;
@@ -181,10 +181,10 @@ void LFPQuantizer::AddReservePalette(const void *palette, unsigned size) {
 		const unsigned color = *ppal++;
 		const unsigned index = i + offset;
 		unsigned bucket = hash(color) & (MAP_SIZE - 1);
-		while((m_map[bucket].color != EMPTY_BUCKET) && (m_map[bucket].color != color)) {
+		while ((m_map[bucket].color != EMPTY_BUCKET) && (m_map[bucket].color != color)) {
 			bucket = (bucket + 1) % MAP_SIZE;
 		}
-		if(m_map[bucket].color != color) {
+		if (m_map[bucket].color != color) {
 			m_map[bucket].color = color;
 			m_map[bucket].index = index;
 		}

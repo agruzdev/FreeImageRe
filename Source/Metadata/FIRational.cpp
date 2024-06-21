@@ -25,7 +25,7 @@
 
 /// Initialize and normalize a rational number
 void FIRational::initialize(int32_t n, int32_t d) {
-	if(d) {
+	if (d) {
 		_numerator = n;
 		_denominator = d;
 		// normalize rational
@@ -49,7 +49,7 @@ FIRational::FIRational(int32_t n, int32_t d) {
 
 /// Constructor with FITAG
 FIRational::FIRational(const FITAG *tag) {
-	switch(FreeImage_GetTagType((FITAG*)tag)) {
+	switch (FreeImage_GetTagType((FITAG*)tag)) {
 		case FIDT_RATIONAL:		// 64-bit unsigned fraction 
 		{
 			auto *pvalue = (const uint32_t*)FreeImage_GetTagValue((FITAG*)tag);
@@ -79,19 +79,19 @@ FIRational::FIRational(float value) {
 
 		// make a continued-fraction expansion of x
 		count = -1;
-		for(k = 0; k < 4; k++) {
+		for (k = 0; k < 4; k++) {
 			n[k] = (int32_t)floor(x);
 			count++;
 			x -= (float)n[k];
-			if(x == 0) break;
+			if (x == 0) break;
 			x = 1 / x;
 		}
 		// compute the rational
 		_numerator = 1;
 		_denominator = n[count];
 
-		for(int i = count - 1; i >= 0; i--) {
-			if(n[i] == 0) break;
+		for (int i = count - 1; i >= 0; i--) {
+			if (n[i] == 0) break;
 			int32_t _num = (n[i] * _numerator + _denominator);
 			int32_t _den = _numerator;
 			_numerator = _num;
@@ -112,7 +112,7 @@ FIRational::~FIRational() {
 
 /// Assignement operator
 FIRational& FIRational::operator=(const FIRational& r) {
-	if(this != &r) {
+	if (this != &r) {
 		initialize(r._numerator, r._denominator);
 	}
 	return *this;
@@ -149,7 +149,7 @@ void FIRational::normalize() {
 			_denominator /= common;	// Calculate new denominator
 		}
 	}
-	if(_denominator < 0) {	// If sign is in denominator
+	if (_denominator < 0) {	// If sign is in denominator
 		_numerator *= -1;	// Multiply num and den by -1
 		_denominator *= -1;	// To keep sign in numerator
 	}
@@ -157,7 +157,7 @@ void FIRational::normalize() {
 
 /// Checks if this rational number is an Integer, either positive or negative
 FIBOOL FIRational::isInteger() {
-	if(_denominator == 1 || (_denominator != 0 && (_numerator % _denominator == 0)) || (_denominator == 0 && _numerator == 0))
+	if (_denominator == 1 || (_denominator != 0 && (_numerator % _denominator == 0)) || (_denominator == 0 && _numerator == 0))
 		return TRUE;
 	return FALSE;
 }
@@ -165,12 +165,10 @@ FIBOOL FIRational::isInteger() {
 /// Convert as "numerator/denominator"
 std::string FIRational::toString() {
 	std::ostringstream s;
-	if(isInteger()) {
+	if (isInteger()) {
 		s << intValue();
 	} else {
 		s << _numerator << "/" << _denominator;
 	}
 	return s.str();
 }
-
-

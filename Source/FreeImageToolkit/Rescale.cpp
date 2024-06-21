@@ -24,13 +24,13 @@
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_RescaleRect(FIBITMAP *src, int dst_width, int dst_height, int src_left, int src_top, int src_right, int src_bottom, FREE_IMAGE_FILTER filter, unsigned flags) {
-	FIBITMAP *dst = NULL;
+	FIBITMAP *dst{};
 
 	const int src_width = FreeImage_GetWidth(src);
 	const int src_height = FreeImage_GetHeight(src);
 
 	if (!FreeImage_HasPixels(src) || (dst_width <= 0) || (dst_height <= 0) || (src_width <= 0) || (src_height <= 0)) {
-		return NULL;
+		return nullptr;
 	}
 
 	// normalize the rectangle
@@ -42,12 +42,12 @@ FreeImage_RescaleRect(FIBITMAP *src, int dst_width, int dst_height, int src_left
 	}
 
 	// check the size of the sub image
-	if((src_left < 0) || (src_right > src_width) || (src_top < 0) || (src_bottom > src_height)) {
-		return NULL;
+	if ((src_left < 0) || (src_right > src_width) || (src_top < 0) || (src_bottom > src_height)) {
+		return nullptr;
 	}
 
 	// select the filter
-	CGenericFilter *pFilter = NULL;
+	CGenericFilter *pFilter{};
 	switch (filter) {
 		case FILTER_BOX:
 			pFilter = new(std::nothrow) CBoxFilter();
@@ -70,7 +70,7 @@ FreeImage_RescaleRect(FIBITMAP *src, int dst_width, int dst_height, int src_left
 	}
 
 	if (!pFilter) {
-		return NULL;
+		return nullptr;
 	}
 
 	CResizeEngine Engine(pFilter);
@@ -95,40 +95,40 @@ FreeImage_Rescale(FIBITMAP *src, int dst_width, int dst_height, FREE_IMAGE_FILTE
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
-	FIBITMAP *thumbnail = NULL;
+	FIBITMAP *thumbnail{};
 	int new_width, new_height;
 
-	if(!FreeImage_HasPixels(dib) || (max_pixel_size <= 0)) return NULL;
+	if (!FreeImage_HasPixels(dib) || (max_pixel_size <= 0)) return nullptr;
 
 	const int width	= FreeImage_GetWidth(dib);
 	const int height = FreeImage_GetHeight(dib);
 
-	if(max_pixel_size == 0) max_pixel_size = 1;
+	if (max_pixel_size == 0) max_pixel_size = 1;
 
-	if((width < max_pixel_size) && (height < max_pixel_size)) {
+	if ((width < max_pixel_size) && (height < max_pixel_size)) {
 		// image is smaller than the requested thumbnail
 		return FreeImage_Clone(dib);
 	}
 
-	if(width > height) {
+	if (width > height) {
 		new_width = max_pixel_size;
 		// change image height with the same ratio
 		double ratio = ((double)new_width / (double)width);
 		new_height = (int)(height * ratio + 0.5);
-		if(new_height == 0) new_height = 1;
+		if (new_height == 0) new_height = 1;
 	} else {
 		new_height = max_pixel_size;
 		// change image width with the same ratio
 		double ratio = ((double)new_height / (double)height);
 		new_width = (int)(width * ratio + 0.5);
-		if(new_width == 0) new_width = 1;
+		if (new_width == 0) new_width = 1;
 	}
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 
 	// perform downsampling using a bilinear interpolation
 
-	switch(image_type) {
+	switch (image_type) {
 		case FIT_BITMAP:
 		case FIT_UINT16:
 		case FIT_RGB16:
@@ -149,14 +149,14 @@ FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
 		case FIT_COMPLEX:
 		default:
 			// cannot rescale this kind of image
-			thumbnail = NULL;
+			thumbnail = nullptr;
 			break;
 	}
 
-	if((thumbnail != NULL) && (image_type != FIT_BITMAP) && convert) {
+	if (thumbnail && (image_type != FIT_BITMAP) && convert) {
 		// convert to a standard bitmap
-		FIBITMAP *bitmap = NULL;
-		switch(image_type) {
+		FIBITMAP *bitmap{};
+		switch (image_type) {
 			case FIT_UINT16:
 				bitmap = FreeImage_ConvertTo8Bits(thumbnail);
 				break;
@@ -179,7 +179,7 @@ FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
 				FreeImage_Unload(rgbf);
 				break;
 		}
-		if(bitmap != NULL) {
+		if (bitmap) {
 			FreeImage_Unload(thumbnail);
 			thumbnail = bitmap;
 		}

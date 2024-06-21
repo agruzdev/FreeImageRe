@@ -353,7 +353,7 @@ SwapHeader(DDSHEADER *header) {
 	SwapLong(&header->surfaceDesc.dwPitchOrLinearSize);
 	SwapLong(&header->surfaceDesc.dwDepth);
 	SwapLong(&header->surfaceDesc.dwMipMapCount);
-	for(int i=0; i<11; i++) {
+	for (int i=0; i<11; i++) {
 		SwapLong(&header->surfaceDesc.dwReserved1[i]);
 	}
 	SwapLong(&header->surfaceDesc.ddpfPixelFormat.dwSize);
@@ -599,7 +599,7 @@ static int s_format_id;
 */
 static FIBITMAP *
 LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	DDSFormat16 format16 = RGB_UNKNOWN;	// for 16-bit formats
 
 	const DDPIXELFORMAT *ddspf = &(desc->ddspf);
@@ -620,8 +620,8 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	else {
 		dib = FreeImage_Allocate(width, height, bpp, ddspf->dwRBitMask, ddspf->dwGBitMask, ddspf->dwBBitMask);
 	}
-	if (dib == NULL) {
-		return NULL;
+	if (!dib) {
+		return nullptr;
 	}
 
 	// read the file
@@ -632,7 +632,7 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	const long delta = (long)filePitch - (long)line;
 
 	if (bpp == 16) {
-		uint8_t *pixels = (uint8_t*)malloc(line * sizeof(uint8_t));
+		auto *pixels = (uint8_t*)malloc(line * sizeof(uint8_t));
 		if (pixels) {
 			for (int y = 0; y < height; y++) {
 				uint8_t *dst_bits = FreeImage_GetScanLine(dib, height - y - 1);
@@ -760,8 +760,8 @@ LoadDXT(int decoder_type, const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle
 
 	// allocate a 32-bit dib
 	FIBITMAP *dib = FreeImage_Allocate(width, height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
-	if (dib == NULL) {
-		return NULL;
+	if (!dib) {
+		return nullptr;
 	}
 
 	// select the right decoder, then decode the image
@@ -802,7 +802,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -841,7 +841,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 
 static void * DLL_CALLCONV
 Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
-	return NULL;
+	return nullptr;
 }
 
 static void DLL_CALLCONV
@@ -853,7 +853,7 @@ Close(FreeImageIO *io, fi_handle handle, void *data) {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	DDSHEADER header;
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	memset(&header, 0, sizeof(header));
 	io->read_proc(&header, 1, sizeof(header), handle);
@@ -909,13 +909,13 @@ InitDDS(Plugin *plugin, int format_id) {
 	plugin->regexpr_proc = RegExpr;
 	plugin->open_proc = Open;
 	plugin->close_proc = Close;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;	//Save;	// not implemented (yet?)
+	plugin->save_proc = nullptr;	//Save;	// not implemented (yet?)
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }

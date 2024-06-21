@@ -148,7 +148,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -166,7 +166,7 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	SwapLong(&type);
 #endif
 
-	if(type != ID_FORM)
+	if (type != ID_FORM)
 		return FALSE;
 		
 	// skip 4 bytes
@@ -197,8 +197,8 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	if (handle != NULL) {
-		FIBITMAP *dib = NULL;
+	if (handle) {
+		FIBITMAP *dib{};
 
 		uint32_t type, size;
 
@@ -207,8 +207,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		SwapLong(&type);
 #endif
 
-		if(type != ID_FORM)
-			return NULL;
+		if (type != ID_FORM)
+			return nullptr;
 
 		io->read_proc(&size, 4, 1, handle);
 #ifndef FREEIMAGE_BIGENDIAN
@@ -220,8 +220,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		SwapLong(&type);
 #endif
 
-		if((type != ID_ILBM) && (type != ID_PBM))
-			return NULL;
+		if ((type != ID_ILBM) && (type != ID_PBM))
+			return nullptr;
 
 		size -= 4;
 
@@ -258,25 +258,25 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				planes = bmhd.nPlanes;
 				comp = bmhd.compression;
 
-				if(bmhd.masking & 1)
+				if (bmhd.masking & 1)
 					planes++;	// there is a mask ( 'stencil' )
 
 				if (planes > 8 && planes != 24)
-					return NULL;
+					return nullptr;
 
 				depth = planes > 8 ? 24 : 8;
 
-				if( depth == 24 ) {
+				if ( depth == 24 ) {
 					dib = FreeImage_Allocate(width, height, depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				} else {
 					dib = FreeImage_Allocate(width, height, depth);
 				}
 			} else if (ch_type == ID_CMAP) {	// Palette (Color Map)
 				if (!dib)
-					return NULL;
+					return nullptr;
 
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				if(pal != NULL) {
+				if (pal) {
 					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib));
 					for (unsigned k = 0; k < palette_entries; k++) {					
 						io->read_proc(&pal[k].red, 1, 1, handle );
@@ -286,7 +286,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			} else if (ch_type == ID_BODY) {
 				if (!dib)
-					return NULL;
+					return nullptr;
 
 				if (type == ID_PBM) {
 					// NON INTERLACED (LBM)
@@ -335,7 +335,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					unsigned n_width=(width+15)&~15;
 					unsigned plane_size = n_width/8;
 					unsigned src_size = plane_size * planes;
-					uint8_t *src = (uint8_t*)malloc(src_size);
+					auto *src = (uint8_t*)malloc(src_size);
 					uint8_t *dest = FreeImage_GetBits(dib);
 
 					dest += FreeImage_GetPitch(dib) * height;
@@ -349,7 +349,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						if (comp) {
 							// unpacker algorithm
 
-							for(unsigned x = 0; x < src_size;) {
+							for (unsigned x = 0; x < src_size;) {
 								// read the next source byte into t
 								signed char t = 0;
 								io->read_proc(&t, 1, 1, handle);
@@ -358,7 +358,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									// t = [0..127] => copy the next t+1 bytes literally
 									unsigned size_to_read = t + 1;
 
-									if((size_to_read + x) > src_size) {
+									if ((size_to_read + x) > src_size) {
 										// sanity check for buffer overruns 
 										size_to_read = src_size - x;
 										io->read_proc(src + x, size_to_read, 1, handle);
@@ -373,7 +373,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									io->read_proc(&b, 1, 1, handle);
 									unsigned size_to_copy = (unsigned)(-(int)t + 1);
 
-									if((size_to_copy + x) > src_size) {
+									if ((size_to_copy + x) > src_size) {
 										// sanity check for buffer overruns 
 										size_to_copy = src_size - x;
 										memset(src + x, b, size_to_copy);
@@ -445,15 +445,15 @@ InitIFF(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }

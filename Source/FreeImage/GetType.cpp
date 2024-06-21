@@ -35,13 +35,13 @@
 
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFileTypeFromHandle(FreeImageIO *io, fi_handle handle, int size) {
-	if (handle != NULL) {
+	if (handle) {
 		int fif_count = FreeImage_GetFIFCount();
 
 		for (int i = 0; i < fif_count; ++i) {
 			FREE_IMAGE_FORMAT fif = (FREE_IMAGE_FORMAT)i;
 			if (FreeImage_ValidateFIF(fif, io, handle)) {
-				if(fif == FIF_TIFF) {
+				if (fif == FIF_TIFF) {
 					// many camera raw files use a TIFF signature ...
 					// ... try to revalidate against FIF_RAW (even if it breaks the code genericity)
 					if (FreeImage_ValidateFIF(FIF_RAW, io, handle)) {
@@ -64,10 +64,10 @@ FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFileType(const char *filename, int size) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
-	
+
 	FILE *handle = fopen(filename, "rb");
 
-	if (handle != NULL) {
+	if (handle) {
 		FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromHandle(&io, (fi_handle)handle, size);
 
 		fclose(handle);
@@ -85,7 +85,7 @@ FreeImage_GetFileTypeU(const wchar_t *filename, int size) {
 	SetDefaultIO(&io);
 	FILE *handle = _wfopen(filename, L"rb");
 
-	if (handle != NULL) {
+	if (handle) {
 		FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromHandle(&io, (fi_handle)handle, size);
 
 		fclose(handle);
@@ -105,7 +105,7 @@ FreeImage_GetFileTypeFromMemory(FIMEMORY *stream, int size) {
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
-	if (stream != NULL) {
+	if (stream) {
 		return FreeImage_GetFileTypeFromHandle(&io, (fi_handle)stream, size);
 	}
 
@@ -126,7 +126,7 @@ FreeImage_Validate(FREE_IMAGE_FORMAT fif, const char *filename) {
 
 	FILE *handle = fopen(filename, "rb");
 
-	if (handle != NULL) {
+	if (handle) {
 		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
 		fclose(handle);
 		return bIsValidFIF;
@@ -142,7 +142,7 @@ FreeImage_ValidateU(FREE_IMAGE_FORMAT fif, const wchar_t *filename) {
 	SetDefaultIO(&io);
 	FILE *handle = _wfopen(filename, L"rb");
 
-	if (handle != NULL) {
+	if (handle) {
 		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)handle);
 		fclose(handle);
 		return bIsValidFIF;
@@ -156,7 +156,7 @@ FreeImage_ValidateFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream) {
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
-	if (stream != NULL) {
+	if (stream) {
 		FIBOOL bIsValidFIF = FreeImage_ValidateFromHandle(fif, &io, (fi_handle)stream);
 		return bIsValidFIF;
 	}

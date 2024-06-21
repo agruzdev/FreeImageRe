@@ -85,17 +85,17 @@ pcx_validate(FreeImageIO *io, fi_handle handle) {
 	uint8_t pcx_signature = 0x0A;
 	uint8_t signature[4] = { 0, 0, 0, 0 };
 
-	if(io->read_proc(&signature, 1, 4, handle) != 4) {
+	if (io->read_proc(&signature, 1, 4, handle) != 4) {
 		return FALSE;
 	}
 	// magic number (0x0A = ZSoft Z)
-	if(signature[0] == pcx_signature) {
+	if (signature[0] == pcx_signature) {
 		// version
-		if(signature[1] <= 5) {
+		if (signature[1] <= 5) {
 			// encoding
-			if((signature[2] == 0) || (signature[2] == 1)) {
+			if ((signature[2] == 0) || (signature[2] == 1)) {
 				// bits per pixel per plane
-				if((signature[3] == 1) || (signature[3] == 8)) {
+				if ((signature[3] == 1) || (signature[3] == 8)) {
 					return TRUE;
 				}
 			}
@@ -248,7 +248,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -343,15 +343,15 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	uint8_t *bits;			  // Pointer to dib data
 	FIRGBA8 *pal;		  // Pointer to dib palette
-	uint8_t *line = NULL;	  // PCX raster line
-	uint8_t *ReadBuf = NULL; // buffer;
+	uint8_t *line{};	  // PCX raster line
+	uint8_t *ReadBuf{}; // buffer;
 	FIBOOL bIsRLE;		  // True if the file is run-length encoded
 
-	if(!handle) {
-		return NULL;
+	if (!handle) {
+		return nullptr;
 	}
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -363,7 +363,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			long start_pos = io->tell_proc(handle);
 			FIBOOL bValidated = pcx_validate(io, handle);
 			io->seek_proc(handle, start_pos, SEEK_SET);
-			if(!bValidated) {
+			if (!bValidated) {
 				throw FI_MSG_ERROR_MAGIC_NUMBER;
 			}
 		}
@@ -371,7 +371,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		PCXHEADER header;
 
 		// process the header
-		if(io->read_proc(&header, sizeof(PCXHEADER), 1, handle) != 1) {
+		if (io->read_proc(&header, sizeof(PCXHEADER), 1, handle) != 1) {
 			throw FI_MSG_ERROR_PARSING;
 		}
 #ifdef FREEIMAGE_BIGENDIAN
@@ -386,7 +386,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		const int bottom	= window[3];
 
 		// check image size
-		if((left >= right) || (top >= bottom)) {
+		if ((left >= right) || (top >= bottom)) {
 			throw FI_MSG_ERROR_PARSING;
 		}
 
@@ -395,7 +395,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		const unsigned bitcount = header.bpp * header.planes;
 
 		// allocate a new dib
-		switch(bitcount) {
+		switch (bitcount) {
 			case 1:
 			case 4:
 			case 8:
@@ -422,7 +422,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// Set up the palette if needed
 		// ----------------------------
 
-		switch(bitcount) {
+		switch (bitcount) {
 			case 1:
 			{
 				pal = FreeImage_GetPalette(dib);
@@ -455,15 +455,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				io->read_proc(&palette_id, 1, 1, handle);
 
 				if (palette_id == 0x0C) {
-					uint8_t *cmap = (uint8_t*)malloc(768 * sizeof(uint8_t));
+					auto *cmap = (uint8_t*)malloc(768 * sizeof(uint8_t));
 
-					if(cmap) {
+					if (cmap) {
 						io->read_proc(cmap, 768, 1, handle);
 
 						pal = FreeImage_GetPalette(dib);
 						uint8_t *pColormap = &cmap[0];
 
-						for(int i = 0; i < 256; i++) {
+						for (int i = 0; i < 256; i++) {
 							pal[i].red   = pColormap[0];
 							pal[i].green = pColormap[1];
 							pal[i].blue  = pColormap[2];
@@ -480,7 +480,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				else if (header.palette_info == 2) {
 					pal = FreeImage_GetPalette(dib);
 
-					for(int i = 0; i < 256; i++) {
+					for (int i = 0; i < 256; i++) {
 						pal[i].red   = (uint8_t)i;
 						pal[i].green = (uint8_t)i;
 						pal[i].blue  = (uint8_t)i;
@@ -492,7 +492,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			break;
 		}
 
-		if(header_only) {
+		if (header_only) {
 			// header only mode
 			return dib;
 		}
@@ -512,12 +512,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// ---------------
 
 		line = (uint8_t*)malloc(lineLength * sizeof(uint8_t));
-		if(!line) {
+		if (!line) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 		
 		ReadBuf = (uint8_t*)malloc(PCX_IO_BUF_SIZE * sizeof(uint8_t));
-		if(!ReadBuf) {
+		if (!ReadBuf) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 		
@@ -553,7 +553,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			uint8_t *buffer;
 
 			buffer = (uint8_t*)malloc(width * sizeof(uint8_t));
-			if(!buffer) {
+			if (!buffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 
@@ -564,7 +564,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				memset(buffer, 0, width * sizeof(uint8_t));
 
-				for(int plane = 0; plane < 4; plane++) {
+				for (int plane = 0; plane < 4; plane++) {
 					bit = (uint8_t)(1 << plane);
 
 					for (unsigned x = 0; x < width; x++) {
@@ -595,7 +595,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			free(buffer);
 
-		} else if((header.planes == 3) && (header.bpp == 8)) {
+		} else if ((header.planes == 3) && (header.bpp == 8)) {
 			uint8_t *pLine;
 
 			for (unsigned y = 0; y < height; y++) {
@@ -636,20 +636,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	} catch (const char *text) {
 		// free allocated memory
 
-		if (dib != NULL) {
+		if (dib) {
 			FreeImage_Unload(dib);
 		}
-		if (line != NULL) {
+		if (line) {
 			free(line);
 		}
-		if (ReadBuf != NULL) {
+		if (ReadBuf) {
 			free(ReadBuf);
 		}
 
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}
 	
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -686,16 +686,16 @@ InitPCX(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

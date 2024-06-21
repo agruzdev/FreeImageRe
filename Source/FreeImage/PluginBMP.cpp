@@ -156,14 +156,14 @@ LoadPixelData(FreeImageIO *io, fi_handle handle, FIBITMAP *dib, int height, unsi
 	// NB: height can be < 0 for BMP data
 	if (height > 0) {
 		count = io->read_proc((void *)FreeImage_GetBits(dib), height * pitch, 1, handle);
-		if(count != 1) {
+		if (count != 1) {
 			return FALSE;
 		}
 	} else {
 		int positiveHeight = abs(height);
 		for (int c = 0; c < positiveHeight; ++c) {
 			count = io->read_proc((void *)FreeImage_GetScanLine(dib, positiveHeight - c - 1), pitch, 1, handle);
-			if(count != 1) {
+			if (count != 1) {
 				return FALSE;
 			}
 		}
@@ -172,9 +172,9 @@ LoadPixelData(FreeImageIO *io, fi_handle handle, FIBITMAP *dib, int height, unsi
 	// swap as needed
 #ifdef FREEIMAGE_BIGENDIAN
 	if (bit_count == 16) {
-		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
-			uint16_t *pixel = (uint16_t *)FreeImage_GetScanLine(dib, y);
-			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
+		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
+			auto *pixel = (uint16_t *)FreeImage_GetScanLine(dib, y);
+			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 				SwapShort(pixel);
 				pixel++;
 			}
@@ -183,9 +183,9 @@ LoadPixelData(FreeImageIO *io, fi_handle handle, FIBITMAP *dib, int height, unsi
 #endif
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	if (bit_count == 24 || bit_count == 32) {
-		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
-			uint8_t *pixel = FreeImage_GetScanLine(dib, y);
-			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
+		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
+			auto *pixel = FreeImage_GetScanLine(dib, y);
+			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 				INPLACESWAP(pixel[0], pixel[2]);
 				pixel += (bit_count >> 3);
 			}
@@ -211,13 +211,13 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 	uint8_t second_byte = 0;
 	int bits = 0;
 
-	uint8_t *pixels = NULL;	// temporary 8-bit buffer
+	uint8_t *pixels{};	// temporary 8-bit buffer
 
 	try {
 		height = abs(height);
 
 		pixels = (uint8_t*)malloc(width * sizeof(uint8_t) * height);
-		if(!pixels) throw(1);
+		if (!pixels) throw(1);
 		memset(pixels, 0, width * sizeof(uint8_t) * height);
 
 		uint8_t *q = pixels;
@@ -227,13 +227,13 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 			if (q < pixels || q  >= end) {
 				break;
 			}
-			if(io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
+			if (io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
 				throw(1);
 			}
 			if (status_byte != 0)	{
 				status_byte = (int)MIN((size_t)status_byte, (size_t)(end - q));
 				// Encoded mode
-				if(io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+				if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
 					throw(1);
 				}
 				for (int i = 0; i < status_byte; i++)	{
@@ -243,7 +243,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 			}
 			else {
 				// Escape mode
-				if(io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
+				if (io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
 					throw(1);
 				}
 				switch (status_byte) {
@@ -268,10 +268,10 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 						uint8_t delta_x = 0;
 						uint8_t delta_y = 0;
 
-						if(io->read_proc(&delta_x, sizeof(uint8_t), 1, handle) != 1) {
+						if (io->read_proc(&delta_x, sizeof(uint8_t), 1, handle) != 1) {
 							throw(1);
 						}
-						if(io->read_proc(&delta_y, sizeof(uint8_t), 1, handle) != 1) {
+						if (io->read_proc(&delta_y, sizeof(uint8_t), 1, handle) != 1) {
 							throw(1);
 						}
 
@@ -289,7 +289,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 						status_byte = (int)MIN((size_t)status_byte, (size_t)(end - q));
 						for (int i = 0; i < status_byte; i++) {
 							if ((i & 0x01) == 0) {
-								if(io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+								if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
 									throw(1);
 								}
 							}
@@ -299,7 +299,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 						// Read pad byte
 						if (((status_byte & 0x03) == 1) || ((status_byte & 0x03) == 2)) {
 							uint8_t padding = 0;
-							if(io->read_proc(&padding, sizeof(uint8_t), 1, handle) != 1) {
+							if (io->read_proc(&padding, sizeof(uint8_t), 1, handle) != 1) {
 								throw(1);
 							}
 						}
@@ -311,8 +311,8 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 		
 		{
 			// Convert to 4-bit
-			const uint8_t *src = (uint8_t*)pixels;
-			for(int y = 0; y < height; y++) {
+			auto *src = (const uint8_t*)pixels;
+			for (int y = 0; y < height; y++) {
 				uint8_t *dst = FreeImage_GetScanLine(dib, y);
 
 				FIBOOL hinibble = TRUE;
@@ -335,7 +335,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 		return TRUE;
 
 	} catch(int) {
-		if(pixels) free(pixels);
+		if (pixels) free(pixels);
 		return FALSE;
 	}
 }
@@ -357,13 +357,13 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 	int bits = 0;
 
 	for (;;) {
-		if( io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
+		if ( io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
 			return FALSE;
 		}
 
 		switch (status_byte) {
 			case RLE_COMMAND :
-				if(io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
+				if (io->read_proc(&status_byte, sizeof(uint8_t), 1, handle) != 1) {
 					return FALSE;
 				}
 
@@ -383,10 +383,10 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 						uint8_t delta_x = 0;
 						uint8_t delta_y = 0;
 
-						if(io->read_proc(&delta_x, sizeof(uint8_t), 1, handle) != 1) {
+						if (io->read_proc(&delta_x, sizeof(uint8_t), 1, handle) != 1) {
 							return FALSE;
 						}
-						if(io->read_proc(&delta_y, sizeof(uint8_t), 1, handle) != 1) {
+						if (io->read_proc(&delta_y, sizeof(uint8_t), 1, handle) != 1) {
 							return FALSE;
 						}
 
@@ -400,7 +400,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 					default :
 					{
-						if(scanline >= abs(height)) {
+						if (scanline >= abs(height)) {
 							return TRUE;
 						}
 
@@ -408,14 +408,14 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 						uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
-						if(io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
+						if (io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
 							return FALSE;
 						}
 						
 						// align run length to even number of bytes 
 
 						if ((status_byte & 1) == 1) {
-							if(io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+							if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
 								return FALSE;
 							}
 						}
@@ -430,7 +430,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 			default :
 			{
-				if(scanline >= abs(height)) {
+				if (scanline >= abs(height)) {
 					return TRUE;
 				}
 
@@ -438,7 +438,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 				uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
-				if(io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+				if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
 					return FALSE;
 				}
 
@@ -458,7 +458,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 static FIBITMAP *
 LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_offset, int type) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	try {
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -497,7 +497,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				// allocate enough memory to hold the bitmap (header, palette, pixels) and read the palette
 
 				dib = FreeImage_AllocateHeader(header_only, width, height, bit_count);
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
@@ -507,7 +507,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 
 				// seek to the end of the header (depending on the BMP header version)
 				// type == sizeof(BITMAPVxINFOHEADER)
-				switch(type) {
+				switch (type) {
 					case 40:	// sizeof(BITMAPINFOHEADER) - all Windows versions since Windows 3.0
 						break;
 					case 52:	// sizeof(BITMAPV2INFOHEADER) (undocumented)
@@ -523,12 +523,12 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				io->read_proc(FreeImage_GetPalette(dib), used_colors * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				for(unsigned int i = 0; i < used_colors; i++) {
+				for (unsigned int i = 0; i < used_colors; i++) {
 					INPLACESWAP(pal[i].red, pal[i].blue);
 				}
 #endif
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -541,7 +541,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 
 				switch (compression) {
 					case BI_RGB :
-						if( LoadPixelData(io, handle, dib, height, pitch, bit_count) ) {
+						if ( LoadPixelData(io, handle, dib, height, pitch, bit_count) ) {
 							return dib;
 						} else {
 							throw "Error encountered while decoding BMP data";
@@ -549,7 +549,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE4 :
-						if( LoadPixelDataRLE4(io, handle, width, height, dib) ) {
+						if ( LoadPixelDataRLE4(io, handle, width, height, dib) ) {
 							return dib;
 						} else {
 							throw "Error encountered while decoding RLE4 BMP data";
@@ -557,7 +557,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE8 :
-						if( LoadPixelDataRLE8(io, handle, width, height, dib) ) {
+						if ( LoadPixelDataRLE8(io, handle, width, height, dib) ) {
 							return dib;
 						} else {
 							throw "Error encountered while decoding RLE8 BMP data";
@@ -586,7 +586,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;						
 				}
 
@@ -594,7 +594,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				FreeImage_SetDotsPerMeterX(dib, bih.biXPelsPerMeter);
 				FreeImage_SetDotsPerMeterY(dib, bih.biYPelsPerMeter);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -623,14 +623,14 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 					io->read_proc(bitfields, use_bitfields * sizeof(uint32_t), 1, handle);
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, bitfields[0], bitfields[1], bitfields[2]);
 				} else {
-					if( bit_count == 32 ) {
+					if ( bit_count == 32 ) {
 						dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 					} else {
 						dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 					}
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
@@ -638,7 +638,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 				FreeImage_SetDotsPerMeterX(dib, bih.biXPelsPerMeter);
 				FreeImage_SetDotsPerMeterY(dib, bih.biYPelsPerMeter);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -663,22 +663,22 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 			break; // 24-, 32-bit
 		}
 	} catch(const char *message) {
-		if(dib) {
+		if (dib) {
 			FreeImage_Unload(dib);
 		}
-		if(message) {
+		if (message) {
 			FreeImage_OutputMessageProc(s_format_id, message);
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------
 
 static FIBITMAP *
 LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_offset) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	try {
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -713,7 +713,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 				dib = FreeImage_AllocateHeader(header_only, width, height, bit_count);
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
@@ -729,7 +729,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
-				if(pal_size == 4) {
+				if (pal_size == 4) {
 					for (unsigned count = 0; count < used_colors; count++) {
 						FILE_BGRA bgra;
 
@@ -739,7 +739,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						pal[count].green = bgra.g;
 						pal[count].blue	= bgra.b;
 					} 
-				} else if(pal_size == 3) {
+				} else if (pal_size == 3) {
 					for (unsigned count = 0; count < used_colors; count++) {
 						FILE_BGR bgr;
 
@@ -751,7 +751,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 					} 
 				}
 				
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -772,7 +772,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						return dib;
 
 					case BI_RLE4 :
-						if( LoadPixelDataRLE4(io, handle, width, height, dib) ) {
+						if ( LoadPixelDataRLE4(io, handle, width, height, dib) ) {
 							return dib;
 						} else {
 							throw "Error encountered while decoding RLE4 BMP data";
@@ -780,7 +780,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						break;
 
 					case BI_RLE8 :
-						if( LoadPixelDataRLE8(io, handle, width, height, dib) ) {
+						if ( LoadPixelDataRLE8(io, handle, width, height, dib) ) {
 							return dib;
 						} else {
 							throw "Error encountered while decoding RLE8 BMP data";
@@ -804,7 +804,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
@@ -812,7 +812,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				FreeImage_SetDotsPerMeterX(dib, bih.biXPelsPerMeter);
 				FreeImage_SetDotsPerMeterY(dib, bih.biYPelsPerMeter);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -830,13 +830,13 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 			case 24 :
 			case 32 :
 			{
-				if( bit_count == 32 ) {
+				if ( bit_count == 32 ) {
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				} else {
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 				
@@ -844,7 +844,7 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				FreeImage_SetDotsPerMeterX(dib, bih.biXPelsPerMeter);
 				FreeImage_SetDotsPerMeterY(dib, bih.biYPelsPerMeter);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -868,20 +868,20 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 			}
 		}
 	} catch(const char *message) {
-		if(dib)
+		if (dib)
 			FreeImage_Unload(dib);
 
 		FreeImage_OutputMessageProc(s_format_id, message);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------
 
 static FIBITMAP *
 LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_offset) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	try {
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -911,7 +911,7 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 				dib = FreeImage_AllocateHeader(header_only, width, height, bit_count);
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
@@ -933,7 +933,7 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 					pal[count].blue	= bgr.b;
 				}
 				
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -955,7 +955,7 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 			{
 				dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;						
 				}
 
@@ -963,7 +963,7 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				FreeImage_SetDotsPerMeterX(dib, 2835);
 				FreeImage_SetDotsPerMeterY(dib, 2835);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -977,13 +977,13 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 			case 24 :
 			case 32 :
 			{
-				if( bit_count == 32 ) {
+				if (bit_count == 32) {
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				} else {
 					dib = FreeImage_AllocateHeader(header_only, width, height, bit_count, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 				}
 
-				if (dib == NULL) {
+				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;						
 				}
 
@@ -991,7 +991,7 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 				FreeImage_SetDotsPerMeterX(dib, 2835);
 				FreeImage_SetDotsPerMeterY(dib, 2835);
 
-				if(header_only) {
+				if (header_only) {
 					// header only mode
 					return dib;
 				}
@@ -1010,13 +1010,13 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 			}
 		}
 	} catch(const char *message) {	
-		if(dib)
+		if (dib)
 			FreeImage_Unload(dib);
 
 		FreeImage_OutputMessageProc(s_format_id, message);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -1091,7 +1091,7 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	if (handle != NULL) {
+	if (handle) {
 		BITMAPFILEHEADER bitmapfileheader;
 		uint32_t type = 0;
 
@@ -1108,9 +1108,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// check the signature
 
-		if((bitmapfileheader.bfType != 0x4D42) && (bitmapfileheader.bfType != 0x4142)) {
+		if ((bitmapfileheader.bfType != 0x4D42) && (bitmapfileheader.bfType != 0x4142)) {
 			FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MAGIC_NUMBER);
-			return NULL;
+			return nullptr;
 		}
 
 		// read the first byte of the infoheader
@@ -1123,7 +1123,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// call the appropriate load function for the found bitmap type
 
-		switch(type) {
+		switch (type) {
 			case 12:
 				// OS/2 and also all Windows versions since Windows 3.0
 				return LoadOS21XBMP(io, handle, flags, offset_in_file + bitmapfileheader.bfOffBits);
@@ -1146,7 +1146,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		FreeImage_OutputMessageProc(s_format_id, "unknown bmp subtype with id %d", type);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ----------------------------------------------------------
@@ -1182,7 +1182,7 @@ RLEEncodeLine(uint8_t *target, const uint8_t *source, int size) {
 			if (((j - i) + 1) > 3) {
 				// don't forget to write what we already have in the buffer
 
-				switch(buffer_size) {
+				switch (buffer_size) {
 					case 0 :
 						break;
 
@@ -1259,7 +1259,7 @@ RLEEncodeLine(uint8_t *target, const uint8_t *source, int size) {
 
 	// write the last bytes
 
-	switch(buffer_size) {
+	switch (buffer_size) {
 		case 0 :
 			break;
 
@@ -1302,7 +1302,7 @@ RLEEncodeLine(uint8_t *target, const uint8_t *source, int size) {
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	if ((dib != NULL) && (handle != NULL)) {
+	if (dib && handle) {
 		// write the file header
 
 		const unsigned dst_width = FreeImage_GetWidth(dib);
@@ -1386,10 +1386,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		// write the palette
 
-		if (FreeImage_GetPalette(dib) != NULL) {
+		if (FreeImage_GetPalette(dib)) {
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 			FILE_BGRA bgra;
-			for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++ ) {
+			for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++ ) {
 				bgra.b = pal[i].blue;
 				bgra.g = pal[i].green;
 				bgra.r = pal[i].red;
@@ -1403,7 +1403,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		// write the bitmap data... if RLE compression is enable, use it
 
 		if ((dst_bpp == 8) && ((flags & BMP_SAVE_RLE) == BMP_SAVE_RLE)) {
-			uint8_t *buffer = (uint8_t*)malloc(dst_pitch * sizeof(uint8_t) * 2);
+			auto *buffer = (uint8_t*)malloc(dst_pitch * sizeof(uint8_t) * 2);
 
 			for (unsigned i = 0; i < dst_height; ++i) {
 				int size = RLEEncodeLine(buffer, FreeImage_GetScanLine(dib, i), FreeImage_GetLine(dib));
@@ -1428,17 +1428,17 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			int padding = dst_pitch - dst_width * sizeof(uint16_t);
 			uint16_t pad = 0;
 			uint16_t pixel;
-			for(unsigned y = 0; y < dst_height; y++) {
+			for (unsigned y = 0; y < dst_height; y++) {
 				uint8_t *line = FreeImage_GetScanLine(dib, y);
-				for(unsigned x = 0; x < dst_width; x++) {
+				for (unsigned x = 0; x < dst_width; x++) {
 					pixel = ((uint16_t *)line)[x];
 					SwapShort(&pixel);
 					if (io->write_proc(&pixel, sizeof(uint16_t), 1, handle) != 1) {
 						return FALSE;
 					}
 				}
-				if(padding != 0) {
-					if(io->write_proc(&pad, padding, 1, handle) != 1) {
+				if (padding != 0) {
+					if (io->write_proc(&pad, padding, 1, handle) != 1) {
 						return FALSE;				
 					}
 				}
@@ -1449,9 +1449,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			int padding = dst_pitch - dst_width * sizeof(FILE_BGR);
 			uint32_t pad = 0;
 			FILE_BGR bgr;
-			for(unsigned y = 0; y < dst_height; y++) {
+			for (unsigned y = 0; y < dst_height; y++) {
 				uint8_t *line = FreeImage_GetScanLine(dib, y);
-				for(unsigned x = 0; x < dst_width; x++) {
+				for (unsigned x = 0; x < dst_width; x++) {
 					const FIRGB8 *triple = ((FIRGB8 *)line)+x;
 					bgr.b = triple->blue;
 					bgr.g = triple->green;
@@ -1460,17 +1460,17 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						return FALSE;
 					}
 				}
-				if(padding != 0) {
-					if(io->write_proc(&pad, padding, 1, handle) != 1) {
-						return FALSE;					
+				if (padding != 0) {
+					if (io->write_proc(&pad, padding, 1, handle) != 1) {
+						return FALSE;
 					}
 				}
 			}
 		} else if (dst_bpp == 32) {
 			FILE_BGRA bgra;
-			for(unsigned y = 0; y < dst_height; y++) {
+			for (unsigned y = 0; y < dst_height; y++) {
 				uint8_t *line = FreeImage_GetScanLine(dib, y);
-				for(unsigned x = 0; x < dst_width; x++) {
+				for (unsigned x = 0; x < dst_width; x++) {
 					const FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
 					bgra.b = quad->blue;
 					bgra.g = quad->green;
@@ -1515,16 +1515,16 @@ InitBMP(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;	// not implemented yet;
+	plugin->supports_icc_profiles_proc = nullptr;	// not implemented yet;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

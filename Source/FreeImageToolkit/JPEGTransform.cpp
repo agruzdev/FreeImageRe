@@ -61,7 +61,7 @@ ls_jpeg_error_exit (j_common_ptr cinfo) {
 	(*cinfo->err->output_message)(cinfo);
 
 	// allow JPEG with a premature end of file
-	if((cinfo)->err->msg_parm.i[0] != 13) {
+	if ((cinfo)->err->msg_parm.i[0] != 13) {
 
 		// let the memory manager delete any temp files before we die
 		jpeg_destroy(cinfo);
@@ -102,7 +102,7 @@ Build a crop string.
 */
 static FIBOOL
 getCropString(char* crop, int* left, int* top, int* right, int* bottom, int width, int height) {
-	if(!left || !top || !right || !bottom) {
+	if (!left || !top || !right || !bottom) {
 		return FALSE;
 	}
 
@@ -111,10 +111,10 @@ getCropString(char* crop, int* left, int* top, int* right, int* bottom, int widt
 
 	// negative/zero right and bottom count from the edges inwards
 
-	if(*right <= 0) {
+	if (*right <= 0) {
 		*right = width + *right;
 	}
-	if(*bottom <= 0) {
+	if (*bottom <= 0) {
 		*bottom = height + *bottom;
 	}
 
@@ -123,22 +123,22 @@ getCropString(char* crop, int* left, int* top, int* right, int* bottom, int widt
 
 	// test for empty rect
 
-	if(((*left - *right) == 0) || ((*top - *bottom) == 0)) {
+	if (((*left - *right) == 0) || ((*top - *bottom) == 0)) {
 		return FALSE;
 	}
 
 	// normalize the rectangle
 
-	if(*right < *left) {
+	if (*right < *left) {
 		INPLACESWAP(*left, *right);
 	}
-	if(*bottom < *top) {
+	if (*bottom < *top) {
 		INPLACESWAP(*top, *bottom);
 	}
 
 	// test for "noop" rect
 
-	if(*left == 0 && *right == width && *top == 0 && *bottom == height) {
+	if (*left == 0 && *right == width && *top == 0 && *bottom == height) {
 		return FALSE;
 	}
 
@@ -150,7 +150,7 @@ getCropString(char* crop, int* left, int* top, int* right, int* bottom, int widt
 
 static FIBOOL
 JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* dst_io, fi_handle dst_handle, FREE_IMAGE_JPEG_OPERATION operation, int* left, int* top, int* right, int* bottom, FIBOOL perfect) {
-	const FIBOOL onlyReturnCropRect = (dst_io == NULL) || (dst_handle == NULL);
+	const FIBOOL onlyReturnCropRect = (!dst_io || !dst_handle);
 	const long stream_start = onlyReturnCropRect ? 0 : dst_io->tell_proc(dst_handle);
 	FIBOOL swappedDim = FALSE;
 	FIBOOL trimH = FALSE;
@@ -160,8 +160,8 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 	jpeg_decompress_struct srcinfo;
 	jpeg_compress_struct dstinfo;
 	jpeg_error_mgr jsrcerr, jdsterr;
-	jvirt_barray_ptr *src_coef_arrays = NULL;
-	jvirt_barray_ptr *dst_coef_arrays = NULL;
+	jvirt_barray_ptr *src_coef_arrays{};
+	jvirt_barray_ptr *dst_coef_arrays{};
 	// Support for copying optional markers from source to destination file
 	JCOPY_OPTION copyoption;
 	// Image transformation options
@@ -182,7 +182,7 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 	transfoptions.crop = FALSE;
 
 	// Select the transform option
-	switch(operation) {
+	switch (operation) {
 		case FIJPEG_OP_FLIP_H:		// horizontal flip
 			transfoptions.transform = JXFORM_FLIP_H;
 			trimH = TRUE;
@@ -253,8 +253,8 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 		char crop[64];
 		const FIBOOL hasCrop = getCropString(crop, left, top, right, bottom, swappedDim ? srcinfo.image_height : srcinfo.image_width, swappedDim ? srcinfo.image_width : srcinfo.image_height);
 
-		if(hasCrop) {
-			if(!jtransform_parse_crop_spec(&transfoptions, crop)) {
+		if (hasCrop) {
+			if (!jtransform_parse_crop_spec(&transfoptions, crop)) {
 				FreeImage_OutputMessageProc(FIF_JPEG, "Bogus crop argument %s", crop);
 				throw(1);
 			}
@@ -265,12 +265,12 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 
 		// Prepare transformation workspace
 		// Fails right away if perfect flag is TRUE and transformation is not perfect
-		if( !jtransform_request_workspace(&srcinfo, &transfoptions) ) {
+		if (!jtransform_request_workspace(&srcinfo, &transfoptions)) {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Transformation is not perfect");
 			throw(1);
 		}
 
-		if(left || top) {
+		if (left || top) {
 			// compute left and top offsets, it's a bit tricky, taking into account both
 			// transform, which might have trimed the image,
 			// and crop itself, which is adjusted to lie on a iMCU boundary
@@ -281,34 +281,34 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 			int transformedFullWidth = fullWidth;
 			int transformedFullHeight = fullHeight;
 
-			if(trimH && transformedFullWidth/transfoptions.iMCU_sample_width > 0) {
+			if (trimH && transformedFullWidth/transfoptions.iMCU_sample_width > 0) {
 				transformedFullWidth = (transformedFullWidth/transfoptions.iMCU_sample_width) * transfoptions.iMCU_sample_width;
 			}
-			if(trimV && transformedFullHeight/transfoptions.iMCU_sample_height > 0) {
+			if (trimV && transformedFullHeight/transfoptions.iMCU_sample_height > 0) {
 				transformedFullHeight = (transformedFullHeight/transfoptions.iMCU_sample_height) * transfoptions.iMCU_sample_height;
 			}
 
 			const int trimmedWidth = fullWidth - transformedFullWidth;
 			const int trimmedHeight = fullHeight - transformedFullHeight;
 
-			if(left) {
+			if (left) {
 				*left = trimmedWidth + transfoptions.x_crop_offset * transfoptions.iMCU_sample_width;
 			}
-			if(top) {
+			if (top) {
 				*top = trimmedHeight + transfoptions.y_crop_offset * transfoptions.iMCU_sample_height;
 			}
 		}
 
-		if(right) {
+		if (right) {
 			*right = (left ? *left : 0) + transfoptions.output_width;
 		}
-		if(bottom) {
+		if (bottom) {
 			*bottom = (top ? *top : 0) + transfoptions.output_height;
 		}
 
 		// if only the crop rect is requested, we are done
 
-		if(onlyReturnCropRect) {
+		if (onlyReturnCropRect) {
 			jpeg_destroy_compress(&dstinfo);
 			jpeg_destroy_decompress(&srcinfo);
 			return TRUE;
@@ -330,7 +330,7 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 		// We cannot call jpeg_finish_decompress here since we still need the
 		// virtual arrays allocated from the source object for processing.
 
-		if(src_handle == dst_handle) {
+		if (src_handle == dst_handle) {
 			dst_io->seek_proc(dst_handle, stream_start, SEEK_SET);
 		}
 
@@ -373,40 +373,40 @@ FreeImage_JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, Fre
 
 static void
 closeStdIO(fi_handle src_handle, fi_handle dst_handle) {
-	if(src_handle) {
+	if (src_handle) {
 		fclose((FILE*)src_handle);
 	}
-	if(dst_handle && (dst_handle != src_handle)) {
+	if (dst_handle && (dst_handle != src_handle)) {
 		fclose((FILE*)dst_handle);
 	}
 }
 
 static FIBOOL
 openStdIO(const char* src_file, const char* dst_file, FreeImageIO* dst_io, fi_handle* src_handle, fi_handle* dst_handle) {
-	*src_handle = NULL;
-	*dst_handle = NULL;
+	*src_handle = nullptr;
+	*dst_handle = nullptr;
 	
 	FreeImageIO io;
 	SetDefaultIO (&io);
 	
 	const FIBOOL isSameFile = (dst_file && (strcmp(src_file, dst_file) == 0)) ? TRUE : FALSE;
 	
-	FILE* srcp = NULL;
-	FILE* dstp = NULL;
+	FILE* srcp{};
+	FILE* dstp{};
 	
-	if(isSameFile) {
+	if (isSameFile) {
 		srcp = fopen(src_file, "r+b");
 		dstp = srcp;
 	}
 	else {
 		srcp = fopen(src_file, "rb");
-		if(dst_file) {
+		if (dst_file) {
 			dstp = fopen(dst_file, "wb");
 		}
 	}
 	
-	if(!srcp || (dst_file && !dstp)) {
-		if(!srcp) {
+	if (!srcp || (dst_file && !dstp)) {
+		if (!srcp) {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Cannot open \"%s\" for reading", src_file);
 		} else {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Cannot open \"%s\" for writing", dst_file);
@@ -415,7 +415,7 @@ openStdIO(const char* src_file, const char* dst_file, FreeImageIO* dst_io, fi_ha
 		return FALSE;
 	}
 
-	if(FreeImage_GetFileTypeFromHandle(&io, srcp) != FIF_JPEG) {
+	if (FreeImage_GetFileTypeFromHandle(&io, srcp) != FIF_JPEG) {
 		FreeImage_OutputMessageProc(FIF_JPEG, " Source file \"%s\" is not jpeg", src_file);
 		closeStdIO(srcp, dstp);
 		return FALSE;
@@ -432,29 +432,29 @@ static FIBOOL
 openStdIOU(const wchar_t* src_file, const wchar_t* dst_file, FreeImageIO* dst_io, fi_handle* src_handle, fi_handle* dst_handle) {
 #ifdef _WIN32
 
-	*src_handle = NULL;
-	*dst_handle = NULL;
+	*src_handle = nullptr;
+	*dst_handle = nullptr;
 
 	FreeImageIO io;
 	SetDefaultIO (&io);
 	
 	const FIBOOL isSameFile = (dst_file && (wcscmp(src_file, dst_file) == 0)) ? TRUE : FALSE;
 
-	FILE* srcp = NULL;
-	FILE* dstp = NULL;
+	FILE* srcp{};
+	FILE* dstp{};
 
-	if(isSameFile) {
+	if (isSameFile) {
 		srcp = _wfopen(src_file, L"r+b");
 		dstp = srcp;
 	} else {
 		srcp = _wfopen(src_file, L"rb");
-		if(dst_file) {
+		if (dst_file) {
 			dstp = _wfopen(dst_file, L"wb");
 		}
 	}
 
-	if(!srcp || (dst_file && !dstp)) {
-		if(!srcp) {
+	if (!srcp || (dst_file && !dstp)) {
+		if (!srcp) {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Cannot open source file for reading");
 		} else {
 			FreeImage_OutputMessageProc(FIF_JPEG, "Cannot open destination file for writing");
@@ -463,7 +463,7 @@ openStdIOU(const wchar_t* src_file, const wchar_t* dst_file, FreeImageIO* dst_io
 		return FALSE;
 	}
 
-	if(FreeImage_GetFileTypeFromHandle(&io, srcp) != FIF_JPEG) {
+	if (FreeImage_GetFileTypeFromHandle(&io, srcp) != FIF_JPEG) {
 		FreeImage_OutputMessageProc(FIF_JPEG, " Source file is not jpeg");
 		closeStdIO(srcp, dstp);
 		return FALSE;
@@ -486,7 +486,7 @@ FreeImage_JPEGTransform(const char *src_file, const char *dst_file, FREE_IMAGE_J
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIO(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIO(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -503,7 +503,7 @@ FreeImage_JPEGCrop(const char *src_file, const char *dst_file, int left, int top
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIO(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIO(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -520,7 +520,7 @@ FreeImage_JPEGTransformU(const wchar_t *src_file, const wchar_t *dst_file, FREE_
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -537,7 +537,7 @@ FreeImage_JPEGCropU(const wchar_t *src_file, const wchar_t *dst_file, int left, 
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -554,7 +554,7 @@ FreeImage_JPEGTransformCombined(const char *src_file, const char *dst_file, FREE
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIO(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIO(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -571,7 +571,7 @@ FreeImage_JPEGTransformCombinedU(const wchar_t *src_file, const wchar_t *dst_fil
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
+	if (!openStdIOU(src_file, dst_file, &io, &src, &dst)) {
 		return FALSE;
 	}
 	
@@ -586,15 +586,15 @@ FreeImage_JPEGTransformCombinedU(const wchar_t *src_file, const wchar_t *dst_fil
 
 static FIBOOL
 getMemIO(FIMEMORY* src_stream, FIMEMORY* dst_stream, FreeImageIO* dst_io, fi_handle* src_handle, fi_handle* dst_handle) {
-	*src_handle = NULL;
-	*dst_handle = NULL;
+	*src_handle = nullptr;
+	*dst_handle = nullptr;
 
 	FreeImageIO io;
 	SetMemoryIO (&io);
 
-	if(dst_stream) {
+	if (dst_stream) {
 		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(dst_stream->data);
-		if(mem_header->delete_me != TRUE) {
+		if (mem_header->delete_me != TRUE) {
 			// do not save in a user buffer
 			FreeImage_OutputMessageProc(FIF_JPEG, "Destination memory buffer is read only");
 			return FALSE;
@@ -614,7 +614,7 @@ FreeImage_JPEGTransformCombinedFromMemory(FIMEMORY* src_stream, FIMEMORY* dst_st
 	fi_handle src;
 	fi_handle dst;
 	
-	if(!getMemIO(src_stream, dst_stream, &io, &src, &dst)) {
+	if (!getMemIO(src_stream, dst_stream, &io, &src, &dst)) {
 		return FALSE;
 	}
 	

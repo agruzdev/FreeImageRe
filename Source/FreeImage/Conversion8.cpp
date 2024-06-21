@@ -97,12 +97,12 @@ FreeImage_ConvertLine32To8(uint8_t *target, uint8_t *source, int width_in_pixels
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 	if (!FreeImage_HasPixels(dib)) {
-		return NULL;
+		return nullptr;
 	}
 
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 	if (image_type != FIT_BITMAP && image_type != FIT_UINT16) {
-		return NULL;
+		return nullptr;
 	}
 
 	const unsigned bpp = FreeImage_GetBPP(dib);
@@ -114,8 +114,8 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 
 		// Allocate a destination image
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 8);
-		if (new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// Copy metadata from src to dst
@@ -128,7 +128,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 
 		if (image_type == FIT_BITMAP) {
 
-			switch(bpp) {
+			switch (bpp) {
 				case 1:
 				{
 					if (color_type == FIC_PALETTE) {
@@ -207,14 +207,14 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 			for (unsigned rows = 0; rows < height; rows++) {
 				const uint16_t *const src_pixel = (uint16_t*)src_bits;
 				uint8_t *dst_pixel = (uint8_t*)dst_bits;
-				for(unsigned cols = 0; cols < width; cols++) {
+				for (unsigned cols = 0; cols < width; cols++) {
 					dst_pixel[cols] = (uint8_t)(src_pixel[cols] >> 8);
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
 			}
 			return new_dib;
-		} 
+		}
 
 	} // bpp != 8
 
@@ -224,7 +224,7 @@ FreeImage_ConvertTo8Bits(FIBITMAP *dib) {
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertToGreyscale(FIBITMAP *dib) {
 	if (!FreeImage_HasPixels(dib)) {
-		return NULL;
+		return nullptr;
 	}
 
 	const FREE_IMAGE_COLOR_TYPE color_type = FreeImage_GetColorType(dib);
@@ -236,8 +236,8 @@ FreeImage_ConvertToGreyscale(FIBITMAP *dib) {
 		const unsigned height = FreeImage_GetHeight(dib);
 
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 8);
-		if (new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// Copy metadata from src to dst
@@ -258,7 +258,7 @@ FreeImage_ConvertToGreyscale(FIBITMAP *dib) {
 		const unsigned src_pitch = FreeImage_GetPitch(dib);
 		const unsigned dst_pitch = FreeImage_GetPitch(new_dib);
 
-		switch(bpp) {
+		switch (bpp) {
 			case 1:
 			{
 				for (unsigned y = 0; y < height; y++) {

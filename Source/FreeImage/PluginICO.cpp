@@ -102,7 +102,7 @@ CalculateImageOffset(std::vector<FIBITMAP*>& vPages, int nIndex ) {
     // add the ICONDIRENTRY's
     dwSize += (uint32_t)( vPages.size() * sizeof(ICONDIRENTRY) );
     // add the sizes of the previous images
-    for(int k = 0; k < nIndex; k++) {
+    for (int k = 0; k < nIndex; k++) {
 		FIBITMAP *icon_dib = (FIBITMAP*)vPages[k];
 		dwSize += CalculateImageSize(icon_dib);
 	}
@@ -152,7 +152,7 @@ SwapIconHeader(ICONHEADER *header) {
 
 static void
 SwapIconDirEntries(ICONDIRENTRY *ent, int num) {
-	while(num) {
+	while (num) {
 		SwapShort(&ent->wPlanes);
 		SwapShort(&ent->wBitCount);
 		SwapLong(&ent->dwBytesInRes);
@@ -190,7 +190,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -237,9 +237,9 @@ SupportsNoPixels() {
 static void * DLL_CALLCONV
 Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	// Allocate memory for the header structure
-	ICONHEADER *lpIH = (ICONHEADER*)malloc(sizeof(ICONHEADER));
-	if(lpIH == NULL) {
-		return NULL;
+	auto *lpIH = (ICONHEADER*)malloc(sizeof(ICONHEADER));
+	if (!lpIH) {
+		return nullptr;
 	}
 
 	if (read) {
@@ -249,10 +249,10 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 		SwapIconHeader(lpIH);
 #endif
 
-		if(!(lpIH->idReserved == 0) || !(lpIH->idType == 1)) {
+		if (!(lpIH->idReserved == 0) || !(lpIH->idType == 1)) {
 			// Not an ICO file
 			free(lpIH);
-			return NULL;
+			return nullptr;
 		}
 	}
 	else {
@@ -278,7 +278,7 @@ static int DLL_CALLCONV
 PageCount(FreeImageIO *io, fi_handle handle, void *data) {
 	ICONHEADER *lpIH = (ICONHEADER*)data;
 
-	if(lpIH) {
+	if (lpIH) {
 		return lpIH->idCount;
 	}
 	return 1;
@@ -288,7 +288,7 @@ PageCount(FreeImageIO *io, fi_handle handle, void *data) {
 
 static FIBITMAP*
 LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_only) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	// load the BITMAPINFOHEADER
 	FIBITMAPINFOHEADER bmih;
@@ -298,32 +298,32 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 #endif
 
 	// allocate the bitmap
-	int width  = bmih.biWidth;
-	int height = bmih.biHeight / 2; // height == xor + and mask
-	unsigned bit_count = bmih.biBitCount;
-	unsigned line   = CalculateLine(width, bit_count);
-	unsigned pitch  = CalculatePitch(line);
+	const int width  = bmih.biWidth;
+	const int height = bmih.biHeight / 2; // height == xor + and mask
+	const unsigned bit_count = bmih.biBitCount;
+	const unsigned line   = CalculateLine(width, bit_count);
+	const unsigned pitch  = CalculatePitch(line);
 
 	// allocate memory for one icon
 
 	dib = FreeImage_AllocateHeader(header_only, width, height, bit_count);
 
-	if (dib == NULL) {
-		return NULL;
+	if (!dib) {
+		return nullptr;
 	}
 
-	if( bmih.biBitCount <= 8 ) {
+	if (bmih.biBitCount <= 8) {
 		// read the palette data
 		io->read_proc(FreeImage_GetPalette(dib), CalculateUsedPaletteEntries(bit_count) * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 		FIRGBA8 *pal = FreeImage_GetPalette(dib);
-		for(unsigned i = 0; i < CalculateUsedPaletteEntries(bit_count); i++) {
+		for (unsigned i = 0; i < CalculateUsedPaletteEntries(bit_count); i++) {
 			INPLACESWAP(pal[i].red, pal[i].blue);
 		}
 #endif
 	}
 	
-	if(header_only) {
+	if (header_only) {
 		// header only mode
 		return dib;
 	}
@@ -333,9 +333,9 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 
 #ifdef FREEIMAGE_BIGENDIAN
 	if (bit_count == 16) {
-		for(int y = 0; y < height; y++) {
+		for (int y = 0; y < height; y++) {
 			uint16_t *pixel = (uint16_t *)FreeImage_GetScanLine(dib, y);
-			for(int x = 0; x < width; x++) {
+			for (int x = 0; x < width; x++) {
 				SwapShort(pixel);
 				pixel++;
 			}
@@ -344,9 +344,9 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 #endif
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	if (bit_count == 24 || bit_count == 32) {
-		for(int y = 0; y < height; y++) {
+		for (int y = 0; y < height; y++) {
 			uint8_t *pixel = FreeImage_GetScanLine(dib, y);
-			for(int x = 0; x < width; x++) {
+			for (int x = 0; x < width; x++) {
 				INPLACESWAP(pixel[0], pixel[2]);
 				pixel += (bit_count>>3);
 			}
@@ -357,29 +357,29 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 
 	// convert to 32bpp and generate an alpha channel
 	// apply the AND mask only if the image is not 32 bpp
-	if(((flags & ICO_MAKEALPHA) == ICO_MAKEALPHA) && (bit_count < 32)) {
+	if (((flags & ICO_MAKEALPHA) == ICO_MAKEALPHA) && (bit_count < 32)) {
 		FIBITMAP *dib32 = FreeImage_ConvertTo32Bits(dib);
 		FreeImage_Unload(dib);
 
-		if (dib32 == NULL) {
-			return NULL;
+		if (!dib32) {
+			return nullptr;
 		}
 
 		int width_and	= WidthBytes(width);
-		uint8_t *line_and	= (uint8_t *)malloc(width_and);
+		auto *line_and	= (uint8_t *)malloc(width_and);
 
-		if( line_and == NULL ) {
+		if (!line_and) {
 			FreeImage_Unload(dib32);
-			return NULL;
+			return nullptr;
 		}
 
 		//loop through each line of the AND-mask generating the alpha channel, invert XOR-mask
-		for(int y = 0; y < height; y++) {
+		for (int y = 0; y < height; y++) {
 			FIRGBA8 *quad = (FIRGBA8 *)FreeImage_GetScanLine(dib32, y);
 			io->read_proc(line_and, width_and, 1, handle);
-			for(int x = 0; x < width; x++) {
+			for (int x = 0; x < width; x++) {
 				quad->alpha = (line_and[x>>3] & (0x80 >> (x & 0x07))) != 0 ? 0 : 0xFF;
-				if( quad->alpha == 0 ) {
+				if ( quad->alpha == 0 ) {
 					quad->blue ^= 0xFF;
 					quad->green ^= 0xFF;
 					quad->red ^= 0xFF;
@@ -403,17 +403,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
-	if (handle != NULL) {
-		FIBITMAP *dib = NULL;
+	if (handle) {
+		FIBITMAP *dib{};
 
 		// get the icon header
 		ICONHEADER *icon_header = (ICONHEADER*)data;
 
 		if (icon_header) {
 			// load the icon descriptions
-			ICONDIRENTRY *icon_list = (ICONDIRENTRY*)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
-			if(icon_list == NULL) {
-				return NULL;
+			auto *icon_list = (ICONDIRENTRY*)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
+			if (!icon_list) {
+				return nullptr;
 			}
 			io->seek_proc(handle, sizeof(ICONHEADER), SEEK_SET);
 			io->read_proc(icon_list, icon_header->idCount * sizeof(ICONDIRENTRY), 1, handle);
@@ -426,7 +426,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// seek to the start of the bitmap data for the icon
 				io->seek_proc(handle, icon_list[page].dwImageOffset, SEEK_SET);
 
-				if( IsPNG(io, handle) ) {
+				if ( IsPNG(io, handle) ) {
 					// Vista icon support
 					// see http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
 					dib = FreeImage_LoadFromHandle(FIF_PNG, io, handle, header_only ? FIF_LOAD_NOPIXELS : PNG_DEFAULT);
@@ -451,14 +451,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ----------------------------------------------------------
 
 static FIBOOL 
 SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
-	FIBITMAPINFOHEADER *bmih = NULL;
+	FIBITMAPINFOHEADER *bmih{};
 
 	// write the BITMAPINFOHEADER
 	bmih = FreeImage_GetInfoHeader(dib);
@@ -473,10 +473,10 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	bmih->biHeight /= 2;
 
 	// write the palette data
-	if (FreeImage_GetPalette(dib) != NULL) {
+	if (FreeImage_GetPalette(dib)) {
 		FIRGBA8 *pal = FreeImage_GetPalette(dib);
 		FILE_BGRA bgra;
-		for(unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
+		for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
 			bgra.b = pal[i].blue;
 			bgra.g = pal[i].green;
 			bgra.r = pal[i].red;
@@ -486,21 +486,21 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	}
 
 	// write the bits
-	int width			= bmih->biWidth;
-	int height			= bmih->biHeight;
-	unsigned bit_count	= bmih->biBitCount;
-	unsigned line		= CalculateLine(width, bit_count);
-	unsigned pitch		= CalculatePitch(line);
-	int size_xor		= height * pitch;
-	int size_and		= height * WidthBytes(width);
+	const int width			= bmih->biWidth;
+	const int height			= bmih->biHeight;
+	const unsigned bit_count	= bmih->biBitCount;
+	const unsigned line		= CalculateLine(width, bit_count);
+	const unsigned pitch		= CalculatePitch(line);
+	const int size_xor		= height * pitch;
+	const int size_and		= height * WidthBytes(width);
 
 	// XOR mask
 #ifdef FREEIMAGE_BIGENDIAN
 	if (bit_count == 16) {
 		uint16_t pixel;
-		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
+		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			uint8_t *line = FreeImage_GetScanLine(dib, y);
-			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
+			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 				pixel = ((uint16_t *)line)[x];
 				SwapShort(&pixel);
 				if (io->write_proc(&pixel, sizeof(uint16_t), 1, handle) != 1)
@@ -512,9 +512,9 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	if (bit_count == 24) {
 		FILE_BGR bgr;
-		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
+		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			uint8_t *line = FreeImage_GetScanLine(dib, y);
-			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
+			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 				FIRGB8 *triple = ((FIRGB8 *)line)+x;
 				bgr.b = triple->blue;
 				bgr.g = triple->green;
@@ -525,9 +525,9 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 		}
 	} else if (bit_count == 32) {
 		FILE_BGRA bgra;
-		for(unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
+		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			uint8_t *line = FreeImage_GetScanLine(dib, y);
-			for(unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
+			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
 				FIRGBA8 *quad = ((FIRGBA8 *)line)+x;
 				bgra.b = quad->blue;
 				bgra.g = quad->green;
@@ -548,14 +548,14 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	}
 #endif
 	// AND mask
-	uint8_t *and_mask = (uint8_t*)malloc(size_and);
-	if(!and_mask) {
+	auto *and_mask = (uint8_t*)malloc(size_and);
+	if (!and_mask) {
 		return FALSE;
 	}
 
-	if(FreeImage_IsTransparent(dib)) {
+	if (FreeImage_IsTransparent(dib)) {
 
-		if(bit_count == 32) {
+		if (bit_count == 32) {
 			// create the AND mask from the alpha channel
 
 			int width_and  = WidthBytes(width);
@@ -564,11 +564,11 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 			// clear the mask
 			memset(and_mask, 0, size_and);
 
-			for(int y = 0; y < height; y++) {
+			for (int y = 0; y < height; y++) {
 				FIRGBA8 *bits = (FIRGBA8*)FreeImage_GetScanLine(dib, y);
 
-				for(int x = 0; x < width; x++) {
-					if(bits[x].alpha != 0xFF) {
+				for (int x = 0; x < width; x++) {
+					if (bits[x].alpha != 0xFF) {
 						// set any transparent color to full transparency
 						and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
 					}
@@ -577,7 +577,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 				and_bits += width_and;
 			}
 		} 
-		else if(bit_count <= 8) {
+		else if (bit_count <= 8) {
 			// create the AND mask from the transparency table
 
 			uint8_t *trns = FreeImage_GetTransparencyTable(dib);
@@ -588,15 +588,15 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 			// clear the mask
 			memset(and_mask, 0, size_and);
 
-			switch(FreeImage_GetBPP(dib)) {
+			switch (FreeImage_GetBPP(dib)) {
 				case 1:
 				{
-					for(int y = 0; y < height; y++) {
-						uint8_t *bits = (uint8_t*)FreeImage_GetScanLine(dib, y);
-						for(int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						auto *bits = (const uint8_t*)FreeImage_GetScanLine(dib, y);
+						for (int x = 0; x < width; x++) {
 							// get pixel at (x, y)
 							uint8_t index = (bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
-							if(trns[index] != 0xFF) {
+							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
 								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
 							}
@@ -608,13 +608,13 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 
 				case 4:
 				{
-					for(int y = 0; y < height; y++) {
-						uint8_t *bits = (uint8_t*)FreeImage_GetScanLine(dib, y);
-						for(int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						auto *bits = (const uint8_t*)FreeImage_GetScanLine(dib, y);
+						for (int x = 0; x < width; x++) {
 							// get pixel at (x, y)
 							uint8_t shift = (uint8_t)((1 - x % 2) << 2);
 							uint8_t index = (bits[x >> 1] & (0x0F << shift)) >> shift;
-							if(trns[index] != 0xFF) {
+							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
 								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
 							}
@@ -626,12 +626,12 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 
 				case 8:
 				{
-					for(int y = 0; y < height; y++) {
-						uint8_t *bits = (uint8_t*)FreeImage_GetScanLine(dib, y);
-						for(int x = 0; x < width; x++) {
+					for (int y = 0; y < height; y++) {
+						auto *bits = (const uint8_t*)FreeImage_GetScanLine(dib, y);
+						for (int x = 0; x < width; x++) {
 							// get pixel at (x, y)
 							uint8_t index = bits[x];
-							if(trns[index] != 0xFF) {
+							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
 								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
 							}
@@ -657,18 +657,18 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	ICONHEADER *icon_header = NULL;
+	ICONHEADER *icon_header{};
 	std::vector<FIBITMAP*> vPages;
 	int k;
 
-	if(!dib || !handle || !data) {
+	if (!dib || !handle || !data) {
 		return FALSE;
 	}
 
 	// check format limits
 	unsigned w = FreeImage_GetWidth(dib);
 	unsigned h = FreeImage_GetHeight(dib);
-	if((w < 16) || (w > 256) || (h < 16) || (h > 256) || (w != h)) {
+	if ((w < 16) || (w > 256) || (h < 16) || (h > 256) || (w != h)) {
 		FreeImage_OutputMessageProc(s_format_id, "Unsupported icon size: width x height = %d x %d", w, h);
 		return FALSE;
 	}
@@ -681,12 +681,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	icon_header = (ICONHEADER*)data;
 
 	try {
-		FIBITMAP *icon_dib = NULL;
+		FIBITMAP *icon_dib{};
 
 		// load all icons
-		for(k = 0; k < icon_header->idCount; k++) {
+		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = Load(io, handle, k, flags, data);
-			if(!icon_dib) {
+			if (!icon_dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			vPages.push_back(icon_dib);
@@ -712,13 +712,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		
 		// save the icon descriptions
 
-		ICONDIRENTRY *icon_list = (ICONDIRENTRY *)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
-		if(!icon_list) {
+		auto *icon_list = (ICONDIRENTRY *)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
+		if (!icon_list) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 		memset(icon_list, 0, icon_header->idCount * sizeof(ICONDIRENTRY));
 
-		for(k = 0; k < icon_header->idCount; k++) {
+		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = (FIBITMAP*)vPages[k];
 
 			// convert internal format to ICONDIRENTRY
@@ -729,7 +729,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			icon_list[k].bReserved		= 0;
 			icon_list[k].wPlanes		= bmih->biPlanes;
 			icon_list[k].wBitCount		= bmih->biBitCount;
-			if( (icon_list[k].wPlanes * icon_list[k].wBitCount) >= 8 ) {
+			if ( (icon_list[k].wPlanes * icon_list[k].wBitCount) >= 8 ) {
 				icon_list[k].bColorCount = 0;
 			} else {
 				icon_list[k].bColorCount = (uint8_t)(1 << (icon_list[k].wPlanes * icon_list[k].wBitCount));
@@ -747,10 +747,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		
 		uint32_t dwImageOffset = (uint32_t)io->tell_proc(handle);
 
-		for(k = 0; k < icon_header->idCount; k++) {
+		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = (FIBITMAP*)vPages[k];
 			
-			if((icon_list[k].bWidth == 0) && (icon_list[k].bHeight == 0)) {
+			if ((icon_list[k].bWidth == 0) && (icon_list[k].bHeight == 0)) {
 				// Vista icon support
 				FreeImage_SaveToHandle(FIF_PNG, icon_dib, io, handle, PNG_DEFAULT);
 			}
@@ -779,7 +779,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		free(icon_list);
 
 		// free the vector class
-		for(k = 0; k < icon_header->idCount; k++) {
+		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = (FIBITMAP*)vPages[k];
 			FreeImage_Unload(icon_dib);
 		}
@@ -788,8 +788,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	} catch(const char *text) {
 		// free the vector class
-		for(size_t k = 0; k < vPages.size(); k++) {
-			FIBITMAP *icon_dib = (FIBITMAP*)vPages[k];
+		for (size_t k = 0; k < vPages.size(); k++) {
+			auto *icon_dib = (FIBITMAP*)vPages[k];
 			FreeImage_Unload(icon_dib);
 		}
 		FreeImage_OutputMessageProc(s_format_id, text);
@@ -812,13 +812,13 @@ InitICO(Plugin *plugin, int format_id) {
 	plugin->open_proc = Open;
 	plugin->close_proc = Close;
 	plugin->pagecount_proc = PageCount;
-	plugin->pagecapability_proc = NULL;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

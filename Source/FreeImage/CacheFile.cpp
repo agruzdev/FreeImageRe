@@ -54,7 +54,7 @@ CacheFile::open(const std::string& filename, FIBOOL keep_in_memory) {
 
 	if ((!m_filename.empty()) && (!m_keep_in_memory)) {
 		m_file = fopen(m_filename.c_str(), "w+b"); 
-		return (m_file != NULL);
+		return (m_file != nullptr);
 	}
 
 	return (m_keep_in_memory == TRUE);
@@ -80,7 +80,7 @@ CacheFile::close() {
 	if (m_file) {
 		// close the file
 		fclose(m_file);
-		m_file = NULL;
+		m_file = nullptr;
 		
 		// delete the file
 		remove(m_filename.c_str());
@@ -100,7 +100,7 @@ CacheFile::cleanupMemCache() {
 			// remove the data
 
 			delete [] old_block->data;
-			old_block->data = NULL;
+			old_block->data = nullptr;
 
 			// move the block to another list
 
@@ -133,7 +133,7 @@ CacheFile::allocateBlock() {
 
 Block *
 CacheFile::lockBlock(int nr) {
-	if (m_current_block == NULL) {
+	if (!m_current_block) {
 		PageMapIt it = m_page_map.find(nr);
 
 		if (it != m_page_map.end()) {
@@ -143,7 +143,7 @@ CacheFile::lockBlock(int nr) {
 			// and remove the block from the cache. it might get cached
 			// again as soon as the memory buffer fills up
 
-			if (m_current_block->data == NULL) {
+			if (!m_current_block->data) {
 				m_current_block->data = new uint8_t[BLOCK_SIZE];
 
 				fseek(m_file, m_current_block->nr * BLOCK_SIZE, SEEK_SET);
@@ -163,13 +163,13 @@ CacheFile::lockBlock(int nr) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 FIBOOL
 CacheFile::unlockBlock(int nr) {
 	if (m_current_block) {
-		m_current_block = NULL;
+		m_current_block = nullptr;
 		return TRUE;
 	}
 	return FALSE;
@@ -261,7 +261,7 @@ CacheFile::deleteFile(int nr) {
 	do {
 		Block *block = lockBlock(nr);
 
-		if (block == NULL)
+		if (!block)
 			break;
 
 		int next = block->next;

@@ -241,7 +241,7 @@ CalculateUsedPaletteEntries(const unsigned bit_count) {
 
 inline uint8_t*
 CalculateScanLine(uint8_t *bits, const unsigned pitch, const int scanline) {
-	return bits ? (bits + ((size_t)pitch * scanline)) : NULL;
+	return bits ? (bits + ((size_t)pitch * scanline)) : nullptr;
 }
 
 // ----------------------------------------------------------

@@ -71,7 +71,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -103,10 +103,10 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
-	if(!handle) {
-		return NULL;
+	if (!handle) {
+		return nullptr;
 	}
 
 	try {
@@ -116,7 +116,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// read the cut header
 
-		if(io->read_proc(&header, 1, sizeof(CUTHEADER), handle) != sizeof(CUTHEADER)) {
+		if (io->read_proc(&header, 1, sizeof(CUTHEADER), handle) != sizeof(CUTHEADER)) {
 			throw FI_MSG_ERROR_PARSING;
 		}
 
@@ -126,14 +126,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #endif
 
 		if ((header.width == 0) || (header.height == 0)) {
-			return NULL;
+			return nullptr;
 		}
 
 		// allocate a new bitmap
 
 		dib = FreeImage_AllocateHeader(header_only, header.width, header.height, 8);
 
-		if (dib == NULL) {
+		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
@@ -145,7 +145,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			palette[j].blue = palette[j].green = palette[j].red = (uint8_t)j;
 		}
 		
-		if(header_only) {
+		if (header_only) {
 			// header only mode
 			return dib;
 		}
@@ -160,7 +160,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		uint8_t count = 0, run = 0;
 
 		while (i < size) {
-			if(io->read_proc(&count, 1, sizeof(uint8_t), handle) != 1) {
+			if (io->read_proc(&count, 1, sizeof(uint8_t), handle) != 1) {
 				throw FI_MSG_ERROR_PARSING;
 			}
 
@@ -179,18 +179,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (count & 0x80) {
 				count &= ~(0x80);
 
-				if(io->read_proc(&run, 1, sizeof(uint8_t), handle) != 1) {
+				if (io->read_proc(&run, 1, sizeof(uint8_t), handle) != 1) {
 					throw FI_MSG_ERROR_PARSING;
 				}
 
-				if(k + count <= header.width) {
+				if (k + count <= header.width) {
 					memset(bits + k, run, count);
 				} else {
 					throw FI_MSG_ERROR_PARSING;
 				}
 			} else {
-				if(k + count <= header.width) {
-					if(io->read_proc(&bits[k], count, sizeof(uint8_t), handle) != 1) {
+				if (k + count <= header.width) {
+					if (io->read_proc(&bits[k], count, sizeof(uint8_t), handle) != 1) {
 						throw FI_MSG_ERROR_PARSING;
 					}
 				} else {
@@ -205,11 +205,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return dib;
 
 	} catch(const char* text) {
-		if(dib) {
+		if (dib) {
 			FreeImage_Unload(dib);
 		}
 		FreeImage_OutputMessageProc(s_format_id, text);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -225,16 +225,16 @@ InitCUT(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }

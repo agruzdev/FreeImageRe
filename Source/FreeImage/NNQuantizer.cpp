@@ -53,28 +53,28 @@ NNQuantizer::NNQuantizer(int PaletteSize)
 	initrad = netsize < 8 ? 1 : (netsize >> 3);
 	initradius = (initrad * radiusbias);
 
-	network = NULL;
+	network = nullptr;
 
 	network = (pixel *)malloc(netsize * sizeof(pixel));
 	bias = (int *)malloc(netsize * sizeof(int));
 	freq = (int *)malloc(netsize * sizeof(int));
 	radpower = (int *)malloc(initrad * sizeof(int));
 
-	if( !network || !bias || !freq || !radpower ) {
-		if(network) free(network);
-		if(bias) free(bias);
-		if(freq) free(freq);
-		if(radpower) free(radpower);
+	if (!network || !bias || !freq || !radpower) {
+		if (network) free(network);
+		if (bias) free(bias);
+		if (freq) free(freq);
+		if (radpower) free(radpower);
 		throw FI_MSG_ERROR_MEMORY;
 	}
 }
 
 NNQuantizer::~NNQuantizer()
 {
-	if(network) free(network);
-	if(bias) free(bias);
-	if(freq) free(freq);
-	if(radpower) free(radpower);
+	if (network) free(network);
+	if (bias) free(bias);
+	if (freq) free(freq);
+	if (radpower) free(radpower);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -361,7 +361,7 @@ void NNQuantizer::learn(int sampling_factor) {
 
 	// decrease learning rate after delta pixel presentations
 	delta = samplepixels / ncycles;
-	if(delta == 0) {
+	if (delta == 0) {
 		// avoid a 'divide by zero' error with very small images
 		delta = 1;
 	}
@@ -431,7 +431,7 @@ void NNQuantizer::learn(int sampling_factor) {
 FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *ReservePalette, int sampling) {
 
 	if ((!dib) || (FreeImage_GetBPP(dib) != 24)) {
-		return NULL;
+		return nullptr;
 	}
 
 	// 1) Select a sampling factor in range 1..30 (input parameter 'sampling')
@@ -449,13 +449,13 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserve
 	// For small images, adjust the sampling factor to avoid a 'divide by zero' error later 
 	// (see delta in learn() routine)
 	int adjust = (img_width * img_height) / ncycles;
-	if(sampling >= adjust)
+	if (sampling >= adjust)
 		sampling = 1;
 
 
 	// 3) Initialize the network and apply the learning algorithm
 
-	if( netsize > ReserveSize ) {
+	if (netsize > ReserveSize) {
 		netsize -= ReserveSize;
 		initnet();
 		learn(sampling);
@@ -475,8 +475,8 @@ FIBITMAP* NNQuantizer::Quantize(FIBITMAP *dib, int ReserveSize, FIRGBA8 *Reserve
 
 	FIBITMAP *new_dib = FreeImage_Allocate(img_width, img_height, 8);
 
-	if (new_dib == NULL)
-		return NULL;
+	if (!new_dib)
+		return nullptr;
 
 	// 5) Write the quantized palette
 

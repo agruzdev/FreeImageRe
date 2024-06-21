@@ -147,9 +147,9 @@ public:
 
     double Filter(double dVal) override {
 		dVal = fabs(dVal);
-		if(dVal < 1)
+		if (dVal < 1)
 			return (p0 + dVal*dVal*(p2 + dVal*p3));
-		if(dVal < 2)
+		if (dVal < 2)
 			return (q0 + dVal*(q1 + dVal*(q2 + dVal*q3)));
 		return 0;
 	}
@@ -186,11 +186,11 @@ public:
     ~CCatmullRomFilter() override {}
 
     double Filter(double dVal) override {
-		if(dVal < -2) return 0;
-		if(dVal < -1) return (0.5*(4 + dVal*(8 + dVal*(5 + dVal))));
-		if(dVal < 0)  return (0.5*(2 + dVal*dVal*(-5 - 3*dVal)));
-		if(dVal < 1)  return (0.5*(2 + dVal*dVal*(-5 + 3*dVal)));
-		if(dVal < 2)  return (0.5*(4 + dVal*(-8 + dVal*(5 - dVal))));
+		if (dVal < -2) return 0;
+		if (dVal < -1) return (0.5*(4 + dVal*(8 + dVal*(5 + dVal))));
+		if (dVal < 0)  return (0.5*(2 + dVal*dVal*(-5 - 3*dVal)));
+		if (dVal < 1)  return (0.5*(2 + dVal*dVal*(-5 + 3*dVal)));
+		if (dVal < 2)  return (0.5*(4 + dVal*(-8 + dVal*(5 - dVal))));
 		return 0;
 	}
 };
@@ -214,7 +214,7 @@ public:
 
     double Filter(double dVal) override {
 		dVal = fabs(dVal); 
-		if(dVal < m_dWidth)	{
+		if (dVal < m_dWidth)	{
 			return (sinc(dVal) * sinc(dVal / m_dWidth));
 		}
 		return 0;
@@ -222,7 +222,7 @@ public:
 
 private:
 	double sinc(double value) {
-		if(value != 0) {
+		if (value != 0) {
 			value *= FILTER_PI;
 			return (sin(value) / value);
 		} 
@@ -248,8 +248,8 @@ public:
     double Filter(double dVal) override {
 
 		dVal = fabs(dVal);
-		if(dVal < 1) return (4 + dVal*dVal*(-6 + 3*dVal)) / 6;
-		if(dVal < 2) {
+		if (dVal < 1) return (4 + dVal*dVal*(-6 + 3*dVal)) / 6;
+		if (dVal < 2) {
 			double t = 2 - dVal;
 			return (t*t*t / 6);
 		}
@@ -275,7 +275,7 @@ public:
     ~CBlackmanFilter() override {}
 
     double Filter (double dVal) override {
-		if(fabs (dVal) > m_dWidth) {
+		if (fabs (dVal) > m_dWidth) {
 			return 0; 
         }
         double dN = 2 * m_dWidth + 1; 

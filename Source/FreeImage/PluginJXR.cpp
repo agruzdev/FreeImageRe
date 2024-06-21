@@ -52,7 +52,7 @@ _jxr_io_Read(WMPStream* pWS, void* pv, size_t cb) {
 static ERR 
 _jxr_io_Write(WMPStream* pWS, const void* pv, size_t cb) {
 	FreeImageJXRIO *fio = (FreeImageJXRIO*)pWS->state.pvObj;
-	if(0 != cb) {
+	if (0 != cb) {
 		return (fio->io->write_proc((void*)pv, (unsigned)cb, 1, fio->handle) == 1) ? WMP_errSuccess : WMP_errFileIO;
 	}
 	return WMP_errFileIO;
@@ -68,7 +68,7 @@ static ERR
 _jxr_io_GetPos(WMPStream* pWS, size_t* poffPos) {
 	FreeImageJXRIO *fio = (FreeImageJXRIO*)pWS->state.pvObj;
     long lOff = fio->io->tell_proc(fio->handle);
-	if(lOff == -1) {
+	if (lOff == -1) {
 		return WMP_errFileIO;
 	}
     *poffPos = (size_t)lOff;
@@ -91,9 +91,9 @@ _jxr_io_Close(WMPStream** ppWS) {
 	// HACK : we use fMem to avoid a stream destruction by the library
 	// because FreeImage MUST HAVE the ownership of the stream
 	// see _jxr_io_Create
-	if(pWS && pWS->fMem) {
+	if (pWS && pWS->fMem) {
 		free(pWS);
-		*ppWS = NULL;
+		*ppWS = nullptr;
 	}
 	return WMP_errSuccess;
 }
@@ -101,7 +101,7 @@ _jxr_io_Close(WMPStream** ppWS) {
 static ERR 
 _jxr_io_Create(WMPStream **ppWS, FreeImageJXRIO *jxr_io) {
 	*ppWS = (WMPStream*)calloc(1, sizeof(**ppWS));
-	if(*ppWS) {
+	if (*ppWS) {
 		WMPStream *pWS = *ppWS;
 
 		pWS->state.pvObj = jxr_io;
@@ -128,7 +128,7 @@ _jxr_io_Create(WMPStream **ppWS, FreeImageJXRIO *jxr_io) {
 
 static const char* 
 JXR_ErrorMessage(const int error) {
-	switch(error) {
+	switch (error) {
 		case WMP_errNotYetImplemented:
 		case WMP_errAbstractMethod:
 			return "Not yet implemented";
@@ -170,7 +170,7 @@ JXR_ErrorMessage(const int error) {
 // ==========================================================
 
 #define JXR_CHECK(error_code) \
-	if(error_code < 0) { \
+	if (error_code < 0) { \
 		const char *error_message = JXR_ErrorMessage(error_code); \
 		throw error_message; \
 	}
@@ -231,9 +231,9 @@ static ERR
 GetNativePixelFormat(const PKPixelInfo *pixelInfo, PKPixelFormatGUID *out_guid_format, FREE_IMAGE_TYPE *image_type, unsigned *bpp, unsigned *red_mask, unsigned *green_mask, unsigned *blue_mask) {
 	const unsigned s_FreeImagePixelInfoSize = (unsigned)sizeof(s_FreeImagePixelInfo) / sizeof(*(s_FreeImagePixelInfo));
 
-	for(unsigned i = 0; i < s_FreeImagePixelInfoSize; i++) {
-		if(pixelInfo->bdBitDepth == s_FreeImagePixelInfo[i].bdBitDepth) {
-			if(pixelInfo->cbitUnit == s_FreeImagePixelInfo[i].cbitUnit) {
+	for (unsigned i = 0; i < s_FreeImagePixelInfoSize; i++) {
+		if (pixelInfo->bdBitDepth == s_FreeImagePixelInfo[i].bdBitDepth) {
+			if (pixelInfo->cbitUnit == s_FreeImagePixelInfo[i].cbitUnit) {
 				// found ! now get dst image format specifications
 				memcpy(out_guid_format, pixelInfo->pGUIDPixFmt, sizeof(PKPixelFormatGUID));
 				*image_type = s_FreeImagePixelInfo[i].image_type;
@@ -279,25 +279,25 @@ GetInputPixelFormat(PKImageDecode *pDecoder, PKPixelFormatGUID *guid_format, FRE
 		// search for an equivalent native FreeImage format
 		error_code = GetNativePixelFormat(&pixelInfo, guid_format, image_type, bpp, red_mask, green_mask, blue_mask);
 
-		if(error_code != WMP_errSuccess) {
+		if (error_code != WMP_errSuccess) {
 			// try to find a suitable conversion function ...
-			const PKPixelFormatGUID *ppguidTargetPF = NULL;	// target pixel format
+			const PKPixelFormatGUID *ppguidTargetPF{};	// target pixel format
 			unsigned iIndex = 0;	// first available conversion function
 			do {
 				error_code = PKFormatConverter_EnumConversions(&pguidSourcePF, iIndex, &ppguidTargetPF);
-				if(error_code == WMP_errSuccess) {
+				if (error_code == WMP_errSuccess) {
 					// found a conversion function, is the converted format a native FreeImage format ?
 					pixelInfo.pGUIDPixFmt = ppguidTargetPF;
 					error_code = PixelFormatLookup(&pixelInfo, LOOKUP_FORWARD);
 					JXR_CHECK(error_code);
 					error_code = GetNativePixelFormat(&pixelInfo, guid_format, image_type, bpp, red_mask, green_mask, blue_mask);
-					if(error_code == WMP_errSuccess) {
+					if (error_code == WMP_errSuccess) {
 						break;
 					}
 				}
 				// try next conversion function
 				iIndex++;
-			} while(error_code != WMP_errIndexNotFound);
+			} while (error_code != WMP_errIndexNotFound);
 
 		}
 
@@ -326,18 +326,18 @@ GetOutputPixelFormat(FIBITMAP *dib, PKPixelFormatGUID *guid_format, FIBOOL *bHas
 	*guid_format = GUID_PKPixelFormatDontCare;
 	*bHasAlpha = FALSE;
 
-	switch(image_type) {
+	switch (image_type) {
 		case FIT_BITMAP:	// standard image	: 1-, 4-, 8-, 16-, 24-, 32-bit
-			switch(bpp) {
+			switch (bpp) {
 				case 1:
 					// assume FIC_MINISBLACK
-					if(color_type == FIC_MINISBLACK) {
+					if (color_type == FIC_MINISBLACK) {
 						*guid_format = GUID_PKPixelFormatBlackWhite;
 					}
 					break;
 				case 8:
 					// assume FIC_MINISBLACK
-					if(color_type == FIC_MINISBLACK) {
+					if (color_type == FIC_MINISBLACK) {
 						*guid_format = GUID_PKPixelFormat8bppGray;
 					}
 					break;
@@ -420,12 +420,12 @@ ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, uint8_t 
 	// (re-)allocate profile buffer
 	uint8_t *pbProfile = *ppbProfile;
 	pbProfile = (uint8_t*)realloc(pbProfile, cbByteCount);
-	if(!pbProfile) {
+	if (!pbProfile) {
 		return WMP_errOutOfMemory;
 	}
 	// read the profile
-	if(WMP_errSuccess == pStream->SetPos(pStream, uOffset)) {
-		if(WMP_errSuccess == pStream->Read(pStream, pbProfile, cbByteCount)) {
+	if (WMP_errSuccess == pStream->SetPos(pStream, uOffset)) {
+		if (WMP_errSuccess == pStream->Read(pStream, pbProfile, cbByteCount)) {
 			*ppbProfile = pbProfile;
 			return WMP_errSuccess;
 		}
@@ -441,20 +441,20 @@ static FIBOOL
 ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 	uint32_t dwSize;
 
-	if(varSrc.vt == DPKVT_EMPTY) {
+	if (varSrc.vt == DPKVT_EMPTY) {
 		return FALSE;
 	}
 
 	// get the tag key
 	const TagLib& s = TagLib::instance();
 	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
-	if(!key) {
+	if (!key) {
 		return FALSE;
 	}
 
 	// create a tag
 	FITAG *tag = FreeImage_CreateTag();
-	if(tag) {
+	if (tag) {
 		// set tag ID
 		FreeImage_SetTagID(tag, tag_id);
 		// set tag type, count, length and value
@@ -542,7 +542,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 	
 	WMPStream *pStream = pID->pStream;
 	WmpDEMisc *wmiDEMisc = &pID->WMP.wmiDEMisc;
-	uint8_t *pbProfile = NULL;
+	uint8_t *pbProfile{};
 
 	try {
 		// save current position
@@ -550,7 +550,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		JXR_CHECK(error_code);
 
 		// ICC profile
-		if(0 != wmiDEMisc->uColorProfileByteCount) {
+		if (0 != wmiDEMisc->uColorProfileByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uColorProfileByteCount;
 			unsigned uOffset = wmiDEMisc->uColorProfileOffset;
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
@@ -559,14 +559,14 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		}
 
 		// XMP metadata
-		if(0 != wmiDEMisc->uXMPMetadataByteCount) {
+		if (0 != wmiDEMisc->uXMPMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uXMPMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uXMPMetadataOffset;
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
 			FITAG *tag = FreeImage_CreateTag();
-			if(tag) {
+			if (tag) {
 				FreeImage_SetTagLength(tag, cbByteCount);
 				FreeImage_SetTagCount(tag, cbByteCount);
 				FreeImage_SetTagType(tag, FIDT_ASCII);
@@ -578,7 +578,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		}
 
 		// IPTC metadata
-		if(0 != wmiDEMisc->uIPTCNAAMetadataByteCount) {
+		if (0 != wmiDEMisc->uIPTCNAAMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uIPTCNAAMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uIPTCNAAMetadataOffset;
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
@@ -588,7 +588,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		}
 
 		// Exif metadata
-		if(0 != wmiDEMisc->uEXIFMetadataByteCount) {
+		if (0 != wmiDEMisc->uEXIFMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uEXIFMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uEXIFMetadataOffset;
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
@@ -598,7 +598,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		}
 
 		// Exif-GPS metadata
-		if(0 != wmiDEMisc->uGPSInfoMetadataByteCount) {
+		if (0 != wmiDEMisc->uGPSInfoMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uGPSInfoMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uGPSInfoMetadataOffset;
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
@@ -622,7 +622,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 	} catch(...) {
 		// free profile buffer
 		free(pbProfile);
-		if(currentPos) {
+		if (currentPos) {
 			// restore initial position
 			pStream->SetPos(pStream, currentPos);
 		}
@@ -641,7 +641,7 @@ No allocation is needed here, the function just copy pointers when needed.
 */
 static FIBOOL
 WritePropVariant(FIBITMAP *dib, uint16_t tag_id, DPKPROPVARIANT & varDst) {
-	FITAG *tag = NULL;
+	FITAG *tag{};
 
 	const TagLib& s = TagLib::instance();
 	
@@ -651,12 +651,12 @@ WritePropVariant(FIBITMAP *dib, uint16_t tag_id, DPKPROPVARIANT & varDst) {
 	// given the tag id, get the tag key
 	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
 	// then, get the tag info
-	if(!FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
+	if (!FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
 		return FALSE;
 	}
 
 	// set the tag value
-	switch(FreeImage_GetTagType(tag)) {
+	switch (FreeImage_GetTagType(tag)) {
 		case FIDT_ASCII:
 			varDst.vt = DPKVT_LPSTR;
 			varDst.VT.pszVal = (char*)FreeImage_GetTagValue(tag);
@@ -719,42 +719,42 @@ Write ICC, XMP, Exif, Exif-GPS, IPTC, descriptive (i.e. Exif-TIFF) metadata
 static ERR
 WriteMetadata(PKImageEncode *pIE, FIBITMAP *dib) {
 	ERR error_code = 0;		// error code as returned by the interface
-	uint8_t *profile = NULL;
+	uint8_t *profile{};
 	unsigned profile_size = 0;
 	
 	try {
 		// write ICC profile
 		{
 			FIICCPROFILE *iccProfile = FreeImage_GetICCProfile(dib);
-			if(iccProfile->data) {
+			if (iccProfile->data) {
 				error_code = pIE->SetColorContext(pIE, (U8*)iccProfile->data, iccProfile->size);
 				JXR_CHECK(error_code);
 			}
 		}
 		
 		// write descriptive metadata
-		if(FreeImage_GetMetadataCount(FIMD_EXIF_MAIN, dib)) {
+		if (FreeImage_GetMetadataCount(FIMD_EXIF_MAIN, dib)) {
 			error_code = WriteDescriptiveMetadata(pIE, dib);
 			JXR_CHECK(error_code);
 		}
 
 		// write IPTC metadata
-		if(FreeImage_GetMetadataCount(FIMD_IPTC, dib)) {
+		if (FreeImage_GetMetadataCount(FIMD_IPTC, dib)) {
 			// create a binary profile
-			if(write_iptc_profile(dib, &profile, &profile_size)) {
+			if (write_iptc_profile(dib, &profile, &profile_size)) {
 				// write the profile
 				error_code = PKImageEncode_SetIPTCNAAMetadata_WMP(pIE, profile, profile_size);
 				JXR_CHECK(error_code);
 				// release profile
 				free(profile);
-				profile = NULL;
+				profile = nullptr;
 			}
 		}
 
 		// write XMP metadata
 		{
-			FITAG *tag_xmp = NULL;
-			if(FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag_xmp)) {
+			FITAG *tag_xmp{};
+			if (FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag_xmp)) {
 				error_code = PKImageEncode_SetXMPMetadata_WMP(pIE, (uint8_t*)FreeImage_GetTagValue(tag_xmp), FreeImage_GetTagLength(tag_xmp));
 				JXR_CHECK(error_code);
 			}
@@ -762,23 +762,23 @@ WriteMetadata(PKImageEncode *pIE, FIBITMAP *dib) {
 
 		// write Exif metadata
 		{
-			if(tiff_get_ifd_profile(dib, FIMD_EXIF_EXIF, &profile, &profile_size)) {
+			if (tiff_get_ifd_profile(dib, FIMD_EXIF_EXIF, &profile, &profile_size)) {
 				error_code = PKImageEncode_SetEXIFMetadata_WMP(pIE, profile, profile_size);
 				JXR_CHECK(error_code);
 				// release profile
 				free(profile);
-				profile = NULL;
+				profile = nullptr;
 			}
 		}
 
 		// write Exif GPS metadata
 		{
-			if(tiff_get_ifd_profile(dib, FIMD_EXIF_GPS, &profile, &profile_size)) {
+			if (tiff_get_ifd_profile(dib, FIMD_EXIF_GPS, &profile, &profile_size)) {
 				error_code = PKImageEncode_SetGPSInfoMetadata_WMP(pIE, profile, profile_size);
 				JXR_CHECK(error_code);
 				// release profile
 				free(profile);
-				profile = NULL;
+				profile = nullptr;
 			}
 		}
 
@@ -889,7 +889,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -947,17 +947,17 @@ SupportsNoPixels() {
 
 static void * DLL_CALLCONV
 Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
-	WMPStream *pStream = NULL;	// stream interface
-	if(io && handle) {
+	WMPStream *pStream{};	// stream interface
+	if (io && handle) {
 		// allocate the FreeImageIO stream wrapper
-		FreeImageJXRIO *jxr_io = (FreeImageJXRIO*)malloc(sizeof(FreeImageJXRIO));
-		if(jxr_io) {
+		auto *jxr_io = (FreeImageJXRIO*)malloc(sizeof(FreeImageJXRIO));
+		if (jxr_io) {
 			jxr_io->io = io;
 			jxr_io->handle = handle;
 			// create a JXR stream wrapper
-			if(_jxr_io_Create(&pStream, jxr_io) != WMP_errSuccess) {
+			if (_jxr_io_Create(&pStream, jxr_io) != WMP_errSuccess) {
 				free(jxr_io);
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
@@ -966,8 +966,8 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 
 static void DLL_CALLCONV
 Close(FreeImageIO *io, fi_handle handle, void *data) {
-	WMPStream *pStream = (WMPStream*)data;
-	if(pStream) {
+	auto *pStream = (WMPStream*)data;
+	if (pStream) {
 		// free the FreeImageIO stream wrapper
 		FreeImageJXRIO *jxr_io = (FreeImageJXRIO*)pStream->state.pvObj;
 		free(jxr_io);
@@ -1004,9 +1004,9 @@ Copy or convert & copy decoded pixels into the dib
 */
 static ERR
 CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP *dib, int width, int height) {
-	PKFormatConverter *pConverter = NULL;	// pixel format converter
+	PKFormatConverter *pConverter{};	// pixel format converter
 	ERR error_code = 0;	// error code as returned by the interface
-	uint8_t *pb = NULL;	// local buffer used for pixel format conversion
+	uint8_t *pb{};	// local buffer used for pixel format conversion
 	
 	// image dimensions
 	const PKRect rect = {0, 0, width, height};
@@ -1019,7 +1019,7 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 		
 		// is a format conversion needed ?
 
-		if(IsEqualGUID(out_guid_format, in_guid_format)) {
+		if (IsEqualGUID(out_guid_format, in_guid_format)) {
 			// no conversion, load bytes "as is" ...
 
 			// get a pointer to dst pixel data
@@ -1072,7 +1072,7 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 
 			// now copy pixels into the dib
 			const size_t line_size = FreeImage_GetLine(dib);
-			for(int y = 0; y < height; y++) {
+			for (int y = 0; y < height; y++) {
 				uint8_t *src_bits = (uint8_t*)(pb + y * cbStride);
 				uint8_t *dst_bits = (uint8_t*)FreeImage_GetScanLine(dib, y);
 				memcpy(dst_bits, src_bits, line_size);
@@ -1094,11 +1094,11 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 		// swap RGB as needed
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-		if(IsEqualGUID(out_guid_format, GUID_PKPixelFormat24bppRGB) || IsEqualGUID(out_guid_format, GUID_PKPixelFormat32bppRGB)) {
+		if (IsEqualGUID(out_guid_format, GUID_PKPixelFormat24bppRGB) || IsEqualGUID(out_guid_format, GUID_PKPixelFormat32bppRGB)) {
 			SwapRedBlue32(dib);
 		}
 #elif FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
-		if(IsEqualGUID(out_guid_format, GUID_PKPixelFormat24bppBGR) || IsEqualGUID(out_guid_format, GUID_PKPixelFormat32bppBGR)) {
+		if (IsEqualGUID(out_guid_format, GUID_PKPixelFormat24bppBGR) || IsEqualGUID(out_guid_format, GUID_PKPixelFormat32bppBGR)) {
 			SwapRedBlue32(dib);
 		}
 #endif
@@ -1119,19 +1119,19 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	PKImageDecode *pDecoder = NULL;	// decoder interface
+	PKImageDecode *pDecoder{};	// decoder interface
 	ERR error_code = 0;				// error code as returned by the interface
 	PKPixelFormatGUID guid_format;	// loaded pixel format (== input file pixel format if no conversion needed)
 	
 	FREE_IMAGE_TYPE image_type = FIT_UNKNOWN;	// input image type
 	unsigned bpp = 0;							// input image bit depth
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 	
 	// get the I/O stream wrapper
 	WMPStream *pDecodeStream = (WMPStream*)data;
 
-	if(!handle || !pDecodeStream) {
-		return NULL;
+	if (!handle || !pDecodeStream) {
+		return nullptr;
 	}
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -1162,10 +1162,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// allocate dst image
 		{			
 			dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, bpp, red_mask, green_mask, blue_mask);
-			if(!dib) {
+			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
-			if(FreeImage_GetBPP(dib) == 1) {
+			if (FreeImage_GetBPP(dib) == 1) {
 				// BD_1 - build a FIC_MINISBLACK palette
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 				pal[0].red = pal[0].green = pal[0].blue = 0;
@@ -1186,12 +1186,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		error_code = ReadMetadata(pDecoder, dib);
 		JXR_CHECK(error_code);
 
-		if(header_only) {
+		if (header_only) {
 			// header only mode ...
 			
 			// free the decoder
 			pDecoder->Release(&pDecoder);
-			assert(pDecoder == NULL);
+			assert(!pDecoder);
 
 			return dib;
 		}
@@ -1202,7 +1202,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// free the decoder
 		pDecoder->Release(&pDecoder);
-		assert(pDecoder == NULL);
+		assert(!pDecoder);
 
 		return dib;
 
@@ -1212,12 +1212,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// free the decoder
 		pDecoder->Release(&pDecoder);
 
-		if(NULL != message) {
+		if (message) {
 			FreeImage_OutputMessageProc(s_format_id, message);
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -1239,28 +1239,28 @@ ImageQuality  Q (BD==1)  Q (BD==8)   Q (BD==16)  Q (BD==32F) Subsample   Overlap
 */
 static void 
 SetCompression(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, float fltImageQuality) {
-    if(fltImageQuality < 1.0F) {
+    if (fltImageQuality < 1.0F) {
         // overlap
-		if(fltImageQuality >= 0.5F) {
+		if (fltImageQuality >= 0.5F) {
 			wmiSCP->olOverlap = OL_ONE;
 		} else {
 			wmiSCP->olOverlap = OL_TWO;
 		}
 		// chroma sub-sampling
-		if(fltImageQuality >= 0.5F || pixelInfo->uBitsPerSample > 8) {
+		if (fltImageQuality >= 0.5F || pixelInfo->uBitsPerSample > 8) {
 			wmiSCP->cfColorFormat = YUV_444;
 		} else {
 			wmiSCP->cfColorFormat = YUV_420;
 		}
 
 	    // bit depth
-		if(pixelInfo->bdBitDepth == BD_1) {
+		if (pixelInfo->bdBitDepth == BD_1) {
 			wmiSCP->uiDefaultQPIndex = (U8)(8 - 5.0F * fltImageQuality + 0.5F);
 		}
 		else {
 			// remap [0.8, 0.866, 0.933, 1.0] to [0.8, 0.9, 1.0, 1.1]
             // to use 8-bit DPK QP table (0.933 == Photoshop JPEG 100)
-            if(fltImageQuality > 0.8F && pixelInfo->bdBitDepth == BD_8 && wmiSCP->cfColorFormat != YUV_420 && wmiSCP->cfColorFormat != YUV_422) {
+            if (fltImageQuality > 0.8F && pixelInfo->bdBitDepth == BD_8 && wmiSCP->cfColorFormat != YUV_420 && wmiSCP->cfColorFormat != YUV_422) {
 				fltImageQuality = 0.8F + (fltImageQuality - 0.8F) * 1.5F;
 			}
 
@@ -1318,17 +1318,17 @@ SetEncoderParameters(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, in
 	// -----------------
 
 	// progressive mode
-	if((flags & JXR_PROGRESSIVE) == JXR_PROGRESSIVE) {
+	if ((flags & JXR_PROGRESSIVE) == JXR_PROGRESSIVE) {
 		// turn on progressive mode (instead of sequential mode)
 		wmiSCP->bProgressiveMode = TRUE;
 	}
 
 	// quality in [0.01 - 1.0), 1.0 means lossless - default is 0.80
 	int quality = flags & 0x7F;
-	if(quality == 0) {
+	if (quality == 0) {
 		// defaut to 0.80
 		fltImageQuality = 0.8F;
-	} else if((flags & JXR_LOSSLESS) == JXR_LOSSLESS) {
+	} else if ((flags & JXR_LOSSLESS) == JXR_LOSSLESS) {
 		fltImageQuality = 1.0F;
 	} else {
 		quality = (quality >= 100) ? 100 : quality;
@@ -1337,7 +1337,7 @@ SetEncoderParameters(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, in
 	SetCompression(wmiSCP, pixelInfo, fltImageQuality);
 
 	// alpha compression
-	if(bHasAlpha) {
+	if (bHasAlpha) {
 		wmiSCP->uAlphaMode = 2;	// encode with a planar alpha channel
 	}
 }
@@ -1351,13 +1351,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	PKPixelInfo pixelInfo;			// image specifications
 	FIBOOL bHasAlpha = FALSE;			// is alpha layer present ?
 
-	PKImageEncode *pEncoder = NULL;		// encoder interface
+	PKImageEncode *pEncoder{};		// encoder interface
 	ERR error_code = 0;					// error code as returned by the interface
 
 	// get the I/O stream wrapper
 	WMPStream *pEncodeStream = (WMPStream*)data;
 
-	if(!dib || !handle || !pEncodeStream) {
+	if (!dib || !handle || !pEncodeStream) {
 		return FALSE;
 	}
 
@@ -1367,9 +1367,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		unsigned height = FreeImage_GetHeight(dib);
 
 		// check JPEG-XR limits
-		if((width < MB_WIDTH_PIXEL) || (height < MB_HEIGHT_PIXEL)) {
+		if ((width < MB_WIDTH_PIXEL) || (height < MB_HEIGHT_PIXEL)) {
 			FreeImage_OutputMessageProc(s_format_id, "Unsupported image size: width x height = %d x %d", width, height);
-			throw (const char*)NULL;
+			throw (const char*)nullptr;
 		}
 
 		// get output pixel format
@@ -1425,21 +1425,21 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		// free the encoder
 		pEncoder->Release(&pEncoder);
-		assert(pEncoder == NULL);
+		assert(!pEncoder);
 		
 		return TRUE;
 
 	} catch (const char *message) {
-		if(bIsFlipped) {
+		if (bIsFlipped) {
 			// recover dib coordinates
 			FreeImage_FlipVertical(dib);
 		}
-		if(pEncoder) {
+		if (pEncoder) {
 			// free the encoder
 			pEncoder->Release(&pEncoder);
-			assert(pEncoder == NULL);
+			assert(!pEncoder);
 		}
-		if(NULL != message) {
+		if (message) {
 			FreeImage_OutputMessageProc(s_format_id, message);
 		}
 	}
@@ -1461,8 +1461,8 @@ InitJXR(Plugin *plugin, int format_id) {
 	plugin->regexpr_proc = RegExpr;
 	plugin->open_proc = Open;
 	plugin->close_proc = Close;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
 	plugin->validate_proc = Validate;

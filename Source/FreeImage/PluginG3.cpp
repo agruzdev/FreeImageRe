@@ -101,8 +101,8 @@ G3ReadFile(FreeImageIO *io, fi_handle handle, uint8_t *tif_rawdata, tmsize_t tif
 
 static int 
 copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int stretch, FIMEMORY *memory) {
-	uint8_t *rowbuf = NULL;
-	uint8_t *refbuf = NULL;
+	uint8_t *rowbuf{};
+	uint8_t *refbuf{};
 	uint32_t row;
 	uint16_t badrun;
 	uint16_t	badfaxrun;
@@ -111,20 +111,20 @@ copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int 
 
 	try {
 
-		uint32_t linesize = TIFFhowmany8(xsize);
+		const uint32_t linesize = TIFFhowmany8(xsize);
 		rowbuf = (uint8_t*) _TIFFmalloc(linesize);
 		refbuf = (uint8_t*) _TIFFmalloc(linesize);
-		if (rowbuf == NULL || refbuf == NULL) {
+		if (!rowbuf || !refbuf) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 
 		tifin->tif_rawdatasize = G3GetFileSize(io, handle);
 		tifin->tif_rawdata = (tidata_t) _TIFFmalloc(tifin->tif_rawdatasize);
-		if (tifin->tif_rawdata == NULL) {
+		if (!tifin->tif_rawdata) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 			
-		if(!G3ReadFile(io, handle, tifin->tif_rawdata, tifin->tif_rawdatasize)) {
+		if (!G3ReadFile(io, handle, tifin->tif_rawdata, tifin->tif_rawdatasize)) {
 			throw "Read error at scanline 0";
 		}
 		tifin->tif_rawcp = tifin->tif_rawdata;
@@ -165,7 +165,7 @@ copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int 
 			badfaxrun = badrun;
 
 		_TIFFfree(tifin->tif_rawdata);
-		tifin->tif_rawdata = NULL;
+		tifin->tif_rawdata = nullptr;
 
 		_TIFFfree(rowbuf);
 		_TIFFfree(refbuf);
@@ -179,11 +179,11 @@ copyFaxFile(FreeImageIO *io, fi_handle handle, TIFF* tifin, uint32_t xsize, int 
 		*/
 
 	} catch(const char *message) {
-		if(rowbuf) _TIFFfree(rowbuf);
-		if(refbuf) _TIFFfree(refbuf);
-		if(tifin->tif_rawdata) {
+		if (rowbuf) _TIFFfree(rowbuf);
+		if (refbuf) _TIFFfree(refbuf);
+		if (tifin->tif_rawdata) {
 			_TIFFfree(tifin->tif_rawdata);
-			tifin->tif_rawdata = NULL;
+			tifin->tif_rawdata = nullptr;
 		}
 		FreeImage_OutputMessageProc(s_format_id, message);
 
@@ -215,7 +215,7 @@ Extension() {
 
 static const char * DLL_CALLCONV 
 RegExpr() {
-	return NULL; // there is now reasonable regexp for raw G3
+	return nullptr; // there is now reasonable regexp for raw G3
 }
 
 static const char * DLL_CALLCONV 
@@ -232,9 +232,9 @@ SupportsExportDepth(int depth) {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	TIFF *faxTIFF = NULL;
-	FIBITMAP *dib = NULL;
-	FIMEMORY *memory = NULL;
+	TIFF *faxTIFF{};
+	FIBITMAP *dib{};
+	FIMEMORY *memory{};
 
 	//int verbose = 0;
 	int	stretch = 0;
@@ -249,7 +249,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	uint32_t group4options_in = 0;	// compressed 
 	int photometric_in = PHOTOMETRIC_MINISWHITE;
 
-	if(handle==NULL) return NULL;
+	if (!handle) return nullptr;
 
 	try {
 		// set default load options
@@ -319,7 +319,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// open a temporary memory buffer to save decoded scanlines
 		memory = FreeImage_OpenMemory();
-		if(!memory) throw FI_MSG_ERROR_MEMORY;
+		if (!memory) throw FI_MSG_ERROR_MEMORY;
 		
 		// wrap the raw fax file
 		faxTIFF = TIFFClientOpen("(FakeInput)", "w",
@@ -330,7 +330,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			_g3SizeProc, _g3MapProc,
 			_g3UnmapProc);
 
-		if (faxTIFF == NULL) {
+		if (!faxTIFF) {
 			throw "Can not create fake input file";
 		}
 		TIFFSetMode(faxTIFF, O_RDONLY);
@@ -359,7 +359,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// decode the raw fax data
 		rows = copyFaxFile(io, handle, faxTIFF, xsize, stretch, memory);
-		if(rows <= 0) throw "Error when decoding raw fax file : check the decoder options";
+		if (rows <= 0) throw "Error when decoding raw fax file : check the decoder options";
 
 
 		// allocate the output dib
@@ -370,7 +370,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// fill the bitmap structure ...
 		// ... palette
 		FIRGBA8 *pal = FreeImage_GetPalette(dib);
-		if(photometric_in == PHOTOMETRIC_MINISWHITE) {
+		if (photometric_in == PHOTOMETRIC_MINISWHITE) {
 			pal[0].red = pal[0].green = pal[0].blue = 255;
 			pal[1].red = pal[1].green = pal[1].blue = 0;
 		} else {
@@ -384,7 +384,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// read the decoded scanline and fill the bitmap data
 		FreeImage_SeekMemory(memory, 0, SEEK_SET);
 		uint8_t *bits = FreeImage_GetScanLine(dib, rows - 1);
-		for(int k = 0; k < rows; k++) {
+		for (int k = 0; k < rows; k++) {
 			FreeImage_ReadMemory(bits, linesize, 1, memory);
 			bits -= pitch;
 		}
@@ -396,11 +396,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		FreeImage_CloseMemory(memory);
 
 	} catch(const char *message) {
-		if(memory) FreeImage_CloseMemory(memory);
-		if(faxTIFF) TIFFClose(faxTIFF);
-		if(dib) FreeImage_Unload(dib);
+		if (memory) FreeImage_CloseMemory(memory);
+		if (faxTIFF) TIFFClose(faxTIFF);
+		if (dib) FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, message);
-		return NULL;
+		return nullptr;
 	}
 
 	return dib;
@@ -419,15 +419,15 @@ InitG3(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
-	plugin->validate_proc = NULL;
+	plugin->save_proc = nullptr;
+	plugin->validate_proc = nullptr;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
-	plugin->supports_export_type_proc = NULL;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_export_type_proc = nullptr;
+	plugin->supports_icc_profiles_proc = nullptr;
 }

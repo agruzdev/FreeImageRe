@@ -34,17 +34,17 @@
 FIMEMORY * DLL_CALLCONV 
 FreeImage_OpenMemory(uint8_t *data, uint32_t size_in_bytes) {
 	// allocate a memory handle
-	FIMEMORY *stream = (FIMEMORY*)malloc(sizeof(FIMEMORY));
-	if(stream) {
+	auto *stream = (FIMEMORY*)malloc(sizeof(FIMEMORY));
+	if (stream) {
 		stream->data = (uint8_t*)malloc(sizeof(FIMEMORYHEADER));
 
-		if(stream->data) {
+		if (stream->data) {
 			FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
 
 			// initialize the memory header
 			memset(mem_header, 0, sizeof(FIMEMORYHEADER));
 			
-			if(data && size_in_bytes) {
+			if (data && size_in_bytes) {
 				// wrap a user buffer
 				mem_header->delete_me = FALSE;
 				mem_header->data = (uint8_t*)data;
@@ -58,15 +58,15 @@ FreeImage_OpenMemory(uint8_t *data, uint32_t size_in_bytes) {
 		free(stream);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
 void DLL_CALLCONV
 FreeImage_CloseMemory(FIMEMORY *stream) {
-	if(stream && stream->data) {
+	if (stream && stream->data) {
 		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
-		if(mem_header->delete_me) {
+		if (mem_header->delete_me) {
 			free(mem_header->data);
 		}
 		free(mem_header);
@@ -87,7 +87,7 @@ FreeImage_LoadFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int flags) {
 		return FreeImage_LoadFromHandle(fif, &io, (fi_handle)stream, flags);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
@@ -99,7 +99,7 @@ FreeImage_SaveToMemory(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FIMEMORY *stream, i
 
 		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(stream->data);
 
-		if(mem_header->delete_me == TRUE) {
+		if (mem_header->delete_me == TRUE) {
 			return FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)stream, flags);
 		} else {
 			// do not save in a user buffer
@@ -143,7 +143,7 @@ FreeImage_SeekMemory(FIMEMORY *stream, long offset, int origin) {
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
-	if (stream != NULL) {
+	if (stream) {
 		int success = io.seek_proc((fi_handle)stream, offset, origin);
 		return (success == 0) ? TRUE : FALSE;
 	}
@@ -161,7 +161,7 @@ FreeImage_TellMemory(FIMEMORY *stream) {
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
-	if (stream != NULL) {
+	if (stream) {
 		return io.tell_proc((fi_handle)stream);
 	}
 
@@ -185,7 +185,7 @@ FreeImage_ReadMemory(void *buffer, unsigned size, unsigned count, FIMEMORY *stre
 	FreeImageIO io;
 	SetMemoryIO(&io);
 
-	if (stream != NULL) {
+	if (stream) {
 		return io.read_proc(buffer, size, count, stream);
 	}
 
@@ -202,13 +202,13 @@ Writes data to a memory stream.
 */
 unsigned DLL_CALLCONV 
 FreeImage_WriteMemory(const void *buffer, unsigned size, unsigned count, FIMEMORY *stream) {
-	if (stream != NULL) {
+	if (stream) {
 		FreeImageIO io;
 		SetMemoryIO(&io);
 
 		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)stream)->data);
 
-		if(mem_header->delete_me == TRUE) {
+		if (mem_header->delete_me == TRUE) {
 			return io.write_proc((void *)buffer, size, count, stream);
 		} else {
 			// do not write in a user buffer

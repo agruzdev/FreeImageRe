@@ -195,8 +195,8 @@ FreeImage_IsLittleEndian() {
 
 //----------------------------------------------------------------------
 
-static FreeImage_OutputMessageFunction freeimage_outputmessage_proc = NULL;
-static FreeImage_OutputMessageFunctionStdCall freeimage_outputmessagestdcall_proc = NULL; 
+static FreeImage_OutputMessageFunction freeimage_outputmessage_proc{};
+static FreeImage_OutputMessageFunctionStdCall freeimage_outputmessagestdcall_proc{};
 
 void DLL_CALLCONV
 FreeImage_SetOutputMessage(FreeImage_OutputMessageFunction omf) {
@@ -212,7 +212,7 @@ void DLL_CALLCONV
 FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 	const int MSG_SIZE = 512; // 512 bytes should be more than enough for a short message
 
-	if ((fmt != NULL) && ((freeimage_outputmessage_proc != NULL) || (freeimage_outputmessagestdcall_proc != NULL))) {
+	if (fmt && (freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
 		char message[MSG_SIZE];
 		memset(message, 0, MSG_SIZE);
 
@@ -230,7 +230,7 @@ FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 		for (int i = 0, j = 0; i < str_length; ++i) {
 			if (fmt[i] == '%') {
 				if (i + 1 < str_length) {
-					switch(tolower(fmt[i + 1])) {
+					switch (tolower(fmt[i + 1])) {
 						case '%' :
 							message[j++] = '%';
 							break;
@@ -308,10 +308,10 @@ FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 
 		// output the message to the user program
 
-		if (freeimage_outputmessage_proc != NULL)
+		if (freeimage_outputmessage_proc)
 			freeimage_outputmessage_proc((FREE_IMAGE_FORMAT)fif, message);
 
-		if (freeimage_outputmessagestdcall_proc != NULL)
+		if (freeimage_outputmessagestdcall_proc)
 			freeimage_outputmessagestdcall_proc((FREE_IMAGE_FORMAT)fif, message); 
 	}
 }

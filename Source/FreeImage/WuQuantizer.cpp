@@ -52,9 +52,9 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	pitch = FreeImage_GetPitch(dib);
 	m_dib = dib;
 
-	gm2 = NULL;
-	wt = mr = mg = mb = NULL;
-	Qadd = NULL;
+	gm2 = nullptr;
+	wt = mr = mg = mb = nullptr;
+	Qadd = nullptr;
 
 	// Allocate 3D arrays
 	gm2 = (float*)malloc(SIZE_3D * sizeof(float));
@@ -66,13 +66,13 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	// Allocate Qadd
 	Qadd = (uint16_t *)malloc(width * sizeof(uint16_t) * height);
 
-	if(!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
-		if(gm2)	free(gm2);
-		if(wt)	free(wt);
-		if(mr)	free(mr);
-		if(mg)	free(mg);
-		if(mb)	free(mb);
-		if(Qadd)  free(Qadd);
+	if (!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
+		if (gm2)	free(gm2);
+		if (wt)	free(wt);
+		if (mr)	free(mr);
+		if (mg)	free(mg);
+		if (mb)	free(mb);
+		if (Qadd)  free(Qadd);
 		throw FI_MSG_ERROR_MEMORY;
 	}
 	memset(gm2, 0, SIZE_3D * sizeof(float));
@@ -84,12 +84,12 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 }
 
 WuQuantizer::~WuQuantizer() {
-	if(gm2)	free(gm2);
-	if(wt)	free(wt);
-	if(mr)	free(mr);
-	if(mg)	free(mg);
-	if(mb)	free(mb);
-	if(Qadd)  free(Qadd);
+	if (gm2)	free(gm2);
+	if (wt)	free(wt);
+	if (mr)	free(mr);
+	if (mg)	free(mg);
+	if (mb)	free(mb);
+	if (Qadd)  free(Qadd);
 }
 
 
@@ -105,15 +105,15 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 	int i;
 	unsigned y, x;
 
-	for(i = 0; i < 256; i++)
+	for (i = 0; i < 256; i++)
 		table[i] = i * i;
 
 	if (FreeImage_GetBPP(m_dib) == 24) {
 		size_t rowOffset = 0;
-		for(y = 0; y < height; y++) {
+		for (y = 0; y < height; y++) {
 			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
-			for(x = 0; x < width; x++)	{
+			for (x = 0; x < width; x++)	{
 				inr = (bits[FI_RGBA_RED] >> 3) + 1;
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
@@ -131,10 +131,10 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 		}
 	} else {
 		size_t rowOffset = 0;
-		for(y = 0; y < height; y++) {
+		for (y = 0; y < height; y++) {
 			uint8_t *bits = FreeImage_GetScanLine(m_dib, y);
 
-			for(x = 0; x < width; x++)	{
+			for (x = 0; x < width; x++)	{
 				inr = (bits[FI_RGBA_RED] >> 3) + 1;
 				ing = (bits[FI_RGBA_GREEN] >> 3) + 1;
 				inb = (bits[FI_RGBA_BLUE] >> 3) + 1;
@@ -152,13 +152,13 @@ WuQuantizer::Hist3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, floa
 		}
 	}
 
-	if( ReserveSize > 0 ) {
+	if (ReserveSize > 0) {
 		int max = 0;
-		for(i = 0; i < SIZE_3D; i++) {
-			if( vwt[i] > max ) max = vwt[i];
+		for (i = 0; i < SIZE_3D; i++) {
+			if (vwt[i] > max) max = vwt[i];
 		}
 		max++;
-		for(i = 0; i < ReserveSize; i++) {
+		for (i = 0; i < ReserveSize; i++) {
 			inr = (ReservePalette[i].red >> 3) + 1;
 			ing = (ReservePalette[i].green >> 3) + 1;
 			inb = (ReservePalette[i].blue >> 3) + 1;
@@ -193,15 +193,15 @@ WuQuantizer::M3D(int32_t *vwt, int32_t *vmr, int32_t *vmg, int32_t *vmb, float *
 	int32_t area[33], area_r[33], area_g[33], area_b[33];
 	float line2, area2[33];
 
-    for(r = 1; r <= 32; r++) {
-		for(i = 0; i <= 32; i++) {
+    for (r = 1; r <= 32; r++) {
+		for (i = 0; i <= 32; i++) {
 			area2[i] = 0;
 			area[i] = area_r[i] = area_g[i] = area_b[i] = 0;
 		}
-		for(g = 1; g <= 32; g++) {
+		for (g = 1; g <= 32; g++) {
 			line2 = 0;
 			line = line_r = line_g = line_b = 0;
-			for(b = 1; b <= 32; b++) {			 
+			for (b = 1; b <= 32; b++) {			 
 				ind1 = INDEX(r, g, b); // [r][g][b]
 				line += vwt[ind1];
 				line_r += vmr[ind1]; 
@@ -248,7 +248,7 @@ WuQuantizer::Vol( Box *cube, int32_t *mmt ) {
 
 int32_t 
 WuQuantizer::Bottom(Box *cube, uint8_t dir, int32_t *mmt) {
-    switch(dir)
+    switch (dir)
 	{
 		case FI_RGBA_RED:
 			return( - mmt[INDEX(cube->r0, cube->g1, cube->b1)]
@@ -279,7 +279,7 @@ WuQuantizer::Bottom(Box *cube, uint8_t dir, int32_t *mmt) {
 
 int32_t 
 WuQuantizer::Top(Box *cube, uint8_t dir, int pos, int32_t *mmt) {
-    switch(dir)
+    switch (dir)
 	{
 		case FI_RGBA_RED:
 			return( mmt[INDEX(pos, cube->g1, cube->b1)] 
@@ -450,7 +450,7 @@ WuQuantizer::Mark(Box *cube, int label, uint8_t *tag) {
 // Wu Quantization algorithm
 FIBITMAP *
 WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette) {
-	uint8_t *tag = NULL;
+	uint8_t *tag{};
 
 	try {
 		Box	cube[MAXCOLOR];
@@ -472,7 +472,7 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette)
 		next = 0;
 
 		for (i = 1; i < PaletteSize; i++) {
-			if(Cut(&cube[next], &cube[i])) {
+			if (Cut(&cube[next], &cube[i])) {
 				// volume test ensures we won't try to cut one-cell box
 				vv[next] = (cube[next].vol > 1) ? Var(&cube[next]) : 0;
 				vv[i] = (cube[i].vol > 1) ? Var(&cube[i]) : 0;
@@ -504,13 +504,13 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette)
 
 		free(gm2);
 
-		gm2 = NULL;
+		gm2 = nullptr;
 
 		// Allocate a new dib
 
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 8);
 
-		if (new_dib == NULL) {
+		if (!new_dib) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 
@@ -518,8 +518,8 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette)
 
 		FIRGBA8 *new_pal = FreeImage_GetPalette(new_dib);
 
-		tag = (uint8_t*) malloc(SIZE_3D * sizeof(uint8_t));
-		if (tag == NULL) {
+		tag = (uint8_t*)malloc(SIZE_3D * sizeof(uint8_t));
+		if (!tag) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 		memset(tag, 0, SIZE_3D * sizeof(uint8_t));
@@ -561,5 +561,5 @@ WuQuantizer::Quantize(int PaletteSize, int ReserveSize, FIRGBA8 *ReservePalette)
 		free(tag);
 	}
 
-	return NULL;
+	return nullptr;
 }

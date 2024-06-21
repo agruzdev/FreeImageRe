@@ -116,9 +116,9 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 	// first check for a mandatory tag
 	{
 		short tag_count = 0;
-		void* data = NULL;
+		void* data{};
 		
-		if(!TIFFGetField(tif, TIFFTAG_GEOKEYDIRECTORY, &tag_count, &data)) {
+		if (!TIFFGetField(tif, TIFFTAG_GEOKEYDIRECTORY, &tag_count, &data)) {
 			// no GeoTIFF tag here
 			return TRUE;
 		}
@@ -130,17 +130,17 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 	const TagLib& tag_lib = TagLib::instance();
 
-	for(size_t i = 0; i < tag_size; i++) {
+	for (size_t i = 0; i < tag_size; i++) {
 
 		const TIFFFieldInfo *fieldInfo = &xtiffFieldInfo[i];
 
-		if(fieldInfo->field_type == TIFF_ASCII) {
-			char *params = NULL;
+		if (fieldInfo->field_type == TIFF_ASCII) {
+			char *params{};
 
-			if(TIFFGetField(tif, fieldInfo->field_tag, &params)) {
+			if (TIFFGetField(tif, fieldInfo->field_tag, &params)) {
 				// create a tag
 				FITAG *tag = FreeImage_CreateTag();
-				if(!tag) {
+				if (!tag) {
 					return FALSE;
 				}
 
@@ -160,12 +160,12 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 			}
 		} else {
 			short tag_count = 0;
-			void* data = NULL;
+			void* data{};
 
-			if(TIFFGetField(tif, fieldInfo->field_tag, &tag_count, &data)) {
+			if (TIFFGetField(tif, fieldInfo->field_tag, &tag_count, &data)) {
 				// create a tag
 				FITAG *tag = FreeImage_CreateTag();
-				if(!tag) {
+				if (!tag) {
 					return FALSE;
 				}
 
@@ -185,7 +185,7 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 				FreeImage_DeleteTag(tag);
 			}
 		}
-	} // for(tag_size)
+	} // for (tag_size)
 
 	return TRUE;
 }
@@ -194,7 +194,7 @@ FIBOOL
 tiff_write_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 	char defaultKey[16];
 
-	if(FreeImage_GetMetadataCount(FIMD_GEOTIFF, dib) == 0) {
+	if (FreeImage_GetMetadataCount(FIMD_GEOTIFF, dib) == 0) {
 		// no GeoTIFF tag here
 		return TRUE;
 	}
@@ -203,14 +203,14 @@ tiff_write_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 	const TagLib& tag_lib = TagLib::instance();
 
-	for(size_t i = 0; i < tag_size; i++) {
+	for (size_t i = 0; i < tag_size; i++) {
 		const TIFFFieldInfo *fieldInfo = &xtiffFieldInfo[i];
 
-		FITAG *tag = NULL;
+		FITAG *tag{};
 		const char *key = tag_lib.getTagFieldName(TagLib::GEOTIFF, (uint16_t)fieldInfo->field_tag, defaultKey);
 
-		if(FreeImage_GetMetadata(FIMD_GEOTIFF, dib, key, &tag)) {
-			if(FreeImage_GetTagType(tag) == FIDT_ASCII) {
+		if (FreeImage_GetMetadata(FIMD_GEOTIFF, dib, key, &tag)) {
+			if (FreeImage_GetTagType(tag) == FIDT_ASCII) {
 				TIFFSetField(tif, fieldInfo->field_tag, FreeImage_GetTagValue(tag));
 			} else {
 				TIFFSetField(tif, fieldInfo->field_tag, FreeImage_GetTagCount(tag), FreeImage_GetTagValue(tag));
@@ -238,14 +238,14 @@ static FIBOOL
 tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md_model) {
 	uint32_t value_count = 0;
 	int mem_alloc = 0;
-	void *raw_data = NULL;
+	void *raw_data{};
 
-	if(tag_id == TIFFTAG_EXIFIFD) {
+	if (tag_id == TIFFTAG_EXIFIFD) {
 		// Exif IFD offset - skip this tag
 		// md_model should be EXIF_MAIN, the Exif IFD is processed later using the EXIF_EXIF metadata model
 		return TRUE;
 	}
-	if((tag_id == TIFFTAG_GPSIFD) && (md_model == TagLib::EXIF_MAIN)) {
+	if ((tag_id == TIFFTAG_GPSIFD) && (md_model == TagLib::EXIF_MAIN)) {
 		// Exif GPS IFD offset - skip this tag
 		// should be processed in another way ...
 		return TRUE;
@@ -255,22 +255,22 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 	// get the tag key - use NULL to avoid reading GeoTIFF tags
 	const char *key = tagLib.getTagFieldName(md_model, (uint16_t)tag_id, NULL);
-	if(key == NULL) {
+	if (!key) {
 		return TRUE;
 	}
 
 	const TIFFField *fip = TIFFFieldWithTag(tif, tag_id);
-	if(fip == NULL) {
+	if (!fip) {
 		return TRUE;
 	}
 
-	if(TIFFFieldPassCount(fip)) { 
+	if (TIFFFieldPassCount(fip)) { 
 		// a count value is required for 'TIFFGetField'
 
 		if (TIFFFieldReadCount(fip) != TIFF_VARIABLE2) {
 			// a count is required, it will be of type uint16_t
 			uint16_t value_count16 = 0;
-			if(TIFFGetField(tif, tag_id, &value_count16, &raw_data) != 1) {
+			if (TIFFGetField(tif, tag_id, &value_count16, &raw_data) != 1) {
 				// stop, ignore error
 				return TRUE;
 			}
@@ -278,7 +278,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 		} else {
 			// a count is required, it will be of type uint32_t
 			uint32_t value_count32 = 0;
-			if(TIFFGetField(tif, tag_id, &value_count32, &raw_data) != 1) {
+			if (TIFFGetField(tif, tag_id, &value_count32, &raw_data) != 1) {
 				// stop, ignore error
 				return TRUE;
 			}
@@ -301,7 +301,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 		// access fields as pointers to data
 		// (### determining this is NOT robust... and hardly can be. It is implemented looking the _TIFFVGetField code)
 
-		if(TIFFFieldTag(fip) == TIFFTAG_TRANSFERFUNCTION) {
+		if (TIFFFieldTag(fip) == TIFFTAG_TRANSFERFUNCTION) {
 			// reading this tag cause a bug probably located somewhere inside libtiff
 			return TRUE;
 		}
@@ -320,7 +320,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			 && TIFFFieldTag(fip) != TIFFTAG_BITSPERSAMPLE	//<- these two are tricky - 
 			 && TIFFFieldTag(fip) != TIFFTAG_COMPRESSION	//<- they are defined as TIFF_VARIABLE but in reality return a single value
 			 ) {
-				 if(TIFFGetField(tif, tag_id, &raw_data) != 1) {
+				 if (TIFFGetField(tif, tag_id, &raw_data) != 1) {
 					 // stop, ignore error
 					 return TRUE;
 				 }
@@ -332,8 +332,8 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			// Note: 
 			// For TIFF_RATIONAL values, TIFFDataWidth() returns 8, but LibTIFF use internaly 4-byte float to represent rationals.
 			{
-				TIFFDataType tag_type = TIFFFieldDataType(fip);
-				switch(tag_type) {
+				const TIFFDataType tag_type = TIFFFieldDataType(fip);
+				switch (tag_type) {
 					case TIFF_RATIONAL:
 					case TIFF_SRATIONAL:
 						value_size = 4;
@@ -350,7 +350,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			
 			// ### if value_count > 1, tag is PAGENUMBER or HALFTONEHINTS or YCBCRSUBSAMPLING or DOTRANGE, 
 			// all off which are value_count == 2 (see tif_dirinfo.c)
-			switch(value_count)
+			switch (value_count)
 			{
 				case 1:
 					ok = TIFFGetField(tif, tag_id, raw_data);
@@ -367,7 +367,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 					FreeImage_OutputMessageProc(FIF_TIFF, "Unimplemented variable number of parameters for Tiff Tag %s", TIFFFieldName(fip));
 					break;
 			}
-			if(ok != 1) {
+			if (ok != 1) {
 				_TIFFfree(raw_data);
 				return TRUE;
 			}
@@ -377,8 +377,8 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 	// build FreeImage tag from Tiff Tag data we collected
 
 	FITAG *fitag = FreeImage_CreateTag();
-	if(!fitag) {
-		if(mem_alloc) {
+	if (!fitag) {
+		if (mem_alloc) {
 			_TIFFfree(raw_data);
 		}
 		return FALSE;
@@ -387,7 +387,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 	FreeImage_SetTagID(fitag, (uint16_t)tag_id);
 	FreeImage_SetTagKey(fitag, key);
 
-	switch(TIFFFieldDataType(fip)) {
+	switch (TIFFFieldDataType(fip)) {
 		case TIFF_BYTE:
 			FreeImage_SetTagType(fitag, FIDT_BYTE);
 			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
@@ -446,8 +446,8 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 		case TIFF_RATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			uint32_t *rvalue = (uint32_t*)malloc(2 * sizeof(uint32_t) * value_count);
-			for(uint32_t i = 0; i < value_count; i++) {
+			auto *rvalue = (uint32_t*)malloc(2 * sizeof(uint32_t) * value_count);
+			for (uint32_t i = 0; i < value_count; i++) {
 				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
@@ -463,8 +463,8 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 		case TIFF_SRATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			int32_t *rvalue = (int32_t*)malloc(2 * sizeof(uint32_t) * value_count);
-			for(uint32_t i = 0; i < value_count; i++) {
+			auto *rvalue = (int32_t*)malloc(2 * sizeof(uint32_t) * value_count);
+			for (uint32_t i = 0; i < value_count; i++) {
 				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
@@ -516,7 +516,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 		case TIFF_ASCII:
 		default: {
 			size_t length = 0;
-			if(!mem_alloc && (TIFFFieldDataType(fip) == TIFF_ASCII) && (TIFFFieldReadCount(fip) == TIFF_VARIABLE)) {
+			if (!mem_alloc && (TIFFFieldDataType(fip) == TIFF_ASCII) && (TIFFFieldReadCount(fip) == TIFF_VARIABLE)) {
 				// when metadata tag is of type ASCII and it's value is of variable size (TIFF_VARIABLE),
 				// tiff_read_exif_tag function gives length of 1 so all strings are truncated ...
 				// ... try to avoid this by using an explicit calculation for 'length'
@@ -536,7 +536,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 	}
 
 	const char *description = tagLib.getTagDescription(md_model, (uint16_t)tag_id);
-	if(description) {
+	if (description) {
 		FreeImage_SetTagDescription(fitag, description);
 	}
 	// store the tag
@@ -545,7 +545,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 	// destroy the tag
 	FreeImage_DeleteTag(fitag);
 
-	if(mem_alloc) {
+	if (mem_alloc) {
 		_TIFFfree(raw_data);
 	}
 	return TRUE;
@@ -565,7 +565,7 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 	const TagLib& tagLib = TagLib::instance();
 
 	const int count = TIFFGetTagListCount(tif);
-	for(int i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		uint32_t tag_id = TIFFGetTagListEntry(tif, i);
 		// read the tag
 		if (!tiff_read_exif_tag(tif, tag_id, dib, md_model))
@@ -576,7 +576,7 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 
 	// loop over all Core Directory Tags
 	// ### uses private data, but there is no other way
-	if(md_model == TagLib::EXIF_MAIN) {
+	if (md_model == TagLib::EXIF_MAIN) {
 		const TIFFDirectory *td = &tif->tif_dir;
 
 		uint32_t lastTag = 0;	//<- used to prevent reading some tags twice (as stored in tif_fieldinfo)
@@ -586,25 +586,25 @@ tiff_read_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 
 			const uint32_t tag_id = TIFFFieldTag(fld);
 
-			if(tag_id == lastTag) {
+			if (tag_id == lastTag) {
 				continue;
 			}
 
 			// test if tag value is set
 			// (lifted directly from LibTiff _TIFFWriteDirectory)
 
-			if( fld->field_bit == FIELD_CUSTOM ) {
+			if ( fld->field_bit == FIELD_CUSTOM ) {
 				int is_set = FALSE;
 
-				for(int ci = 0; ci < td->td_customValueCount; ci++ ) {
+				for (int ci = 0; ci < td->td_customValueCount; ci++ ) {
 					is_set |= (td->td_customValues[ci].info == fld);
 				}
 
-				if( !is_set ) {
+				if (!is_set) {
 					continue;
 				}
 
-			} else if(!TIFFFieldSet(tif, fld->field_bit)) {
+			} else if (!TIFFFieldSet(tif, fld->field_bit)) {
 				continue;
 			}
 
@@ -686,10 +686,10 @@ skip_write_field(TIFF* tif, uint32_t tag) {
 			
 		case TIFFTAG_PAGENAME:
 		{
-			char *value = NULL;
+			char *value{};
 			TIFFGetField(tif, TIFFTAG_PAGENAME, &value);
 			// only skip if no value has been set
-			if(value == NULL) {
+			if (!value) {
 				return FALSE;
 			} else {
 				return TRUE;
@@ -714,11 +714,11 @@ tiff_write_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 	char defaultKey[16];
 	
 	// only EXIF_MAIN so far
-	if(md_model != TagLib::EXIF_MAIN) {
+	if (md_model != TagLib::EXIF_MAIN) {
 		return FALSE;
 	}
 	
-	if(FreeImage_GetMetadataCount(FIMD_EXIF_MAIN, dib) == 0) {
+	if (FreeImage_GetMetadataCount(FIMD_EXIF_MAIN, dib) == 0) {
 		return FALSE;
 	}
 	
@@ -729,33 +729,33 @@ tiff_write_exif_tags(TIFF *tif, TagLib::MDMODEL md_model, FIBITMAP *dib) {
 		
 		const uint32_t tag_id = TIFFFieldTag(fld);
 
-		if(skip_write_field(tif, tag_id)) {
+		if (skip_write_field(tif, tag_id)) {
 			// skip tags that are already handled by the LibTIFF writing process
 			continue;
 		}
 
-		FITAG *tag = NULL;
+		FITAG *tag{};
 		// get the tag key
 		const char *key = tag_lib.getTagFieldName(TagLib::EXIF_MAIN, (uint16_t)tag_id, defaultKey);
 
-		if(FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
+		if (FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
 			FREE_IMAGE_MDTYPE tag_type = FreeImage_GetTagType(tag);
 			TIFFDataType tif_tag_type = TIFFFieldDataType(fld);
 			
 			// check for identical formats
 
 			// (enum value are the sames between FREE_IMAGE_MDTYPE and TIFFDataType types)
-			if((int)tif_tag_type != (int)tag_type) {
+			if ((int)tif_tag_type != (int)tag_type) {
 				// skip tag or _TIFFmemcpy will fail
 				continue;
 			}
 			// type of storage may differ (e.g. rationnal array vs float array type)
-			if((unsigned)TIFFDataWidth(tif_tag_type) != FreeImage_TagDataWidth(tag_type)) {
+			if ((unsigned)TIFFDataWidth(tif_tag_type) != FreeImage_TagDataWidth(tag_type)) {
 				// skip tag or _TIFFmemcpy will fail
 				continue;
 			}
 
-			if(tag_type == FIDT_ASCII) {
+			if (tag_type == FIDT_ASCII) {
 				TIFFSetField(tif, tag_id, FreeImage_GetTagValue(tag));
 			} else {
 				TIFFSetField(tif, tag_id, FreeImage_GetTagCount(tag), FreeImage_GetTagValue(tag));

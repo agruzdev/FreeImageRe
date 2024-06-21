@@ -56,9 +56,9 @@ readLine(char *str, int n, FreeImageIO *io, fi_handle handle) {
 	do {
 		count = io->read_proc(&c, 1, 1, handle);
 		str[i++] = c;
-	} while((c != '\n') && (i < n));
-	if(count <= 0)
-		return NULL;
+	} while ((c != '\n') && (i < n));
+	if (count <= 0)
+		return nullptr;
 	str[i] = '\0';
 	return str;
 }
@@ -107,47 +107,47 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 	found_declaration = FALSE;    // haven't found it yet; haven't even looked
 	eof = FALSE;                  // haven't encountered end of file yet 
 	
-	while(!found_declaration && !eof) {
+	while (!found_declaration && !eof) {
 
-		if( readLine(line, MAX_LINE, io, handle) == NULL) {
+		if (!readLine(line, MAX_LINE, io, handle)) {
 			eof = TRUE;
 		}
 		else {
-			if( strlen( line ) == MAX_LINE - 1 )
+			if (strlen(line) == MAX_LINE - 1)
 				return( ERR_XBM_LINE );
-			if( sscanf(line, "#define %s %d", name_and_type, &v) == 2 ) {
-				if( ( t = strrchr( name_and_type, '_' ) ) == NULL )
+			if (sscanf(line, "#define %s %d", name_and_type, &v) == 2) {
+				if ((t = strrchr(name_and_type, '_')) == nullptr)
 					t = name_and_type;
 				else
 					t++;
-				if ( ! strcmp( "width", t ) )
+				if (!strcmp("width", t))
 					*widthP = v;
-				else if ( ! strcmp( "height", t ) )
+				else if (!strcmp("height", t))
 					*heightP = v;
 				continue;
 			}
 
-			if( sscanf( line, "static short %s = {", name_and_type ) == 1 ) {
+			if (sscanf(line, "static short %s = {", name_and_type) == 1) {
 				version = 10;
 				found_declaration = TRUE;
 			}
-			else if( sscanf( line, "static char %s = {", name_and_type ) == 1 ) {
+			else if (sscanf( line, "static char %s = {", name_and_type ) == 1) {
 				version = 11;
 				found_declaration = TRUE;
 			}
-			else if(sscanf(line, "static unsigned char %s = {", name_and_type ) == 1 ) {
+			else if (sscanf(line, "static unsigned char %s = {", name_and_type ) == 1) {
 				version = 11;
 				found_declaration = TRUE;
 			}
 		}
 	}
 
-	if(!found_declaration) 
+	if (!found_declaration)
 		return( ERR_XBM_DECL );
 
-	if(*widthP == -1 )
+	if (*widthP == -1)
 		return( ERR_XBM_WIDTH );
-	if( *heightP == -1 )
+	if (*heightP == -1)
 		return( ERR_XBM_HEIGHT );
 
 	padding = 0;
@@ -158,7 +158,7 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 
 	raster_length =  bytes_per_line * *heightP;
 	*dataP = (char*) malloc( raster_length );
-	if ( *dataP == (char*) 0 )
+	if (!(*dataP))
 		return( ERR_XBM_MEMORY );
 
 	// initialize hex_table
@@ -188,60 +188,60 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 	hex_table['e'] = 14;
 	hex_table['f'] = 15;
 
-	if(version == 10) {
-		for( bytes = 0, ptr = *dataP; bytes < raster_length; bytes += 2 ) {
-			while( ( c1 = readChar(io, handle) ) != 'x' ) {
-				if ( c1 == EOF )
+	if (version == 10) {
+		for (bytes = 0, ptr = *dataP; bytes < raster_length; bytes += 2) {
+			while (( c1 = readChar(io, handle) ) != 'x') {
+				if (c1 == EOF)
 					return( ERR_XBM_EOFREAD );
 			}
 
 			c1 = readChar(io, handle);
 			c2 = readChar(io, handle);
-			if( c1 == EOF || c2 == EOF )
+			if (c1 == EOF || c2 == EOF)
 				return( ERR_XBM_EOFREAD );
 			value1 = ( hex_table[c1] << 4 ) + hex_table[c2];
-			if ( value1 >= 256 )
+			if (value1 >= 256)
 				return( ERR_XBM_SYNTAX );
 			c1 = readChar(io, handle);
 			c2 = readChar(io, handle);
-			if( c1 == EOF || c2 == EOF )
+			if (c1 == EOF || c2 == EOF)
 				return( ERR_XBM_EOFREAD );
 			value2 = ( hex_table[c1] << 4 ) + hex_table[c2];
-			if ( value2 >= 256 )
+			if (value2 >= 256)
 				return( ERR_XBM_SYNTAX );
 			*ptr++ = (char)value2;
-			if ( ( ! padding ) || ( ( bytes + 2 ) % bytes_per_line ) )
+			if ((!padding) || (( bytes + 2 ) % bytes_per_line))
 				*ptr++ = (char)value1;
 		}
 	}
 	else {
-		for(bytes = 0, ptr = *dataP; bytes < raster_length; bytes++ ) {
+		for (bytes = 0, ptr = *dataP; bytes < raster_length; bytes++) {
 			/*
 			** skip until digit is found
 			*/
-			for( ; ; ) {
+			for (; ;) {
 				c1 = readChar(io, handle);
-				if ( c1 == EOF )
+				if (c1 == EOF)
 					return( ERR_XBM_EOFREAD );
 				value1 = hex_table[c1];
-				if ( value1 != 256 )
+				if (value1 != 256)
 					break;
 			}
 			/*
 			** loop on digits
 			*/
-			for( ; ; ) {
+			for (; ;) {
 				c2 = readChar(io, handle);
-				if ( c2 == EOF )
+				if (c2 == EOF)
 					return( ERR_XBM_EOFREAD );
 				value2 = hex_table[c2];
-				if ( value2 != 256 ) {
+				if (value2 != 256) {
 					value1 = (value1 << 4) | value2;
-					if ( value1 >= 256 )
+					if (value1 >= 256)
 						return( ERR_XBM_SYNTAX );
 				}
-				else if ( c2 == 'x' || c2 == 'X' ) {
-					if ( value1 == 0 )
+				else if (c2 == 'x' || c2 == 'X') {
+					if (value1 == 0)
 						continue;
 					else return( ERR_XBM_SYNTAX );
 				}
@@ -251,7 +251,7 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, char *
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // ==========================================================
@@ -281,7 +281,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -292,8 +292,8 @@ MimeType() {
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	char magic[8];
-	if(readLine(magic, 7, io, handle)) {
-		if(strcmp(magic, "#define") == 0)
+	if (readLine(magic, 7, io, handle)) {
+		if (strcmp(magic, "#define") == 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -313,21 +313,21 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	char *buffer = NULL;
+	char *buffer{};
 	int width, height;
-	FIBITMAP *dib = NULL;
+	FIBITMAP *dib{};
 
 	try {
 
 		// load the bitmap data
 		const char* error = readXBMFile(io, handle, &width, &height, &buffer);
 		// Microsoft doesn't implement throw between functions :(
-		if(error) throw (char*)error;
+		if (error) throw (char*)error;
 
 
 		// allocate a new dib
 		dib = FreeImage_Allocate(width, height, 1);
-		if(!dib) throw (char*)ERR_XBM_MEMORY;
+		if (!dib) throw (char*)ERR_XBM_MEMORY;
 
 		// write the palette data
 		FIRGBA8 *pal = FreeImage_GetPalette(dib);
@@ -336,18 +336,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// copy the bitmap
 		uint8_t *bP = (uint8_t*)buffer;
-		for(int y = 0; y < height; y++) {
+		for (int y = 0; y < height; y++) {
 			uint8_t count = 0;
 			uint8_t mask = 1;
 			uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 
-			for(int x = 0; x < width; x++) {
-				if(count >= 8) {
+			for (int x = 0; x < width; x++) {
+				if (count >= 8) {
 					bP++;
 					count = 0;
 					mask = 1;
 				}
-				if(*bP & mask) {
+				if (*bP & mask) {
 					// Set bit(x, y) to 0
 					bits[x >> 3] &= (0xFF7F >> (x & 0x7));
 				} else {
@@ -364,10 +364,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return dib;
 
 	} catch(const char *text) {
-		if(buffer)	free(buffer);
-		if(dib)		FreeImage_Unload(dib);
+		if (buffer)	free(buffer);
+		if (dib)		FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -384,16 +384,16 @@ InitXBM(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
-	plugin->save_proc = NULL;
+	plugin->save_proc = nullptr;
 	plugin->validate_proc = Validate;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }
 

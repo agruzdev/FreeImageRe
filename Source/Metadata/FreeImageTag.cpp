@@ -47,25 +47,25 @@ FI_STRUCT (FITAGHEADER) {
 
 FITAG * DLL_CALLCONV 
 FreeImage_CreateTag() {
-	FITAG *tag = (FITAG *)malloc(sizeof(FITAG));
+	auto *tag = (FITAG *)malloc(sizeof(FITAG));
 
-	if (tag != NULL) {
+	if (tag) {
 		unsigned tag_size = sizeof(FITAGHEADER); 
 		tag->data = (uint8_t *)malloc(tag_size * sizeof(uint8_t));
-		if (tag->data != NULL) {
+		if (tag->data) {
 			memset(tag->data, 0, tag_size);
 			return tag;
 		}
 		free(tag);
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void DLL_CALLCONV 
 FreeImage_DeleteTag(FITAG *tag) {
-	if (NULL != tag) {	
-		if (NULL != tag->data) {
+	if (tag) {	
+		if (tag->data) {
 			FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 			// delete tag members
 			free(tag_header->key); 
@@ -81,11 +81,11 @@ FreeImage_DeleteTag(FITAG *tag) {
 
 FITAG * DLL_CALLCONV 
 FreeImage_CloneTag(FITAG *tag) {
-	if(!tag) return NULL;
+	if (!tag) return nullptr;
 
 	// allocate a new tag
 	FITAG *clone = FreeImage_CreateTag();
-	if(!clone) return NULL;
+	if (!clone) return nullptr;
 
 	try {
 		// copy the tag
@@ -95,17 +95,17 @@ FreeImage_CloneTag(FITAG *tag) {
 		// tag ID
 		dst_tag->id = src_tag->id;
 		// tag key
-		if(src_tag->key) {
+		if (src_tag->key) {
 			dst_tag->key = (char*)malloc((strlen(src_tag->key) + 1) * sizeof(char));
-			if(!dst_tag->key) {
+			if (!dst_tag->key) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 			strcpy(dst_tag->key, src_tag->key);
 		}
 		// tag description
-		if(src_tag->description) {
+		if (src_tag->description) {
 			dst_tag->description = (char*)malloc((strlen(src_tag->description) + 1) * sizeof(char));
-			if(!dst_tag->description) {
+			if (!dst_tag->description) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 			strcpy(dst_tag->description, src_tag->description);
@@ -117,10 +117,10 @@ FreeImage_CloneTag(FITAG *tag) {
 		// tag length
 		dst_tag->length = src_tag->length;
 		// tag value
-		switch(dst_tag->type) {
+		switch (dst_tag->type) {
 			case FIDT_ASCII:
 				dst_tag->value = (uint8_t*)malloc((src_tag->length + 1) * sizeof(uint8_t));
-				if(!dst_tag->value) {
+				if (!dst_tag->value) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 				memcpy(dst_tag->value, src_tag->value, src_tag->length);
@@ -128,7 +128,7 @@ FreeImage_CloneTag(FITAG *tag) {
 				break;
 			default:
 				dst_tag->value = (uint8_t*)malloc(src_tag->length * sizeof(uint8_t));
-				if(!dst_tag->value) {
+				if (!dst_tag->value) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 				memcpy(dst_tag->value, src_tag->value, src_tag->length);
@@ -140,7 +140,7 @@ FreeImage_CloneTag(FITAG *tag) {
 	} catch(const char *message) {
 		FreeImage_DeleteTag(clone);
 		FreeImage_OutputMessageProc(FIF_UNKNOWN, message);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -185,9 +185,9 @@ FreeImage_GetTagValue(FITAG *tag) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagKey(FITAG *tag, const char *key) {
-	if(tag && key) {
+	if (tag && key) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
-		if(tag_header->key) free(tag_header->key);
+		if (tag_header->key) free(tag_header->key);
 		tag_header->key = (char*)malloc(strlen(key) + 1);
 		strcpy(tag_header->key, key);
 		return TRUE;
@@ -197,9 +197,9 @@ FreeImage_SetTagKey(FITAG *tag, const char *key) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagDescription(FITAG *tag, const char *description) {
-	if(tag && description) {
+	if (tag && description) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
-		if(tag_header->description) free(tag_header->description);
+		if (tag_header->description) free(tag_header->description);
 		tag_header->description = (char*)malloc(strlen(description) + 1);
 		strcpy(tag_header->description, description);
 		return TRUE;
@@ -209,7 +209,7 @@ FreeImage_SetTagDescription(FITAG *tag, const char *description) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagID(FITAG *tag, uint16_t id) {
-	if(tag) {
+	if (tag) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		tag_header->id = id;
 		return TRUE;
@@ -219,7 +219,7 @@ FreeImage_SetTagID(FITAG *tag, uint16_t id) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagType(FITAG *tag, FREE_IMAGE_MDTYPE type) {
-	if(tag) {
+	if (tag) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		tag_header->type = (uint16_t)type;
 		return TRUE;
@@ -229,7 +229,7 @@ FreeImage_SetTagType(FITAG *tag, FREE_IMAGE_MDTYPE type) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagCount(FITAG *tag, uint32_t count) {
-	if(tag) {
+	if (tag) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		tag_header->count = count;
 		return TRUE;
@@ -239,7 +239,7 @@ FreeImage_SetTagCount(FITAG *tag, uint32_t count) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagLength(FITAG *tag, uint32_t length) {
-	if(tag) {
+	if (tag) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		tag_header->length = length;
 		return TRUE;
@@ -249,28 +249,28 @@ FreeImage_SetTagLength(FITAG *tag, uint32_t length) {
 
 FIBOOL DLL_CALLCONV 
 FreeImage_SetTagValue(FITAG *tag, const void *value) {
-	if(tag && value) {
+	if (tag && value) {
 		FITAGHEADER *tag_header = (FITAGHEADER *)tag->data;
 		// first, check the tag
-		if(tag_header->count * FreeImage_TagDataWidth((FREE_IMAGE_MDTYPE)tag_header->type) != tag_header->length) {
+		if (tag_header->count * FreeImage_TagDataWidth((FREE_IMAGE_MDTYPE)tag_header->type) != tag_header->length) {
 			// invalid data count ?
 			return FALSE;
 		}
 
-		if(tag_header->value) {
+		if (tag_header->value) {
 			free(tag_header->value);
 		}
 
-		switch(tag_header->type) {
+		switch (tag_header->type) {
 			case FIDT_ASCII:
 			{
 				tag_header->value = (char*)malloc((tag_header->length + 1) * sizeof(char));
-				if(!tag_header->value) {
+				if (!tag_header->value) {
 					return FALSE;
 				}
 				auto *src_data = (const char*)value;
 				auto *dst_data = (char*)tag_header->value;
-				for(uint32_t i = 0; i < tag_header->length; i++) {
+				for (uint32_t i = 0; i < tag_header->length; i++) {
 					dst_data[i] = src_data[i];
 				}
 				dst_data[tag_header->length] = '\0';
@@ -279,7 +279,7 @@ FreeImage_SetTagValue(FITAG *tag, const void *value) {
 
 			default:
 				tag_header->value = malloc(tag_header->length * sizeof(uint8_t));
-				if(!tag_header->value) {
+				if (!tag_header->value) {
 					return FALSE;
 				}
 				memcpy(tag_header->value, value, tag_header->length);

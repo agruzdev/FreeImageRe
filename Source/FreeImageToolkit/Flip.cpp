@@ -52,7 +52,7 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 		switch (FreeImage_GetBPP(src)) {
 			case 1 :
 			{
-				for(unsigned x = 0; x < width; x++) {
+				for (unsigned x = 0; x < width; x++) {
 					// get pixel at (x, y)
 					FIBOOL value = (new_bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
 					// set pixel at (new_x, y)
@@ -64,7 +64,7 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 
 			case 4 :
 			{
-				for(unsigned c = 0; c < line; c++) {
+				for (unsigned c = 0; c < line; c++) {
 					bits[c] = new_bits[line - c - 1];
 
 					uint8_t nibble = (bits[c] & 0xF0) >> 4;
@@ -77,9 +77,9 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 
 			case 8:
 			{
-				uint8_t *dst_data = (uint8_t*) bits;
-				const uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp);
-				for(unsigned c = 0; c < width; c++) {
+				auto *dst_data = (uint8_t*) bits;
+				auto *src_data = (const uint8_t*) (new_bits + line - bytespp);
+				for (unsigned c = 0; c < width; c++) {
 					*dst_data++ = *src_data--;
 				}
 			}
@@ -87,9 +87,9 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 
 			case 16:
 			{
-				uint16_t *dst_data = (uint16_t*) bits;
-				const uint16_t *src_data = (uint16_t*) (new_bits + line - bytespp);
-				for(unsigned c = 0; c < width; c++) {
+				auto *dst_data = (uint16_t*) bits;
+				auto *src_data = (const uint16_t*) (new_bits + line - bytespp);
+				for (unsigned c = 0; c < width; c++) {
 					*dst_data++ = *src_data--;
 				}
 			}
@@ -102,10 +102,10 @@ FreeImage_FlipHorizontal(FIBITMAP *src) {
 			case 96:
 			case 128:
 			{
-				uint8_t *dst_data = (uint8_t*) bits;
-				uint8_t *src_data = (uint8_t*) (new_bits + line - bytespp);
-				for(unsigned c = 0; c < width; c++) {
-					for(unsigned k = 0; k < bytespp; k++) {
+				auto *dst_data = (uint8_t*) bits;
+				auto *src_data = (const uint8_t*) (new_bits + line - bytespp);
+				for (unsigned c = 0; c < width; c++) {
+					for (unsigned k = 0; k < bytespp; k++) {
 						*dst_data++ = src_data[k];
 					}
 					src_data -= bytespp;
@@ -148,7 +148,7 @@ FreeImage_FlipVertical(FIBITMAP *src) {
 	unsigned line_s = 0;
 	unsigned line_t = (height-1) * pitch;
 
-	for(unsigned y = 0; y < height/2; y++) {
+	for (unsigned y = 0; y < height/2; y++) {
 
 		memcpy(Mid, From + line_s, pitch);
 		memcpy(From + line_s, From + line_t, pitch);

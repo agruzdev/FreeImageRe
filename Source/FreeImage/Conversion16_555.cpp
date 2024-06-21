@@ -115,18 +115,18 @@ FreeImage_ConvertLine32To16_555(uint8_t *target, uint8_t *source, int width_in_p
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_ConvertTo16Bits555(FIBITMAP *dib) {
-	if(!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) return NULL;
+	if (!FreeImage_HasPixels(dib) || (FreeImage_GetImageType(dib) != FIT_BITMAP)) return nullptr;
 
 	const int width = FreeImage_GetWidth(dib);
 	const int height = FreeImage_GetHeight(dib);
 	const int bpp = FreeImage_GetBPP(dib);
 
-	if(bpp == 16) {
+	if (bpp == 16) {
 		if ((FreeImage_GetRedMask(dib) == FI16_565_RED_MASK) && (FreeImage_GetGreenMask(dib) == FI16_565_GREEN_MASK) && (FreeImage_GetBlueMask(dib) == FI16_565_BLUE_MASK)) {
 			// RGB 565
 			FIBITMAP *new_dib = FreeImage_Allocate(width, height, 16, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
-			if(new_dib == NULL) {
-				return NULL;
+			if (!new_dib) {
+				return nullptr;
 			}
 			for (int rows = 0; rows < height; rows++) {
 				FreeImage_ConvertLine16_565_To16_555(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width);
@@ -144,8 +144,8 @@ FreeImage_ConvertTo16Bits555(FIBITMAP *dib) {
 	else {
 		// other bpp cases => convert to RGB 555
 		FIBITMAP *new_dib = FreeImage_Allocate(width, height, 16, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
-		if(new_dib == NULL) {
-			return NULL;
+		if (!new_dib) {
+			return nullptr;
 		}
 
 		// copy metadata from src to dst
@@ -205,5 +205,5 @@ FreeImage_ConvertTo16Bits555(FIBITMAP *dib) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }

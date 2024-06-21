@@ -152,8 +152,8 @@ readExtHeader(FreeImageIO *io, fi_handle handle, uint8_t b) {
 			uint8_t sizeParamIdent = (b & 0x70) >> 4;	// Size of Parameter Identifier (in bytes)
 			uint8_t sizeParamValue = (b & 0x0F);		// Size of Parameter Value (in bytes)
 			
-			uint8_t *Ident = (uint8_t*)malloc(sizeParamIdent * sizeof(uint8_t));
-			uint8_t *Value = (uint8_t*)malloc(sizeParamValue * sizeof(uint8_t));
+			auto *Ident = (uint8_t*)malloc(sizeParamIdent * sizeof(uint8_t));
+			auto *Value = (uint8_t*)malloc(sizeParamValue * sizeof(uint8_t));
 		
 			io->read_proc(Ident, sizeParamIdent, 1, handle);
 			io->read_proc(Value, sizeParamValue, 1, handle);
@@ -198,7 +198,7 @@ Extension() {
 
 static const char * DLL_CALLCONV
 RegExpr() {
-	return NULL;
+	return nullptr;
 }
 
 static const char * DLL_CALLCONV
@@ -252,7 +252,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (header.FixHeaderField & 0x80) {
 				header.ExtHeaderFields = 0x80;
 
-				while(header.ExtHeaderFields & 0x80) {
+				while (header.ExtHeaderFields & 0x80) {
 					io->read_proc(&header.ExtHeaderFields, 1, 1, handle);
 
 					readExtHeader(io, handle, header.ExtHeaderFields);
@@ -294,12 +294,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} catch(const char *text)  {
 			FreeImage_OutputMessageProc(s_format_id, text);
 
-			return NULL;
+			return nullptr;
 		}
 
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
@@ -358,15 +358,15 @@ InitWBMP(Plugin *plugin, int format_id) {
 	plugin->description_proc = Description;
 	plugin->extension_proc = Extension;
 	plugin->regexpr_proc = RegExpr;
-	plugin->open_proc = NULL;
-	plugin->close_proc = NULL;
-	plugin->pagecount_proc = NULL;
-	plugin->pagecapability_proc = NULL;
+	plugin->open_proc = nullptr;
+	plugin->close_proc = nullptr;
+	plugin->pagecount_proc = nullptr;
+	plugin->pagecapability_proc = nullptr;
 	plugin->load_proc = Load;
 	plugin->save_proc = Save;
-	plugin->validate_proc = NULL;
+	plugin->validate_proc = nullptr;
 	plugin->mime_proc = MimeType;
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
-	plugin->supports_icc_profiles_proc = NULL;
+	plugin->supports_icc_profiles_proc = nullptr;
 }
