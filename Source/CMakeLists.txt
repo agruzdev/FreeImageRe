@@ -57,14 +57,16 @@ target_include_directories(FreeImage PRIVATE
 )
 
 
-if (WIN32)
-    add_custom_command(TARGET FreeImage POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E create_hardlink ".\\FreeImage.dll" "FreeImage.pyd"
-        WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
-    )
-else()
-    add_custom_command(TARGET FreeImage POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E create_symlink "./libFreeImage.so" "FreeImage.so"
-        WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
-    )
+if (FREEIMAGE_WITH_PYTHON_BINDINGS)
+    if (WIN32)
+        add_custom_command(TARGET FreeImage POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E create_hardlink ".\\$<TARGET_FILE_NAME:FreeImage>" "FreeImage.pyd"
+            WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
+        )
+    else()
+        add_custom_command(TARGET FreeImage POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E create_symlink "./$<TARGET_FILE_NAME:FreeImage>" "FreeImage.so"
+            WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
+        )
+    endif()
 endif()
