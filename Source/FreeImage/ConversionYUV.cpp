@@ -10,6 +10,8 @@
 #include <memory>
 #include "SimpleTools.h"
 
+#if __cplusplus >= 201703L
+
 
 namespace {
 
@@ -102,3 +104,15 @@ FIBITMAP* ConvertYuvToRgb(FIBITMAP* dib, int64_t standard_version)
 
 	return result.release();
 }
+#else
+FIBITMAP* ConvertRgbToYuv(FIBITMAP* dib, int64_t standard_version)
+{
+	return nullptr;
+}
+
+
+FIBITMAP* ConvertYuvToRgb(FIBITMAP* dib, int64_t standard_version)
+{
+	return nullptr;
+}
+#endif

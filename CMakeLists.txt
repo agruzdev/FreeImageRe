@@ -24,6 +24,11 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(MSVC)
+    # Make sure MSVC reports __cplusplus w/ the real value.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus")
+endif()
+
 # External dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
