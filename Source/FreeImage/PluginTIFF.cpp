@@ -800,23 +800,22 @@ tiff_read_xmp_profile(TIFF *tiff, FIBITMAP *dib) {
 
 	if (TIFFGetField(tiff, TIFFTAG_XMLPACKET, &profile_size, &profile) == 1) {
 		// create a tag
-		FITAG *tag = FreeImage_CreateTag();
-		if (!tag) return FALSE;
+		if (auto *tag = FreeImage_CreateTag()) {
+			FreeImage_SetTagID(tag, TIFFTAG_XMLPACKET);	// 700
+			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
+			FreeImage_SetTagLength(tag, profile_size);
+			FreeImage_SetTagCount(tag, profile_size);
+			FreeImage_SetTagType(tag, FIDT_ASCII);
+			FreeImage_SetTagValue(tag, profile);
 
-		FreeImage_SetTagID(tag, TIFFTAG_XMLPACKET);	// 700
-		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-		FreeImage_SetTagLength(tag, profile_size);
-		FreeImage_SetTagCount(tag, profile_size);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, profile);
+			// store the tag
+			FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 
-		// store the tag
-		FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
+			// destroy the tag
+			FreeImage_DeleteTag(tag);
 
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
-
-		return TRUE;
+			return TRUE;
+		}
 	}
 
 	return FALSE;

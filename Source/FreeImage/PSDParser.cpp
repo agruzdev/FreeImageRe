@@ -259,8 +259,7 @@ psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_s
 static FIBOOL
 psd_set_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		FreeImage_SetTagID(tag, PSDP_RES_XMP);
 		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 		FreeImage_SetTagLength(tag, (uint32_t)datalen);

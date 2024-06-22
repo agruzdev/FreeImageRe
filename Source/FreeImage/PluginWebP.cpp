@@ -382,8 +382,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				error_status = WebPMuxGetChunk(mux, "XMP ", &xmp_metadata);
 				if (error_status == WEBP_MUX_OK) {
 					// create a tag
-					FITAG *tag = FreeImage_CreateTag();
-					if (tag) {
+					if (auto *tag = FreeImage_CreateTag()) {
 						FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 						FreeImage_SetTagLength(tag, (uint32_t)xmp_metadata.size);
 						FreeImage_SetTagCount(tag, (uint32_t)xmp_metadata.size);

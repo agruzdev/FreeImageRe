@@ -672,8 +672,7 @@ mng_SetKeyValue(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, const 
 		return FALSE;
 	}
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		FIBOOL bSuccess = TRUE;
 		// fill the tag
 		uint32_t tag_length = (uint32_t)(strlen(value) + 1);

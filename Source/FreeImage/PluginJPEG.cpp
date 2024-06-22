@@ -439,8 +439,7 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	value[length] = '\0';
 
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		unsigned int count = (unsigned int)length + 1;	// includes the null value
 
 		FreeImage_SetTagID(tag, JPEG_COM);
@@ -637,8 +636,7 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 		length  -= xmp_signature_size;
 
 		// create a tag
-		FITAG *tag = FreeImage_CreateTag();
-		if (tag) {
+		if (auto *tag = FreeImage_CreateTag()) {
 			FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
 			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 			FreeImage_SetTagLength(tag, (uint32_t)length);
@@ -1063,8 +1061,7 @@ static void
 store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 	char buffer[256];
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		size_t length = 0;
 		// set the original width
 		sprintf(buffer, "%d", (int)width);

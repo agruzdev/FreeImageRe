@@ -511,12 +511,10 @@ FreeImage_Unload(FIBITMAP *dib) {
 			}
 
 			// delete metadata models
-			METADATAMAP *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+			auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
 
 			for (METADATAMAP::iterator i = (*metadata).begin(); i != (*metadata).end(); i++) {
-				TAGMAP *tagmap = (*i).second;
-
-				if (tagmap) {
+				if (auto *tagmap = i->second) {
 					for (TAGMAP::iterator j = tagmap->begin(); j != tagmap->end(); j++) {
 						FITAG *tag = (*j).second;
 						FreeImage_DeleteTag(tag);
@@ -571,8 +569,8 @@ FreeImage_Clone(FIBITMAP *dib) {
 		FIICCPROFILE *dst_iccProfile = FreeImage_GetICCProfile(new_dib);
 
 		// save metadata links
-		METADATAMAP *src_metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
-		METADATAMAP *dst_metadata = ((FREEIMAGEHEADER *)new_dib->data)->metadata;
+		auto *src_metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+		auto *dst_metadata = ((FREEIMAGEHEADER *)new_dib->data)->metadata;
 
 		// calculate the size of the dst image
 		// align the palette and the pixels on a FIBITMAP_ALIGNMENT bytes alignment boundary
@@ -604,15 +602,12 @@ FreeImage_Clone(FIBITMAP *dib) {
 		dst_iccProfile->flags = src_iccProfile->flags;
 
 		// copy metadata models
-		for (METADATAMAP::iterator i = (*src_metadata).begin(); i != (*src_metadata).end(); i++) {
-			int model = (*i).first;
-			TAGMAP *src_tagmap = (*i).second;
+		for (METADATAMAP::iterator i = src_metadata->begin(); i != src_metadata->end(); i++) {
+			int model = i->first;
 
-			if (src_tagmap) {
+			if (auto *src_tagmap = i->second) {
 				// create a metadata model
-				TAGMAP *dst_tagmap = new(std::nothrow) TAGMAP();
-
-				if (dst_tagmap) {
+				if (auto *dst_tagmap = new(std::nothrow) TAGMAP()) {
 					// fill the model
 					for (TAGMAP::iterator j = src_tagmap->begin(); j != src_tagmap->end(); j++) {
 						std::string dst_key = (*j).first;
@@ -1272,21 +1267,18 @@ FreeImage_FindFirstMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, FITAG **tag
 	}
 
 	// get the metadata model
-	METADATAMAP *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+	auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
 	TAGMAP *tagmap{};
-	if ((*metadata).find(model) != (*metadata).end()) {
-		tagmap = (*metadata)[model];
+	if (auto it{ metadata->find(model) }; it != metadata->end()) {
+		tagmap = it->second;
 	}
 	if (tagmap) {
 		// allocate a handle
-		auto *handle = (FIMETADATA *)malloc(sizeof(FIMETADATA));
-		if (handle) {
+		if (auto *handle = (FIMETADATA *)malloc(sizeof(FIMETADATA))) {
 			// calculate the size of a METADATAHEADER
 			const size_t header_size = sizeof(METADATAHEADER);
 
-			handle->data = (uint8_t *)malloc(header_size);
-			
-			if (handle->data) {
+			if (handle->data = (uint8_t *)malloc(header_size)) {
 				memset(handle->data, 0, header_size);
 
 				// write out the METADATAHEADER
@@ -1343,9 +1335,7 @@ FreeImage_FindNextMetadata(FIMETADATA *mdhandle, FITAG **tag) {
 void DLL_CALLCONV 
 FreeImage_FindCloseMetadata(FIMETADATA *mdhandle) {
 	if (mdhandle) {	// delete the handle
-		if (mdhandle->data) {
-			free(mdhandle->data);
-		}
+		free(mdhandle->data);
 		free(mdhandle);		// ... and the wrapper
 	}
 }
@@ -1360,31 +1350,28 @@ FreeImage_CloneMetadata(FIBITMAP *dst, FIBITMAP *src) {
 	}
 
 	// get metadata links
-	METADATAMAP *src_metadata = ((FREEIMAGEHEADER *)src->data)->metadata;
-	METADATAMAP *dst_metadata = ((FREEIMAGEHEADER *)dst->data)->metadata;
+	auto *src_metadata = ((FREEIMAGEHEADER *)src->data)->metadata;
+	auto *dst_metadata = ((FREEIMAGEHEADER *)dst->data)->metadata;
 
 	// copy metadata models, *except* the FIMD_ANIMATION model
-	for (METADATAMAP::iterator i = (*src_metadata).begin(); i != (*src_metadata).end(); i++) {
-		int model = (*i).first;
+	for (METADATAMAP::iterator i = src_metadata->begin(); i != src_metadata->end(); i++) {
+		int model = i->first;
 		if (model == (int)FIMD_ANIMATION) {
 			continue;
 		}
-		TAGMAP *src_tagmap = (*i).second;
 
-		if (src_tagmap) {
+		if (auto *src_tagmap = i->second) {
 			if (dst_metadata->find(model) != dst_metadata->end()) {
 				// destroy dst model
 				FreeImage_SetMetadata((FREE_IMAGE_MDMODEL)model, dst, nullptr, nullptr);
 			}
 
 			// create a metadata model
-			TAGMAP *dst_tagmap = new(std::nothrow) TAGMAP();
-
-			if (dst_tagmap) {
+			if (auto *dst_tagmap = new(std::nothrow) TAGMAP()) {
 				// fill the model
 				for (TAGMAP::iterator j = src_tagmap->begin(); j != src_tagmap->end(); j++) {
-					std::string dst_key = (*j).first;
-					FITAG *dst_tag = FreeImage_CloneTag( (*j).second );
+					std::string dst_key = j->first;
+					FITAG *dst_tag = FreeImage_CloneTag( j->second );
 
 					// assign key and tag value
 					(*dst_tagmap)[dst_key] = dst_tag;
@@ -1414,8 +1401,8 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 	TAGMAP *tagmap{};
 
 	// get the metadata model
-	METADATAMAP *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
-	METADATAMAP::iterator model_iterator = metadata->find(model);
+	auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+	auto model_iterator = metadata->find(model);
 	if (model_iterator != metadata->end()) {
 		tagmap = model_iterator->second;
 	}
@@ -1466,8 +1453,7 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 			}
 
 			// delete existing tag
-			FITAG *old_tag = (*tagmap)[key];
-			if (old_tag) {
+			if (FITAG *old_tag = (*tagmap)[key]) {
 				FreeImage_DeleteTag(old_tag);
 			}
 
@@ -1476,9 +1462,8 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 		}
 		else {
 			// delete existing tag
-			TAGMAP::iterator i = tagmap->find(key);
-			if (i != tagmap->end()) {
-				FITAG *old_tag = (*i).second;
+			if (auto i{ tagmap->find(key)}; i != tagmap->end()) {
+				FITAG *old_tag = i->second;
 				FreeImage_DeleteTag(old_tag);
 				tagmap->erase(key);
 			}
@@ -1488,7 +1473,7 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 		// destroy the metadata model
 		if (tagmap) {
 			for (TAGMAP::iterator i = tagmap->begin(); i != tagmap->end(); i++) {
-				FITAG *tag = (*i).second;
+				FITAG *tag = i->second;
 				FreeImage_DeleteTag(tag);
 			}
 
@@ -1506,18 +1491,15 @@ FreeImage_GetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 		return FALSE;
 	}
 
-	TAGMAP *tagmap{};
 	*tag = nullptr;
 
 	// get the metadata model
-	METADATAMAP *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
-	if (!(*metadata).empty()) {
-		METADATAMAP::iterator model_iterator = metadata->find(model);
-		if (model_iterator != metadata->end() ) {
+	auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+	if (!metadata->empty()) {
+		if (auto model_iterator{ metadata->find(model) }; model_iterator != metadata->end() ) {
 			// this model exists : try to get the requested tag
-			tagmap = model_iterator->second;
-			TAGMAP::iterator tag_iterator = tagmap->find(key);
-			if (tag_iterator != tagmap->end() ) {
+			auto *tagmap = model_iterator->second;
+			if (auto tag_iterator = tagmap->find(key); tag_iterator != tagmap->end() ) {
 				// get the requested tag
 				*tag = tag_iterator->second;
 			} 
@@ -1541,8 +1523,7 @@ FreeImage_SetMetadataKeyValue(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const cha
 		return FALSE;
 	}
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		FIBOOL bSuccess = TRUE;
 		// fill the tag
 		uint32_t tag_length = (uint32_t)(strlen(value) + 1);
@@ -1572,20 +1553,17 @@ FreeImage_GetMetadataCount(FREE_IMAGE_MDMODEL model, FIBITMAP *dib) {
 		return FALSE;
 	}
 
-	TAGMAP *tagmap{};
-
 	// get the metadata model
-	METADATAMAP *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
-	if ((*metadata).find(model) != (*metadata).end()) {
-		tagmap = (*metadata)[model];
-	}
-	if (!tagmap) {
-		// this model, doesn't exist: return
-		return 0;
+	auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
+	if (auto it{ metadata->find(model) }; it != metadata->end()) {
+		if (auto *tagmap = it->second) {
+			// get the tag count
+			return (unsigned)tagmap->size();
+		}
 	}
 
-	// get the tag count
-	return (unsigned)tagmap->size();
+	// this model, doesn't exist: return
+	return 0;
 }
 
 // ----------------------------------------------------------
@@ -1595,10 +1573,10 @@ FreeImage_GetMemorySize(FIBITMAP *dib) {
 	if (!dib) {
 		return 0;
 	}
-	FREEIMAGEHEADER *header = (FREEIMAGEHEADER *)dib->data;
-	FIBITMAPINFOHEADER *bih = FreeImage_GetInfoHeader(dib);
+	auto *header = (FREEIMAGEHEADER *)dib->data;
+	auto *bih = FreeImage_GetInfoHeader(dib);
 
-	FIBOOL header_only = !header->has_pixels || header->external_bits != nullptr;
+	FIBOOL header_only = !header->has_pixels || header->external_bits;
 	FIBOOL need_masks = bih->biCompression == BI_BITFIELDS;
 	unsigned width = bih->biWidth;
 	unsigned height = bih->biHeight;
@@ -1621,7 +1599,7 @@ FreeImage_GetMemorySize(FIBITMAP *dib) {
 	}
 
 	// add metadata size
-	METADATAMAP *md = header->metadata;
+	auto *md = header->metadata;
 	if (!md) {
 		return (unsigned)size;
 	}
@@ -1637,8 +1615,7 @@ FreeImage_GetMemorySize(FIBITMAP *dib) {
 	unsigned tags = 0;
 
 	for (METADATAMAP::iterator i = md->begin(); i != md->end(); i++) {
-		TAGMAP *tm = i->second;
-		if (tm) {
+		if (TAGMAP *tm = i->second) {
 			for (TAGMAP::iterator j = tm->begin(); j != tm->end(); j++) {
 				++tags;
 				const std::string & key = j->first;

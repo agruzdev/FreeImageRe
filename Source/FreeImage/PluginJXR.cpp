@@ -453,8 +453,7 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 	}
 
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		// set tag ID
 		FreeImage_SetTagID(tag, tag_id);
 		// set tag type, count, length and value
@@ -565,8 +564,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
-			FITAG *tag = FreeImage_CreateTag();
-			if (tag) {
+			if (auto *tag = FreeImage_CreateTag()) {
 				FreeImage_SetTagLength(tag, cbByteCount);
 				FreeImage_SetTagCount(tag, cbByteCount);
 				FreeImage_SetTagType(tag, FIDT_ASCII);
