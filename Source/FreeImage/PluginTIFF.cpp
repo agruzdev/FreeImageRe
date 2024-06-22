@@ -218,7 +218,7 @@ _TIFFmalloc(tmsize_t s) {
 void* 
 _TIFFcalloc(tmsize_t nmemb, tmsize_t siz) {
 	if (nmemb == 0 || siz == 0) {
-		return ((void *)NULL);
+		return nullptr;
 	}
 	return calloc((size_t)nmemb, (size_t)siz);
 }
@@ -2310,7 +2310,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			else {
 				// if original image is CMYK but is converted to RGB, remove ICC profile from Exif-TIFF metadata
-				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", NULL);
+				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", nullptr);
 			}
 		}
 

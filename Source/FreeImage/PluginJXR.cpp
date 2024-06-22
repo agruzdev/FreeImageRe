@@ -447,7 +447,7 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 
 	// get the tag key
 	const TagLib& s = TagLib::instance();
-	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
+	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, nullptr);
 	if (!key) {
 		return FALSE;
 	}
@@ -649,7 +649,7 @@ WritePropVariant(FIBITMAP *dib, uint16_t tag_id, DPKPROPVARIANT & varDst) {
 	varDst.vt = DPKVT_EMPTY;
 
 	// given the tag id, get the tag key
-	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
+	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, nullptr);
 	// then, get the tag info
 	if (!FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
 		return FALSE;
@@ -1040,7 +1040,7 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 			JXR_CHECK(error_code);
 			
 			// set the conversion function
-			error_code = pConverter->Initialize(pConverter, pDecoder, NULL, out_guid_format);
+			error_code = pConverter->Initialize(pConverter, pDecoder, nullptr, out_guid_format);
 			JXR_CHECK(error_code);
 			
 			// get the maximum stride

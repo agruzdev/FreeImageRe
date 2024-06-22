@@ -156,9 +156,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			
 			// configure the event callbacks
 			// catch events using our callbacks (no local context needed here)
-			opj_set_info_handler(d_codec, NULL, NULL);
-			opj_set_warning_handler(d_codec, jp2_warning_callback, NULL);
-			opj_set_error_handler(d_codec, jp2_error_callback, NULL);
+			opj_set_info_handler(d_codec, nullptr, nullptr);
+			opj_set_warning_handler(d_codec, jp2_warning_callback, nullptr);
+			opj_set_error_handler(d_codec, jp2_error_callback, nullptr);
 
 			// setup the decoder decoding parameters using user parameters
 			if (!opj_setup_decoder(d_codec, &parameters)) {
@@ -264,9 +264,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// configure the event callbacks
 			// catch events using our callbacks (no local context needed here)
-			opj_set_info_handler(c_codec, NULL, NULL);
-			opj_set_warning_handler(c_codec, jp2_warning_callback, NULL);
-			opj_set_error_handler(c_codec, jp2_error_callback, NULL);
+			opj_set_info_handler(c_codec, nullptr, nullptr);
+			opj_set_warning_handler(c_codec, jp2_warning_callback, nullptr);
+			opj_set_error_handler(c_codec, jp2_error_callback, nullptr);
 
 			// setup the encoder parameters using the current image and using user parameters
 			opj_setup_encoder(c_codec, &parameters, image);

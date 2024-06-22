@@ -90,7 +90,7 @@ enum {
 	PSDP_RES_DISPLAY_INFO_FLT		= 1077,
 };
 
-#define SAFE_DELETE_ARRAY(_p_) { if (NULL != (_p_)) { delete [] (_p_); (_p_) = nullptr; } }
+#define SAFE_DELETE_ARRAY(_p_) { if ((_p_)) { delete [] (_p_); (_p_) = nullptr; } }
 
 // --------------------------------------------------------------------------
 
@@ -359,7 +359,7 @@ bool psdHeaderInfo::Write(FreeImageIO *io, fi_handle handle) {
 
 // --------------------------------------------------------------------------
 
-psdColourModeData::psdColourModeData() : _Length(-1), _plColourData(NULL) {
+psdColourModeData::psdColourModeData() : _Length(-1), _plColourData{} {
 }
 
 psdColourModeData::~psdColourModeData() {
@@ -712,7 +712,7 @@ bool psdDisplayInfo::Write(FreeImageIO *io, fi_handle handle) {
 // --------------------------------------------------------------------------
 
 psdThumbnail::psdThumbnail() :
-_Format(-1), _Width(-1), _Height(-1), _WidthBytes(-1), _Size(-1), _CompressedSize(-1), _BitPerPixel(-1), _Planes(-1), _dib(NULL), _owned(true) {
+_Format(-1), _Width(-1), _Height(-1), _WidthBytes(-1), _Size(-1), _CompressedSize(-1), _BitPerPixel(-1), _Planes(-1), _dib{}, _owned(true) {
 }
 
 psdThumbnail::~psdThumbnail() {
@@ -901,7 +901,7 @@ bool psdThumbnail::Write(FreeImageIO *io, fi_handle handle, bool isBGR) {
 
 //---------------------------------------------------------------------------
 
-psdICCProfile::psdICCProfile() : _ProfileSize(0), _ProfileData(NULL), _owned(true) {
+psdICCProfile::psdICCProfile() : _ProfileSize(0), _ProfileData{}, _owned(true) {
 }
 
 psdICCProfile::~psdICCProfile() {
@@ -947,7 +947,7 @@ bool psdICCProfile::Write(FreeImageIO *io, fi_handle handle) {
 
 //---------------------------------------------------------------------------
 
-psdData::psdData() : _Size(0), _Data(NULL), _owned(true) {
+psdData::psdData() : _Size(0), _Data{}, _owned(true) {
 }
 
 psdData::~psdData() {
@@ -1623,7 +1623,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			if (mode == PSDP_MULTICHANNEL) {
 				//### we force CMY to be CMYK, but CMY has no ICC.
 				// Create empty profile and add the flag.
-				FreeImage_CreateICCProfile(bitmap, NULL, 0);
+				FreeImage_CreateICCProfile(bitmap, nullptr, 0);
 				FreeImage_GetICCProfile(bitmap)->flags |= FIICC_COLOR_IS_CMYK;
 			}
 		}

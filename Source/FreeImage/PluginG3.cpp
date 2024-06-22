@@ -324,7 +324,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// wrap the raw fax file
 		faxTIFF = TIFFClientOpen("(FakeInput)", "w",
 			// TIFFClientOpen() fails if we don't set existing value here 
-			NULL,
+			nullptr,
 			_g3ReadProc, _g3WriteProc,
 			_g3SeekProc, _g3CloseProc,
 			_g3SizeProc, _g3MapProc,

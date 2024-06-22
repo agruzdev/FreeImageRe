@@ -651,7 +651,7 @@ mng_WritePNGStream(uint32_t jng_width, uint32_t jng_height, uint8_t jng_alpha_sa
 	mng_WriteChunk(mng_IDAT, mChunk, mLength, hPngMemory);
 
 	// write a IEND chunk ...
-	mng_WriteChunk(mng_IEND, NULL, 0, hPngMemory);
+	mng_WriteChunk(mng_IEND, nullptr, 0, hPngMemory);
 
 }
 
@@ -1290,7 +1290,7 @@ mng_WriteJNG(int format_id, FreeImageIO *io, FIBITMAP *dib, fi_handle handle, in
 		}
 
 		// --- write a IEND chunk ---
-		mng_WriteChunk(mng_IEND, NULL, 0, hJngMemory);
+		mng_WriteChunk(mng_IEND, nullptr, 0, hJngMemory);
 
 		// write the JNG on output stream
 		{

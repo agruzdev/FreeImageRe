@@ -483,22 +483,22 @@ FreeImage_AllocateHeaderForBits(uint8_t *ext_bits, unsigned ext_pitch, FREE_IMAG
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_AllocateHeaderT(FIBOOL header_only, FREE_IMAGE_TYPE type, int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask) {
-	return FreeImage_AllocateBitmap(header_only, NULL, 0, type, width, height, bpp, red_mask, green_mask, blue_mask);
+	return FreeImage_AllocateBitmap(header_only, nullptr, 0, type, width, height, bpp, red_mask, green_mask, blue_mask);
 }
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_AllocateHeader(FIBOOL header_only, int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask) {
-	return FreeImage_AllocateBitmap(header_only, NULL, 0, FIT_BITMAP, width, height, bpp, red_mask, green_mask, blue_mask);
+	return FreeImage_AllocateBitmap(header_only, nullptr, 0, FIT_BITMAP, width, height, bpp, red_mask, green_mask, blue_mask);
 }
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_Allocate(int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask) {
-	return FreeImage_AllocateBitmap(FALSE, NULL, 0, FIT_BITMAP, width, height, bpp, red_mask, green_mask, blue_mask);
+	return FreeImage_AllocateBitmap(FALSE, nullptr, 0, FIT_BITMAP, width, height, bpp, red_mask, green_mask, blue_mask);
 }
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_AllocateT(FREE_IMAGE_TYPE type, int width, int height, int bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask) {
-	return FreeImage_AllocateBitmap(FALSE, NULL, 0, type, width, height, bpp, red_mask, green_mask, blue_mask);
+	return FreeImage_AllocateBitmap(FALSE, nullptr, 0, type, width, height, bpp, red_mask, green_mask, blue_mask);
 }
 
 void DLL_CALLCONV
@@ -1133,7 +1133,7 @@ FreeImage_DestroyICCProfile(FIBITMAP *dib) {
 	}
 
 	// destroy also Exif-Main ICC profile
-	FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", NULL);
+	FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", nullptr);
 }
 
 // ----------------------------------------------------------
@@ -1374,7 +1374,7 @@ FreeImage_CloneMetadata(FIBITMAP *dst, FIBITMAP *src) {
 		if (src_tagmap) {
 			if (dst_metadata->find(model) != dst_metadata->end()) {
 				// destroy dst model
-				FreeImage_SetMetadata((FREE_IMAGE_MDMODEL)model, dst, NULL, NULL);
+				FreeImage_SetMetadata((FREE_IMAGE_MDMODEL)model, dst, nullptr, nullptr);
 			}
 
 			// create a metadata model

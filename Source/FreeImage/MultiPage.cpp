@@ -98,9 +98,9 @@ typedef BlockList::iterator BlockListIterator;
 struct MULTIBITMAPHEADER {
 
 	MULTIBITMAPHEADER()
-		: node(NULL)
+		: node(nullptr)
 		, fif(FIF_UNKNOWN)
-		, handle(NULL)
+		, handle(nullptr)
 		, changed(FALSE)
 		, page_count(0)
 		, read_only(TRUE)
@@ -579,7 +579,7 @@ FreeImage_SavePageToBlock(MULTIBITMAPHEADER *header, FIBITMAP *data) {
 
 	// open a memory handle
 	FIMEMORY *hmem = FreeImage_OpenMemory();
-	if (hmem==NULL) {
+	if (!hmem) {
 		return res;
 	}
 	// save the file to memory

@@ -226,15 +226,15 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 			s_plugins->AddNode(InitKOALA);
 			s_plugins->AddNode(InitIFF);
 			s_plugins->AddNode(InitMNG);
-			s_plugins->AddNode(InitPNM, NULL, "PBM", "Portable Bitmap (ASCII)", "pbm", "^P1");
-			s_plugins->AddNode(InitPNM, NULL, "PBMRAW", "Portable Bitmap (RAW)", "pbm", "^P4");
+			s_plugins->AddNode(InitPNM, nullptr, "PBM", "Portable Bitmap (ASCII)", "pbm", "^P1");
+			s_plugins->AddNode(InitPNM, nullptr, "PBMRAW", "Portable Bitmap (RAW)", "pbm", "^P4");
 			s_plugins->AddNode(InitPCD);
 			s_plugins->AddNode(InitPCX);
-			s_plugins->AddNode(InitPNM, NULL, "PGM", "Portable Greymap (ASCII)", "pgm", "^P2");
-			s_plugins->AddNode(InitPNM, NULL, "PGMRAW", "Portable Greymap (RAW)", "pgm", "^P5");
+			s_plugins->AddNode(InitPNM, nullptr, "PGM", "Portable Greymap (ASCII)", "pgm", "^P2");
+			s_plugins->AddNode(InitPNM, nullptr, "PGMRAW", "Portable Greymap (RAW)", "pgm", "^P5");
 			s_plugins->AddNode(InitPNG);
-			s_plugins->AddNode(InitPNM, NULL, "PPM", "Portable Pixelmap (ASCII)", "ppm", "^P3");
-			s_plugins->AddNode(InitPNM, NULL, "PPMRAW", "Portable Pixelmap (RAW)", "ppm", "^P6");
+			s_plugins->AddNode(InitPNM, nullptr, "PPM", "Portable Pixelmap (ASCII)", "ppm", "^P3");
+			s_plugins->AddNode(InitPNM, nullptr, "PPMRAW", "Portable Pixelmap (RAW)", "ppm", "^P6");
 			s_plugins->AddNode(InitRAS);
 			s_plugins->AddNode(InitTARGA);
 			s_plugins->AddNode(InitTIFF);
@@ -267,7 +267,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 				// store the current directory. then set the directory to the application location
 
 				if (GetCurrentDirectoryW(2 * _MAX_PATH, current_dir) != 0) {
-					if (GetModuleFileNameW(NULL, module, 2 * _MAX_PATH) != 0) {
+					if (GetModuleFileNameW(nullptr, module, 2 * _MAX_PATH) != 0) {
 						wchar_t *last_point = wcsrchr(module, L'\\');
 
 						if (last_point) {
@@ -488,7 +488,7 @@ FreeImage_SaveU(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const wchar_t *filename, i
 
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_RegisterLocalPlugin(FI_InitProc proc_address, const char *format, const char *description, const char *extension, const char *regexpr) {
-	return s_plugins->AddNode(proc_address, NULL, format, description, extension, regexpr);
+	return s_plugins->AddNode(proc_address, nullptr, format, description, extension, regexpr);
 }
 
 #ifdef _WIN32
@@ -738,7 +738,7 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 								return (FREE_IMAGE_FORMAT)i;
 						}
 
-						token = strtok(NULL, ",");
+						token = strtok(nullptr, ",");
 					}
 
 					// free the copy of the extension list

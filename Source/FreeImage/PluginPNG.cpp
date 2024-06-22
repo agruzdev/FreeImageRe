@@ -532,7 +532,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			
 			// create the chunk manage structure
 
-			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, error_handler, warning_handler);
+			png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, (png_voidp)nullptr, error_handler, warning_handler);
 
 			if (!png_ptr) {
 				return nullptr;			
@@ -543,7 +543,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		    info_ptr = png_create_info_struct(png_ptr);
 
 			if (!info_ptr) {
-				png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+				png_destroy_read_struct(&png_ptr, (png_infopp)nullptr, (png_infopp)nullptr);
 				return nullptr;
 			}
 
@@ -555,7 +555,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (setjmp(png_jmpbuf(png_ptr))) {
 				// assume error_handler was called before by the PNG library
-				throw((const char*)NULL);
+				throw((const char*)nullptr);
 			}
 
 			// because we have already read the signature...
@@ -565,7 +565,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// read the IHDR chunk
 
 			png_read_info(png_ptr, info_ptr);
-			png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, NULL, NULL, NULL);
+			png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, nullptr, nullptr, nullptr);
 
 			// configure the decoder
 
@@ -725,7 +725,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				ReadMetadata(png_ptr, info_ptr, dib);
 				if (png_ptr) {
 					// clean up after the read, and free any memory allocated - REQUIRED
-					png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+					png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)nullptr);
 				}
 				return dib;
 			}
@@ -735,7 +735,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			row_pointers = (png_bytepp)malloc(height * sizeof(png_bytep));
 
 			if (!row_pointers) {
-				png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+				png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 				FreeImage_Unload(dib);
 				return nullptr;
 			}
@@ -777,14 +777,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (png_ptr) {
 				// clean up after the read, and free any memory allocated - REQUIRED
-				png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+				png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)nullptr);
 			}
 
 			return dib;
 
 		} catch (const char *text) {
 			if (png_ptr) {
-				png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
+				png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)nullptr);
 			}
 			if (row_pointers) {
 				free(row_pointers);
@@ -826,7 +826,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		try {
 			// create the chunk manage structure
 
-			png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)NULL, error_handler, warning_handler);
+			png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)nullptr, error_handler, warning_handler);
 
 			if (!png_ptr)  {
 				return FALSE;
@@ -837,7 +837,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			info_ptr = png_create_info_struct(png_ptr);
 
 			if (!info_ptr)  {
-				png_destroy_write_struct(&png_ptr,  (png_infopp)NULL);
+				png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
 				return FALSE;
 			}
 
@@ -853,7 +853,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			}
 
 			// init the IO
-            
+
 			png_set_write_fn(png_ptr, &fio, _WriteProc, _FlushProc);
 
 			// set physical resolution
@@ -1011,7 +1011,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			// set the transparency table
 
 			if (bIsTransparent) {
-				png_set_tRNS(png_ptr, info_ptr, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), NULL);
+				png_set_tRNS(png_ptr, info_ptr, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), nullptr);
 			}
 
 			// set the background color

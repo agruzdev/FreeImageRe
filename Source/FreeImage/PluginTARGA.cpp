@@ -107,7 +107,7 @@ static const char *FI_MSG_ERROR_CORRUPTED = "Image data corrupted";
 class TargaThumbnail
 {
 public:
-	TargaThumbnail() : _w(0), _h(0), _depth(0), _data(NULL) { 
+	TargaThumbnail() : _w(0), _h(0), _depth(0), _data{} { 
 	}
 	~TargaThumbnail() { 
 		if (_data) {
@@ -210,7 +210,7 @@ class IOCache
 {
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
-		_ptr(NULL), _begin(NULL), _end(NULL), _size(size), _io(io), _handle(handle)	{
+		_ptr{}, _begin{}, _end{}, _size(size), _io(io), _handle(handle)	{
 			_begin = (uint8_t*)malloc(size);
 			if (_begin) {
 			_end = _begin + _size;

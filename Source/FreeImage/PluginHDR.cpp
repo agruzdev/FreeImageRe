@@ -200,7 +200,7 @@ rgbe_ReadHeader(FreeImageIO *io, fi_handle handle, unsigned *width, unsigned *he
 
 	// get the first line
 	if (!rgbe_GetLine(io, handle, buf, HDR_MAXLINE)) {
-		return rgbe_Error(rgbe_read_error, NULL);
+		return rgbe_Error(rgbe_read_error, nullptr);
 	}
 
 	// check the signature
@@ -223,7 +223,7 @@ rgbe_ReadHeader(FreeImageIO *io, fi_handle handle, unsigned *width, unsigned *he
 	for (;;) {
 		// get next line
 		if (!rgbe_GetLine(io, handle, buf, HDR_MAXLINE)) {
-			return rgbe_Error(rgbe_read_error, NULL);
+			return rgbe_Error(rgbe_read_error, nullptr);
 		}
 
 		if ((buf[0] == 0) || (buf[0] == '\n')) {
@@ -253,7 +253,7 @@ rgbe_ReadHeader(FreeImageIO *io, fi_handle handle, unsigned *width, unsigned *he
 
 	// get next line
 	if (!rgbe_GetLine(io, handle, buf, HDR_MAXLINE)) {
-		return rgbe_Error(rgbe_read_error, NULL);
+		return rgbe_Error(rgbe_read_error, nullptr);
 	}
 
 	// get the image width & height
@@ -281,31 +281,31 @@ rgbe_WriteHeader(FreeImageIO *io, fi_handle handle, unsigned width, unsigned hei
 	// The #? is to identify file type, the programtype is optional
 	sprintf(buffer, "#?%s\n", programtype);
 	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-		return rgbe_Error(rgbe_write_error, NULL);
+		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 	sprintf(buffer, "%s\n", info->comment);
 	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-		return rgbe_Error(rgbe_write_error, NULL);
+		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 	sprintf(buffer, "FORMAT=32-bit_rle_rgbe\n");
 	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-		return rgbe_Error(rgbe_write_error, NULL);
+		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 	if (info && (info->valid & RGBE_VALID_GAMMA)) {
 		sprintf(buffer, "GAMMA=%g\n", info->gamma);
 		if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-			return rgbe_Error(rgbe_write_error, NULL);
+			return rgbe_Error(rgbe_write_error, nullptr);
 		}
 	}
 	if (info && (info->valid & RGBE_VALID_EXPOSURE)) {
 		sprintf(buffer,"EXPOSURE=%g\n", info->exposure);
 		if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-			return rgbe_Error(rgbe_write_error, NULL);
+			return rgbe_Error(rgbe_write_error, nullptr);
 		}
 	}
 	sprintf(buffer, "\n-Y %d +X %d\n", height, width);
 	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
-		return rgbe_Error(rgbe_write_error, NULL);
+		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 
 	return TRUE;
@@ -334,7 +334,7 @@ rgbe_ReadPixels(FreeImageIO *io, fi_handle handle, FIRGBF *data, unsigned numpix
 
   for (unsigned x = 0; x < numpixels; x++) {
 	if (io->read_proc(rgbe, 1, sizeof(rgbe), handle) < 1) {
-		return rgbe_Error(rgbe_read_error, NULL);
+		return rgbe_Error(rgbe_read_error, nullptr);
 	}
 	rgbe_RGBEToFloat(&data[x], rgbe);
   }
@@ -354,7 +354,7 @@ rgbe_WritePixels(FreeImageIO *io, fi_handle handle, FIRGBF *data, unsigned numpi
   for (unsigned x = 0; x < numpixels; x++) {
 	  rgbe_FloatToRGBE(rgbe, &data[x]);
 	  if (io->write_proc(rgbe, sizeof(rgbe), 1, handle) < 1) {
-		  return rgbe_Error(rgbe_write_error, NULL);
+		  return rgbe_Error(rgbe_write_error, nullptr);
 	  }
   }
 
@@ -376,7 +376,7 @@ rgbe_ReadPixels_RLE(FreeImageIO *io, fi_handle handle, FIRGBF *data, int scanlin
 	while (num_scanlines > 0) {
 		if (io->read_proc(rgbe, 1, sizeof(rgbe), handle) < 1) {
 			free(scanline_buffer);
-			return rgbe_Error(rgbe_read_error,NULL);
+			return rgbe_Error(rgbe_read_error, nullptr);
 		}
 		if ((rgbe[0] != 2) || (rgbe[1] != 2) || (rgbe[2] & 0x80)) {
 			// this file is not run length encoded
@@ -403,7 +403,7 @@ rgbe_ReadPixels_RLE(FreeImageIO *io, fi_handle handle, FIRGBF *data, int scanlin
 			while (ptr < ptr_end) {
 				if (io->read_proc(buf, 1, 2 * sizeof(uint8_t), handle) < 1) {
 					free(scanline_buffer);
-					return rgbe_Error(rgbe_read_error, NULL);
+					return rgbe_Error(rgbe_read_error, nullptr);
 				}
 				if (buf[0] > 128) {
 					// a run of the same value
@@ -427,7 +427,7 @@ rgbe_ReadPixels_RLE(FreeImageIO *io, fi_handle handle, FIRGBF *data, int scanlin
 					if (--count > 0) {
 						if (io->read_proc(ptr, 1, sizeof(uint8_t) * count, handle) < 1) {
 							free(scanline_buffer);
-							return rgbe_Error(rgbe_read_error, NULL);
+							return rgbe_Error(rgbe_read_error, nullptr);
 						}
 						ptr += count;
 					}
@@ -483,7 +483,7 @@ rgbe_WriteBytes_RLE(FreeImageIO *io, fi_handle handle, uint8_t *data, int numbyt
 			buf[0] = (uint8_t)(128 + old_run_count);   // write short run
 			buf[1] = data[cur];
 			if (io->write_proc(buf, 2 * sizeof(uint8_t), 1, handle) < 1) {
-				return rgbe_Error(rgbe_write_error, NULL);
+				return rgbe_Error(rgbe_write_error, nullptr);
 			}
 			cur = beg_run;
 		}
@@ -495,10 +495,10 @@ rgbe_WriteBytes_RLE(FreeImageIO *io, fi_handle handle, uint8_t *data, int numbyt
 			}
 			buf[0] = (uint8_t)nonrun_count;
 			if (io->write_proc(buf, sizeof(buf[0]), 1, handle) < 1) {
-				return rgbe_Error(rgbe_write_error, NULL);
+				return rgbe_Error(rgbe_write_error, nullptr);
 			}
 			if (io->write_proc(&data[cur], sizeof(data[0]) * nonrun_count, 1, handle) < 1) {
-				return rgbe_Error(rgbe_write_error, NULL);
+				return rgbe_Error(rgbe_write_error, nullptr);
 			}
 			cur += nonrun_count;
 		}
@@ -507,7 +507,7 @@ rgbe_WriteBytes_RLE(FreeImageIO *io, fi_handle handle, uint8_t *data, int numbyt
 			buf[0] = (uint8_t)(128 + run_count);
 			buf[1] = data[beg_run];
 			if (io->write_proc(buf, sizeof(buf[0]) * 2, 1, handle) < 1) {
-				return rgbe_Error(rgbe_write_error, NULL);
+				return rgbe_Error(rgbe_write_error, nullptr);
 			}
 			cur += run_count;
 		}
@@ -537,7 +537,7 @@ rgbe_WritePixels_RLE(FreeImageIO *io, fi_handle handle, FIRGBF *data, unsigned s
 		rgbe[3] = (uint8_t)(scanline_width & 0xFF);
 		if (io->write_proc(rgbe, sizeof(rgbe), 1, handle) < 1) {
 			free(buffer);
-			return rgbe_Error(rgbe_write_error, NULL);
+			return rgbe_Error(rgbe_write_error, nullptr);
 		}
 		for (unsigned x = 0; x < scanline_width; x++) {
 			rgbe_FloatToRGBE(rgbe, data);
