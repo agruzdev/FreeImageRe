@@ -89,7 +89,7 @@ reference (and so one can make use of picture->custom_ptr).
 */
 static int 
 WebP_MemoryWriter(const uint8_t *data, size_t data_size, const WebPPicture* const picture) {
-	FIMEMORY *hmem = (FIMEMORY*)picture->custom_ptr;
+	auto *hmem = (FIMEMORY*)picture->custom_ptr;
 	return data_size ? (FreeImage_WriteMemory(data, 1, (unsigned)data_size, hmem) == data_size) : 0;
 }
 

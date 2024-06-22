@@ -593,8 +593,8 @@ Unpack32Bits( FreeImageIO *io, fi_handle handle, FIBITMAP* dib, MacRect* bounds,
 		rowBytes = (uint16_t)( width * 4 );
 	}
 	
-	auto *pLineBuf = (uint8_t*)malloc( rowBytes ); // Let's allocate enough for 4 bit planes
-	if (pLineBuf)	{
+	// Let's allocate enough for 4 bit planes
+	if (auto *pLineBuf = (uint8_t*)malloc( rowBytes ))	{
 		try	{
 			for ( int i = 0; i < height; i++ ) { 
 				// for each line do...
@@ -633,13 +633,13 @@ Unpack32Bits( FreeImageIO *io, fi_handle handle, FIBITMAP* dib, MacRect* bounds,
 					}
 				}
 			}
+			free( pLineBuf );
 		}
 		catch( ... ) {
 			free( pLineBuf );
 			throw;
 		}
 	}
-	free( pLineBuf );
 }
 
 /**

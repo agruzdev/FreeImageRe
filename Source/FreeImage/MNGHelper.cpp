@@ -1106,8 +1106,8 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 			}
 			if (key_value_pair.size()) {
 				for (tEXtMAP::iterator j = key_value_pair.begin(); j != key_value_pair.end(); j++) {
-					std::string key = (*j).first;
-					std::string value = (*j).second;
+					std::string key = j->first;
+					std::string value = j->second;
 					mng_SetKeyValue(FIMD_COMMENTS, dib, key.c_str(), value.c_str());
 				}
 			}

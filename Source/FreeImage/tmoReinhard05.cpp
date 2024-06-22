@@ -218,14 +218,11 @@ FIBITMAP* DLL_CALLCONV
 FreeImage_TmoReinhard05Ex(FIBITMAP *src, double intensity, double contrast, double adaptation, double color_correction) {
 	if (!FreeImage_HasPixels(src)) return nullptr;
 
-	// working RGBF variable
-	FIBITMAP *dib{}, *Y{};
-
-	dib = FreeImage_ConvertToRGBF(src);
+	auto *dib = FreeImage_ConvertToRGBF(src);
 	if (!dib) return nullptr;
 
 	// get the Luminance channel
-	Y = ConvertRGBFToY(dib);
+	auto *Y = ConvertRGBFToY(dib);
 	if (!Y) {
 		FreeImage_Unload(dib);
 		return nullptr;

@@ -127,11 +127,11 @@ PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, c
 PluginNode *
 PluginList::FindNodeFromFormat(const char *format) {
 	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
-		const char *the_format = ((*i).second->m_format) ? (*i).second->m_format : (*i).second->m_plugin->format_proc();
+		const char *the_format = (i->second->m_format) ? i->second->m_format : i->second->m_plugin->format_proc();
 
-		if ((*i).second->m_enabled) {
+		if (i->second->m_enabled) {
 			if (FreeImage_stricmp(the_format, format) == 0) {
-				return (*i).second.get();
+				return i->second.get();
 			}
 		}
 	}
@@ -142,11 +142,11 @@ PluginList::FindNodeFromFormat(const char *format) {
 PluginNode *
 PluginList::FindNodeFromMime(const char *mime) {
 	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
-		const char *the_mime = ((*i).second->m_plugin->mime_proc) ? (*i).second->m_plugin->mime_proc() : "";
+		const char *the_mime = (i->second->m_plugin->mime_proc) ? i->second->m_plugin->mime_proc() : "";
 
-		if ((*i).second->m_enabled) {
+		if (i->second->m_enabled) {
 			if (the_mime && (strcmp(the_mime, mime) == 0)) {
-				return (*i).second.get();
+				return i->second.get();
 			}
 		}
 	}
@@ -156,10 +156,8 @@ PluginList::FindNodeFromMime(const char *mime) {
 
 PluginNode *
 PluginList::FindNodeFromFIF(int node_id) {
-	const auto i = m_plugin_map.find(node_id);
-
-	if (i != m_plugin_map.end()) {
-		return (*i).second.get();
+	if (const auto i{ m_plugin_map.find(node_id) }; i != m_plugin_map.end()) {
+		return i->second.get();
 	}
 
 	return nullptr;
@@ -176,13 +174,13 @@ PluginList::IsEmpty() const {
 }
 
 PluginList::~PluginList() {
-	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
 #ifdef _WIN32
-		if ((*i).second->m_instance) {
-			FreeLibrary((HINSTANCE)(*i).second->m_instance);
+	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
+		if (i->second->m_instance) {
+			FreeLibrary((HINSTANCE)i->second->m_instance);
 		}
-#endif
 	}
+#endif
 }
 
 // =====================================================================

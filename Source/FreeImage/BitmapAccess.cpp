@@ -513,10 +513,10 @@ FreeImage_Unload(FIBITMAP *dib) {
 			// delete metadata models
 			auto *metadata = ((FREEIMAGEHEADER *)dib->data)->metadata;
 
-			for (METADATAMAP::iterator i = (*metadata).begin(); i != (*metadata).end(); i++) {
+			for (METADATAMAP::iterator i = metadata->begin(); i != metadata->end(); i++) {
 				if (auto *tagmap = i->second) {
 					for (TAGMAP::iterator j = tagmap->begin(); j != tagmap->end(); j++) {
-						FITAG *tag = (*j).second;
+						FITAG *tag = j->second;
 						FreeImage_DeleteTag(tag);
 					}
 
@@ -610,8 +610,8 @@ FreeImage_Clone(FIBITMAP *dib) {
 				if (auto *dst_tagmap = new(std::nothrow) TAGMAP()) {
 					// fill the model
 					for (TAGMAP::iterator j = src_tagmap->begin(); j != src_tagmap->end(); j++) {
-						std::string dst_key = (*j).first;
-						FITAG *dst_tag = FreeImage_CloneTag( (*j).second );
+						std::string dst_key = j->first;
+						auto *dst_tag = FreeImage_CloneTag( j->second );
 
 						// assign key and tag value
 						(*dst_tagmap)[dst_key] = dst_tag;
@@ -1289,7 +1289,7 @@ FreeImage_FindFirstMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, FITAG **tag
 
 				// get the first element
 				TAGMAP::iterator i = tagmap->begin();
-				*tag = (*i).second;
+				*tag = i->second;
 
 				return handle;
 			}
@@ -1319,7 +1319,7 @@ FreeImage_FindNextMetadata(FIMETADATA *mdhandle, FITAG **tag) {
 
 		for (TAGMAP::iterator i = tagmap->begin(); i != tagmap->end(); i++) {
 			if (count == current_pos) {
-				*tag = (*i).second;
+				*tag = i->second;
 				mdh->pos++;
 				break;
 			}
@@ -1371,7 +1371,7 @@ FreeImage_CloneMetadata(FIBITMAP *dst, FIBITMAP *src) {
 				// fill the model
 				for (TAGMAP::iterator j = src_tagmap->begin(); j != src_tagmap->end(); j++) {
 					std::string dst_key = j->first;
-					FITAG *dst_tag = FreeImage_CloneTag( j->second );
+					auto *dst_tag = FreeImage_CloneTag( j->second );
 
 					// assign key and tag value
 					(*dst_tagmap)[dst_key] = dst_tag;

@@ -74,7 +74,8 @@ FreeImage_ToneMapping(FIBITMAP *dib, FREE_IMAGE_TMO tmo, double first_param, dou
 				else {
 					return FreeImage_TmoClamp(dib, first_param);
 				}
-				
+				break;
+
 			case FITMO_LINEAR:
 				if ((first_param == 0) && (second_param == 0)) {
 					return FreeImage_TmoLinear(dib);

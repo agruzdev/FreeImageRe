@@ -261,9 +261,7 @@ FreeImage_TmoDrago03(FIBITMAP *src, double gamma, double exposure) {
 	if (!FreeImage_HasPixels(src)) return nullptr;
 
 	// working RGBF variable
-	FIBITMAP *dib{};
-
-	dib = FreeImage_ConvertToRGBF(src);
+	auto *dib = FreeImage_ConvertToRGBF(src);
 	if (!dib) return nullptr;
 
 	// default algorithm parameters
