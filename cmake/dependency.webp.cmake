@@ -1,41 +1,41 @@
 # WEBP dependency
 # https://chromium.googlesource.com/webm/libwebp
+#
+# Output target: LibWEBP
 
-# Output variables:
-# WEBP_INCLUDE_DIR - includes
-# WEBP_LIBRARY_DIR - link directories
-# WEBP_LIBRARY     - link targets
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
-dependency_find_or_download(
-    NAME WEBP
-    VERBOSE_NAME "WEBP"
+
+ExternalProject_Add(WEBP
+    PREFIX ${CMAKE_BINARY_DIR}/webp
     URL "https://chromium.googlesource.com/webm/libwebp/+archive/ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz"   #v1.3.2
-    HASH_MD5 OFF   # googlesource can't provde stable hash, so ignore hash check
-    FILE_NAME "webp.tar.gz"
+    # googlesource can't provide stable hash, so ignore hash check
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/webp"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/webp/source"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/webp/build"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t webp libwebpmux sharpyuv
+    INSTALL_COMMAND ""
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DWEBP_BUILD_ANIM_UTILS=OFF" "-DWEBP_BUILD_CWEBP=OFF" "-DWEBP_BUILD_DWEBP=OFF" "-DWEBP_BUILD_GIF2WEBP=OFF" "-DWEBP_BUILD_IMG2WEBP=OFF" 
+        "-DWEBP_BUILD_VWEBP=OFF" "-DWEBP_BUILD_WEBPINFO=OFF" "-DWEBP_BUILD_LIBWEBPMUX=ON" "-DWEBP_BUILD_WEBPMUX=OFF" "-DWEBP_BUILD_EXTRAS=OFF" "-DWEBP_UNICODE=ON"
+        "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG}"
+    EXCLUDE_FROM_ALL
 )
 
+ExternalProject_Get_Property(WEBP SOURCE_DIR)
+ExternalProject_Get_Property(WEBP BINARY_DIR)
 
-set(BUILD_SHARED_LIBS OFF)
-set(WEBP_BUILD_ANIM_UTILS OFF)
-set(WEBP_BUILD_CWEBP OFF)
-set(WEBP_BUILD_DWEBP OFF)
-set(WEBP_BUILD_GIF2WEBP OFF)
-set(WEBP_BUILD_IMG2WEBP OFF)
-set(WEBP_BUILD_VWEBP OFF)
-set(WEBP_BUILD_WEBPINFO OFF)
-set(WEBP_BUILD_LIBWEBPMUX ON)
-set(WEBP_BUILD_WEBPMUX OFF)
-set(WEBP_BUILD_EXTRAS OFF)
-set(WEBP_UNICODE ON)
+add_library(LibWEBP INTERFACE)
+add_dependencies(LibWEBP WEBP)
+link_config_aware_library_path(LibWEBP ${BINARY_DIR} libwebp${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_config_aware_library_path(LibWEBP ${BINARY_DIR} libwebpmux${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_config_aware_library_path(LibWEBP ${BINARY_DIR} libsharpyuv${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_include_directories(LibWEBP INTERFACE ${SOURCE_DIR} ${SOURCE_DIR}/src ${BINARY_DIR}/src)
+set_property(TARGET WEBP PROPERTY FOLDER "Dependencies")
 
-add_subdirectory(${WEBP_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/webp EXCLUDE_FROM_ALL)
-set_property(TARGET sharpyuv webp webpdecode webpencode webpdsp webputils libwebpmux PROPERTY FOLDER "Dependencies")
+unset(SOURCE_DIR)
+unset(BINARY_DIR)
 
-unset(BUILD_SHARED_LIBS)
-
-
-set(WEBP_INCLUDE_DIR ${WEBP_FOUND_ROOT};${WEBP_FOUND_ROOT}/src CACHE PATH "")
-set(WEBP_LIBRARY_DIR "" CACHE PATH "")
-set(WEBP_LIBRARY webp libwebpmux CACHE STRING "")

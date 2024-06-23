@@ -1,42 +1,45 @@
 # LibPNG dependency
 # https://sourceforge.net/projects/libpng
+#
+# Output target: LibPNG
 
-# Output variables:
-# PNG_INCLUDE_DIR - includes
-# PNG_LIBRARY_DIR - link directories
-# PNG_LIBRARY     - link targets
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
-dependency_find_or_download(
-    NAME PNG
-    VERBOSE_NAME "LibPNG"
+ExternalProject_Get_Property(ZLIB INSTALL_DIR)
+set(ZLIB_INSTALL_DIR ${INSTALL_DIR})
+unset(INSTALL_DIR)
+
+ExternalProject_Add(PNG
+    PREFIX ${CMAKE_BINARY_DIR}/png
     URL "https://sourceforge.net/projects/libpng/files/libpng16/1.6.43/libpng-1.6.43.tar.gz/download?download="
-    HASH_MD5 "cee1c227d1f23c3a2a72341854b5a83f"
-    FILE_NAME "libpng-1.6.43.tar.gz"
-    PREFIX "libpng-1.6.43"
+    URL_MD5 "cee1c227d1f23c3a2a72341854b5a83f"
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/png"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/png/source"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/png/build"
+    INSTALL_DIR "${CMAKE_BINARY_DIR}/png/install"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t png_static
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" "-DPNG_SHARED=OFF" "-DPNG_STATIC=ON" "-DPNG_TESTS=OFF" "-DPNG_TOOLS=OFF" "-DPNG_FRAMEWORK=OFF" "-DPNG_DEBUG=OFF" 
+        "-DPNG_BUILD_ZLIB=OFF" "-DPNG_HARDWARE_OPTIMIZATIONS=ON" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
+        "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/png/install" "-DSKIP_INSTALL_EXECUTABLES=ON" "-DSKIP_INSTALL_PROGRAMS=ON"
+    EXCLUDE_FROM_ALL
+    DEPENDS ZLIB
 )
 
-if(NOT TARGET png_static)
-    set(PNG_SHARED OFF)
-    set(PNG_STATIC ON)
-    set(PNG_TESTS OFF)
-    set(PNG_FRAMEWORK OFF)
-    set(PNG_DEBUG OFF)
-    set(PNG_BUILD_ZLIB OFF)
-    set(PNG_HARDWARE_OPTIMIZATIONS ON)
-    set(SKIP_INSTALL_ALL ON)
+ExternalProject_Get_Property(PNG INSTALL_DIR)
 
-    add_subdirectory(${PNG_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/png EXCLUDE_FROM_ALL)
-    set_property(TARGET png_static png_genfiles PROPERTY FOLDER "Dependencies")
-
-    if (MSVC)
-        target_compile_options(png_static PRIVATE "/w")
-    endif()
-
-    add_dependencies(png_static zlibstatic)
+add_library(LibPNG INTERFACE)
+add_dependencies(LibPNG PNG)
+if(UNIX)
+    link_library_path2(LibPNG ${INSTALL_DIR}/lib libpng16${CMAKE_STATIC_LIBRARY_SUFFIX} libpng16d${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    link_library_path2(LibPNG ${INSTALL_DIR}/lib libpng16_static${CMAKE_STATIC_LIBRARY_SUFFIX} libpng16_staticd${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
+target_include_directories(LibPNG INTERFACE ${INSTALL_DIR}/include)
+set_property(TARGET PNG PROPERTY FOLDER "Dependencies")
 
-set(PNG_INCLUDE_DIR ${PNG_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/png CACHE PATH "")
-set(PNG_LIBRARY_DIR "" CACHE PATH "")
-set(PNG_LIBRARY png_static CACHE STRING "")
+unset(INSTALL_DIR)
+

@@ -29,7 +29,7 @@
 #endif 
 
 #include "OpenEXR/ImfIO.h"
-#include "Iex/Iex.h"
+#include "OpenEXR/Iex.h"
 #include "OpenEXR/ImfOutputFile.h"
 #include "OpenEXR/ImfInputFile.h"
 #include "OpenEXR/ImfRgbaFile.h"

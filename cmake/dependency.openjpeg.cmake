@@ -1,45 +1,36 @@
 # OpenJPEG dependency (JPEG 2000)
+#
+# Output target: LibOpenJPEG
+#
 
-# Output variables:
-# OPENJPEG_INCLUDE_DIR - includes
-# OPENJPEG_LIBRARY_DIR - link directories
-# OPENJPEG_LIBRARY     - link targets
+include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
-
-# https://github.com/uclouvain/openjpeg/releases
-dependency_find_or_download(
-    NAME OPENJPEG
-    VERBOSE_NAME "OpenJPEG"
+ExternalProject_Add(OPENJPEG
+    PREFIX ${CMAKE_BINARY_DIR}/openjpeg
     URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.2.zip"
-    HASH_MD5 "6295f52db915f7b4afd3241d3692cf00"
-    FILE_NAME "v2.5.2.zip"
-    PREFIX "openjpeg-2.5.2"
+    URL_MD5 "6295f52db915f7b4afd3241d3692cf00"
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openjpeg"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openjpeg/source"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/openjpeg/build"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t openjp2
+    INSTALL_COMMAND ""
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_STATIC_LIBS=ON" "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_CODEC=OFF" "-DBUILD_JPIP=OFF" "-DBUILD_TESTING=OFF"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
+    EXCLUDE_FROM_ALL
 )
 
-if(NOT TARGET openjp2)
+ExternalProject_Get_Property(OPENJPEG SOURCE_DIR)
+ExternalProject_Get_Property(OPENJPEG BINARY_DIR)
 
-    set(BUILD_STATIC_LIBS ON)
-    set(BUILD_SHARED_LIBS OFF)
-    set(BUILD_CODEC OFF)
-    set(BUILD_JPIP OFF)
-    set(BUILD_TESTING OFF)
+add_library(LibOpenJPEG INTERFACE)
+add_dependencies(LibOpenJPEG OPENJPEG)
+link_config_aware_library_path(LibOpenJPEG ${BINARY_DIR}/bin ${CMAKE_STATIC_LIBRARY_PREFIX}openjp2${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_include_directories(LibOpenJPEG INTERFACE ${SOURCE_DIR}/src/lib ${BINARY_DIR}/src/lib/openjp2)
+set_property(TARGET OPENJPEG PROPERTY FOLDER "Dependencies")
 
-    add_subdirectory(${OPENJPEG_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/openjpeg)
-    set_property(TARGET openjp2 PROPERTY FOLDER "Dependencies")
-
-    unset(BUILD_STATIC_LIBS)
-    unset(BUILD_SHARED_LIBS)
-    unset(BUILD_CODEC)
-    unset(BUILD_JPIP)
-    unset(BUILD_TESTING)
-
-endif()
-
-set(OPENJPEG_INCLUDE_DIR ${OPENJPEG_FOUND_ROOT}/src/lib ${CMAKE_BINARY_DIR}/dependencies/openjpeg/src/lib/openjp2 CACHE PATH "")
-set(OPENJPEG_LIBRARY_DIR "" CACHE PATH "")
-set(OPENJPEG_LIBRARY openjp2 CACHE STRING "")
-
-
-
+unset(SOURCE_DIR)
+unset(BINARY_DIR)
 

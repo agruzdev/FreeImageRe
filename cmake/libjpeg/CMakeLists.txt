@@ -55,4 +55,6 @@ target_include_directories(LibJPEG PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (MSVC)
     target_compile_options(LibJPEG PRIVATE "/w")
+else()
+    target_compile_options(LibJPEG PRIVATE "-w")
 endif()

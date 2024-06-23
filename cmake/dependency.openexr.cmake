@@ -1,50 +1,43 @@
 # OpenEXR dependency
 # https://github.com/AcademySoftwareFoundation/openexr
+#
+# Output target: LibOpenEXR
+#
 
-# Output variables:
-# EXR_INCLUDE_DIR - includes
-# EXR_LIBRARY_DIR - link directories
-# EXR_LIBRARY     - link targets
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
-dependency_find_or_download(
-    NAME EXR
-    VERBOSE_NAME "OpenEXR"
+find_package(Git REQUIRED) # needed by OpenEXR
+
+ExternalProject_Add(EXR
+    PREFIX ${CMAKE_BINARY_DIR}/openexr
     URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.2.2.zip"
-    HASH_MD5 "f1a5ec77d01549dacb8954f4ccde989b"
-    FILE_NAME "v3.2.2.zip"
-    PREFIX "openexr-3.2.2"
+    URL_MD5 "f1a5ec77d01549dacb8954f4ccde989b"
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openexr"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openexr/source"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/openexr/build"
+    INSTALL_DIR "${CMAKE_BINARY_DIR}/openexr/install"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    UPDATE_COMMAND ""
+    PATCH_COMMAND ""
+    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t OpenEXR
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DOPENEXR_FORCE_INTERNAL_IMATH=ON" "-DOPENEXR_FORCE_INTERNAL_DEFLATE=ON" "-DOPENEXR_INSTALL=ON" "-DOPENEXR_INSTALL_TOOLS=OFF" 
+        "-DOPENEXR_INSTALL_EXAMPLES=OFF" "-DOPENEXR_INSTALL_PKG_CONFIG=OFF" "-DOPENEXR_BUILD_TOOLS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_TESTING=OFF"
+        "-DOPENEXR_LIB_SUFFIX=" "-DGIT_EXECUTABLE:PATH=${GIT_EXECUTABLE}" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG}" "-DCMAKE_CXX_FLAGS:STRING=${ZERO_WARNINGS_FLAG}"
+        "-DIMATH_LIB_SUFFIX=" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/openexr/install"
+    EXCLUDE_FROM_ALL
 )
 
-if(NOT TARGET OpenEXR)
-    set(OPENEXR_IS_SUBPROJECT ON)
-    set(OPENEXR_FORCE_INTERNAL_IMATH ON CACHE INTERNAL "")
-    set(OPENEXR_FORCE_INTERNAL_ZLIB OFF CACHE INTERNAL "")
+ExternalProject_Get_Property(EXR INSTALL_DIR)
 
-    set(OPENEXR_INSTALL OFF CACHE INTERNAL "")
-    set(OPENEXR_INSTALL_TOOLS OFF CACHE INTERNAL "")
-    set(OPENEXR_INSTALL_EXAMPLES OFF CACHE INTERNAL "")
-    set(OPENEXR_INSTALL_PKG_CONFIG OFF CACHE INTERNAL "")
+add_library(LibOpenEXR INTERFACE)
+add_dependencies(LibOpenEXR EXR)
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXRCore${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXRCore_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Imath${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Imath_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Iex${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Iex_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_include_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath)
+set_property(TARGET EXR PROPERTY FOLDER "Dependencies")
 
-    set(BUILD_SHARED_LIBS OFF)
-
-    add_subdirectory(${EXR_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/exr EXCLUDE_FROM_ALL)
-    set_property(TARGET OpenEXR OpenEXRCore Iex IlmThread Imath PROPERTY FOLDER "Dependencies")
-
-    if (MSVC)
-        target_compile_options(Iex PRIVATE "/w")
-        target_compile_options(IlmThread PRIVATE "/w")
-        target_compile_options(Imath PRIVATE "/w")
-        target_compile_options(OpenEXR PRIVATE "/w")
-    endif()
-
-    target_link_libraries(OpenEXR PRIVATE zlibstatic)
-
-    target_include_directories(OpenEXR INTERFACE ${EXR_FOUND_ROOT}/src/lib ${CMAKE_BINARY_DIR}/dependencies/exr)
-    unset(BUILD_SHARED_LIBS)
-endif()
-
-set(EXR_INCLUDE_DIR ${EXR_FOUND_ROOT}/src/lib ${CMAKE_BINARY_DIR}/dependencies/exr CACHE PATH "")
-set(EXR_LIBRARY_DIR "" CACHE PATH "")
-set(EXR_LIBRARY OpenEXR CACHE STRING "")
+unset(INSTALL_DIR)

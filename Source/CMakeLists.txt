@@ -33,29 +33,20 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")
     target_link_directories(FreeImage PRIVATE ${Python3_LIBRARY_DIRS})
+    target_link_libraries(FreeImage PRIVATE LibPybind)
 endif()
 
 target_link_libraries(FreeImage PRIVATE
-    ${ZLIB_LIBRARY}
-    ${LIBJPEG_LIBRARY}
-    ${EXR_LIBRARY}
-    ${OPENJPEG_LIBRARY}
-    ${PNG_LIBRARY}
-    ${TIFF_LIBRARY}
-    ${WEBP_LIBRARY}
-    ${RAW_LIBRARY}
+    LibZLIB
+    LibJPEG
+    LibOpenEXR
+    LibOpenJPEG
+    LibPNG
+    LibTIFF
+    LibWEBP
+    LibRAW
     LibJXR
 )
-
-target_include_directories(FreeImage PRIVATE
-    ${LIBJPEG_INCLUDE_DIR}
-    ${OPENJPEG_INCLUDE_DIR}
-    ${PNG_INCLUDE_DIR}
-    ${TIFF_INCLUDE_DIR}
-    ${WEBP_INCLUDE_DIR}
-    ${RAW_INCLUDE_DIR}
-)
-
 
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     if (WIN32)

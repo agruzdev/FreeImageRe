@@ -1273,7 +1273,7 @@ Read and decode PSD image resource (Exif profile)
 @return Returns TRUE if successful, FALSE otherwise
 */
 FIBOOL
-psd_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned int length) {
+psd_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length) {
 	uint8_t lsb_first[4] = { 0x49, 0x49, 0x2A, 0x00 };		// Classic TIFF signature - little-endian order
 	uint8_t msb_first[4] = { 0x4D, 0x4D, 0x00, 0x2A };		// Classic TIFF signature - big-endian order
 

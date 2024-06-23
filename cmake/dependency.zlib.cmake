@@ -1,41 +1,41 @@
 # ZLib dependency
 # https://github.com/madler/zlib
+#
+# Output target: LibZLIB
 
-# Output variables:
-# ZLIB_INCLUDE_DIR - includes
-# ZLIB_LIBRARY_DIR - link directories
-# ZLIB_LIBRARY     - link targets
+include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.common.functions.cmake)
 
-dependency_find_or_download(
-    NAME ZLIB
-    VERBOSE_NAME "ZLib"
+ExternalProject_Add(ZLIB
+    PREFIX "${CMAKE_BINARY_DIR}/zlib"
     URL "https://github.com/madler/zlib/archive/refs/tags/v1.3.1.zip"
-    HASH_MD5 "127b8a71a3fb8bebe89df1080f15fdf6"
-    FILE_NAME "v1.3.1.zip"
-    PREFIX "zlib-1.3.1"
+    URL_MD5 "127b8a71a3fb8bebe89df1080f15fdf6"
+    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/zlib"
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/zlib/source"
+    BINARY_DIR "${CMAKE_BINARY_DIR}/zlib/build"
+    INSTALL_DIR "${CMAKE_BINARY_DIR}/zlib/install"
+    UPDATE_COMMAND ""
+    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t zlibstatic
+    INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
+            COMMAND ${CMAKE_COMMAND} -E copy "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/zlib/source/zutil.h" -t "${CMAKE_BINARY_DIR}/zlib/install/include"
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_RELEASE} "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/zlib/install" "-DZLIB_BUILD_EXAMPLES=OFF"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
 )
 
-if(NOT TARGET zlibstatic)
-    set(SKIP_INSTALL_ALL ON)
+# For configuring other dependencies
+ExternalProject_Get_Property(ZLIB INSTALL_DIR)
+set(ZLIB_ROOT ${INSTALL_DIR})
+unset(INSTALL_DIR)
 
-    add_subdirectory(${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib EXCLUDE_FROM_ALL)
-    set_property(TARGET zlibstatic PROPERTY FOLDER "Dependencies")
-
-    if (MSVC)
-        target_compile_options(zlibstatic PRIVATE "/w")
-    endif()
-
-    unset(SKIP_INSTALL_ALL)
-
-    add_library(ZLIB::ZLIB ALIAS zlibstatic)
-
-    target_include_directories(zlibstatic INTERFACE ${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib)
+add_library(LibZLIB INTERFACE)
+add_dependencies(LibZLIB ZLIB)
+target_include_directories(LibZLIB INTERFACE ${ZLIB_ROOT}/include)
+if(MSVC)
+    link_library_path2(LibZLIB ${ZLIB_ROOT}/lib zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX} zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    target_link_libraries(LibZLIB INTERFACE "${ZLIB_ROOT}/lib/libz${CMAKE_STATIC_LIBRARY_SUFFIX}")
 endif()
-export(TARGETS zlibstatic FILE "${CMAKE_BINARY_DIR}/dependencies/zlib/zlibstaticTargets.cmake")
+set_property(TARGET ZLIB PROPERTY FOLDER "Dependencies")
 
-set(ZLIB_INCLUDE_DIR ${ZLIB_FOUND_ROOT} ${CMAKE_BINARY_DIR}/dependencies/zlib CACHE PATH "")
-set(ZLIB_INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} CACHE PATH "") # For libpng
-set(ZLIB_LIBRARY_DIR "" CACHE PATH "")
-set(ZLIB_LIBRARY zlibstatic CACHE STRING "")
+

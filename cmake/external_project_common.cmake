@@ -1,0 +1,66 @@
+#
+# FreeImageRe library
+#
+
+cmake_minimum_required(VERSION 3.28)    # for FetchContent's EXCLUDE_FROM_ALL
+
+
+if(NOT _EXTERNAL_PROJECT_INCLUDE_GUARD_)
+    set(_EXTERNAL_PROJECT_INCLUDE_GUARD_ ON)
+
+    include(FetchContent)
+    include(ExternalProject)
+
+    option(EXTERNALPROJECT_UNPACK_IN_BINARY_DIR "Unpack sources into binary dir to avoid possible permission issues" OFF)
+    if (EXTERNALPROJECT_UNPACK_IN_BINARY_DIR)
+        set(EXTERNALPROJECT_SOURCE_PREFIX ${CMAKE_BINARY_DIR})
+    else()
+        set(EXTERNALPROJECT_SOURCE_PREFIX ${CMAKE_SOURCE_DIR})
+    endif()
+
+    get_property(IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+    set(BUILD_COMMAND_FOR_TARGET ${CMAKE_COMMAND} --build . )
+    set(CMAKE_BUILD_TYPE_ARG "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+    set(CMAKE_BUILD_TYPE_RELEASE "-DCMAKE_BUILD_TYPE=Release")
+    if (IS_MULTI_CONFIG)
+        list(APPEND BUILD_COMMAND_FOR_TARGET --config $<CONFIG>)
+        set(CMAKE_BUILD_TYPE_ARG "")
+        set(CMAKE_BUILD_TYPE_RELEASE "")
+    endif()
+
+    if (MSVC)
+        set(ZERO_WARNINGS_FLAG "/w")
+    else()
+        set(ZERO_WARNINGS_FLAG "-w")
+    endif()
+
+
+
+    macro(link_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
+        if (IS_MULTI_CONFIG)
+            target_link_libraries(${TARGET_} INTERFACE
+                optimized "${PREFIX_}/${LIBRARY_}"
+                debug "${PREFIX_}/${LIBRARY_DEBUG_}"
+            )
+        else ()
+            target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
+        endif()
+    endmacro()
+
+    macro(link_config_aware_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
+        if (IS_MULTI_CONFIG)
+            target_link_libraries(${TARGET_} INTERFACE
+                optimized "${PREFIX_}/Release/${LIBRARY_}"
+                debug "${PREFIX_}/Debug/${LIBRARY_DEBUG_}"
+            )
+        else ()
+            target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
+        endif()
+    endmacro()
+
+    macro(link_config_aware_library_path TARGET_ PREFIX_ LIBRARY_)
+        link_config_aware_library_path2(${TARGET_} ${PREFIX_} ${LIBRARY_} ${LIBRARY_})
+    endmacro()
+
+endif()
