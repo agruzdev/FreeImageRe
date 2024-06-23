@@ -68,11 +68,12 @@ void FreeImage_SO_Initialise() __attribute__((constructor));
 void FreeImage_SO_DeInitialise() __attribute__((destructor));
 
 void FreeImage_SO_Initialise() {
-  FreeImage_Initialise(FALSE);
+    FreeImage_Initialise(FALSE);
 }
 
 void FreeImage_SO_DeInitialise() {
-  FreeImage_DeInitialise();
+    // FreeImage_SO_DeInitialise is called after all static objects are destoryed. Nothing to do here.
+    //FreeImage_DeInitialise();
 }
 #endif // FREEIMAGE_LIB
 

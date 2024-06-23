@@ -54,7 +54,13 @@ s_search_list[] = {
 	"plugins\\",
 };
 
-static std::unique_ptr<PluginList> s_plugins{};
+#if defined(_WIN32) && !defined(__MINGW32__)
+# define GCC_INIT_PRIORITY(Val_)
+#else 
+# define GCC_INIT_PRIORITY(Val_) __attribute__((init_priority(Val_)))
+#endif
+
+static std::unique_ptr<PluginList> s_plugins GCC_INIT_PRIORITY(101) { };    // init before FreeImage_SO_Initialize
 static int s_plugin_reference_count = 0;
 
 
