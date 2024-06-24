@@ -30,13 +30,13 @@
 // ----------------------------------------------------------
 
 CacheFile::CacheFile() :
-m_file(nullptr),
+m_file{},
 m_free_pages(),
 m_page_cache_mem(),
 m_page_cache_disk(),
 m_page_map(),
 m_page_count(0),
-m_current_block(nullptr),
+m_current_block{},
 m_keep_in_memory(TRUE) {
 }
 

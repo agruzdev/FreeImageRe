@@ -98,9 +98,9 @@ typedef BlockList::iterator BlockListIterator;
 struct MULTIBITMAPHEADER {
 
 	MULTIBITMAPHEADER()
-		: node(nullptr)
+		: node{}
 		, fif(FIF_UNKNOWN)
-		, handle(nullptr)
+		, handle{}
 		, changed(FALSE)
 		, page_count(0)
 		, read_only(TRUE)

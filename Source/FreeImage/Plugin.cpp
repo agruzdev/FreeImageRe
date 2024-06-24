@@ -290,14 +290,10 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 							strcpy(buffer, s_search_list[count]);
 							strncat(buffer, find_data.name, MAX_PATH + 200);
 
-							HINSTANCE instance = LoadLibrary(buffer);
-
-							if (instance) {
+							if (auto instance = LoadLibrary(buffer)) {
 								FARPROC proc_address = GetProcAddress(instance, "_Init@8");
 
-								if (proc_address) {
-									s_plugins->AddNode((FI_InitProc)proc_address, (void *)instance);
-								} else {
+								if (!proc_address || FIF_UNKNOWN == s_plugins->AddNode((FI_InitProc)proc_address, (void *)instance)) {
 									FreeLibrary(instance);
 								}
 							}
