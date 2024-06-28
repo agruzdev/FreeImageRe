@@ -351,70 +351,64 @@ FreeImage_Close(PluginNode *node, FreeImageIO *io, fi_handle handle, void *data)
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_LoadFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
+	FIBITMAP *bitmap{};
+
 	if ((fif >= 0) && (fif < FreeImage_GetFIFCount())) {
 
 		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			if (node->m_plugin->load_proc) {
 				void *data = FreeImage_Open(node, io, handle, true);
 					
-				FIBITMAP *bitmap = node->m_plugin->load_proc(io, handle, -1, flags, data);
+				bitmap = node->m_plugin->load_proc(io, handle, -1, flags, data);
 					
 				FreeImage_Close(node, io, handle, data);
-					
-				return bitmap;
 			}
 		}
 	}
-
-	return nullptr;
+	return bitmap;
 }
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_Load(FREE_IMAGE_FORMAT fif, const char *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
-	
-	FILE *handle = fopen(filename, "rb");
+	FIBITMAP *bitmap{};
 
-	if (handle) {
-		FIBITMAP *bitmap = FreeImage_LoadFromHandle(fif, &io, (fi_handle)handle, flags);
+	if (auto *handle = fopen(filename, "rb")) {
+		bitmap = FreeImage_LoadFromHandle(fif, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
-
-		return bitmap;
 	} else {
 		FreeImage_OutputMessageProc((int)fif, "FreeImage_Load: failed to open file %s", filename);
 	}
 
-	return nullptr;
+	return bitmap;
 }
 
 FIBITMAP * DLL_CALLCONV
 FreeImage_LoadU(FREE_IMAGE_FORMAT fif, const wchar_t *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
+	FIBITMAP *bitmap{};
 #ifdef _WIN32	
-	FILE *handle = _wfopen(filename, L"rb");
-
-	if (handle) {
-		FIBITMAP *bitmap = FreeImage_LoadFromHandle(fif, &io, (fi_handle)handle, flags);
+	if (auto *handle = _wfopen(filename, L"rb")) {
+		bitmap = FreeImage_LoadFromHandle(fif, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
-
-		return bitmap;
 	} else {
 		FreeImage_OutputMessageProc((int)fif, "FreeImage_LoadU: failed to open input file");
 	}
 #endif
-	return nullptr;
+	return bitmap;
 }
 
 FIBOOL DLL_CALLCONV
 FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi_handle handle, int flags) {
 	// cannot save "header only" formats
+	FIBOOL result{FALSE};
 	if (!FreeImage_HasPixels(dib)) {
 		FreeImage_OutputMessageProc((int)fif, "FreeImage_SaveToHandle: cannot save \"header only\" formats");
-		return FALSE;
+		return result;
 	}
 
 	if ((fif >= 0) && (fif < FreeImage_GetFIFCount())) {
@@ -423,16 +417,14 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 			if (node->m_plugin->save_proc) {
 				void *data = FreeImage_Open(node, io, handle, false);
 					
-				FIBOOL result = node->m_plugin->save_proc(io, dib, handle, -1, flags, data);
+				result = node->m_plugin->save_proc(io, dib, handle, -1, flags, data);
 					
 				FreeImage_Close(node, io, handle, data);
-					
-				return result;
 			}
 		}
 	}
 
-	return FALSE;
+	return result;
 }
 
 
@@ -440,40 +432,34 @@ FIBOOL DLL_CALLCONV
 FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
-	
-	FILE *handle = fopen(filename, "w+b");
-	
-	if (handle) {
-		FIBOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
+	FIBOOL success{FALSE};
+
+	if (auto *handle = fopen(filename, "w+b")) {
+		success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
-
-		return success;
 	} else {
 		FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to open file %s", filename);
 	}
 
-	return FALSE;
+	return success;
 }
 
 FIBOOL DLL_CALLCONV
 FreeImage_SaveU(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const wchar_t *filename, int flags) {
 	FreeImageIO io;
 	SetDefaultIO(&io);
+	FIBOOL success{FALSE};
 #ifdef _WIN32	
-	FILE *handle = _wfopen(filename, L"w+b");
-	
-	if (handle) {
-		FIBOOL success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
+	if (auto *handle = _wfopen(filename, L"w+b")) {
+		success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
 
 		fclose(handle);
-
-		return success;
 	} else {
 		FreeImage_OutputMessageProc((int)fif, "FreeImage_SaveU: failed to open output file");
 	}
 #endif
-	return FALSE;
+	return success;
 }
 
 // =====================================================================
@@ -489,17 +475,15 @@ FreeImage_RegisterLocalPlugin(FI_InitProc proc_address, const char *format, cons
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_RegisterExternalPlugin(const char *path, const char *format, const char *description, const char *extension, const char *regexpr) {
 	if (path) {
-		HINSTANCE instance = LoadLibrary(path);
 
-		if (instance) {
+		if (auto instance = LoadLibrary(path)) {
 			FARPROC proc_address = GetProcAddress(instance, "_Init@8");
 
-			FREE_IMAGE_FORMAT result = s_plugins->AddNode((FI_InitProc)proc_address, (void *)instance, format, description, extension, regexpr);
+			if (auto result = s_plugins->AddNode((FI_InitProc)proc_address, (void *)instance, format, description, extension, regexpr); FIF_UNKNOWN != result) {
+				return result;
+			}
 
-			if (result == FIF_UNKNOWN)
-				FreeLibrary(instance);
-
-			return result;
+			FreeLibrary(instance);
 		}
 	}
 
@@ -729,7 +713,7 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 						if (FreeImage_stricmp(token, extension) == 0) {
 							free(copy);
 
-								return (FREE_IMAGE_FORMAT)i;
+							return (FREE_IMAGE_FORMAT)i;
 						}
 
 						token = strtok(nullptr, ",");
@@ -738,7 +722,7 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 					// free the copy of the extension list
 
 					free(copy);
-				}	
+				}
 			}
 		}
 	}
