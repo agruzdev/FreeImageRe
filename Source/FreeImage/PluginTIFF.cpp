@@ -218,7 +218,7 @@ _TIFFmalloc(tmsize_t s) {
 void* 
 _TIFFcalloc(tmsize_t nmemb, tmsize_t siz) {
 	if (nmemb == 0 || siz == 0) {
-		return ((void *)NULL);
+		return nullptr;
 	}
 	return calloc((size_t)nmemb, (size_t)siz);
 }
@@ -800,23 +800,22 @@ tiff_read_xmp_profile(TIFF *tiff, FIBITMAP *dib) {
 
 	if (TIFFGetField(tiff, TIFFTAG_XMLPACKET, &profile_size, &profile) == 1) {
 		// create a tag
-		FITAG *tag = FreeImage_CreateTag();
-		if (!tag) return FALSE;
+		if (auto *tag = FreeImage_CreateTag()) {
+			FreeImage_SetTagID(tag, TIFFTAG_XMLPACKET);	// 700
+			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
+			FreeImage_SetTagLength(tag, profile_size);
+			FreeImage_SetTagCount(tag, profile_size);
+			FreeImage_SetTagType(tag, FIDT_ASCII);
+			FreeImage_SetTagValue(tag, profile);
 
-		FreeImage_SetTagID(tag, TIFFTAG_XMLPACKET);	// 700
-		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-		FreeImage_SetTagLength(tag, profile_size);
-		FreeImage_SetTagCount(tag, profile_size);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, profile);
+			// store the tag
+			FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 
-		// store the tag
-		FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
+			// destroy the tag
+			FreeImage_DeleteTag(tag);
 
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
-
-		return TRUE;
+			return TRUE;
+		}
 	}
 
 	return FALSE;
@@ -2310,7 +2309,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			else {
 				// if original image is CMYK but is converted to RGB, remove ICC profile from Exif-TIFF metadata
-				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", NULL);
+				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", nullptr);
 			}
 		}
 

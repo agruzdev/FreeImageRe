@@ -1050,8 +1050,8 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t bmp_signature1[] = { 0x42, 0x4D };
-	uint8_t bmp_signature2[] = { 0x42, 0x41 };
+	const uint8_t bmp_signature1[] = { 0x42, 0x4D };
+	const uint8_t bmp_signature2[] = { 0x42, 0x41 };
 	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(bmp_signature1), handle);

@@ -82,7 +82,7 @@ We use other information from the PCX header to improve the trust we have with t
 */
 static FIBOOL 
 pcx_validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t pcx_signature = 0x0A;
+	const uint8_t pcx_signature = 0x0A;
 	uint8_t signature[4] = { 0, 0, 0, 0 };
 
 	if (io->read_proc(&signature, 1, 4, handle) != 4) {

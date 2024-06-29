@@ -1222,7 +1222,7 @@ tiff_get_ifd_profile(FIBITMAP *dib, FREE_IMAGE_MDMODEL md_model, uint8_t **ppbPr
 
 	try {
 		// open a memory stream
-		hmem = FreeImage_OpenMemory(NULL, 0);
+		hmem = FreeImage_OpenMemory(nullptr, 0);
 		if (!hmem) {
 			throw(1);
 		}

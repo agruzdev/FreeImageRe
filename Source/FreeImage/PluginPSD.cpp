@@ -59,7 +59,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t psd_id[] = { 0x38, 0x42, 0x50, 0x53 };
+	const uint8_t psd_id[] = { 0x38, 0x42, 0x50, 0x53 };
 	uint8_t signature[4] = { 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 4, handle);

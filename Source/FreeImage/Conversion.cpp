@@ -481,7 +481,7 @@ FreeImage_ConvertFromRawBits(uint8_t *bits, int width, int height, int pitch, un
 
 void DLL_CALLCONV
 FreeImage_ConvertToRawBits(uint8_t *bits, FIBITMAP *dib, int pitch, unsigned bpp, unsigned red_mask, unsigned green_mask, unsigned blue_mask, FIBOOL topdown) {
-	if (FreeImage_HasPixels(dib) && (bits != nullptr)) {
+	if (FreeImage_HasPixels(dib) && bits) {
 		for (unsigned i = 0; i < FreeImage_GetHeight(dib); ++i) {
 			uint8_t *scanline = FreeImage_GetScanLine(dib, topdown ? (FreeImage_GetHeight(dib) - i - 1) : i);
 

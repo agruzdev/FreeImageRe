@@ -490,7 +490,7 @@ FreeImage_JPEGTransform(const char *src_file, const char *dst_file, FREE_IMAGE_J
 		return FALSE;
 	}
 	
-	FIBOOL ret = JPEGTransformFromHandle(&io, src, &io, dst, operation, NULL, NULL, NULL, NULL, perfect);
+	FIBOOL ret = JPEGTransformFromHandle(&io, src, &io, dst, operation, nullptr, nullptr, nullptr, nullptr, perfect);
 
 	closeStdIO(src, dst);
 
@@ -524,7 +524,7 @@ FreeImage_JPEGTransformU(const wchar_t *src_file, const wchar_t *dst_file, FREE_
 		return FALSE;
 	}
 	
-	FIBOOL ret = JPEGTransformFromHandle(&io, src, &io, dst, operation, NULL, NULL, NULL, NULL, perfect);
+	FIBOOL ret = JPEGTransformFromHandle(&io, src, &io, dst, operation, nullptr, nullptr, nullptr, nullptr, perfect);
 	
 	closeStdIO(src, dst);
 

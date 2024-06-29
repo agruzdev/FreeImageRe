@@ -206,7 +206,7 @@ FreeImage_WriteMemory(const void *buffer, unsigned size, unsigned count, FIMEMOR
 		FreeImageIO io;
 		SetMemoryIO(&io);
 
-		FIMEMORYHEADER *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)stream)->data);
+		auto *mem_header = (FIMEMORYHEADER*)(((FIMEMORY*)stream)->data);
 
 		if (mem_header->delete_me == TRUE) {
 			return io.write_proc((void *)buffer, size, count, stream);

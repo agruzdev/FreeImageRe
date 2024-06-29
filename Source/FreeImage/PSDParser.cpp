@@ -90,7 +90,7 @@ enum {
 	PSDP_RES_DISPLAY_INFO_FLT		= 1077,
 };
 
-#define SAFE_DELETE_ARRAY(_p_) { if (NULL != (_p_)) { delete [] (_p_); (_p_) = nullptr; } }
+#define SAFE_DELETE_ARRAY(_p_) { if ((_p_)) { delete [] (_p_); (_p_) = nullptr; } }
 
 // --------------------------------------------------------------------------
 
@@ -233,7 +233,7 @@ static FIBOOL
 psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
     // marker identifying string for Exif = "Exif\0\0"
 	// used by JPEG not PSD
-    uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
+	const uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	FITAG *tag_exif{};
 	FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &tag_exif);
@@ -259,8 +259,7 @@ psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_s
 static FIBOOL
 psd_set_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		FreeImage_SetTagID(tag, PSDP_RES_XMP);
 		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 		FreeImage_SetTagLength(tag, (uint32_t)datalen);
@@ -359,7 +358,7 @@ bool psdHeaderInfo::Write(FreeImageIO *io, fi_handle handle) {
 
 // --------------------------------------------------------------------------
 
-psdColourModeData::psdColourModeData() : _Length(-1), _plColourData(NULL) {
+psdColourModeData::psdColourModeData() : _Length(-1), _plColourData{} {
 }
 
 psdColourModeData::~psdColourModeData() {
@@ -712,7 +711,7 @@ bool psdDisplayInfo::Write(FreeImageIO *io, fi_handle handle) {
 // --------------------------------------------------------------------------
 
 psdThumbnail::psdThumbnail() :
-_Format(-1), _Width(-1), _Height(-1), _WidthBytes(-1), _Size(-1), _CompressedSize(-1), _BitPerPixel(-1), _Planes(-1), _dib(NULL), _owned(true) {
+_Format(-1), _Width(-1), _Height(-1), _WidthBytes(-1), _Size(-1), _CompressedSize(-1), _BitPerPixel(-1), _Planes(-1), _dib{}, _owned(true) {
 }
 
 psdThumbnail::~psdThumbnail() {
@@ -901,7 +900,7 @@ bool psdThumbnail::Write(FreeImageIO *io, fi_handle handle, bool isBGR) {
 
 //---------------------------------------------------------------------------
 
-psdICCProfile::psdICCProfile() : _ProfileSize(0), _ProfileData(NULL), _owned(true) {
+psdICCProfile::psdICCProfile() : _ProfileSize(0), _ProfileData{}, _owned(true) {
 }
 
 psdICCProfile::~psdICCProfile() {
@@ -947,7 +946,7 @@ bool psdICCProfile::Write(FreeImageIO *io, fi_handle handle) {
 
 //---------------------------------------------------------------------------
 
-psdData::psdData() : _Size(0), _Data(NULL), _owned(true) {
+psdData::psdData() : _Size(0), _Data{}, _owned(true) {
 }
 
 psdData::~psdData() {
@@ -1623,7 +1622,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			if (mode == PSDP_MULTICHANNEL) {
 				//### we force CMY to be CMYK, but CMY has no ICC.
 				// Create empty profile and add the flag.
-				FreeImage_CreateICCProfile(bitmap, NULL, 0);
+				FreeImage_CreateICCProfile(bitmap, nullptr, 0);
 				FreeImage_GetICCProfile(bitmap)->flags |= FIICC_COLOR_IS_CMYK;
 			}
 		}

@@ -439,8 +439,7 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	value[length] = '\0';
 
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		unsigned int count = (unsigned int)length + 1;	// includes the null value
 
 		FreeImage_SetTagID(tag, JPEG_COM);
@@ -637,8 +636,7 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 		length  -= xmp_signature_size;
 
 		// create a tag
-		FITAG *tag = FreeImage_CreateTag();
-		if (tag) {
+		if (auto *tag = FreeImage_CreateTag()) {
 			FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
 			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 			FreeImage_SetTagLength(tag, (uint32_t)length);
@@ -791,7 +789,7 @@ jpeg_write_comment(j_compress_ptr cinfo, FIBITMAP *dib) {
 static FIBOOL 
 jpeg_write_icc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
     // marker identifying string "ICC_PROFILE" (null-terminated)
-	uint8_t icc_signature[12] = { 0x49, 0x43, 0x43, 0x5F, 0x50, 0x52, 0x4F, 0x46, 0x49, 0x4C, 0x45, 0x00 };
+	const uint8_t icc_signature[12] = { 0x49, 0x43, 0x43, 0x5F, 0x50, 0x52, 0x4F, 0x46, 0x49, 0x4C, 0x45, 0x00 };
 
 	FIICCPROFILE *iccProfile = FreeImage_GetICCProfile(dib);
 
@@ -916,7 +914,7 @@ jpeg_write_xmp_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 static FIBOOL 
 jpeg_write_exif_profile_raw(j_compress_ptr cinfo, FIBITMAP *dib) {
     // marker identifying string for Exif = "Exif\0\0"
-    uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
+    const uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	FITAG *tag_exif{};
 	FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &tag_exif);
@@ -1063,8 +1061,7 @@ static void
 store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 	char buffer[256];
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		size_t length = 0;
 		// set the original width
 		sprintf(buffer, "%d", (int)width);
@@ -1120,7 +1117,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t jpeg_signature[] = { 0xFF, 0xD8 };
+	const uint8_t jpeg_signature[] = { 0xFF, 0xD8 };
 	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(jpeg_signature), handle);
@@ -1327,7 +1324,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				
 				// if original image is CMYK but is converted to RGB, remove ICC profile from Exif-TIFF metadata
-				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", NULL);
+				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", nullptr);
 
 			} else if ((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) == JPEG_CMYK)) {
 				// convert from LibJPEG CMYK to standard CMYK

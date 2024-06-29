@@ -651,47 +651,11 @@ mng_WritePNGStream(uint32_t jng_width, uint32_t jng_height, uint8_t jng_alpha_sa
 	mng_WriteChunk(mng_IDAT, mChunk, mLength, hPngMemory);
 
 	// write a IEND chunk ...
-	mng_WriteChunk(mng_IEND, NULL, 0, hPngMemory);
+	mng_WriteChunk(mng_IEND, nullptr, 0, hPngMemory);
 
 }
 
 // --------------------------------------------------------------------------
-
-/**
-Build and set a FITAG whose type is FIDT_ASCII. 
-The tag must be destroyed by the caller using FreeImage_DeleteTag.
-@param model Metadata model to be filled
-@param dib Image to be filled
-@param key Tag key
-@param value Tag value
-@return Returns TRUE if successful, returns FALSE otherwise
-*/
-static FIBOOL 
-mng_SetKeyValue(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, const char *value) {
-	if (!dib || !key || !value) {
-		return FALSE;
-	}
-	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
-		FIBOOL bSuccess = TRUE;
-		// fill the tag
-		uint32_t tag_length = (uint32_t)(strlen(value) + 1);
-		bSuccess &= FreeImage_SetTagKey(tag, key);
-		bSuccess &= FreeImage_SetTagLength(tag, tag_length);
-		bSuccess &= FreeImage_SetTagCount(tag, tag_length);
-		bSuccess &= FreeImage_SetTagType(tag, FIDT_ASCII);
-		bSuccess &= FreeImage_SetTagValue(tag, value);
-		if (bSuccess) {
-			// set the tag
-			FreeImage_SetMetadata(model, dib, FreeImage_GetTagKey(tag), tag);
-		}
-		FreeImage_DeleteTag(tag);
-		return bSuccess;
-	}
-
-	return FALSE;
-}
 
 /**
 Read a tEXt chunk and extract the key/value pair. 
@@ -1107,9 +1071,9 @@ mng_ReadChunks(int format_id, FreeImageIO *io, fi_handle handle, long Offset, in
 			}
 			if (key_value_pair.size()) {
 				for (tEXtMAP::iterator j = key_value_pair.begin(); j != key_value_pair.end(); j++) {
-					std::string key = (*j).first;
-					std::string value = (*j).second;
-					mng_SetKeyValue(FIMD_COMMENTS, dib, key.c_str(), value.c_str());
+					std::string key = j->first;
+					std::string value = j->second;
+					FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, key.c_str(), value.c_str());
 				}
 			}
 		}
@@ -1290,7 +1254,7 @@ mng_WriteJNG(int format_id, FreeImageIO *io, FIBITMAP *dib, fi_handle handle, in
 		}
 
 		// --- write a IEND chunk ---
-		mng_WriteChunk(mng_IEND, NULL, 0, hJngMemory);
+		mng_WriteChunk(mng_IEND, nullptr, 0, hJngMemory);
 
 		// write the JNG on output stream
 		{

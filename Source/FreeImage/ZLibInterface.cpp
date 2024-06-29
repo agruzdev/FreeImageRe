@@ -102,7 +102,7 @@ which must be at least 0.1% larger than source_size plus 24 bytes.
 uint32_t DLL_CALLCONV 
 FreeImage_ZLibGZip(uint8_t *target, uint32_t target_size, uint8_t *source, uint32_t source_size) {
 	uLongf dest_len = (uLongf)target_size - 12;
-	uint32_t crc = crc32(0L, NULL, 0);
+	uint32_t crc = crc32(0L, nullptr, 0);
 
     // set up header (stolen from zlib/gzio.c)
     sprintf((char *)target, "%c%c%c%c%c%c%c%c", 0x1f, 0x8b,

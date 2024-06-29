@@ -897,7 +897,7 @@ namespace fi
 
         bool HasThumbnail() const
         {
-            return (FreeImage_GetThumbnail(NativeHandle_()) != nullptr);
+            return FreeImage_GetThumbnail(NativeHandle_());
         }
 
         Bitmap GetThumbnail() const

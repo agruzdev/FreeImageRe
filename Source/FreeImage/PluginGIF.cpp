@@ -148,8 +148,7 @@ static FIBOOL
 FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, uint16_t id, FREE_IMAGE_MDTYPE type, uint32_t count, uint32_t length, const void *value)
 {
 	FIBOOL bResult = FALSE;
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		FreeImage_SetTagKey(tag, key);
 		FreeImage_SetTagID(tag, id);
 		FreeImage_SetTagType(tag, type);
