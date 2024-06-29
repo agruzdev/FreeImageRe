@@ -114,7 +114,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t koala_signature[] = { 0x00, 0x60 };
+	const uint8_t koala_signature[] = { 0x00, 0x60 };
 	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(koala_signature), handle);

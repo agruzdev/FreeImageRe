@@ -914,7 +914,7 @@ MimeType() {
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	if (io->seek_proc(handle, 522, SEEK_SET) == 0) {
-		uint8_t pict_signature[] = { 0x00, 0x11, 0x02, 0xFF, 0x0C, 0X00 };
+		const uint8_t pict_signature[] = { 0x00, 0x11, 0x02, 0xFF, 0x0C, 0X00 };
 		uint8_t signature[6];
 
 		if (io->read_proc(signature, 1, sizeof(pict_signature), handle)) {

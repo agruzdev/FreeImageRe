@@ -1515,22 +1515,19 @@ FreeImage_SetMetadataKeyValue(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const cha
 	}
 	// create a tag
 	if (auto *tag = FreeImage_CreateTag()) {
-		FIBOOL bSuccess = TRUE;
 		// fill the tag
-		uint32_t tag_length = (uint32_t)(strlen(value) + 1);
-		bSuccess &= FreeImage_SetTagKey(tag, key);
-		bSuccess &= FreeImage_SetTagLength(tag, tag_length);
-		bSuccess &= FreeImage_SetTagCount(tag, tag_length);
-		bSuccess &= FreeImage_SetTagType(tag, FIDT_ASCII);
-		bSuccess &= FreeImage_SetTagValue(tag, value);
-		if (bSuccess) {
-			// set the tag
-			bSuccess &= FreeImage_SetMetadata(model, dib, FreeImage_GetTagKey(tag), tag);
-		}
+		auto tag_length = (uint32_t)(strlen(value) + 1);
+		bool bSuccess = FreeImage_SetTagKey(tag, key);
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag, tag_length);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag, tag_length);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag, value);
+		// set the tag
+		bSuccess = bSuccess && FreeImage_SetMetadata(model, dib, FreeImage_GetTagKey(tag), tag);
 		// delete the tag
 		FreeImage_DeleteTag(tag);
 
-		return bSuccess;
+		return bSuccess ? TRUE : FALSE;
 	}
 
 	return FALSE;

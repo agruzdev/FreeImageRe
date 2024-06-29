@@ -233,7 +233,7 @@ static FIBOOL
 psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_size) {
     // marker identifying string for Exif = "Exif\0\0"
 	// used by JPEG not PSD
-    uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
+	const uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	FITAG *tag_exif{};
 	FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &tag_exif);

@@ -155,12 +155,12 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t pbm_id1[] = { 0x50, 0x31 };
-	uint8_t pbm_id2[] = { 0x50, 0x34 };
-	uint8_t pgm_id1[] = { 0x50, 0x32 };
-	uint8_t pgm_id2[] = { 0x50, 0x35 };
-	uint8_t ppm_id1[] = { 0x50, 0x33 };
-	uint8_t ppm_id2[] = { 0x50, 0x36 };
+	const uint8_t pbm_id1[] = { 0x50, 0x31 };
+	const uint8_t pbm_id2[] = { 0x50, 0x34 };
+	const uint8_t pgm_id1[] = { 0x50, 0x32 };
+	const uint8_t pgm_id2[] = { 0x50, 0x35 };
+	const uint8_t ppm_id1[] = { 0x50, 0x33 };
+	const uint8_t ppm_id2[] = { 0x50, 0x36 };
 	uint8_t signature[2] = { 0, 0 };
 
 	io->read_proc(signature, 1, sizeof(pbm_id1), handle);

@@ -116,7 +116,7 @@ Vista icon support
 */
 static FIBOOL
 IsPNG(FreeImageIO *io, fi_handle handle) {
-	uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+	const uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 	uint8_t signature[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	long tell = io->tell_proc(handle);

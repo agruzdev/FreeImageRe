@@ -124,8 +124,8 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t riff_signature[4] = { 0x52, 0x49, 0x46, 0x46 };
-	uint8_t webp_signature[4] = { 0x57, 0x45, 0x42, 0x50 };
+	const uint8_t riff_signature[4] = { 0x52, 0x49, 0x46, 0x46 };
+	const uint8_t webp_signature[4] = { 0x57, 0x45, 0x42, 0x50 };
 	uint8_t signature[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 12, handle);

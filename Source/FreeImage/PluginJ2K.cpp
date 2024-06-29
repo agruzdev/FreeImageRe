@@ -78,7 +78,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t jpc_signature[] = { 0xFF, 0x4F };
+	const uint8_t jpc_signature[] = { 0xFF, 0x4F };
 	uint8_t signature[2] = { 0, 0 };
 
 	long tell = io->tell_proc(handle);

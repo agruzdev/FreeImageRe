@@ -271,7 +271,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+	const uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 	uint8_t signature[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	io->read_proc(&signature, 1, 8, handle);
