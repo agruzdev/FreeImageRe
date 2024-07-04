@@ -447,14 +447,13 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 
 	// get the tag key
 	const TagLib& s = TagLib::instance();
-	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
+	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, nullptr);
 	if (!key) {
 		return FALSE;
 	}
 
 	// create a tag
-	FITAG *tag = FreeImage_CreateTag();
-	if (tag) {
+	if (auto *tag = FreeImage_CreateTag()) {
 		// set tag ID
 		FreeImage_SetTagID(tag, tag_id);
 		// set tag type, count, length and value
@@ -565,8 +564,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
-			FITAG *tag = FreeImage_CreateTag();
-			if (tag) {
+			if (auto *tag = FreeImage_CreateTag()) {
 				FreeImage_SetTagLength(tag, cbByteCount);
 				FreeImage_SetTagCount(tag, cbByteCount);
 				FreeImage_SetTagType(tag, FIDT_ASCII);
@@ -649,7 +647,7 @@ WritePropVariant(FIBITMAP *dib, uint16_t tag_id, DPKPROPVARIANT & varDst) {
 	varDst.vt = DPKVT_EMPTY;
 
 	// given the tag id, get the tag key
-	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, NULL);
+	const char *key = s.getTagFieldName(TagLib::EXIF_MAIN, tag_id, nullptr);
 	// then, get the tag info
 	if (!FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, key, &tag)) {
 		return FALSE;
@@ -899,7 +897,7 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t jxr_signature[3] = { 0x49, 0x49, 0xBC };
+	const uint8_t jxr_signature[3] = { 0x49, 0x49, 0xBC };
 	uint8_t signature[3] = { 0, 0, 0 };
 
 	io->read_proc(&signature, 1, 3, handle);
@@ -1040,7 +1038,7 @@ CopyPixels(PKImageDecode *pDecoder, PKPixelFormatGUID out_guid_format, FIBITMAP 
 			JXR_CHECK(error_code);
 			
 			// set the conversion function
-			error_code = pConverter->Initialize(pConverter, pDecoder, NULL, out_guid_format);
+			error_code = pConverter->Initialize(pConverter, pDecoder, nullptr, out_guid_format);
 			JXR_CHECK(error_code);
 			
 			// get the maximum stride

@@ -254,7 +254,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 	const TagLib& tagLib = TagLib::instance();
 
 	// get the tag key - use NULL to avoid reading GeoTIFF tags
-	const char *key = tagLib.getTagFieldName(md_model, (uint16_t)tag_id, NULL);
+	const char *key = tagLib.getTagFieldName(md_model, (uint16_t)tag_id, nullptr);
 	if (!key) {
 		return TRUE;
 	}

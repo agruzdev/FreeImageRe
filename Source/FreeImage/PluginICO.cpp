@@ -116,7 +116,7 @@ Vista icon support
 */
 static FIBOOL
 IsPNG(FreeImageIO *io, fi_handle handle) {
-	uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+	const uint8_t png_signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 	uint8_t signature[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	long tell = io->tell_proc(handle);
@@ -458,10 +458,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 static FIBOOL 
 SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
-	FIBITMAPINFOHEADER *bmih{};
-
 	// write the BITMAPINFOHEADER
-	bmih = FreeImage_GetInfoHeader(dib);
+	auto *bmih = FreeImage_GetInfoHeader(dib);
 	bmih->biHeight *= 2;	// height == xor + and mask
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapInfoHeader(bmih);
@@ -723,7 +721,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// convert internal format to ICONDIRENTRY
 			// take into account Vista icons whose size is 256x256
-			const FIBITMAPINFOHEADER *bmih = FreeImage_GetInfoHeader(icon_dib);
+			const auto *bmih = FreeImage_GetInfoHeader(icon_dib);
 			icon_list[k].bWidth			= (bmih->biWidth > 255)  ? 0 : (uint8_t)bmih->biWidth;
 			icon_list[k].bHeight		= (bmih->biHeight > 255) ? 0 : (uint8_t)bmih->biHeight;
 			icon_list[k].bReserved		= 0;

@@ -174,7 +174,7 @@ FreeImage_MakeThumbnail(FIBITMAP *dib, int max_pixel_size, FIBOOL convert) {
 				break;
 			case FIT_RGBAF:
 				// no way to keep the transparency yet ...
-				FIBITMAP *rgbf = FreeImage_ConvertToRGBF(thumbnail);
+				auto *rgbf = FreeImage_ConvertToRGBF(thumbnail);
 				bitmap = FreeImage_ToneMapping(rgbf, FITMO_DRAGO03);
 				FreeImage_Unload(rgbf);
 				break;

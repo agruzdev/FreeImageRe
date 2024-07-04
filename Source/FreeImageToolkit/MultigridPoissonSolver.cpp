@@ -315,9 +315,9 @@ static FIBOOL fmg_mglin(FIBITMAP *U, int n, int ncycle) {
 	memset(array, 0, array_size * sizeof(FIBITMAP*))
 
 #define _FREE_ARRAY_GRID_(array, array_size) \
-	if (NULL != array) {\
+	if (array) {\
 		for (int k = 0; k < array_size; k++) {\
-			if (NULL != array[k]) {\
+			if (array[k]) {\
 				FreeImage_Unload(array[k]); array[k] = nullptr;\
 			}\
 		}\

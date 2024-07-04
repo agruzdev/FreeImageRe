@@ -89,7 +89,7 @@ reference (and so one can make use of picture->custom_ptr).
 */
 static int 
 WebP_MemoryWriter(const uint8_t *data, size_t data_size, const WebPPicture* const picture) {
-	FIMEMORY *hmem = (FIMEMORY*)picture->custom_ptr;
+	auto *hmem = (FIMEMORY*)picture->custom_ptr;
 	return data_size ? (FreeImage_WriteMemory(data, 1, (unsigned)data_size, hmem) == data_size) : 0;
 }
 
@@ -124,8 +124,8 @@ MimeType() {
 
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
-	uint8_t riff_signature[4] = { 0x52, 0x49, 0x46, 0x46 };
-	uint8_t webp_signature[4] = { 0x57, 0x45, 0x42, 0x50 };
+	const uint8_t riff_signature[4] = { 0x52, 0x49, 0x46, 0x46 };
+	const uint8_t webp_signature[4] = { 0x57, 0x45, 0x42, 0x50 };
 	uint8_t signature[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	io->read_proc(signature, 1, 12, handle);
@@ -382,8 +382,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				error_status = WebPMuxGetChunk(mux, "XMP ", &xmp_metadata);
 				if (error_status == WEBP_MUX_OK) {
 					// create a tag
-					FITAG *tag = FreeImage_CreateTag();
-					if (tag) {
+					if (auto *tag = FreeImage_CreateTag()) {
 						FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 						FreeImage_SetTagLength(tag, (uint32_t)xmp_metadata.size);
 						FreeImage_SetTagCount(tag, (uint32_t)xmp_metadata.size);
