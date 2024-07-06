@@ -4,9 +4,33 @@ file(GLOB freeimage_sources FreeImage/*.cpp FreeImage/*.h)
 file(GLOB freeimage_toolkit_sources FreeImageToolkit/*.cpp FreeImageToolkit/*.h)
 file(GLOB metadata_sources Metadata/*.cpp Metadata/*.h)
 file(GLOB freeimage_headers ./*.h ./*.hpp)
-list(APPEND freeimage_all_sources ${freeimage_sources} ${freeimage_toolkit_sources} ${metadata_sources} ${freeimage_headers})
+set(freeimage_plugins
+    Plugins/PluginBMP.cpp
+    Plugins/PluginCUT.cpp
+    Plugins/PluginDDS.cpp
+    Plugins/PluginGIF.cpp
+    Plugins/PluginHDR.cpp
+    Plugins/PluginICO.cpp
+    Plugins/PluginIFF.cpp
+    Plugins/PluginJNG.cpp
+    Plugins/PluginKOALA.cpp
+    Plugins/PluginMNG.cpp
+    Plugins/PluginPCD.cpp
+    Plugins/PluginPCX.cpp
+    Plugins/PluginPFM.cpp
+    Plugins/PluginPICT.cpp
+    Plugins/PluginPNM.cpp
+    Plugins/PluginPSD.cpp
+    Plugins/PluginRAS.cpp
+    Plugins/PluginSGI.cpp
+    Plugins/PluginTARGA.cpp
+    Plugins/PluginWBMP.cpp
+    Plugins/PluginXBM.cpp
+    Plugins/PluginXPM.cpp
+    Plugins/PSDParser.cpp
+    Plugins/PSDParser.h
+)
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${freeimage_all_sources})
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -26,7 +50,7 @@ if(WIN32)
     endif()
 endif()
 
-add_library(FreeImage SHARED ${freeimage_all_sources})
+add_library(FreeImage SHARED)
 
 target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_COLORORDER=1")
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
@@ -36,17 +60,61 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_link_libraries(FreeImage PRIVATE LibPybind)
 endif()
 
-target_link_libraries(FreeImage PRIVATE
-    LibZLIB
-    LibJPEG
-    LibOpenEXR
-    LibOpenJPEG
-    LibPNG
-    LibTIFF
-    LibWEBP
-    LibRAW
-    LibJXR
-)
+target_link_libraries(FreeImage PRIVATE LibZLIB)
+
+if (FREEIMAGE_WITH_LIBOPENEXR)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBOPENEXR=1")
+    target_link_libraries(FreeImage PRIVATE LibOpenEXR)
+    list(APPEND freeimage_plugins Plugins/PluginEXR.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBJPEG)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJPEG=1")
+    target_link_libraries(FreeImage PRIVATE LibJPEG)
+    list(APPEND freeimage_plugins Plugins/PluginJPEG.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBOPENJPEG)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBOPENJPEG=1")
+    target_link_libraries(FreeImage PRIVATE LibOpenJPEG)
+    list(APPEND freeimage_plugins Plugins/PluginJ2K.cpp Plugins/PluginJP2.cpp Plugins/J2KHelper.cpp Plugins/J2KHelper.h)
+endif()
+
+if (FREEIMAGE_WITH_LIBPNG)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBPNG=1")
+    target_link_libraries(FreeImage PRIVATE LibPNG)
+    list(APPEND freeimage_plugins Plugins/PluginPNG.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBTIFF)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBTIFF=1")
+    target_link_libraries(FreeImage PRIVATE LibTIFF)
+    list(APPEND freeimage_plugins Plugins/PluginTIFF.cpp Plugins/PluginG3.cpp Plugins/TIFFLogLuv.cpp Plugins/XTIFF.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBWEBP)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBWEBP=1")
+    target_link_libraries(FreeImage PRIVATE LibWEBP)
+    list(APPEND freeimage_plugins Plugins/PluginWebP.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBRAW)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBRAW=1")
+    target_link_libraries(FreeImage PRIVATE LibRAW)
+    list(APPEND freeimage_plugins Plugins/PluginRAW.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBJXR)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJXR=1")
+    target_link_libraries(FreeImage PRIVATE LibJXR)
+    list(APPEND freeimage_plugins Plugins/PluginJXR.cpp)
+endif()
+
+
+list(APPEND freeimage_all_sources ${freeimage_sources} ${freeimage_toolkit_sources} ${metadata_sources} ${freeimage_headers} ${freeimage_plugins})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${freeimage_all_sources})
+target_sources(FreeImage PRIVATE ${freeimage_all_sources})
+
 
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     if (WIN32)

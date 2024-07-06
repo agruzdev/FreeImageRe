@@ -84,16 +84,14 @@ FreeImage_stricmp(const char *s1, const char *s2) {
 //  Implementation of PluginList
 // =====================================================================
 
-PluginList::PluginList() 
-	: m_plugin_map()
-	, m_node_count(0) 
-{ }
+PluginList::PluginList() = default;
+
 
 FREE_IMAGE_FORMAT
 PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, const char *description, const char *extension, const char *regexpr) {
 	if (init_proc) {
 		try {
-			const int curr_id = static_cast<int>(m_plugin_map.size());
+			const int curr_id = static_cast<int>(m_plugins.size());
 
 			auto node = std::make_unique<PluginNode>();
 			node->m_plugin = std::make_unique<Plugin>();
@@ -121,7 +119,7 @@ PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, c
 				node->m_regexpr = regexpr;
 				node->m_enabled = true;
 
-				m_plugin_map.emplace(curr_id, std::move(node));
+				m_plugins.emplace_back(std::move(node));
 				return static_cast<FREE_IMAGE_FORMAT>(curr_id);
 			}
 		}
@@ -130,14 +128,35 @@ PluginList::AddNode(FI_InitProc init_proc, void *instance, const char *format, c
 	return FIF_UNKNOWN;
 }
 
+void
+PluginList::SkipNode(size_t count) {
+	for (size_t i = 0; i < count; ++i) {
+		m_plugins.emplace_back(nullptr);
+	}
+}
+
 PluginNode *
 PluginList::FindNodeFromFormat(const char *format) {
-	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
-		const char *the_format = (i->second->m_format) ? i->second->m_format : i->second->m_plugin->format_proc();
+	if (!format) {
+		return nullptr;
+	}
 
-		if (i->second->m_enabled) {
+	for (auto& node : m_plugins) {
+		if (!node) {
+			continue;
+		}
+
+		const char* the_format = node->m_format;
+		if (!the_format) {
+			if (!node->m_plugin->format_proc) {
+				continue;
+			}
+			the_format = node->m_plugin->format_proc();
+		}
+
+		if (node->m_enabled) {
 			if (FreeImage_stricmp(the_format, format) == 0) {
-				return i->second.get();
+				return node.get();
 			}
 		}
 	}
@@ -147,12 +166,19 @@ PluginList::FindNodeFromFormat(const char *format) {
 
 PluginNode *
 PluginList::FindNodeFromMime(const char *mime) {
-	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
-		const char *the_mime = (i->second->m_plugin->mime_proc) ? i->second->m_plugin->mime_proc() : "";
+	if (!mime) {
+		return nullptr;
+	}
 
-		if (i->second->m_enabled) {
-			if (the_mime && (strcmp(the_mime, mime) == 0)) {
-				return i->second.get();
+	for (auto& node : m_plugins) {
+		if (!node) {
+			continue;
+		}
+		const char *the_mime = (node->m_plugin->mime_proc) ? node->m_plugin->mime_proc() : "";
+
+		if (node->m_enabled) {
+			if (strcmp(the_mime, mime) == 0) {
+				return node.get();
 			}
 		}
 	}
@@ -162,8 +188,13 @@ PluginList::FindNodeFromMime(const char *mime) {
 
 PluginNode *
 PluginList::FindNodeFromFIF(int node_id) {
-	if (const auto i{ m_plugin_map.find(node_id) }; i != m_plugin_map.end()) {
-		return i->second.get();
+	if (node_id < 0 || node_id >= m_plugins.size()) {
+		return nullptr;
+	}
+
+	auto& node = m_plugins[node_id];
+	if (node && node->m_enabled) {
+		return node.get();
 	}
 
 	return nullptr;
@@ -171,19 +202,19 @@ PluginList::FindNodeFromFIF(int node_id) {
 
 int
 PluginList::Size() const {
-	return static_cast<int>(m_plugin_map.size());
+	return static_cast<int>(m_plugins.size());
 }
 
 bool
 PluginList::IsEmpty() const {
-	return m_plugin_map.empty();
+	return m_plugins.empty();
 }
 
 PluginList::~PluginList() {
 #ifdef _WIN32
-	for (auto i = m_plugin_map.begin(); i != m_plugin_map.end(); ++i) {
-		if (i->second->m_instance) {
-			FreeLibrary((HINSTANCE)i->second->m_instance);
+	for (auto& node : m_plugins) {
+		if (node && node->m_instance) {
+			FreeLibrary((HINSTANCE)node->m_instance);
 		}
 	}
 #endif
@@ -225,7 +256,11 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 			*/
 			s_plugins->AddNode(InitBMP);
 			s_plugins->AddNode(InitICO);
+#if FREEIMAGE_WITH_LIBJPEG
 			s_plugins->AddNode(InitJPEG);
+#else
+			s_plugins->SkipNode();
+#endif
 			s_plugins->AddNode(InitJNG);
 			s_plugins->AddNode(InitKOALA);
 			s_plugins->AddNode(InitIFF);
@@ -236,12 +271,20 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 			s_plugins->AddNode(InitPCX);
 			s_plugins->AddNode(InitPNM, nullptr, "PGM", "Portable Greymap (ASCII)", "pgm", "^P2");
 			s_plugins->AddNode(InitPNM, nullptr, "PGMRAW", "Portable Greymap (RAW)", "pgm", "^P5");
+#if FREEIMAGE_WITH_LIBPNG
 			s_plugins->AddNode(InitPNG);
+#else
+			s_plugins->SkipNode();
+#endif
 			s_plugins->AddNode(InitPNM, nullptr, "PPM", "Portable Pixelmap (ASCII)", "ppm", "^P3");
 			s_plugins->AddNode(InitPNM, nullptr, "PPMRAW", "Portable Pixelmap (RAW)", "ppm", "^P6");
 			s_plugins->AddNode(InitRAS);
 			s_plugins->AddNode(InitTARGA);
+#if FREEIMAGE_WITH_LIBTIFF
 			s_plugins->AddNode(InitTIFF);
+#else
+			s_plugins->SkipNode();
+#endif
 			s_plugins->AddNode(InitWBMP);
 			s_plugins->AddNode(InitPSD);
 			s_plugins->AddNode(InitCUT);
@@ -250,16 +293,40 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 			s_plugins->AddNode(InitDDS);
 	        s_plugins->AddNode(InitGIF);
 	        s_plugins->AddNode(InitHDR);
+#if FREEIMAGE_WITH_LIBTIFF
 			s_plugins->AddNode(InitG3);
+#else
+			s_plugins->SkipNode();
+#endif
 			s_plugins->AddNode(InitSGI);
+#if FREEIMAGE_WITH_LIBEXR
 			s_plugins->AddNode(InitEXR);
+#else
+			s_plugins->SkipNode();
+#endif
+#if FREEIMAGE_WITH_LIBOPENJPEG
 			s_plugins->AddNode(InitJ2K);
 			s_plugins->AddNode(InitJP2);
+#else
+			s_plugins->SkipNode(2);
+#endif
 			s_plugins->AddNode(InitPFM);
 			s_plugins->AddNode(InitPICT);
+#if FREEIMAGE_WITH_LIBRAW
 			s_plugins->AddNode(InitRAW);
+#else
+			s_plugins->SkipNode();
+#endif
+#if FREEIMAGE_WITH_LIBWEBP
 			s_plugins->AddNode(InitWEBP);
+#else
+			s_plugins->SkipNode();
+#endif
+#if FREEIMAGE_WITH_LIBJXR
 			s_plugins->AddNode(InitJXR);
+#else
+			s_plugins->SkipNode();
+#endif
 			// external plugin initialization
 #ifdef _WIN32
 			if (!load_local_plugins_only) {
@@ -503,9 +570,7 @@ FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 
 		if (auto *node = s_plugins->FindNodeFromFIF(fif)) {
 			FIBOOL previous_state = node->m_enabled;
-
 			node->m_enabled = enable;
-
 			return previous_state;
 		}
 	}
@@ -517,7 +582,6 @@ int DLL_CALLCONV
 FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif) {
 	if (s_plugins) {
 		auto *node = s_plugins->FindNodeFromFIF(fif);
-
 		return node ? node->m_enabled : FALSE;
 	}
 	
@@ -698,7 +762,8 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 
 		for (int i = 0; i < FreeImage_GetFIFCount(); ++i) {
 
-			if (s_plugins->FindNodeFromFIF(i)->m_enabled) {
+			auto* node = s_plugins->FindNodeFromFIF(i);
+			if (node && node->m_enabled) {
 
 				// compare the format id with the extension
 

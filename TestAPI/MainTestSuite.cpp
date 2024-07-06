@@ -66,37 +66,16 @@ int main(int argc, char *argv[]) {
 	// test plugins capabilities
 	showPlugins();
 
-	// test the clone function
-	testAllocateCloneUnload("exif.jpg");
-
 	// test internal image types
 	testImageType(width, height);
 
-	// test loading / saving / converting image types using the TIFF plugin
-	testImageTypeTIFF(width, height);
-
-	// test memory IO
-	testMemIO("sample.png");
-	testMemIO("exif.jxr");
-
-	// test multipage functions
-	testMultiPage("sample.png");
-
-	// test multipage streaming
-	testStreamMultiPage("sample.tif");
-	
-	// test multipage streaming with memory IO
-	testMultiPageMemory("sample.tif");
+#if FREEIMAGE_WITH_LIBJPEG
+	// test the clone function
+	testAllocateCloneUnload("exif.jpg");
 
 	// test JPEG lossless transform & cropping
 	testJPEG();
 
-	// test get/set channel
-	testImageChannels(width, height);
-
-	// test loading header only
-	testHeaderOnly();
-	
 	// test Exif raw metadata loading & saving
 	testExifRaw();
 
@@ -108,6 +87,40 @@ int main(int argc, char *argv[]) {
 
 	// test views
 	testCreateView("exif.jpg", 0);
+#endif
+
+#if FREEIMAGE_WITH_LIBTIFF
+	// test loading / saving / converting image types using the TIFF plugin
+	testImageTypeTIFF(width, height);
+
+	// test multipage streaming
+	testStreamMultiPage("sample.tif");
+
+	// test multipage streaming with memory IO
+	testMultiPageMemory("sample.tif");
+#endif
+
+#if FREEIMAGE_WITH_LIBPNG
+	// test memory IO
+	testMemIO("sample.png");
+
+	// test multipage functions
+	testMultiPage("sample.png");
+
+	// test get/set channel
+	testImageChannels(width, height);
+#endif
+
+#if FREEIMAGE_WITH_LIBJXR
+	// test memory IO
+	testMemIO("exif.jxr");
+#endif
+
+#if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG
+	// test loading header only
+	testHeaderOnly();
+#endif
+	
 
 #if defined(FREEIMAGE_LIB) || !defined(WIN32)
 	FreeImage_DeInitialise();

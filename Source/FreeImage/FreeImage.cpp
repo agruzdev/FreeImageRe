@@ -149,14 +149,30 @@ namespace {
 	private:
 		DependenciesTable() {
 			mEntries.emplace_back(MakeZLibDependencyInfo());
+#if FREEIMAGE_WITH_LIBPNG
 			mEntries.emplace_back(MakePngDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBJPEG
 			mEntries.emplace_back(MakeJpegDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBOPENJPEG
 			mEntries.emplace_back(MakeJpeg2kDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBEXR
 			mEntries.emplace_back(MakeExrDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBTIFF
 			mEntries.emplace_back(MakeTiffDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBRAW
 			mEntries.emplace_back(MakeRawDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBWEBP
 			mEntries.emplace_back(MakeWebpDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBJXR
 			mEntries.emplace_back(MakeJxrDependencyInfo());
+#endif
 		}
 
 		std::vector<FIDEPENDENCY> mEntries;

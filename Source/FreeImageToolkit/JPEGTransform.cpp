@@ -21,6 +21,8 @@
 // Use at your own risk!
 // ==========================================================
 
+#if FREEIMAGE_WITH_LIBJPEG
+
 extern "C" {
 #define XMD_H
 #undef FAR
@@ -32,9 +34,13 @@ extern "C" {
 #include "transupp.h"
 }
 
+#endif // FREEIMAGE_WITH_LIBJPEG
+
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "FreeImageIO.h"
+
+#if FREEIMAGE_WITH_LIBJPEG
 
 // ----------------------------------------------------------
 //   Source manager & Destination manager setup
@@ -361,6 +367,15 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 
 	return TRUE;
 }
+
+#else // FREEIMAGE_WITH_LIBJPEG
+
+static FIBOOL
+JPEGTransformFromHandle(FreeImageIO*, fi_handle, FreeImageIO*, fi_handle, FREE_IMAGE_JPEG_OPERATION, int*, int*, int*, int*, FIBOOL) {
+	return FALSE;
+}
+
+#endif // FREEIMAGE_WITH_LIBJPEG
 
 // ----------------------------------------------------------
 //   FreeImage interface

@@ -68,6 +68,7 @@ public :
 	~PluginList();
 
 	FREE_IMAGE_FORMAT AddNode(FI_InitProc proc, void *instance = nullptr, const char *format = 0, const char *description = 0, const char *extension = 0, const char *regexpr = 0);
+	void SkipNode(size_t count = 1U);
 	PluginNode *FindNodeFromFormat(const char *format);
 	PluginNode *FindNodeFromMime(const char *mime);
 	PluginNode *FindNodeFromFIF(int node_id);
@@ -76,8 +77,7 @@ public :
 	bool IsEmpty() const;
 
 private :
-	std::map<size_t, std::unique_ptr<PluginNode>> m_plugin_map;
-	int m_node_count;
+	std::vector<std::unique_ptr<PluginNode>> m_plugins{ };
 };
 
 // ==========================================================

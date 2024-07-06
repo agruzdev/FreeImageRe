@@ -26,13 +26,41 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # External dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.tiff.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.webp.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.raw.cmake)
+
+option(FREEIMAGE_WITH_LIBJPEG "Compile with the LibJPEG backend" ON)
+if (FREEIMAGE_WITH_LIBJPEG)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBOPENJPEG "Compile with the LibOpenJPEG backend" ON)
+if (FREEIMAGE_WITH_LIBOPENJPEG)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBOPENEXR "Compile with the LibOpenEXR backend" ON)
+if (FREEIMAGE_WITH_LIBOPENEXR)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.openexr.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBPNG "Compile with the LibPNG backend" ON)
+if (FREEIMAGE_WITH_LIBPNG)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.png.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBTIFF "Compile with the LibTIFF backend" ON)
+if (FREEIMAGE_WITH_LIBTIFF)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.tiff.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBWEBP "Compile with the LibWEBP backend" ON)
+if (FREEIMAGE_WITH_LIBWEBP)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.webp.cmake)
+endif()
+
+option(FREEIMAGE_WITH_LIBRAW "Compile with the LibRAW backend" ON)
+if (FREEIMAGE_WITH_LIBRAW)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.raw.cmake)
+endif()
 
 option(FREEIMAGE_WITH_PYTHON_BINDINGS "Build pythin bindings" OFF)
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
@@ -41,8 +69,10 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
 endif()
 
 # Internal dependencies
-add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
-
+option(FREEIMAGE_WITH_LIBJXR "Compile with the LibJXR backend" ON)
+if (FREEIMAGE_WITH_LIBJXR)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
+endif()
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/Source)
 

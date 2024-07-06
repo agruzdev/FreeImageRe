@@ -131,9 +131,10 @@ void testThumbnail(const char *lpszPathName, int flags) {
 	bResult = testLoadThumbnail(lpszPathName, flags);
 	assert(bResult);
 
+#if FREEIMAGE_WITH_LIBTIFF
 	// Thumbnail saving
 	bResult = testSaveThumbnail(lpszPathName, flags);
 	assert(bResult);
-
+#endif
 }
 
