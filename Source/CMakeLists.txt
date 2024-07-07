@@ -114,18 +114,16 @@ endif()
 list(APPEND freeimage_all_sources ${freeimage_sources} ${freeimage_toolkit_sources} ${metadata_sources} ${freeimage_headers} ${freeimage_plugins})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${freeimage_all_sources})
 target_sources(FreeImage PRIVATE ${freeimage_all_sources})
+set_target_properties(FreeImage PROPERTIES PUBLIC_HEADER "FreeImage.h;FreeImage.hpp")
 
-
+message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
+install(TARGETS FreeImage)
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     if (WIN32)
-        add_custom_command(TARGET FreeImage POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E create_hardlink ".\\$<TARGET_FILE_NAME:FreeImage>" "FreeImage.pyd"
-            WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
-        )
+        install(CODE "message(STATUS \"Make a hardlink for Python: FreeImage.pyd\")")
+        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_hardlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.pyd WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/bin\" COMMAND_ERROR_IS_FATAL ANY)")
     else()
-        add_custom_command(TARGET FreeImage POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E create_symlink "./$<TARGET_FILE_NAME:FreeImage>" "FreeImage.so"
-            WORKING_DIRECTORY $<TARGET_FILE_DIR:FreeImage>
-        )
+        install(CODE "message(STATUS \"Make a symlink for Python: FreeImage.so\")")
+        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.so WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/lib\" COMMAND_ERROR_IS_FATAL ANY)")
     endif()
 endif()
