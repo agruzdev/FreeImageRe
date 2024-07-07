@@ -57,7 +57,7 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")
     target_link_directories(FreeImage PRIVATE ${Python3_LIBRARY_DIRS})
-    target_link_libraries(FreeImage PRIVATE LibPybind)
+    target_link_libraries(FreeImage PRIVATE LibPybind ${Python3_LIBRARIES})
 endif()
 
 target_link_libraries(FreeImage PRIVATE LibZLIB)
