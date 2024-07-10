@@ -259,22 +259,23 @@ psd_write_exif_profile_raw(FIBITMAP *dib, uint8_t **profile, unsigned *profile_s
 static FIBOOL
 psd_set_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	// create a tag
+	bool bSuccess{};
 	if (auto *tag = FreeImage_CreateTag()) {
-		FreeImage_SetTagID(tag, PSDP_RES_XMP);
-		FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-		FreeImage_SetTagLength(tag, (uint32_t)datalen);
-		FreeImage_SetTagCount(tag, (uint32_t)datalen);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, dataptr);
+		bSuccess = FreeImage_SetTagID(tag, PSDP_RES_XMP);
+		bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag, (uint32_t)datalen);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag, (uint32_t)datalen);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag, dataptr);
 
 		// store the tag
-		FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 
 		// destroy the tag
 		FreeImage_DeleteTag(tag);
 	}
 
-	return TRUE;
+	return bSuccess ? TRUE : FALSE;
 }
 
 /**

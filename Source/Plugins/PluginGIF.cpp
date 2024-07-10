@@ -147,25 +147,25 @@ static int g_GifInterlaceIncrement[GIF_INTERLACE_PASSES] = {8, 8, 4, 2};
 static FIBOOL 
 FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, uint16_t id, FREE_IMAGE_MDTYPE type, uint32_t count, uint32_t length, const void *value)
 {
-	FIBOOL bResult = FALSE;
+	bool bSuccess{};
 	if (auto *tag = FreeImage_CreateTag()) {
-		FreeImage_SetTagKey(tag, key);
-		FreeImage_SetTagID(tag, id);
-		FreeImage_SetTagType(tag, type);
-		FreeImage_SetTagCount(tag, count);
-		FreeImage_SetTagLength(tag, length);
-		FreeImage_SetTagValue(tag, value);
+		bSuccess = FreeImage_SetTagKey(tag, key);
+		bSuccess = bSuccess && FreeImage_SetTagID(tag, id);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag, type);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag, count);
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag, length);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag, value);
 		if (model == FIMD_ANIMATION) {
 			const TagLib& s = TagLib::instance();
 			// get the tag description
 			const char *description = s.getTagDescription(TagLib::ANIMATION, id);
-			FreeImage_SetTagDescription(tag, description);
+			bSuccess = bSuccess && FreeImage_SetTagDescription(tag, description);
 		}
 		// store the tag
-		bResult = FreeImage_SetMetadata(model, dib, key, tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(model, dib, key, tag);
 		FreeImage_DeleteTag(tag);
 	}
-	return bResult;
+	return bSuccess ? TRUE : FALSE;
 }
 
 static FIBOOL 
