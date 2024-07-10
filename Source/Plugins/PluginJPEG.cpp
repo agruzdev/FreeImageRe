@@ -628,8 +628,8 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 		return FALSE;
 	}
 
+	bool bSuccess{};
 	// verify the identifying string
-
 	if (memcmp(xmp_signature, profile, strlen(xmp_signature)) == 0) {
 		// XMP profile
 
@@ -638,7 +638,7 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 
 		// create a tag
 		if (auto *tag = FreeImage_CreateTag()) {
-			bool bSuccess = FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
+			bSuccess = FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
 			bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 			bSuccess = bSuccess && FreeImage_SetTagLength(tag, (uint32_t)length);
 			bSuccess = bSuccess && FreeImage_SetTagCount(tag, (uint32_t)length);
@@ -650,11 +650,10 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 
 			// destroy the tag
 			FreeImage_DeleteTag(tag);
-			return bSuccess ? TRUE : FALSE;
 		}
 	}
 
-	return FALSE;
+	return bSuccess ? TRUE : FALSE;
 }
 
 /**
