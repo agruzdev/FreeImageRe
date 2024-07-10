@@ -1854,13 +1854,12 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 			// later use this array as uint16_t rleLineSizeList[nChannels][nHeight];
 			// Every 127 bytes needs a length byte.
 			uint8_t* rle_line_start = new uint8_t[lineSize + ((nWidth + 126) / 127)]; //< RLE buffer
-			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight];
+			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight]();
 
 			if (!rleLineSizeList) {
 				SAFE_DELETE_ARRAY(line_start);
 				throw std::bad_alloc();
 			}
-			memset(rleLineSizeList, 0, sizeof(uint32_t)*nChannels*nHeight);
 			const long offsets_pos = io->tell_proc(handle);
 			if (_headerInfo._Version == 1) {
 				if (io->write_proc(rleLineSizeList, nChannels*nHeight*2, 1, handle) != 1) {

@@ -310,9 +310,8 @@ static FIBOOL fmg_mglin(FIBITMAP *U, int n, int ncycle) {
 // --------------------------------------------------------------------------
 
 #define _CREATE_ARRAY_GRID_(array, array_size) \
-	array = (FIBITMAP**)malloc(array_size * sizeof(FIBITMAP*));\
+	array = static_cast<FIBITMAP**>(calloc(array_size, sizeof(FIBITMAP*)));\
 	if (!array) throw(1);\
-	memset(array, 0, array_size * sizeof(FIBITMAP*))
 
 #define _FREE_ARRAY_GRID_(array, array_size) \
 	if (array) {\

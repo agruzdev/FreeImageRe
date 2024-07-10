@@ -886,12 +886,11 @@ tiff_write_iptc_profile(TIFF *tiff, FIBITMAP *dib) {
 		if (write_iptc_profile(dib, &profile, &profile_size)) {
 			uint32_t iptc_size = profile_size;
 			iptc_size += (4-(iptc_size & 0x03)); // Round up for long word alignment
-			auto *iptc_profile = (uint8_t*)malloc(iptc_size);
+			auto *iptc_profile = static_cast<uint8_t*>(calloc(iptc_size, sizeof(uint8_t)));
 			if (!iptc_profile) {
 				free(profile);
 				return FALSE;
 			}
-			memset(iptc_profile, 0, iptc_size);
 			memcpy(iptc_profile, profile, profile_size);
 			if (TIFFIsByteSwapped(tiff)) {
 				TIFFSwabArrayOfLong((uint32_t *) iptc_profile, (unsigned long)iptc_size/4);
@@ -1924,12 +1923,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// read the tiff lines and save them in the DIB
 
-				auto *buf = (uint8_t*)malloc(TIFFStripSize(tif) * sizeof(uint8_t));
+				auto *buf = static_cast<uint8_t*>(calloc(TIFFStripSize(tif), sizeof(uint8_t)));
 				if (!buf) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
-				memset(buf, 0, TIFFStripSize(tif) * sizeof(uint8_t));
-				
+
 				FIBOOL bThrowMessage = FALSE;
 				
 				if (planar_config == PLANARCONFIG_CONTIG) {

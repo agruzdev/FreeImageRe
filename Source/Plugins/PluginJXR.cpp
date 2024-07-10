@@ -100,7 +100,7 @@ _jxr_io_Close(WMPStream** ppWS) {
 
 static ERR 
 _jxr_io_Create(WMPStream **ppWS, FreeImageJXRIO *jxr_io) {
-	*ppWS = (WMPStream*)calloc(1, sizeof(**ppWS));
+	*ppWS = static_cast<WMPStream*>(calloc(1, sizeof(**ppWS)));
 	if (*ppWS) {
 		WMPStream *pWS = *ppWS;
 

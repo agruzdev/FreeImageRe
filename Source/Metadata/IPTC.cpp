@@ -113,8 +113,7 @@ read_iptc_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 		FreeImage_SetTagLength(tag, tagByteCount);
 
 		// allocate a buffer to store the tag value
-		auto *iptc_value = (uint8_t*)malloc((tagByteCount + 1) * sizeof(uint8_t));
-		memset(iptc_value, 0, (tagByteCount + 1) * sizeof(uint8_t));
+		auto *iptc_value = static_cast<uint8_t*>(calloc((tagByteCount + 1), sizeof(uint8_t)));
 
 		// get the tag value
 
