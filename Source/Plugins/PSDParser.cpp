@@ -1826,7 +1826,7 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 	const unsigned srcBpp =  (depth == 1) ? 1 : FreeImage_GetBPP(dib)/8;
 	const unsigned srcLineSize = FreeImage_GetPitch(dib);
 	uint8_t* const src_first_line = FreeImage_GetScanLine(dib, nHeight - 1);//<*** flipped
-	uint8_t* line_start = new uint8_t[lineSize]; //< fileline cache
+	auto line_start = std::make_unique<uint8_t[]>(lineSize); //< fileline cache
 
 	switch (nCompression) {
 		case PSDP_COMPRESSION_NONE: // raw data
@@ -1836,8 +1836,8 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 
 				uint8_t* src_line_start = src_first_line + channelOffset;
 				for (unsigned h = 0; h < nHeight; ++h, src_line_start -= srcLineSize) {//<*** flipped
-					WriteImageLine(line_start, src_line_start, lineSize, srcBpp, bytes);
-					if (io->write_proc(line_start, lineSize, 1, handle) != 1) {
+					WriteImageLine(line_start.get(), src_line_start, lineSize, srcBpp, bytes);
+					if (io->write_proc(line_start.get(), lineSize, 1, handle) != 1) {
 						return false;
 					}
 				} //< h
@@ -1853,20 +1853,16 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 
 			// later use this array as uint16_t rleLineSizeList[nChannels][nHeight];
 			// Every 127 bytes needs a length byte.
-			uint8_t* rle_line_start = new uint8_t[lineSize + ((nWidth + 126) / 127)]; //< RLE buffer
-			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight]();
+			auto rle_line_start = std::make_unique<uint8_t[]>(lineSize + ((nWidth + 126) / 127)); //< RLE buffer
+			auto rleLineSizeList = std::make_unique<uint32_t[]>(nChannels*nHeight);
 
-			if (!rleLineSizeList) {
-				SAFE_DELETE_ARRAY(line_start);
-				throw std::bad_alloc();
-			}
 			const long offsets_pos = io->tell_proc(handle);
 			if (_headerInfo._Version == 1) {
-				if (io->write_proc(rleLineSizeList, nChannels*nHeight*2, 1, handle) != 1) {
+				if (io->write_proc(rleLineSizeList.get(), nChannels*nHeight*2, 1, handle) != 1) {
 					return false;
 				}
 			} else {
-				if (io->write_proc(rleLineSizeList, nChannels*nHeight*4, 1, handle) != 1) {
+				if (io->write_proc(rleLineSizeList.get(), nChannels*nHeight*4, 1, handle) != 1) {
 					return false;
 				}
 			}
@@ -1875,40 +1871,35 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 
 				uint8_t* src_line_start = src_first_line + channelOffset;
 				for (unsigned h = 0; h < nHeight; ++h, src_line_start -= srcLineSize) {//<*** flipped
-					WriteImageLine(line_start, src_line_start, lineSize, srcBpp, bytes);
-					unsigned len = PackRLE(rle_line_start, line_start, lineSize);
+					WriteImageLine(line_start.get(), src_line_start, lineSize, srcBpp, bytes);
+					unsigned len = PackRLE(rle_line_start.get(), line_start.get(), lineSize);
 					rleLineSizeList[c * nHeight + h] = len;
-					if (io->write_proc(rle_line_start, len, 1, handle) != 1) {
+					if (io->write_proc(rle_line_start.get(), len, 1, handle) != 1) {
 						return false;
 					}
 				}
 			}
-			SAFE_DELETE_ARRAY(rle_line_start);
 			// Fix length of resource
 			io->seek_proc(handle, offsets_pos, SEEK_SET);
 			if (_headerInfo._Version == 1) {
-				uint16_t *rleLineSizeList2 = new (std::nothrow) uint16_t[nChannels*nHeight];
-				if (!rleLineSizeList2) {
-					SAFE_DELETE_ARRAY(line_start);
-					throw std::bad_alloc();
-				}
+				auto rleLineSizeList2 = std::make_unique<uint16_t[]>(nChannels*nHeight);
+
 				for (unsigned index = 0; index < nChannels * nHeight; ++index) {
 					rleLineSizeList2[index] = (uint16_t)rleLineSizeList[index];
 #ifndef FREEIMAGE_BIGENDIAN
 					SwapShort(&rleLineSizeList2[index]);
 #endif
 				}
-				if (io->write_proc(rleLineSizeList2, nChannels*nHeight*2, 1, handle) != 1) {
+				if (io->write_proc(rleLineSizeList2.get(), nChannels*nHeight*2, 1, handle) != 1) {
 					return false;
 				}
-				SAFE_DELETE_ARRAY(rleLineSizeList2);
 			} else {
 #ifndef FREEIMAGE_BIGENDIAN
 				for (unsigned index = 0; index < nChannels * nHeight; ++index) {
 					SwapLong(&rleLineSizeList[index]);
 				}
 #endif
-				if (io->write_proc(rleLineSizeList, nChannels*nHeight*4, 1, handle) != 1) {
+				if (io->write_proc(rleLineSizeList.get(), nChannels*nHeight*4, 1, handle) != 1) {
 					return false;
 				}
 			}
@@ -1925,8 +1916,6 @@ bool psdParser::WriteImageData(FreeImageIO *io, fi_handle handle, FIBITMAP* dib)
 		default: // Unknown format
 			break;
 	}
-
-	SAFE_DELETE_ARRAY(line_start);
 
 	if (cmyk_dib) {
 		FreeImage_Unload(cmyk_dib);
