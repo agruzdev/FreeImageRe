@@ -216,7 +216,7 @@ LoadPixelDataRLE4(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 	try {
 		height = abs(height);
 
-		pixels = static_cast<uint8_t*>(calloc(width * height, sizeof(uint8_t)));
+		pixels = static_cast<uint8_t*>(calloc(static_cast<size_t>(width) * height, sizeof(uint8_t)));
 		if (!pixels) throw(1);
 
 		uint8_t *q = pixels;

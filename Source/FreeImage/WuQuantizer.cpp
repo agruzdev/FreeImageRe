@@ -64,7 +64,7 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	mb = static_cast<int32_t*>(calloc(SIZE_3D, sizeof(int32_t)));
 
 	// Allocate Qadd
-	Qadd = static_cast<uint16_t*>(calloc(width * height, sizeof(uint16_t)));
+	Qadd = static_cast<uint16_t*>(calloc(static_cast<size_t>(width) * height, sizeof(uint16_t)));
 
 	if (!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
 		if (gm2)	free(gm2);
