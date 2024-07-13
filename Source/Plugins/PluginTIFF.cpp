@@ -404,7 +404,7 @@ ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *
 			uint16_t *red;
 			uint16_t *green;
 			uint16_t *blue;
-			
+
 			TIFFGetField(tiff, TIFFTAG_COLORMAP, &red, &green, &blue); 
 
 			// load the palette in the DIB
@@ -452,7 +452,7 @@ CreateImageType(FIBOOL header_only, FREE_IMAGE_TYPE fit, int width, int height, 
 		// standard bitmap type 
 
 		if (bpp == 16) {
-			
+
 			if ((samplesperpixel == 2) && (bitspersample == 8)) {
 				// 8-bit indexed + 8-bit alpha channel -> convert to 8-bit transparent
 				dib = FreeImage_AllocateHeader(header_only, width, height, 8);
@@ -460,7 +460,7 @@ CreateImageType(FIBOOL header_only, FREE_IMAGE_TYPE fit, int width, int height, 
 				// 16-bit RGB -> expect it to be 565
 				dib = FreeImage_AllocateHeader(header_only, width, height, bpp, FI16_565_RED_MASK, FI16_565_GREEN_MASK, FI16_565_BLUE_MASK);
 			}
-			
+
 		}
 		else {
 
@@ -601,7 +601,7 @@ ReadImageType(TIFF *tiff, uint16_t bitspersample, uint16_t samplesperpixel) {
 				case 16:
 					fit = FIT_UINT16;
 					break;
-					
+
 				case 32:
 					fit = FIT_UINT32;
 					break;
@@ -920,7 +920,7 @@ tiff_write_xmp_profile(TIFF *tiff, FIBITMAP *dib) {
 	FreeImage_GetMetadata(FIMD_XMP, dib, g_TagLib_XMPFieldName, &tag_xmp);
 
 	if (tag_xmp && FreeImage_GetTagValue(tag_xmp)) {
-		
+
 		TIFFSetField(tiff, TIFFTAG_XMLPACKET, (uint32_t)FreeImage_GetTagLength(tag_xmp), (uint8_t*)FreeImage_GetTagValue(tag_xmp));
 
 		return TRUE;
@@ -952,13 +952,13 @@ static void
 WriteMetadata(TIFF *tiff, FIBITMAP *dib) {
 	// IPTC
 	tiff_write_iptc_profile(tiff, dib);
-	
+
 	// Adobe XMP
 	tiff_write_xmp_profile(tiff, dib);
-	
+
 	// EXIF_MAIN tags
 	tiff_write_exif_profile(tiff, dib);
-	
+
 	// GeoTIFF tags
 	tiff_write_geotiff_profile(tiff, dib);
 }
@@ -1051,7 +1051,7 @@ SupportsICCProfiles() {
 static FIBOOL DLL_CALLCONV
 SupportsNoPixels() {
 	return TRUE;
-} 
+}
 
 // ----------------------------------------------------------
 
@@ -1099,7 +1099,7 @@ PageCount(FreeImageIO *io, fi_handle handle, void *data) {
 		do {
 			nr_ifd++;
 		} while (TIFFReadDirectory(tif));
-				
+
 		return nr_ifd;
 	}
 
@@ -1259,9 +1259,9 @@ Read embedded thumbnail
 static void 
 ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMAP *dib) {
 	FIBITMAP* thumbnail{};
-	
+
 	// read exif thumbnail (IFD 1) ...
-	
+
 	/*
 	// this code can cause unwanted recursion causing an overflow, it is thus disabled until we have a better solution
 	// do we really need to read a thumbnail from the Exif segment ? knowing that TIFF store the thumbnail in the subIFD ...
@@ -1287,13 +1287,13 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 		}
 	}
 	*/
-	
+
 	// ... or read the first subIFD
-	
+
 	if (!thumbnail) {
 		uint16_t subIFD_count = 0;
 		toff_t* subIFD_offsets{};
-		
+
 		// This will also read the first (and only) subIFD from a Photoshop-created "pyramid" file.
 		// Subsequent, smaller images are 'nextIFD' in that subIFD. Currently we only load the first one. 
 		
@@ -1311,7 +1311,7 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 					// store the thumbnail (remember to release it before return)
 					FreeImage_SetThumbnail(dib, thumbnail);
 				}
-				
+
 				// restore current position
 				io->seek_proc(handle, tell_pos, SEEK_SET);
 				TIFFSetDirectory(tiff, cur_dir);
@@ -1327,15 +1327,15 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 		
 		if (TIFFGetField(tiff, TIFFTAG_PHOTOSHOP, &ps_size, &ps_data)) {
 			FIMEMORY *handle = FreeImage_OpenMemory((uint8_t*)ps_data, ps_size);
-			
+
 			FreeImageIO io;
 			SetMemoryIO(&io);
-			
+
 			psdParser parser;
 			parser.ReadImageResources(&io, handle, ps_size);
 
 			FreeImage_SetThumbnail(dib, parser.GetThumbnail());
-			
+
 			FreeImage_CloseMemory(handle);
 		}
 	}
@@ -1351,7 +1351,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (!handle || !data ) {
 		return nullptr;
 	}
-	
+
 	TIFF   *tif{};
 	uint32_t height = 0; 
 	uint32_t width = 0; 
@@ -1367,17 +1367,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	void *iccBuf{};	// ICC profile data		
 
 	const FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
-	
-	try {	
+
+	try {
 		fi_TIFFIO *fio = (fi_TIFFIO*)data;
 		tif = fio->tif;
 
 		if (page != -1) {
 			if (!tif || !TIFFSetDirectory(tif, (uint16_t)page)) {
-				throw "Error encountered while opening TIFF file";			
+				throw "Error encountered while opening TIFF file";
 			}
 		}
-		
+
 		const FIBOOL asCMYK = (flags & TIFF_CMYK) == TIFF_CMYK;
 
 		// first, get the photometric, the compression and basic metadata
@@ -1404,7 +1404,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
 		TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
 		TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
-		TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);   			
+		TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
 		TIFFGetField(tif, TIFFTAG_ICCPROFILE, &iccSize, &iccBuf);
 		TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
 
@@ -1440,7 +1440,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// Read the whole image into one big RGBA buffer and then 
 			// convert it to a DIB. This is using the traditional
 			// TIFFReadRGBAImage() API that we trust.
-			
+
 			uint32_t *raster{};
 
 			if (!header_only) {
@@ -1531,7 +1531,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				_TIFFfree(raster);
 			}
-			
+
 			// ### Not correct when header only
 			FreeImage_SetTransparent(dib, has_alpha);
 
@@ -1550,14 +1550,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			ReadResolution(tif, dib);
 
-			// set up the colormap based on photometric	
+			// set up the colormap based on photometric
 
 			ReadPalette(tif, photometric, bitspersample, dib);
 
 			// calculate the line + pitch (separate for scr & dest)
 
 			const tmsize_t src_line = TIFFScanlineSize(tif);
-			// here, the pitch is 2x less than the original as we only keep the first layer				
+			// here, the pitch is 2x less than the original as we only keep the first layer
 			int dst_pitch = FreeImage_GetPitch(dib);
 
 			// transparency table for 8-bit + 8-bit alpha images
@@ -1621,11 +1621,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), grey, nrow * src_line) == -1) {
 						free(buf);
 						throw FI_MSG_ERROR_PARSING;
-					} 
+					}
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 1), alpha, nrow * src_line) == -1) {
 						free(buf);
 						throw FI_MSG_ERROR_PARSING;
-					} 
+					}
 
 					for (int l = 0; l < nrow; l++) {
 						uint8_t *p = bits;
@@ -1667,7 +1667,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// We use a temp dib to store the alpha for the CMYKA to RGBA conversion
 			// NOTE this is until we have Extra channels implementation.
 			// Also then it will be possible to merge LoadAsCMYK with LoadAsGenericStrip
-			
+
 			FIBITMAP *alpha{};
 			unsigned alpha_pitch = 0;
 			uint8_t *alpha_bits{};
@@ -1679,7 +1679,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				} else if (bitspersample == 8) {
 					alpha = FreeImage_Allocate(width, height, 8);
 				}
-					
+
 				if (!alpha) {
 					FreeImage_OutputMessageProc(s_format_id, "Failed to allocate temporary alpha channel");
 				} else {
@@ -1689,7 +1689,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				
 			}
-			
+
 			// create a new DIB
 			const uint16_t chCount = MIN<uint16_t>(samplesperpixel, 4);
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, chCount);
@@ -1729,9 +1729,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 
 				if (planar_config == PLANARCONFIG_CONTIG) {
-					
+
 					// - loop for strip blocks -
-					
+
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
 						const int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
 
@@ -1739,10 +1739,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							free(buf);
 							FreeImage_Unload(alpha);
 							throw FI_MSG_ERROR_PARSING;
-						} 
-						
+						}
+
 						// - loop for strips -
-						
+
 						if (src_line != dst_line) {
 							// CMYKA+
 							if (alpha) {
@@ -1794,7 +1794,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					uint8_t *al_strip = alpha_bits;
 
 					// - loop for strip blocks -
-					
+
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
 						const int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
 						
@@ -1829,45 +1829,45 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									break; 
 								}
 							}
-							
-							const unsigned channelOffset = ch * Bpc;			
-							
+
+							const unsigned channelOffset = ch * Bpc;
+
 							// - loop for strips in block -
-							
+
 							uint8_t *src_line_begin = buf;
 							uint8_t *dst_line_begin = dst_strip;
 							for (int l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
 								// - loop for pixels in strip -
-								
+
 								const uint8_t* const src_line_end = src_line_begin + src_line;
 								for (uint8_t *src_bits = src_line_begin, * dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
 									AssignPixel(dst_bits + channelOffset, src_bits, Bpc);									
 								} // line
 								
 							} // strips
-															
+
 						} // channels
-							
+
 						// done with a strip block, incr to the next
 						dib_strip -= strips * dib_pitch;
 						al_strip -= strips * alpha_pitch;
-							
+
 					} //< height
 					
 				}
 
 				free(buf);
-			
+
 				if (!asCMYK) {
 					ConvertCMYKtoRGBA(dib);
-					
+
 					// The ICC Profile is invalid, clear it
 					iccSize = 0;
 					iccBuf = nullptr;
-					
+
 					if (isCMYKA) {
 						// HACK until we have Extra channels. (ConvertCMYKtoRGBA will then do the work)
-						
+
 						FreeImage_SetChannel(dib, alpha, FICC_ALPHA);
 						FreeImage_Unload(alpha);
 						alpha = nullptr;
@@ -1885,7 +1885,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				
 			} // !header_only
-			
+
 		} else if (loadMethod == LoadAsGenericStrip) {
 			// ---------------------------------------------------------------------------------
 			// Generic loading
@@ -1902,7 +1902,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			ReadResolution(tif, dib);
 
-			// set up the colormap based on photometric	
+			// set up the colormap based on photometric
 
 			ReadPalette(tif, photometric, bitspersample, dib);
 	
@@ -1929,7 +1929,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 
 				FIBOOL bThrowMessage = FALSE;
-				
+
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
@@ -1937,15 +1937,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, strips * src_line) == -1) {
 							// ignore errors as they can be frequent and not really valid errors, especially with fax images
-							bThrowMessage = TRUE;							
+							bThrowMessage = TRUE;
 							/*
 							free(buf);
 							throw FI_MSG_ERROR_PARSING;
 							*/
-						} 
+						}
 						if (src_line == dst_line) {
 							// channel count match
-							for (int l = 0; l < strips; l++) {							
+							for (int l = 0; l < strips; l++) {
 								memcpy(bits, buf + l * src_line, src_line);
 								bits -= dst_pitch;
 							}
@@ -2032,9 +2032,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							uint8_t* src_line_begin = buf;
 							uint8_t* dst_line_begin = dib_strip;
 							for (int l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
-									
+
 								// - loop for pixels in strip -
-								
+
 								const uint8_t* const src_line_end = src_line_begin + src_line;
 
 								for (uint8_t* src_bits = src_line_begin, * dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
@@ -2045,25 +2045,25 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							} // strips
 
 						} // channels
-							
+
 						// done with a strip block, incr to the next
 						dib_strip -= strips * dst_pitch;
-							
+
 					} // height
 
 				}
 				free(buf);
-				
+
 				if (bThrowMessage) {
 					FreeImage_OutputMessageProc(s_format_id, "Warning: parsing error. Image may be incomplete or contain invalid data !");
 				}
-				
+
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 				SwapRedBlue32(dib);
 #endif
 
 			} // !header only
-			
+
 		} else if (loadMethod == LoadAsTiled) {
 			// ---------------------------------------------------------------------------------
 			// Tiled image loading
@@ -2082,7 +2082,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			ReadResolution(tif, dib);
 
-			// set up the colormap based on photometric	
+			// set up the colormap based on photometric
 
 			ReadPalette(tif, photometric, bitspersample, dib);
 
@@ -2115,8 +2115,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				uint8_t *bits = FreeImage_GetScanLine(dib, height - 1);
 				
-				for (uint32_t y = 0; y < height; y += tileHeight) {						
-					int32_t nrows = (y + tileHeight > height ? height - y : tileHeight);					
+				for (uint32_t y = 0; y < height; y += tileHeight) {
+					int32_t nrows = (y + tileHeight > height ? height - y : tileHeight);
 
 					for (uint32_t x = 0, rowSize = 0; x < width; x += tileWidth, rowSize += tileRowSize) {
 						memset(tileBuffer, 0, tileSize);
@@ -2150,7 +2150,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				free(tileBuffer);
 			}
 			else if (planar_config == PLANARCONFIG_SEPARATE) {
-				throw "Separated tiled TIFF images are not supported"; 
+				throw "Separated tiled TIFF images are not supported";
 			}
 
 
@@ -2163,7 +2163,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (!TIFFGetField(tif, TIFFTAG_STONITS, &stonits)) {
 				stonits = 1;
 			}
-			
+
 			// create a new DIB
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, samplesperpixel);
 			if (!dib) {
@@ -2198,9 +2198,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, nrow * src_line) == -1) {
 						free(buf);
 						throw FI_MSG_ERROR_PARSING;
-					} 
+					}
 					// convert from XYZ to RGB
-					for (int l = 0; l < nrow; l++) {						
+					for (int l = 0; l < nrow; l++) {
 						tiff_ConvertLineXYZToRGB(bits, buf + l * src_line, stonits, width);
 						bits -= dst_pitch;
 					}
@@ -2316,7 +2316,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		return dib;
 
-	} catch (const char *message) {			
+	} catch (const char *message) {
 		if (dib)	{
 			FreeImage_Unload(dib);
 		}
@@ -2347,9 +2347,9 @@ static FIBOOL
 SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data, unsigned ifd, unsigned ifdCount) {
 	if (!dib || !handle || !data) {
 		return FALSE;
-	} 
-	
-	try { 
+	}
+
+	try {
 		fi_TIFFIO *fio = (fi_TIFFIO*)data;
 		TIFF *out = fio->tif;
 
@@ -2436,16 +2436,16 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 				// store with default compression (LZW) or with input compression flag
 				photometric	= PHOTOMETRIC_RGB;
 			}
-			
+
 		} else if (image_type == FIT_RGBAF) {
 			// 128-bit RGBAF => store with default compression (LZW) or with input compression flag
-			
+
 			samplesperpixel = 4;
 			bitspersample = bitsperpixel / samplesperpixel;
 			photometric	= PHOTOMETRIC_RGB;
 		} else {
 			// special image type (int, long, double, ...)
-			
+
 			samplesperpixel = 1;
 			bitspersample = bitsperpixel;
 			photometric	= PHOTOMETRIC_MINISBLACK;
@@ -2537,12 +2537,12 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		// read the DIB lines from bottom to top
 		// and save them in the TIF
 		// -------------------------------------
-		
+
 		const uint32_t pitch = FreeImage_GetPitch(dib);
 
 		if (image_type == FIT_BITMAP) {
 			// standard bitmap type
-		
+
 			switch (bitsperpixel) {
 				case 1 :
 				case 4 :
@@ -2598,7 +2598,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 					}
 
 					break;
-				}				
+				}
 
 				case 24:
 				case 32:
@@ -2676,21 +2676,21 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		}
 
 		return TRUE;
-		
+
 	} catch(const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return FALSE;
-	} 
+	}
 }
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	FIBOOL bResult = FALSE;
-	
+
 	// handle thumbnail as SubIFD
 	const FIBOOL bHasThumbnail = (FreeImage_GetThumbnail(dib) != nullptr);
 	const unsigned ifdCount = bHasThumbnail ? 2 : 1;
-	
+
 	FIBITMAP *bitmap = dib;
 
 	for (unsigned ifd = 0; ifd < ifdCount; ifd++) {
