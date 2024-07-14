@@ -383,6 +383,7 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		if (!bitmap) {
 			break;
 		}
+		std::unique_ptr<FIBITMAP, decltype(&free)> safeBitmap(bitmap, &free);
 
 		// calculate the size of a FreeImage image
 		// align the palette and the pixels on a FIBITMAP_ALIGNMENT bytes alignment boundary
@@ -395,16 +396,15 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 
 		if (dib_size == 0) {
 			// memory allocation will fail (probably a malloc overflow)
-			free(bitmap);
 			break;
 		}
 
 		bitmap->data = static_cast<uint8_t *>(FreeImage_Aligned_Malloc(dib_size * sizeof(uint8_t), FIBITMAP_ALIGNMENT));
 
 		if (!bitmap->data) {
-			free(bitmap);
 			break;
 		}
+		std::unique_ptr<void, decltype(&FreeImage_Aligned_Free)> safeData(bitmap->data, &FreeImage_Aligned_Free);
 
 		memset(bitmap->data, 0, dib_size);
 
@@ -432,8 +432,6 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		fih->metadata = new(std::nothrow) METADATAMAP;
 
 		if (!fih->metadata) {
-			FreeImage_Aligned_Free(bitmap->data);
-			free(bitmap);
 			break;
 		}
 
@@ -478,6 +476,8 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 			masks->blue_mask = blue_mask;
 		}
 
+		safeData.release();
+		safeBitmap.release();
 		return bitmap;
 	}
 	while (false);
