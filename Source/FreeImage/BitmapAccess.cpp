@@ -377,9 +377,12 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 			return nullptr;
 	}
 
-	auto *bitmap = (FIBITMAP *)malloc(sizeof(FIBITMAP));
+	do {
+		auto *bitmap = (FIBITMAP *)malloc(sizeof(FIBITMAP));
 
-	if (bitmap) {
+		if (!bitmap) {
+			break;
+		}
 
 		// calculate the size of a FreeImage image
 		// align the palette and the pixels on a FIBITMAP_ALIGNMENT bytes alignment boundary
@@ -393,85 +396,91 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		if (dib_size == 0) {
 			// memory allocation will fail (probably a malloc overflow)
 			free(bitmap);
-			return nullptr;
+			break;
 		}
 
-		bitmap->data = (uint8_t *)FreeImage_Aligned_Malloc(dib_size * sizeof(uint8_t), FIBITMAP_ALIGNMENT);
+		bitmap->data = static_cast<uint8_t *>(FreeImage_Aligned_Malloc(dib_size * sizeof(uint8_t), FIBITMAP_ALIGNMENT));
 
-		if (bitmap->data) {
-			memset(bitmap->data, 0, dib_size);
-
-			// write out the FREEIMAGEHEADER
-
-			FREEIMAGEHEADER *fih = (FREEIMAGEHEADER *)bitmap->data;
-
-			fih->type = type;
-
-			memset(&fih->bkgnd_color, 0, sizeof(FIRGBA8));
-
-			fih->transparent = FALSE;
-			fih->transparency_count = 0;
-			memset(fih->transparent_table, 0xff, 256);
-
-			fih->has_pixels = header_only ? FALSE : TRUE;
-
-			// initialize FIICCPROFILE link
-
-			FIICCPROFILE *iccProfile = FreeImage_GetICCProfile(bitmap);
-			iccProfile->size = 0;
-			iccProfile->data = 0;
-			iccProfile->flags = 0;
-
-			// initialize metadata models list
-
-			fih->metadata = new(std::nothrow) METADATAMAP;
-
-			// initialize attached thumbnail
-
-			fih->thumbnail = nullptr;
-
-			// store a pointer to user provided pixel buffer (if any)
-
-			fih->external_bits = ext_bits;
-			fih->external_pitch = ext_pitch;
-
-			// write out the BITMAPINFOHEADER
-
-			FIBITMAPINFOHEADER *bih   = FreeImage_GetInfoHeader(bitmap);
-			bih->biSize             = sizeof(FIBITMAPINFOHEADER);
-			bih->biWidth            = width;
-			bih->biHeight           = height;
-			bih->biPlanes           = 1;
-			bih->biCompression      = need_masks ? BI_BITFIELDS : BI_RGB;
-			bih->biBitCount         = (uint16_t)bpp;
-			bih->biClrUsed          = CalculateUsedPaletteEntries(bpp);
-			bih->biClrImportant     = bih->biClrUsed;
-			bih->biXPelsPerMeter	= 2835;	// 72 dpi
-			bih->biYPelsPerMeter	= 2835;	// 72 dpi
-
-			if (bpp == 8) {
-				// build a default greyscale palette (very useful for image processing)
-				FIRGBA8 *pal = FreeImage_GetPalette(bitmap);
-				for (int i = 0; i < 256; i++) {
-					pal[i].red	= (uint8_t)i;
-					pal[i].green = (uint8_t)i;
-					pal[i].blue	= (uint8_t)i;
-				}
-			}
-
-			// just setting the masks (only if needed) just like the palette.
-			if (need_masks) {
-				FREEIMAGERGBMASKS *masks = FreeImage_GetRGBMasks(bitmap);
-				masks->red_mask = red_mask;
-				masks->green_mask = green_mask;
-				masks->blue_mask = blue_mask;
-			}
-
-			return bitmap;
+		if (!bitmap->data) {
+			free(bitmap);
+			break;
 		}
 
-		free(bitmap);
+		memset(bitmap->data, 0, dib_size);
+
+		// write out the FREEIMAGEHEADER
+
+		auto *fih = (FREEIMAGEHEADER *)bitmap->data;
+
+		fih->type = type;
+
+		fih->transparent = FALSE;
+		fih->transparency_count = 0;
+		memset(fih->transparent_table, 0xff, 256);
+
+		fih->has_pixels = header_only ? FALSE : TRUE;
+
+		// initialize FIICCPROFILE link
+
+		FIICCPROFILE *iccProfile = FreeImage_GetICCProfile(bitmap);
+		iccProfile->size = 0;
+		iccProfile->data = 0;
+		iccProfile->flags = 0;
+
+		// initialize metadata models list
+
+		fih->metadata = new(std::nothrow) METADATAMAP;
+
+		if (!fih->metadata) {
+			FreeImage_Aligned_Free(bitmap->data);
+			free(bitmap);
+			break;
+		}
+
+		// initialize attached thumbnail
+
+		fih->thumbnail = nullptr;
+
+		// store a pointer to user provided pixel buffer (if any)
+
+		fih->external_bits = ext_bits;
+		fih->external_pitch = ext_pitch;
+
+		// write out the BITMAPINFOHEADER
+
+		auto *bih   = FreeImage_GetInfoHeader(bitmap);
+		bih->biSize             = sizeof(FIBITMAPINFOHEADER);
+		bih->biWidth            = width;
+		bih->biHeight           = height;
+		bih->biPlanes           = 1;
+		bih->biCompression      = need_masks ? BI_BITFIELDS : BI_RGB;
+		bih->biBitCount         = (uint16_t)bpp;
+		bih->biClrUsed          = CalculateUsedPaletteEntries(bpp);
+		bih->biClrImportant     = bih->biClrUsed;
+		bih->biXPelsPerMeter	= 2835;	// 72 dpi
+		bih->biYPelsPerMeter	= 2835;	// 72 dpi
+
+		if (bpp == 8) {
+			// build a default greyscale palette (very useful for image processing)
+			auto *pal = FreeImage_GetPalette(bitmap);
+			for (int i = 0; i < 256; i++) {
+				pal[i].red	= (uint8_t)i;
+				pal[i].green = (uint8_t)i;
+				pal[i].blue	= (uint8_t)i;
+			}
+			}
+
+		// just setting the masks (only if needed) just like the palette.
+		if (need_masks) {
+			auto *masks = FreeImage_GetRGBMasks(bitmap);
+			masks->red_mask = red_mask;
+			masks->green_mask = green_mask;
+			masks->blue_mask = blue_mask;
+		}
+
+		return bitmap;
 	}
+	while (false);
 
 	return nullptr;
 }
@@ -851,18 +860,16 @@ FreeImage_HasPixels(FIBITMAP *dib) {
 
 FIBOOL DLL_CALLCONV
 FreeImage_HasRGBMasks(FIBITMAP *dib) {
-	return dib && FreeImage_GetInfoHeader(dib)->biCompression == BI_BITFIELDS;
+	return (dib && FreeImage_GetInfoHeader(dib)->biCompression == BI_BITFIELDS) ? TRUE : FALSE;
 }
 
 unsigned DLL_CALLCONV
 FreeImage_GetRedMask(FIBITMAP *dib) {
-	FREEIMAGERGBMASKS *masks{};
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 	switch (image_type) {
 		case FIT_BITMAP:
 			// check for 16-bit RGB (565 or 555)
-			masks = FreeImage_GetRGBMasks(dib);
-			if (masks) {
+			if (auto *masks = FreeImage_GetRGBMasks(dib)) {
 				return masks->red_mask;
 			}
 			return FreeImage_GetBPP(dib) >= 24 ? FI_RGBA_RED_MASK : 0;
@@ -873,13 +880,11 @@ FreeImage_GetRedMask(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetGreenMask(FIBITMAP *dib) {
-	FREEIMAGERGBMASKS *masks{};
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 	switch (image_type) {
 		case FIT_BITMAP:
 			// check for 16-bit RGB (565 or 555)
-			masks = FreeImage_GetRGBMasks(dib);
-			if (masks) {
+			if (auto *masks = FreeImage_GetRGBMasks(dib)) {
 				return masks->green_mask;
 			}
 			return FreeImage_GetBPP(dib) >= 24 ? FI_RGBA_GREEN_MASK : 0;
@@ -890,13 +895,11 @@ FreeImage_GetGreenMask(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetBlueMask(FIBITMAP *dib) {
-	FREEIMAGERGBMASKS *masks{};
 	const FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
 	switch (image_type) {
 		case FIT_BITMAP:
 			// check for 16-bit RGB (565 or 555)
-			masks = FreeImage_GetRGBMasks(dib);
-			if (masks) {
+			if (auto *masks = FreeImage_GetRGBMasks(dib)) {
 				return masks->blue_mask;
 			}
 			return FreeImage_GetBPP(dib) >= 24 ? FI_RGBA_BLUE_MASK : 0;
@@ -925,7 +928,7 @@ FreeImage_GetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor) {
 			memcpy(bkcolor, bkgnd_color, sizeof(FIRGBA8));
 			// get the background index
 			if (FreeImage_GetBPP(dib) == 8) {
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				auto *pal = FreeImage_GetPalette(dib);
 				for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
 					if (bkgnd_color->red == pal[i].red) {
 						if (bkgnd_color->green == pal[i].green) {
