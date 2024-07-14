@@ -383,7 +383,7 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		if (!bitmap) {
 			break;
 		}
-		std::unique_ptr<FIBITMAP, decltype(&free)> safeBitmap(bitmap, &free);
+		std::unique_ptr<void, decltype(&free)> safeBitmap(bitmap, &free);
 
 		// calculate the size of a FreeImage image
 		// align the palette and the pixels on a FIBITMAP_ALIGNMENT bytes alignment boundary
