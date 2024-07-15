@@ -299,7 +299,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 			s_plugins->SkipNode();
 #endif
 			s_plugins->AddNode(InitSGI);
-#if FREEIMAGE_WITH_LIBEXR
+#if FREEIMAGE_WITH_LIBOPENEXR
 			s_plugins->AddNode(InitEXR);
 #else
 			s_plugins->SkipNode();
