@@ -86,3 +86,4 @@ Version 0.3:
  - Added API for querying versions of compiled dependencies
  - Added Python3 bindings
  - Ability to enable/disable each image library dependency
+ - FreeImage_ConvertToRGBF supports FI_DOUBLE input
