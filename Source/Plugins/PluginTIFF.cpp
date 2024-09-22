@@ -1582,12 +1582,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				std::unique_ptr<void, decltype(&free)> safeBuf(buf, &free);
 
 				for (uint32_t y = 0; y < height; y += rowsperstrip) {
-					int32_t nrow = (y + rowsperstrip > height ? height - y : rowsperstrip);
+					const uint32_t nrow = std::min(height - y, rowsperstrip);
 
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, nrow * src_line) == -1) {
 						throw FI_MSG_ERROR_PARSING;
 					}
-					for (int l = 0; l < nrow; l++) {
+					for (uint32_t l = 0; l < nrow; l++) {
 						uint8_t *p = bits;
 						uint8_t *b = buf + l * src_line;
 
@@ -1615,7 +1615,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				uint8_t *alpha = buf + stripsize;
 
 				for (uint32_t y = 0; y < height; y += rowsperstrip) {
-					int32_t nrow = (y + rowsperstrip > height ? height - y : rowsperstrip);
+					const uint32_t nrow = std::min(height - y, rowsperstrip);
 
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), grey, nrow * src_line) == -1) {
 						throw FI_MSG_ERROR_PARSING;
@@ -1624,7 +1624,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						throw FI_MSG_ERROR_PARSING;
 					}
 
-					for (int l = 0; l < nrow; l++) {
+					for (uint32_t l = 0; l < nrow; l++) {
 						uint8_t *p = bits;
 						uint8_t *g = grey + l * src_line;
 						uint8_t *a = alpha + l * src_line;
@@ -1728,7 +1728,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					// - loop for strip blocks -
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						const int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const uint32_t strips = std::min(height - y, rowsperstrip);
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, strips * src_line) == -1) {
 							FreeImage_Unload(alpha);
@@ -1740,7 +1740,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						if (src_line != dst_line) {
 							// CMYKA+
 							if (alpha) {
-								for (int l = 0; l < strips; l++) {
+								for (uint32_t l = 0; l < strips; l++) {
 									for (uint8_t *pixel = bits, *al_pixel = alpha_bits, *src_pixel =  buf + l * src_line; pixel < bits + dib_pitch; pixel += dibBpp, al_pixel += alpha_Bpp, src_pixel += srcBpp) {
 										// copy pixel byte by byte
 										uint8_t b = 0;
@@ -1762,7 +1762,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 							else {
 								// alpha/extra channels alloc failed
-								for (int l = 0; l < strips; l++) {
+								for (uint32_t l = 0; l < strips; l++) {
 									for (uint8_t* pixel = bits, * src_pixel =  buf + l * src_line; pixel < bits + dst_line; pixel += dibBpp, src_pixel += srcBpp) {
 										AssignPixel(pixel, src_pixel, dibBpp);
 									}
@@ -1772,7 +1772,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						else { 
 							// CMYK to CMYK
-							for (int l = 0; l < strips; l++) {
+							for (uint32_t l = 0; l < strips; l++) {
 								uint8_t *b = buf + l * src_line;
 								memcpy(bits, b, src_line);
 								bits -= dib_pitch;
@@ -1790,7 +1790,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					// - loop for strip blocks -
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						const int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const uint32_t strips = std::min(height - y, rowsperstrip);
 						
 						// - loop for channels (planes) -
 						
@@ -1829,7 +1829,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 							uint8_t *src_line_begin = buf;
 							uint8_t *dst_line_begin = dst_strip;
-							for (int l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
+							for (uint32_t l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
 								// - loop for pixels in strip -
 
 								const uint8_t* const src_line_end = src_line_begin + src_line;
@@ -1925,7 +1925,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						const int32_t rows = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const uint32_t rows = std::min(height - y, rowsperstrip);
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, rows * src_line) == -1) {
 							// ignore errors as they can be frequent and not really valid errors, especially with fax images
@@ -1936,14 +1936,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						if (src_line == dst_line) {
 							// channel count match
-							for (int l = 0; l < rows; l++) {
+							for (uint32_t l = 0; l < rows; l++) {
 								memcpy(bits, buf + l * src_line, src_line);
 								bits -= dst_pitch;
 							}
 						}
 						else {
 							if (srcBpp * 8 == srcBits) {
-								for (int l = 0; l < rows; l++) {
+								for (uint32_t l = 0; l < rows; l++) {
 									for (uint8_t* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch; pixel += Bpp, src_pixel += srcBpp) {
 										AssignPixel(pixel, src_pixel, Bpp);
 									}
@@ -1954,7 +1954,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
 								const uint8_t* src_pixel = buf;
 								if (bitspersample <= 8) {
-									for (int l = 0; l < rows; l++) {
+									for (uint32_t l = 0; l < rows; l++) {
 										uint8_t* dst_pixel = bits;
 										uint32_t t = 0;
 										uint16_t stored_bits = 0;
@@ -1971,7 +1971,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									}
 								}
 								else if (bitspersample <= 16) {
-									for (int l = 0; l < rows; l++) {
+									for (uint32_t l = 0; l < rows; l++) {
 										uint8_t* dst_pixel = bits;
 										uint32_t t = 0;
 										uint16_t stored_bits = 0;
@@ -2008,7 +2008,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					// - loop for strip blocks -
 					
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						const int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const uint32_t strips = std::min(height - y, rowsperstrip);
 						
 						// - loop for channels (planes) -
 						
@@ -2030,7 +2030,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 							uint8_t* src_line_begin = buf;
 							uint8_t* dst_line_begin = dib_strip;
-							for (int l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
+							for (uint32_t l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
 
 								// - loop for pixels in strip -
 
@@ -2114,7 +2114,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				uint8_t *bits = FreeImage_GetScanLine(dib, height - 1);
 				
 				for (uint32_t y = 0; y < height; y += tileHeight) {
-					int32_t nrows = (y + tileHeight > height ? height - y : tileHeight);
+					const uint32_t nrows = std::min(height - y, tileHeight);
 
 					for (uint32_t x = 0, rowSize = 0; x < width; x += tileWidth, rowSize += tileRowSize) {
 						memset(tileBuffer, 0, tileSize);
@@ -2132,7 +2132,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						uint8_t *src_bits = tileBuffer;
 						uint8_t *dst_bits = bits + rowSize;
-						for (int k = 0; k < nrows; k++) {
+						for (uint32_t k = 0; k < nrows; k++) {
 							memcpy(dst_bits, src_bits, src_line);
 							src_bits += tileRowSize;
 							dst_bits -= dst_pitch;
@@ -2192,13 +2192,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				std::unique_ptr<void, decltype(&free)> safeBuf(buf, &free);
 
 				for (uint32_t y = 0; y < height; y += rowsperstrip) {
-					int32_t nrow = (y + rowsperstrip > height ? height - y : rowsperstrip);
+					const uint32_t nrow = std::min(height - y, rowsperstrip);
 
 					if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, nrow * src_line) == -1) {
 						throw FI_MSG_ERROR_PARSING;
 					}
 					// convert from XYZ to RGB
-					for (int l = 0; l < nrow; l++) {
+					for (uint32_t l = 0; l < nrow; l++) {
 						tiff_ConvertLineXYZToRGB(bits, buf + l * src_line, stonits, width);
 						bits -= dst_pitch;
 					}
@@ -2247,7 +2247,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					std::unique_ptr<void, decltype(&free)> safeBuf(buf, &free);
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						uint32_t nrow = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const uint32_t nrow = std::min(height - y, rowsperstrip);
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, nrow * src_line) == -1) {
 							throw FI_MSG_ERROR_PARSING;
