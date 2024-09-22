@@ -1925,7 +1925,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						int32_t rows = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const int32_t rows = (y + rowsperstrip > height ? height - y : rowsperstrip);
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, rows * src_line) == -1) {
 							// ignore errors as they can be frequent and not really valid errors, especially with fax images
