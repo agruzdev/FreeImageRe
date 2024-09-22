@@ -158,7 +158,7 @@ namespace {
 #if FREEIMAGE_WITH_LIBOPENJPEG
 			mEntries.emplace_back(MakeJpeg2kDependencyInfo());
 #endif
-#if FREEIMAGE_WITH_LIBEXR
+#if FREEIMAGE_WITH_LIBOPENEXR
 			mEntries.emplace_back(MakeExrDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBTIFF
