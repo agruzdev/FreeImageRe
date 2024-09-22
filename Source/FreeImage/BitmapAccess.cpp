@@ -378,7 +378,7 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 	}
 
 	do {
-		auto *bitmap = (FIBITMAP *)malloc(sizeof(FIBITMAP));
+		auto *bitmap = static_cast<FIBITMAP *>(malloc(sizeof(FIBITMAP)));
 
 		if (!bitmap) {
 			break;
@@ -684,7 +684,7 @@ FreeImage_SetThumbnail(FIBITMAP *dib, FIBITMAP *thumbnail) {
 	if (!dib) {
 		return FALSE;
 	}
-	FIBITMAP *currentThumbnail = ((FREEIMAGEHEADER *)dib->data)->thumbnail;
+	FIBITMAP *currentThumbnail = FreeImage_GetThumbnail(dib);
 	if (currentThumbnail == thumbnail) {
 		return TRUE;
 	}
@@ -926,6 +926,9 @@ FreeImage_GetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor) {
 			// get the background color
 			FIRGBA8 *bkgnd_color = &((FREEIMAGEHEADER *)dib->data)->bkgnd_color;
 			memcpy(bkcolor, bkgnd_color, sizeof(FIRGBA8));
+
+			bkcolor->alpha = 0;
+
 			// get the background index
 			if (FreeImage_GetBPP(dib) == 8) {
 				auto *pal = FreeImage_GetPalette(dib);
@@ -934,15 +937,12 @@ FreeImage_GetBackgroundColor(FIBITMAP *dib, FIRGBA8 *bkcolor) {
 						if (bkgnd_color->green == pal[i].green) {
 							if (bkgnd_color->blue == pal[i].blue) {
 								bkcolor->alpha = (uint8_t)i;
-								return TRUE;
+								break;
 							}
 						}
 					}
 				}
 			}
-
-			bkcolor->alpha = 0;
-
 			return TRUE;
 		}
 	}
@@ -1058,7 +1058,7 @@ FreeImage_SetTransparentIndex(FIBITMAP *dib, int index) {
 	if (dib) {
 		int count = FreeImage_GetColorsUsed(dib);
 		if (count) {
-			auto *new_tt = (uint8_t *)malloc(count * sizeof(uint8_t));
+			auto *new_tt = static_cast<uint8_t *>(malloc(count * sizeof(uint8_t)));
 			memset(new_tt, 0xFF, count);
 			if ((index >= 0) && (index < count)) {
 				new_tt[index] = 0x00;
@@ -1084,8 +1084,8 @@ FreeImage_SetTransparentIndex(FIBITMAP *dib, int index) {
  */
 int DLL_CALLCONV
 FreeImage_GetTransparentIndex(FIBITMAP *dib) {
-	int count = FreeImage_GetTransparencyCount(dib);
-	uint8_t *tt = FreeImage_GetTransparencyTable(dib);
+	const int count = FreeImage_GetTransparencyCount(dib);
+	const uint8_t *tt = FreeImage_GetTransparencyTable(dib);
 	for (int i = 0; i < count; i++) {
 		if (tt[i] == 0) {
 			return i;
@@ -1098,7 +1098,7 @@ FreeImage_GetTransparentIndex(FIBITMAP *dib) {
 
 FIICCPROFILE * DLL_CALLCONV
 FreeImage_GetICCProfile(FIBITMAP *dib) {
-	FIICCPROFILE *profile = (dib) ? (FIICCPROFILE *)&((FREEIMAGEHEADER *)dib->data)->iccProfile : nullptr;
+	FIICCPROFILE *profile = (dib ? (FIICCPROFILE *)&((FREEIMAGEHEADER *)dib->data)->iccProfile : nullptr);
 	return profile;
 }
 
@@ -1109,6 +1109,7 @@ FreeImage_CreateICCProfile(FIBITMAP *dib, void *data, long size) {
 	// create the new profile
 	FIICCPROFILE *profile = FreeImage_GetICCProfile(dib);
 	if (size && profile) {
+		assert(data);
 		profile->data = malloc(size);
 		if (profile->data) {
 			memcpy(profile->data, data, profile->size = size);
@@ -1142,7 +1143,7 @@ FreeImage_GetWidth(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetHeight(FIBITMAP *dib) {
-	return (dib) ? FreeImage_GetInfoHeader(dib)->biHeight : 0;
+	return dib ? FreeImage_GetInfoHeader(dib)->biHeight : 0;
 }
 
 unsigned DLL_CALLCONV
@@ -1171,7 +1172,7 @@ FreeImage_GetColorsUsed(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetDIBSize(FIBITMAP *dib) {
-	return (dib) ? sizeof(FIBITMAPINFOHEADER) + (FreeImage_GetColorsUsed(dib) * sizeof(FIRGBA8)) + (FreeImage_GetPitch(dib) * FreeImage_GetHeight(dib)) : 0;
+	return dib ? sizeof(FIBITMAPINFOHEADER) + (FreeImage_GetColorsUsed(dib) * sizeof(FIRGBA8)) + (FreeImage_GetPitch(dib) * FreeImage_GetHeight(dib)) : 0;
 }
 
 FIRGBA8 * DLL_CALLCONV
@@ -1181,12 +1182,12 @@ FreeImage_GetPalette(FIBITMAP *dib) {
 
 unsigned DLL_CALLCONV
 FreeImage_GetDotsPerMeterX(FIBITMAP *dib) {
-	return (dib) ? FreeImage_GetInfoHeader(dib)->biXPelsPerMeter : 0;
+	return dib ? FreeImage_GetInfoHeader(dib)->biXPelsPerMeter : 0;
 }
 
 unsigned DLL_CALLCONV
 FreeImage_GetDotsPerMeterY(FIBITMAP *dib) {
-	return (dib) ? FreeImage_GetInfoHeader(dib)->biYPelsPerMeter : 0;
+	return dib ? FreeImage_GetInfoHeader(dib)->biYPelsPerMeter : 0;
 }
 
 void DLL_CALLCONV
