@@ -1936,9 +1936,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
-						int32_t strips = (y + rowsperstrip > height ? height - y : rowsperstrip);
+						const int32_t rows = (y + rowsperstrip > height ? height - y : rowsperstrip);
 
-						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, strips * src_line) == -1) {
+						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, rows * src_line) == -1) {
 							// ignore errors as they can be frequent and not really valid errors, especially with fax images
 							bThrowMessage = TRUE;							
 							/*
@@ -1948,14 +1948,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						} 
 						if (src_line == dst_line) {
 							// channel count match
-							for (int l = 0; l < strips; l++) {							
+							for (int l = 0; l < rows; l++) {
 								memcpy(bits, buf + l * src_line, src_line);
 								bits -= dst_pitch;
 							}
 						}
 						else {
 							if (srcBpp * 8 == srcBits) {
-								for (int l = 0; l < strips; l++) {
+								for (int l = 0; l < rows; l++) {
 									for (uint8_t* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch; pixel += Bpp, src_pixel += srcBpp) {
 										AssignPixel(pixel, src_pixel, Bpp);
 									}
@@ -1963,23 +1963,31 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								}
 							}
 							else { // not whole number of bytes
-								uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
-								for (int l = 0; l < strips; l++) {
-									uint32_t t = 0;
-									uint16_t stored_bits = 0;
-									if (bitspersample <= 8) {
-										for (uint8_t* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch;) {
+								const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
+								const uint8_t* src_pixel = buf;
+								if (bitspersample <= 8) {
+									for (int l = 0; l < rows; l++) {
+										uint8_t* dst_pixel = bits;
+										uint32_t t = 0;
+										uint16_t stored_bits = 0;
+										for (tmsize_t i = 0; i < src_line; ++i) {
 											t <<= 8;
 											t |= *src_pixel++;
 											stored_bits += 8;
 											while (stored_bits >= bitspersample) {
 												stored_bits -= bitspersample;
-												*pixel++ = static_cast<uint8_t>((t >> stored_bits) & bits_mask);
+												*dst_pixel++ = static_cast<uint8_t>((t >> stored_bits) & bits_mask);
 											}
 										}
+										bits -= dst_pitch;
 									}
-									else if (bitspersample <= 16) {
-										for (uint8_t* pixel = bits, *src_pixel = buf + l * src_line; pixel < bits + dst_pitch;) {
+								}
+								else if (bitspersample <= 16) {
+									for (int l = 0; l < rows; l++) {
+										uint8_t* dst_pixel = bits;
+										uint32_t t = 0;
+										uint16_t stored_bits = 0;
+										for (tmsize_t i = 0; i < src_line; i += 2) {
 											t <<= 8;
 											t |= *src_pixel++;
 											t <<= 8;
@@ -1987,15 +1995,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 											stored_bits += 16;
 											while (stored_bits >= bitspersample) {
 												stored_bits -= bitspersample;
-												*reinterpret_cast<uint16_t*>(pixel) = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
-												pixel += 2;
+												*reinterpret_cast<uint16_t*>(dst_pixel) = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
+												dst_pixel += 2;
 											}
 										}
+										bits -= dst_pitch;
 									}
-									else {
-										// not supported
-									}
-									bits -= dst_pitch;
+								}
+								else {
+									throw "Unsupported number of bits per sample";
 								}
 							}
 						}
