@@ -1575,7 +1575,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (planar_config == PLANARCONFIG_CONTIG && !header_only) {
 
-				auto * const buf = (uint8_t*)malloc(TIFFStripSize(tif) * sizeof(uint8_t));
+				auto * const buf = static_cast<uint8_t*>(malloc(TIFFStripSize(tif) * sizeof(uint8_t)));
 				if (!buf) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1606,7 +1606,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			else if (planar_config == PLANARCONFIG_SEPARATE && !header_only) {
 				tmsize_t stripsize = TIFFStripSize(tif) * sizeof(uint8_t);
-				auto * const buf = (uint8_t*)malloc(2 * stripsize);
+				auto * const buf = static_cast<uint8_t*>(malloc(2 * stripsize));
 				if (!buf) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1716,7 +1716,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// read the tiff lines and save them in the DIB
 
-				auto * const buf = (uint8_t*)malloc(TIFFStripSize(tif) * sizeof(uint8_t));
+				auto * const buf = static_cast<uint8_t*>(malloc(TIFFStripSize(tif) * sizeof(uint8_t)));
 				if (!buf) {
 					FreeImage_Unload(alpha);
 					throw FI_MSG_ERROR_MEMORY;
@@ -1975,12 +1975,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 										uint8_t* dst_pixel = bits;
 										uint32_t t = 0;
 										uint16_t stored_bits = 0;
-										for (tmsize_t i = 0; i < src_line; i += 2) {
+										for (tmsize_t i = 0; i < src_line; ++i) {
 											t <<= 8;
 											t |= *src_pixel++;
-											t <<= 8;
-											t |= *src_pixel++;
-											stored_bits += 16;
+											stored_bits += 8;
 											while (stored_bits >= bitspersample) {
 												stored_bits -= bitspersample;
 												*reinterpret_cast<uint16_t*>(dst_pixel) = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
@@ -2185,7 +2183,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// read the tiff lines and save them in the DIB
 
-				auto * const buf = (uint8_t*)malloc(TIFFStripSize(tif) * sizeof(uint8_t));
+				auto * const buf = static_cast<uint8_t*>(malloc(TIFFStripSize(tif) * sizeof(uint8_t)));
 				if (!buf) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -2240,7 +2238,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
-					auto * const buf = (uint8_t*)malloc(TIFFStripSize(tif) * sizeof(uint8_t));
+					auto * const buf = static_cast<uint8_t*>(malloc(TIFFStripSize(tif) * sizeof(uint8_t)));
 					if (!buf) {
 						throw FI_MSG_ERROR_MEMORY;
 					}
@@ -2548,7 +2546,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 						// get the transparency table
 						uint8_t *trns = FreeImage_GetTransparencyTable(dib);
 
-						auto * const buffer = (uint8_t *)malloc(width * sizeof(uint8_t) * 2);
+						auto * const buffer = static_cast<uint8_t*>(malloc(width * sizeof(uint8_t) * 2));
 						if (!buffer) {
 							throw FI_MSG_ERROR_MEMORY;
 						}
@@ -2576,7 +2574,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 					}
 					else {
 						// other cases
-						auto * const buffer = (uint8_t *)malloc(pitch * sizeof(uint8_t));
+						auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
 						if (!buffer) {
 							throw FI_MSG_ERROR_MEMORY;
 						}
@@ -2596,7 +2594,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 				case 24:
 				case 32:
 				{
-					auto * const buffer = (uint8_t *)malloc(pitch * sizeof(uint8_t));
+					auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
 					if (!buffer) {
 						throw FI_MSG_ERROR_MEMORY;
 					}
@@ -2631,7 +2629,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		} else if (image_type == FIT_RGBF && (flags & TIFF_LOGLUV) == TIFF_LOGLUV) {
 			// RGBF image => store as XYZ using a LogLuv encoding
 
-			auto * const buffer = (uint8_t *)malloc(pitch * sizeof(uint8_t));
+			auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
 			if (!buffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
@@ -2646,7 +2644,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		} else {
 			// just dump the dib (tiff supports all dib types)
 			
-			auto * const buffer = (uint8_t *)malloc(pitch * sizeof(uint8_t));
+			auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
 			if (!buffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
