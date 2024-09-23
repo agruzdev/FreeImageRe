@@ -1058,7 +1058,7 @@ SupportsNoPixels() {
 static void * DLL_CALLCONV
 Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	// wrapper for TIFF I/O
-	auto *fio = (fi_TIFFIO*)malloc(sizeof(fi_TIFFIO));
+	auto *fio = static_cast<fi_TIFFIO*>(malloc(sizeof(fi_TIFFIO)));
 	if (!fio) return nullptr;
 	fio->io = io;
 	fio->handle = handle;
@@ -1369,7 +1369,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	const FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
-		fi_TIFFIO *fio = (fi_TIFFIO*)data;
+		fi_TIFFIO *fio = static_cast<fi_TIFFIO*>(data);
 		tif = fio->tif;
 
 		if (page != -1) {
@@ -1445,7 +1445,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (!header_only) {
 
-				raster = (uint32_t*)_TIFFmalloc(width * sizeof(uint32_t) * height);
+				raster = static_cast<uint32_t*>(_TIFFmalloc(width * sizeof(uint32_t) * height));
 				if (!raster) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1685,7 +1685,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 
 			// create a new DIB
-			const uint16_t chCount = MIN<uint16_t>(samplesperpixel, 4);
+			const uint16_t chCount = std::min<uint16_t>(samplesperpixel, 4);
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, chCount);
 			if (!dib) {
 				FreeImage_Unload(alpha);
@@ -1883,7 +1883,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// ---------------------------------------------------------------------------------
 
 			// create a new DIB
-			const uint16_t chCount = MIN<uint16_t>(samplesperpixel, 4);
+			const uint16_t chCount = std::min<uint16_t>(samplesperpixel, 4);
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, chCount);
 			if (!dib) {
 				throw FI_MSG_ERROR_MEMORY;
@@ -1972,7 +1972,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								}
 								else if (bitspersample <= 16) {
 									for (uint32_t l = 0; l < rows; l++) {
-										uint8_t* dst_pixel = bits;
+										uint16_t* dst_pixel = reinterpret_cast<uint16_t*>(bits);
 										uint32_t t = 0;
 										uint16_t stored_bits = 0;
 										for (tmsize_t i = 0; i < src_line; ++i) {
@@ -1981,8 +1981,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 											stored_bits += 8;
 											while (stored_bits >= bitspersample) {
 												stored_bits -= bitspersample;
-												*reinterpret_cast<uint16_t*>(dst_pixel) = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
-												dst_pixel += 2;
+												*dst_pixel++ = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
 											}
 										}
 										bits -= dst_pitch;
@@ -2092,18 +2091,19 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (planar_config == PLANARCONFIG_CONTIG && !header_only) {
 				
 				// get the maximum number of bytes required to contain a tile
-				tmsize_t tileSize = TIFFTileSize(tif);
+				const tmsize_t tileSize = TIFFTileSize(tif);
 
 				// allocate tile buffer
-				auto *tileBuffer = (uint8_t*)malloc(tileSize * sizeof(uint8_t));
+				auto * const tileBuffer = static_cast<uint8_t*>(malloc(tileSize * sizeof(uint8_t)));
 				if (!tileBuffer) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
+				std::unique_ptr<void, decltype(&free)> safeBuf(tileBuffer, &free);
 
 				// calculate src line and dst pitch
-				int dst_pitch = FreeImage_GetPitch(dib);
-				uint32_t tileRowSize = (uint32_t)TIFFTileRowSize(tif);
-				uint32_t imageRowSize = (uint32_t)TIFFScanlineSize(tif);
+				const int dst_pitch = FreeImage_GetPitch(dib);
+				const uint32_t tileRowSize = (uint32_t)TIFFTileRowSize(tif);
+				const uint32_t imageRowSize = (uint32_t)TIFFScanlineSize(tif);
 
 
 				// In the tiff file the lines are saved from up to down 
@@ -2119,7 +2119,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						// read one tile
 						if (TIFFReadTile(tif, tileBuffer, x, y, 0, 0) < 0) {
-							free(tileBuffer);
 							throw "Corrupted tiled TIFF file";
 						}
 						// convert to strip
@@ -2128,7 +2127,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						} else {
 							src_line = tileRowSize;
 						}
-						uint8_t *src_bits = tileBuffer;
+						const uint8_t *src_bits = tileBuffer;
 						uint8_t *dst_bits = bits + rowSize;
 						for (uint32_t k = 0; k < nrows; k++) {
 							memcpy(dst_bits, src_bits, src_line);
@@ -2143,7 +2142,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 				SwapRedBlue32(dib);
 #endif
-				free(tileBuffer);
 			}
 			else if (planar_config == PLANARCONFIG_SEPARATE) {
 				throw "Separated tiled TIFF images are not supported";
@@ -2173,8 +2171,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (planar_config == PLANARCONFIG_CONTIG && !header_only) {
 				// calculate the line + pitch (separate for scr & dest)
 
-				tmsize_t src_line = TIFFScanlineSize(tif);
-				int dst_pitch = FreeImage_GetPitch(dib);
+				const tmsize_t src_line = TIFFScanlineSize(tif);
+				const int dst_pitch = FreeImage_GetPitch(dib);
 
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -2226,8 +2224,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// calculate the line + pitch (separate for scr & dest)
 
-				tmsize_t src_line = TIFFScanlineSize(tif);
-				unsigned dst_pitch = FreeImage_GetPitch(dib);
+				const tmsize_t src_line = TIFFScanlineSize(tif);
+				const unsigned dst_pitch = FreeImage_GetPitch(dib);
 
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -2491,7 +2489,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 			uint16_t nColors = (uint16_t)FreeImage_GetColorsUsed(dib);
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
-			r = (uint16_t *) _TIFFmalloc(sizeof(uint16_t) * 3 * nColors);
+			r = static_cast<uint16_t*>(_TIFFmalloc(sizeof(uint16_t) * 3 * nColors));
 			if (!r) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
