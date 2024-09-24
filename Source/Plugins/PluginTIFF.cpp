@@ -1996,57 +1996,103 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				else if (planar_config == PLANARCONFIG_SEPARATE) {
 
-					if (bitspersample < 8) {
-						throw "Unsupported number of bits per sample";
-					}
-
 					const unsigned Bpc = bitspersample / 8;
 					uint8_t* dib_strip = bits;
 					// - loop for strip blocks -
-					
+
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
 						const uint32_t strips = std::min(height - y, rowsperstrip);
-						
+
 						// - loop for channels (planes) -
-						
+
 						for (uint16_t sample = 0; sample < samplesperpixel; sample++) {
-							
+
 							if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, sample), buf, strips * src_line) == -1) {
 								// ignore errors as they can be frequent and not really valid errors, especially with fax images
-								bThrowMessage = TRUE;	
-							} 
+								bThrowMessage = TRUE;
+							}
 
 							if (sample >= chCount) {
 								// TODO Write to Extra Channel
-								break; 
+								break;
 							}
-							
-							const unsigned channelOffset = sample * Bpc;
 
-							// - loop for strips in block -
+							if (src_line == dst_line && 1 == samplesperpixel) {
+								uint8_t* dst_line_begin = dib_strip;
+								for (uint32_t l = 0; l < strips; l++) {
+									memcpy(dst_line_begin, buf + l * src_line, src_line);
+									dst_line_begin -= dst_pitch;
+								}
+							}
+							else {
+								if (0 == (bitspersample & 7)) {
+									const unsigned channelOffset = sample * Bpc;
 
-							uint8_t* src_line_begin = buf;
-							uint8_t* dst_line_begin = dib_strip;
-							for (uint32_t l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch ) {
+									// - loop for strips in block -
 
-								// - loop for pixels in strip -
+									uint8_t* src_line_begin = buf;
+									uint8_t* dst_line_begin = dib_strip;
+									for (uint32_t l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch) {
 
-								const uint8_t* const src_line_end = src_line_begin + src_line;
+										// - loop for pixels in strip -
 
-								for (uint8_t* src_bits = src_line_begin, * dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
-									// actually assigns channel
-									AssignPixel(dst_bits + channelOffset, src_bits, Bpc);
-								} // line
+										const uint8_t* const src_line_end = src_line_begin + src_line;
 
-							} // strips
-
+										for (uint8_t* src_bits = src_line_begin, *dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
+											// actually assigns channel
+											AssignPixel(dst_bits + channelOffset, src_bits, Bpc);
+										} // line
+									} // strips
+								}
+								else { // not whole number of bytes
+									const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
+									const uint8_t *src_pixel = buf;
+									uint8_t *dst_line_begin = dib_strip;
+									if (bitspersample <= 8) {
+										for (uint32_t l = 0; l < strips; ++l) {
+											uint8_t *dst_pixel = dst_line_begin + sample;
+											uint32_t t = 0;
+											uint16_t stored_bits = 0;
+											for (tmsize_t i = 0; i < src_line; ++i) {
+												t <<= 8;
+												t |= *src_pixel++;
+												stored_bits += 8;
+												while (stored_bits >= bitspersample) {
+													stored_bits -= bitspersample;
+													*dst_pixel = static_cast<uint8_t>((t >> stored_bits) & bits_mask);
+													dst_pixel += chCount;
+												}
+											}
+											dst_line_begin -= dst_pitch;
+										}
+									}
+									else if (bitspersample <= 16) {
+										for (uint32_t l = 0; l < strips; ++l) {
+											uint16_t *dst_pixel = reinterpret_cast<uint16_t*>(dst_line_begin) + sample;
+											uint32_t t = 0;
+											uint16_t stored_bits = 0;
+											for (tmsize_t i = 0; i < src_line; ++i) {
+												t <<= 8;
+												t |= *src_pixel++;
+												stored_bits += 8;
+												while (stored_bits >= bitspersample) {
+													stored_bits -= bitspersample;
+													*dst_pixel = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
+													dst_pixel += chCount;
+												}
+											}
+											dst_line_begin -= dst_pitch;
+										}
+									}
+									else {
+										throw "Unsupported number of bits per sample";
+									}
+								}
+							}
 						} // channels
-
 						// done with a strip block, incr to the next
 						dib_strip -= strips * dst_pitch;
-
 					} // height
-
 				}
 
 				if (bThrowMessage) {
