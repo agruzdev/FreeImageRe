@@ -317,6 +317,7 @@ FreeImage_AllocateBitmap(FIBOOL header_only, uint8_t *ext_bits, unsigned ext_pit
 		case FIT_BITMAP:
 			switch (bpp) {
 				case 1:
+				case 2:
 				case 4:
 				case 8:
 					break;

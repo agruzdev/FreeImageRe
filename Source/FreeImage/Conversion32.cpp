@@ -39,7 +39,12 @@ FreeImage_ConvertLine1To32(uint8_t *target, uint8_t *source, int width_in_pixels
 		target[FI_RGBA_RED]		= palette[index].red;
 		target[FI_RGBA_ALPHA]	= 0xFF;
 		target += 4;
-	}	
+	}
+}
+
+void DLL_CALLCONV
+FreeImage_ConvertLine2To32(uint8_t* target, uint8_t* source, int width_in_pixels, FIRGBA8* palette) {
+	FreeImage_ConvertLine2To32MapTransparency(target, source, width_in_pixels, palette, nullptr, 0);
 }
 
 void DLL_CALLCONV
@@ -47,7 +52,7 @@ FreeImage_ConvertLine4To32(uint8_t *target, uint8_t *source, int width_in_pixels
 	FIBOOL low_nibble = FALSE;
 	int x = 0;
 
-	for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
+	for (int cols = 0; cols < width_in_pixels; ++cols) {
 		if (low_nibble) {
 			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].blue;
 			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].green;
@@ -142,7 +147,29 @@ FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int 
 		target[FI_RGBA_RED]		= palette[index].red;
 		target[FI_RGBA_ALPHA] = (index < transparent_pixels) ? table[index] : 255;		
 		target += 4;
-	}	
+	}
+}
+
+void DLL_CALLCONV
+FreeImage_ConvertLine2To32MapTransparency(uint8_t* target, uint8_t* source, int width_in_pixels, FIRGBA8* palette, uint8_t* table, int transparent_pixels) {
+	for (int cols = 0, i = 0, x = 0; cols < width_in_pixels; ++cols) {
+		const uint8_t idx = ((source[x] >> (6 - i * 2)) & 3);
+		switch (i) {
+		case 3:
+			i = 0;
+			++x;
+			break;
+		default:
+			++i;
+			break;
+		}
+		target[FI_RGBA_BLUE] = palette[idx].blue;
+		target[FI_RGBA_GREEN] = palette[idx].green;
+		target[FI_RGBA_RED] = palette[idx].red;
+
+		target[FI_RGBA_ALPHA] = (idx < transparent_pixels) ? table[idx] : 255;
+		target += 4;
+	}
 }
 
 void DLL_CALLCONV
@@ -224,7 +251,23 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 				} else {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine1To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-					}					
+					}
+				}
+
+				return new_dib;
+			}
+
+			case 2:
+			{
+				if (bIsTransparent) {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine2To32MapTransparency(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
+					}
+				}
+				else {
+					for (int rows = 0; rows < height; rows++) {
+						FreeImage_ConvertLine2To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
+					}
 				}
 
 				return new_dib;
@@ -239,7 +282,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 				} else {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine4To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-					}					
+					}
 				}
 
 				return new_dib;
@@ -254,7 +297,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 				} else {
 					for (int rows = 0; rows < height; rows++) {
 						FreeImage_ConvertLine8To32(FreeImage_GetScanLine(new_dib, rows), FreeImage_GetScanLine(dib, rows), width, FreeImage_GetPalette(dib));
-					}					
+					}
 				}
 
 				return new_dib;
@@ -336,7 +379,7 @@ FreeImage_ConvertTo32Bits(FIBITMAP *dib) {
 			}
 			src_bits += src_pitch;
 			dst_bits += dst_pitch;
-		}		
+		}
 
 		return new_dib;
 	}

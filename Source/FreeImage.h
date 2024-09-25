@@ -1030,6 +1030,8 @@ DLL_API void DLL_CALLCONV FreeImage_ConvertLine16To24_565(uint8_t *target, uint8
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine32To24(uint8_t *target, uint8_t *source, int width_in_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8* palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine2To32(uint8_t* target, uint8_t* source, int width_in_pixels, FIRGBA8* palette);
+DLL_API void DLL_CALLCONV FreeImage_ConvertLine2To32MapTransparency(uint8_t* target, uint8_t* source, int width_in_pixels, FIRGBA8* palette, uint8_t* table, int transparent_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine4To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels);
 DLL_API void DLL_CALLCONV FreeImage_ConvertLine8To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette);

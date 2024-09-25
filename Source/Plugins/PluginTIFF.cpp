@@ -379,7 +379,7 @@ ReadPalette(TIFF *tiff, uint16_t photometric, uint16_t bitspersample, FIBITMAP *
 					pal[1].red = pal[1].green = pal[1].blue = 255;
 				}
 
-			} else if ((bitspersample == 4) ||(bitspersample == 8)) {
+			} else if ((bitspersample == 2) || (bitspersample == 4) || (bitspersample == 8)) {
 				// need to build the scale for greyscale images
 				int ncolors = FreeImage_GetColorsUsed(dib);
 
@@ -464,7 +464,7 @@ CreateImageType(FIBOOL header_only, FREE_IMAGE_TYPE fit, int width, int height, 
 		}
 		else {
 
-			dib = FreeImage_AllocateHeader(header_only, width, height, MIN(bpp, 32), FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+			dib = FreeImage_AllocateHeader(header_only, width, height, std::min(bpp, 32), FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
 		}
 
 
@@ -1120,6 +1120,7 @@ IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samp
 
 	switch (bitspersample) {
 		case 1:
+		case 2:
 		case 4:
 			if ((photometric == PHOTOMETRIC_MINISWHITE) || (photometric == PHOTOMETRIC_MINISBLACK) || (photometric == PHOTOMETRIC_PALETTE)) { 
 				return TRUE;
