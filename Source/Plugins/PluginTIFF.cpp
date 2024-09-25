@@ -1346,6 +1346,30 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 
 // --------------------------------------------------------------------------
 
+template <typename DT> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_line, uint8_t *dst_line_begin, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
+	const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
+	const uint8_t *src_pixel = buf;
+
+	for (uint32_t l{}; l < strips; ++l) {
+		auto *dst_pixel = reinterpret_cast<DT*>(dst_line_begin) + sample;
+		uint32_t t{};
+		uint16_t stored_bits{};
+		for (tmsize_t i{}; i < src_line; ++i) {
+			t <<= 8;
+			t |= *src_pixel++;
+			stored_bits += 8;
+			while (stored_bits >= bitspersample) {
+				stored_bits -= bitspersample;
+				*dst_pixel = static_cast<DT>((t >> stored_bits) & bits_mask);
+				dst_pixel += chCount;
+			}
+		}
+		dst_line_begin -= dst_pitch;
+	}
+}
+
+// --------------------------------------------------------------------------
+
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (!handle || !data ) {
@@ -1951,45 +1975,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								}
 							}
 							else { // not whole number of bytes
-								const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
-								const uint8_t* src_pixel = buf;
 								if (bitspersample <= 8) {
-									for (uint32_t l = 0; l < rows; l++) {
-										uint8_t* dst_pixel = bits;
-										uint32_t t = 0;
-										uint16_t stored_bits = 0;
-										for (tmsize_t i = 0; i < src_line; ++i) {
-											t <<= 8;
-											t |= *src_pixel++;
-											stored_bits += 8;
-											while (stored_bits >= bitspersample) {
-												stored_bits -= bitspersample;
-												*dst_pixel++ = static_cast<uint8_t>((t >> stored_bits) & bits_mask);
-											}
-										}
-										bits -= dst_pitch;
-									}
+									DecodeStrip<uint8_t>(buf, src_line, bits, dst_pitch, rows, 0, 1, bitspersample);
 								}
 								else if (bitspersample <= 16) {
-									for (uint32_t l = 0; l < rows; l++) {
-										uint16_t* dst_pixel = reinterpret_cast<uint16_t*>(bits);
-										uint32_t t = 0;
-										uint16_t stored_bits = 0;
-										for (tmsize_t i = 0; i < src_line; ++i) {
-											t <<= 8;
-											t |= *src_pixel++;
-											stored_bits += 8;
-											while (stored_bits >= bitspersample) {
-												stored_bits -= bitspersample;
-												*dst_pixel++ = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
-											}
-										}
-										bits -= dst_pitch;
-									}
+									DecodeStrip<uint16_t>(buf, src_line, bits, dst_pitch, rows, 0, 1, bitspersample);
 								}
 								else {
 									throw "Unsupported number of bits per sample";
 								}
+								bits -= rows * dst_pitch;
 							}
 						}
 					}
@@ -2045,44 +2040,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									} // strips
 								}
 								else { // not whole number of bytes
-									const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
-									const uint8_t *src_pixel = buf;
-									uint8_t *dst_line_begin = dib_strip;
 									if (bitspersample <= 8) {
-										for (uint32_t l = 0; l < strips; ++l) {
-											uint8_t *dst_pixel = dst_line_begin + sample;
-											uint32_t t = 0;
-											uint16_t stored_bits = 0;
-											for (tmsize_t i = 0; i < src_line; ++i) {
-												t <<= 8;
-												t |= *src_pixel++;
-												stored_bits += 8;
-												while (stored_bits >= bitspersample) {
-													stored_bits -= bitspersample;
-													*dst_pixel = static_cast<uint8_t>((t >> stored_bits) & bits_mask);
-													dst_pixel += chCount;
-												}
-											}
-											dst_line_begin -= dst_pitch;
-										}
+										DecodeStrip<uint8_t>(buf, src_line,  dib_strip, dst_pitch, strips, sample, chCount, bitspersample);
 									}
 									else if (bitspersample <= 16) {
-										for (uint32_t l = 0; l < strips; ++l) {
-											uint16_t *dst_pixel = reinterpret_cast<uint16_t*>(dst_line_begin) + sample;
-											uint32_t t = 0;
-											uint16_t stored_bits = 0;
-											for (tmsize_t i = 0; i < src_line; ++i) {
-												t <<= 8;
-												t |= *src_pixel++;
-												stored_bits += 8;
-												while (stored_bits >= bitspersample) {
-													stored_bits -= bitspersample;
-													*dst_pixel = static_cast<uint16_t>((t >> stored_bits) & bits_mask);
-													dst_pixel += chCount;
-												}
-											}
-											dst_line_begin -= dst_pitch;
-										}
+										DecodeStrip<uint16_t>(buf, src_line, dib_strip, dst_pitch, strips, sample, chCount, bitspersample);
 									}
 									else {
 										throw "Unsupported number of bits per sample";
