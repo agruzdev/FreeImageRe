@@ -49,27 +49,7 @@ FreeImage_ConvertLine2To32(uint8_t* target, uint8_t* source, int width_in_pixels
 
 void DLL_CALLCONV
 FreeImage_ConvertLine4To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
-	FIBOOL low_nibble = FALSE;
-	int x = 0;
-
-	for (int cols = 0; cols < width_in_pixels; ++cols) {
-		if (low_nibble) {
-			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].blue;
-			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].green;
-			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].red;
-
-			x++;
-		} else {
-			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].blue;
-			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].green;
-			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].red;
-		}
-
-		low_nibble = !low_nibble;
-
-		target[FI_RGBA_ALPHA] = 0xFF;
-		target += 4;
-	}
+	FreeImage_ConvertLine4To32MapTransparency(target, source, width_in_pixels, palette, nullptr, 0);
 }
 
 void DLL_CALLCONV
@@ -140,7 +120,7 @@ FreeImage_ConvertLine24To32(uint8_t *target, uint8_t *source, int width_in_pixel
 void DLL_CALLCONV
 FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
+		const int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
 
 		target[FI_RGBA_BLUE]	= palette[index].blue;
 		target[FI_RGBA_GREEN]	= palette[index].green;
@@ -152,21 +132,12 @@ FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int 
 
 void DLL_CALLCONV
 FreeImage_ConvertLine2To32MapTransparency(uint8_t* target, uint8_t* source, int width_in_pixels, FIRGBA8* palette, uint8_t* table, int transparent_pixels) {
-	for (int cols = 0, i = 0, x = 0; cols < width_in_pixels; ++cols) {
-		const uint8_t idx = ((source[x] >> (6 - i * 2)) & 3);
-		switch (i) {
-		case 3:
-			i = 0;
-			++x;
-			break;
-		default:
-			++i;
-			break;
-		}
+	for (int cols = 0; cols < width_in_pixels; ++cols) {
+		const uint8_t idx = ((source[cols >> 2] >> (6 - ((cols & 3) << 1))) & 3);
+
 		target[FI_RGBA_BLUE] = palette[idx].blue;
 		target[FI_RGBA_GREEN] = palette[idx].green;
 		target[FI_RGBA_RED] = palette[idx].red;
-
 		target[FI_RGBA_ALPHA] = (idx < transparent_pixels) ? table[idx] : 255;
 		target += 4;
 	}
@@ -174,26 +145,13 @@ FreeImage_ConvertLine2To32MapTransparency(uint8_t* target, uint8_t* source, int 
 
 void DLL_CALLCONV
 FreeImage_ConvertLine4To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
-	FIBOOL low_nibble = FALSE;
-	int x = 0;
+	for (int cols = 0; cols < width_in_pixels; ++cols) {
+		const uint8_t idx = ((source[cols >> 1] >> (4 - ((cols & 1) << 2))) & 0x0F);
 
-	for (int cols = 0 ; cols < width_in_pixels ; ++cols) {
-		if (low_nibble) {
-			target[FI_RGBA_BLUE]	= palette[LOWNIBBLE(source[x])].blue;
-			target[FI_RGBA_GREEN]	= palette[LOWNIBBLE(source[x])].green;
-			target[FI_RGBA_RED]		= palette[LOWNIBBLE(source[x])].red;
-			target[FI_RGBA_ALPHA]	= (LOWNIBBLE(source[x]) < transparent_pixels) ? table[LOWNIBBLE(source[x])] : 255;
-
-			x++;
-		} else {
-			target[FI_RGBA_BLUE]	= palette[HINIBBLE(source[x]) >> 4].blue;
-			target[FI_RGBA_GREEN]	= palette[HINIBBLE(source[x]) >> 4].green;
-			target[FI_RGBA_RED]		= palette[HINIBBLE(source[x]) >> 4].red;
-			target[FI_RGBA_ALPHA]	= (HINIBBLE(source[x] >> 4) < transparent_pixels) ? table[HINIBBLE(source[x]) >> 4] : 255;
-		}
-
-		low_nibble = !low_nibble;
-				
+		target[FI_RGBA_BLUE] = palette[idx].blue;
+		target[FI_RGBA_GREEN] = palette[idx].green;
+		target[FI_RGBA_RED] = palette[idx].red;
+		target[FI_RGBA_ALPHA]	= (idx < transparent_pixels) ? table[idx] : 255;
 		target += 4;
 	}
 }
@@ -201,11 +159,13 @@ FreeImage_ConvertLine4To32MapTransparency(uint8_t *target, uint8_t *source, int 
 void DLL_CALLCONV
 FreeImage_ConvertLine8To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_BLUE]	= palette[source[cols]].blue;
-		target[FI_RGBA_GREEN]	= palette[source[cols]].green;
-		target[FI_RGBA_RED]		= palette[source[cols]].red;
-		target[FI_RGBA_ALPHA] = (source[cols] < transparent_pixels) ? table[source[cols]] : 255;
-		target += 4;		
+		const uint8_t idx = source[cols];
+
+		target[FI_RGBA_BLUE]	= palette[idx].blue;
+		target[FI_RGBA_GREEN]	= palette[idx].green;
+		target[FI_RGBA_RED]		= palette[idx].red;
+		target[FI_RGBA_ALPHA] = (idx < transparent_pixels) ? table[idx] : 255;
+		target += 4;
 	}
 }
 
