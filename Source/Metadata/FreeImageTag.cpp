@@ -51,9 +51,8 @@ FreeImage_CreateTag() {
 
 	if (tag) {
 		unsigned tag_size = sizeof(FITAGHEADER); 
-		tag->data = (uint8_t *)malloc(tag_size * sizeof(uint8_t));
+		tag->data = static_cast<uint8_t*>(calloc(tag_size, sizeof(uint8_t)));
 		if (tag->data) {
-			memset(tag->data, 0, tag_size);
 			return tag;
 		}
 		free(tag);

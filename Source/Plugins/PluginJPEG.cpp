@@ -438,19 +438,20 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	memcpy(value, profile, length);
 	value[length] = '\0';
 
+	bool bSuccess{};
 	// create a tag
 	if (auto *tag = FreeImage_CreateTag()) {
 		unsigned int count = (unsigned int)length + 1;	// includes the null value
 
-		FreeImage_SetTagID(tag, JPEG_COM);
-		FreeImage_SetTagKey(tag, "Comment");
-		FreeImage_SetTagLength(tag, count);
-		FreeImage_SetTagCount(tag, count);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, value);
-		
+		bSuccess = FreeImage_SetTagID(tag, JPEG_COM);
+		bSuccess = bSuccess && FreeImage_SetTagKey(tag, "Comment");
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag, count);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag, count);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag, value);
+
 		// store the tag
-		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
 
 		// destroy the tag
 		FreeImage_DeleteTag(tag);
@@ -458,7 +459,7 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 
 	free(value);
 
-	return TRUE;
+	return bSuccess ? TRUE : FALSE;
 }
 
 /** 
@@ -627,8 +628,8 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 		return FALSE;
 	}
 
+	bool bSuccess{};
 	// verify the identifying string
-
 	if (memcmp(xmp_signature, profile, strlen(xmp_signature)) == 0) {
 		// XMP profile
 
@@ -637,24 +638,22 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 
 		// create a tag
 		if (auto *tag = FreeImage_CreateTag()) {
-			FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
-			FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-			FreeImage_SetTagLength(tag, (uint32_t)length);
-			FreeImage_SetTagCount(tag, (uint32_t)length);
-			FreeImage_SetTagType(tag, FIDT_ASCII);
-			FreeImage_SetTagValue(tag, profile);
+			bSuccess = FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
+			bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
+			bSuccess = bSuccess && FreeImage_SetTagLength(tag, (uint32_t)length);
+			bSuccess = bSuccess && FreeImage_SetTagCount(tag, (uint32_t)length);
+			bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
+			bSuccess = bSuccess && FreeImage_SetTagValue(tag, profile);
 			
 			// store the tag
-			FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
+			bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 
 			// destroy the tag
 			FreeImage_DeleteTag(tag);
 		}
-
-		return TRUE;
 	}
 
-	return FALSE;
+	return bSuccess ? TRUE : FALSE;
 }
 
 /**

@@ -100,7 +100,7 @@ _jxr_io_Close(WMPStream** ppWS) {
 
 static ERR 
 _jxr_io_Create(WMPStream **ppWS, FreeImageJXRIO *jxr_io) {
-	*ppWS = (WMPStream*)calloc(1, sizeof(**ppWS));
+	*ppWS = static_cast<WMPStream*>(calloc(1, sizeof(**ppWS)));
 	if (*ppWS) {
 		WMPStream *pWS = *ppWS;
 
@@ -452,40 +452,41 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 		return FALSE;
 	}
 
+	bool bSuccess{};
 	// create a tag
 	if (auto *tag = FreeImage_CreateTag()) {
 		// set tag ID
-		FreeImage_SetTagID(tag, tag_id);
+		bSuccess = FreeImage_SetTagID(tag, tag_id);
 		// set tag type, count, length and value
 		switch (varSrc.vt) {
 			case DPKVT_LPSTR:
-				FreeImage_SetTagType(tag, FIDT_ASCII);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
 				dwSize = (uint32_t)strlen(varSrc.VT.pszVal) + 1;
-				FreeImage_SetTagCount(tag, dwSize);
-				FreeImage_SetTagLength(tag, dwSize);
-				FreeImage_SetTagValue(tag, varSrc.VT.pszVal);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag, dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag, dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag, varSrc.VT.pszVal);
 				break;
-			
+
 			case DPKVT_LPWSTR:
-				FreeImage_SetTagType(tag, FIDT_UNDEFINED);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_UNDEFINED);
 				dwSize = (uint32_t)(sizeof(U16) * (wcslen((wchar_t *) varSrc.VT.pwszVal) + 1)); // +1 for NULL term
-				FreeImage_SetTagCount(tag, dwSize);
-				FreeImage_SetTagLength(tag, dwSize);
-				FreeImage_SetTagValue(tag, varSrc.VT.pwszVal);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag, dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag, dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag, varSrc.VT.pwszVal);
 				break;
-	            
+
 			case DPKVT_UI2:
-				FreeImage_SetTagType(tag, FIDT_SHORT);
-				FreeImage_SetTagCount(tag, 1);
-				FreeImage_SetTagLength(tag, 2);
-				FreeImage_SetTagValue(tag, &varSrc.VT.uiVal);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_SHORT);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag, 1);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag, 2);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag, &varSrc.VT.uiVal);
 				break;
 
 			case DPKVT_UI4:
-				FreeImage_SetTagType(tag, FIDT_LONG);
-				FreeImage_SetTagCount(tag, 1);
-				FreeImage_SetTagLength(tag, 4);
-				FreeImage_SetTagValue(tag, &varSrc.VT.ulVal);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_LONG);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag, 1);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag, 4);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag, &varSrc.VT.ulVal);
 				break;
 
 			default:
@@ -494,14 +495,14 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 		}
 		// get the tag desctiption
 		const char *description = s.getTagDescription(TagLib::EXIF_MAIN, tag_id);
-		FreeImage_SetTagDescription(tag, description);
+		bSuccess = bSuccess && FreeImage_SetTagDescription(tag, description);
 
 		// store the tag
-		FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, key, tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, key, tag);
 
 		FreeImage_DeleteTag(tag);
 	}
-	return TRUE;
+	return bSuccess ? TRUE : FALSE;
 }
 
 /**

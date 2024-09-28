@@ -245,9 +245,8 @@ static FIBITMAP* PhiMatrix(FIBITMAP **gradients, float *avgGrad, int nlevels, fl
 	FIBITMAP **phi{};
 
 	try {
-		phi = (FIBITMAP**)malloc(nlevels * sizeof(FIBITMAP*));
+		phi = static_cast<FIBITMAP**>(calloc(nlevels, sizeof(FIBITMAP*)));
 		if (!phi) throw(1);
-		memset(phi, 0, nlevels * sizeof(FIBITMAP*));
 
 		for (int k = nlevels-1; k >= 0; k--) {
 			// compute phi(k)
@@ -521,16 +520,14 @@ static FIBITMAP* tmoFattal02(FIBITMAP *Y, float alpha, float beta) {
 		}
 
 		// create the Gaussian pyramid
-		pyramid = (FIBITMAP**)malloc(nlevels * sizeof(FIBITMAP*));
+		pyramid = static_cast<FIBITMAP**>(calloc(nlevels, sizeof(FIBITMAP*)));
 		if (!pyramid) throw(1);
-		memset(pyramid, 0, nlevels * sizeof(FIBITMAP*));
 
 		if (!GaussianPyramid(H, pyramid, nlevels)) throw(1);
 
 		// calculate gradient magnitude and its average value on each pyramid level
-		gradients = (FIBITMAP**)malloc(nlevels * sizeof(FIBITMAP*));
+		gradients = static_cast<FIBITMAP**>(calloc(nlevels, sizeof(FIBITMAP*)));
 		if (!gradients) throw(1);
-		memset(gradients, 0, nlevels * sizeof(FIBITMAP*));
 		avgGrad = (float*)malloc(nlevels * sizeof(float));
 		if (!avgGrad) throw(1);
 

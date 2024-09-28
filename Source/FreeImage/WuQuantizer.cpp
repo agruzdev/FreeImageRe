@@ -57,14 +57,14 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 	Qadd = nullptr;
 
 	// Allocate 3D arrays
-	gm2 = (float*)malloc(SIZE_3D * sizeof(float));
-	wt = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
-	mr = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
-	mg = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
-	mb = (int32_t*)malloc(SIZE_3D * sizeof(int32_t));
+	gm2 = static_cast<float*>(calloc(SIZE_3D, sizeof(float)));
+	wt = static_cast<int32_t*>(calloc(SIZE_3D, sizeof(int32_t)));
+	mr = static_cast<int32_t*>(calloc(SIZE_3D, sizeof(int32_t)));
+	mg = static_cast<int32_t*>(calloc(SIZE_3D, sizeof(int32_t)));
+	mb = static_cast<int32_t*>(calloc(SIZE_3D, sizeof(int32_t)));
 
 	// Allocate Qadd
-	Qadd = (uint16_t *)malloc(width * sizeof(uint16_t) * height);
+	Qadd = static_cast<uint16_t*>(calloc(static_cast<size_t>(width) * height, sizeof(uint16_t)));
 
 	if (!gm2 || !wt || !mr || !mg || !mb || !Qadd) {
 		if (gm2)	free(gm2);
@@ -75,12 +75,6 @@ WuQuantizer::WuQuantizer(FIBITMAP *dib) {
 		if (Qadd)  free(Qadd);
 		throw FI_MSG_ERROR_MEMORY;
 	}
-	memset(gm2, 0, SIZE_3D * sizeof(float));
-	memset(wt, 0, SIZE_3D * sizeof(int32_t));
-	memset(mr, 0, SIZE_3D * sizeof(int32_t));
-	memset(mg, 0, SIZE_3D * sizeof(int32_t));
-	memset(mb, 0, SIZE_3D * sizeof(int32_t));
-	memset(Qadd, 0, width * sizeof(uint16_t) * height);
 }
 
 WuQuantizer::~WuQuantizer() {

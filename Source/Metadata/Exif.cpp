@@ -406,12 +406,11 @@ processExifTag(FIBITMAP *dib, FITAG *tag, char *pval, FIBOOL msb_order, TagLib::
 	uint32_t i;
 
 	// allocate a buffer to store the tag value
-	auto *exif_value = (uint8_t*)malloc(FreeImage_GetTagLength(tag) * sizeof(uint8_t));
+	auto *exif_value = static_cast<uint8_t*>(calloc(FreeImage_GetTagLength(tag), sizeof(uint8_t)));
 	if (!exif_value) {
 		// out of memory ...
 		return;
 	}
-	memset(exif_value, 0, FreeImage_GetTagLength(tag) * sizeof(uint8_t));
 
 	// get the tag value
 	switch (FreeImage_GetTagType(tag)) {

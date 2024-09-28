@@ -710,11 +710,10 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		
 		// save the icon descriptions
 
-		auto *icon_list = (ICONDIRENTRY *)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
+		auto *icon_list = static_cast<ICONDIRENTRY*>(calloc(icon_header->idCount, sizeof(ICONDIRENTRY)));
 		if (!icon_list) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
-		memset(icon_list, 0, icon_header->idCount * sizeof(ICONDIRENTRY));
 
 		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = (FIBITMAP*)vPages[k];
