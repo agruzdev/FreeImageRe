@@ -87,3 +87,4 @@ Version 0.3:
  - Added Python3 bindings
  - Ability to enable/disable each image library dependency
  - FreeImage_ConvertToRGBF supports FI_DOUBLE input
+ - Limited support of 2bit bitmaps

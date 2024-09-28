@@ -49,8 +49,12 @@ FreeImage_GetPixelIndex(FIBITMAP *dib, unsigned x, unsigned y, uint8_t *value) {
 			case 1:
 				*value = (bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
 				break;
+			case 2:
+				shift = (uint8_t)((3 - x & 0x3) << 1);
+				*value = (bits[x >> 2] & (0x03 << shift)) >> shift;
+				break;
 			case 4:
-				shift = (uint8_t)((1 - x % 2) << 2);
+				shift = (uint8_t)((1 - x & 0x1) << 2);
 				*value = (bits[x >> 1] & (0x0F << shift)) >> shift;
 				break;
 			case 8:
