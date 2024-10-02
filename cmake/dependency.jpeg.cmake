@@ -31,8 +31,8 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
     # https://github.com/libjpeg-turbo/libjpeg-turbo
     ExternalProject_Add(TURBOJPEG
         PREFIX ${CMAKE_BINARY_DIR}/turbojpeg
-        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/2.1.4.zip"
-        URL_MD5 "ef4c3147b67629958a4c4a7b5af898eb"
+        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.0.4.zip"
+        URL_MD5 "be79389d0187834ff705c8cd1951b5cd"
         DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/jpeg-turbo"
         SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpeg-turbo/source"
         BINARY_DIR "${CMAKE_BINARY_DIR}/turbojpeg/build"
