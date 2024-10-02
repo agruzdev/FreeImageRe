@@ -9,7 +9,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(WEBP
     PREFIX ${CMAKE_BINARY_DIR}/webp
-    URL "https://chromium.googlesource.com/webm/libwebp/+archive/ca332209cb5567c9b249c86788cb2dbf8847e760.tar.gz"   #v1.3.2
+    URL "https://chromium.googlesource.com/webm/libwebp/+archive/845d5476a866141ba35ac133f856fa62f0b7445f.tar.gz"   #v1.4.0
     # googlesource can't provide stable hash, so ignore hash check
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/webp"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/webp/source"
