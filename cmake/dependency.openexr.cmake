@@ -11,8 +11,8 @@ find_package(Git REQUIRED) # needed by OpenEXR
 
 ExternalProject_Add(EXR
     PREFIX ${CMAKE_BINARY_DIR}/openexr
-    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.2.2.zip"
-    URL_MD5 "f1a5ec77d01549dacb8954f4ccde989b"
+    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.3.0.zip"
+    URL_MD5 "caaa02b1b71de55f94a1eab73976e1e6"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openexr"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openexr/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/openexr/build"
@@ -37,7 +37,7 @@ link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}O
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Imath${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Imath_d${CMAKE_STATIC_LIBRARY_SUFFIX})
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Iex${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Iex_d${CMAKE_STATIC_LIBRARY_SUFFIX})
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread_d${CMAKE_STATIC_LIBRARY_SUFFIX})
-target_include_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath)
+target_include_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath ${INSTALL_DIR}/include/OpenEXR)
 set_property(TARGET EXR PROPERTY FOLDER "Dependencies")
 
 unset(INSTALL_DIR)

@@ -59,7 +59,7 @@ private:
 
 public:
 	C_IStream (FreeImageIO *io, fi_handle handle) : 
-	  Imf::IStream(""), _io (io), _handle(handle) {
+	  Imf::IStream("wrapper"), _io (io), _handle(handle) {
 	}
 
 	virtual bool read (char c[/*n*/], int n) {
@@ -91,7 +91,7 @@ private:
 
 public:
 	C_OStream (FreeImageIO *io, fi_handle handle) : 
-	  Imf::OStream(""), _io (io), _handle(handle) {
+	  Imf::OStream("wrapper"), _io (io), _handle(handle) {
 	}
 
 	virtual void write(const char c[/*n*/], int n) {
