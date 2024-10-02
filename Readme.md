@@ -88,3 +88,9 @@ Version 0.3:
  - Ability to enable/disable each image library dependency
  - FreeImage_ConvertToRGBF supports FI_DOUBLE input
  - Limited support of 2bit bitmaps
+ - Updated OpenEXR till v3.3.0
+ - Updated LibPNG till v1.6.44
+ - Updated jpeg-turbo till v3.0.4
+ - Updated LibTIFF till v4.7.0
+ - Updated LibWebP till v1.4.0
+ - Updated LibRaw till v0.21.3
