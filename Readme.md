@@ -94,3 +94,7 @@ Version 0.3:
  - Updated LibTIFF till v4.7.0
  - Updated LibWebP till v1.4.0
  - Updated LibRaw till v0.21.3
+
+Version 0.4:
+ - Building with libjpeg-turbo by default
+

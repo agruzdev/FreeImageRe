@@ -5,7 +5,7 @@
 include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 
-set(JPEG_REPOSITORY "IJG" CACHE STRING "Repository of LibJPEG to use")
+set(JPEG_REPOSITORY "JPEG-turbo" CACHE STRING "Repository of LibJPEG to use")
 set_property(CACHE JPEG_REPOSITORY PROPERTY STRINGS "IJG" "JPEG-turbo")
 
 if (JPEG_REPOSITORY STREQUAL "IJG")
@@ -41,7 +41,7 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
         PATCH_COMMAND ""
         BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t turbojpeg-static
         INSTALL_COMMAND ""
-        CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DENABLE_SHARED=OFF" "-DENABLE_STATIC=ON" "-DWITH_12BIT=OFF" "-DWITH_JPEG7=ON" "-DWITH_CRT_DLL=ON"
+        CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DENABLE_SHARED=OFF" "-DENABLE_STATIC=ON" "-DWITH_JPEG7=ON" "-DWITH_CRT_DLL=ON" "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON"
         EXCLUDE_FROM_ALL
     )
 
@@ -50,7 +50,11 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
 
     add_library(LibJPEG INTERFACE)
     add_dependencies(LibJPEG TURBOJPEG)
-    link_config_aware_library_path(LibJPEG ${BINARY_DIR} turbojpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if (MSVC)
+        link_config_aware_library_path(LibJPEG ${BINARY_DIR} turbojpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX})
+    else()
+        link_config_aware_library_path(LibJPEG ${BINARY_DIR} libturbojpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endif()
     target_compile_options(LibJPEG INTERFACE "-DJPEG_HAS_READ_ICC_PROFILE=1")
     target_include_directories(LibJPEG INTERFACE ${SOURCE_DIR} ${BINARY_DIR})
     set_property(TARGET TURBOJPEG PROPERTY FOLDER "Dependencies")

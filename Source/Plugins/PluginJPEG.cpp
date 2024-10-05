@@ -1748,14 +1748,20 @@ InitJPEG(Plugin *plugin, int format_id) {
 FIDEPENDENCY MakeJpegDependencyInfo() {
 	FIDEPENDENCY info;
 #ifdef LIBJPEG_TURBO_VERSION
-	info.name = "libjpeg (turbo)";
+# if WITH_SIMD
+# define SIMD_TAG " (simd)"
+#else
+# define SIMD_TAG
+#endif
+	info.name = "libjpeg-turbo";
 	info.majorVersion = LIBJPEG_TURBO_VERSION_NUMBER;
 	info.minorVersion = 0;
+	info.fullVersion  = FI_QUOTE(LIBJPEG_TURBO_VERSION) SIMD_TAG;
 #else
 	info.name = "libjpeg (IJG)";
 	info.majorVersion = JPEG_LIB_VERSION_MAJOR;
 	info.minorVersion = JPEG_LIB_VERSION_MINOR;
+	info.fullVersion  = JVERSION;
 #endif
-	info.fullVersion = JVERSION;
 	return info;
 }
