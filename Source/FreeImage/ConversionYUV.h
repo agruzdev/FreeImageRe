@@ -10,9 +10,12 @@
 #include "FreeImage.h"
 #include <type_traits>
 
+#if __cplusplus >= 201703L
+
 // ----------------------------------------------------------
 //  internal conversions from RGB to YUV
 // ----------------------------------------------------------
+
 
 
 /**
@@ -212,9 +215,10 @@ constexpr FIRGB8 RgbToYuv(const FIRGB8& p) {
 
 
 
+#endif // __cplusplus >= 201703L
+
 FIBITMAP* ConvertRgbToYuv(FIBITMAP* dib, int64_t standard_version);
 
 FIBITMAP* ConvertYuvToRgb(FIBITMAP* dib, int64_t standard_version);
-
 
 #endif //FREEIMAGE_CONVERSION_YUV_H_
