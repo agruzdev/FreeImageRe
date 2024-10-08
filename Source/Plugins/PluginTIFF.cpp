@@ -36,6 +36,9 @@
 #endif
 
 #define TIFF_DISABLE_DEPRECATED
+#ifdef _WIN32
+#define NOMINMAX
+#endif
 
 #include "FreeImage.h"
 #include "Utilities.h"
@@ -186,66 +189,12 @@ Open a TIFF file descriptor for reading or writing
 */
 TIFF *
 TIFFFdOpen(thandle_t handle, const char *name, const char *mode) {
-	TIFF *tif;
-	
 	// Open the file; the callback will set everything up
-	tif = TIFFClientOpen(name, mode, handle,
+	TIFF *tif = TIFFClientOpen(name, mode, handle,
 	    _tiffReadProc, _tiffWriteProc, _tiffSeekProc, _tiffCloseProc,
 	    _tiffSizeProc, _tiffMapProc, _tiffUnmapProc);
 
 	return tif;
-}
-
-/**
-Open a TIFF file for reading or writing
-@param name
-@param mode
-*/
-TIFF*
-TIFFOpen(const char* name, const char* mode) {
-	return 0;
-}
-
-// ----------------------------------------------------------
-//   TIFF library FreeImage-specific routines.
-// ----------------------------------------------------------
-
-void*
-_TIFFmalloc(tmsize_t s) {
-	return malloc(s);
-}
-
-void* 
-_TIFFcalloc(tmsize_t nmemb, tmsize_t siz) {
-	if (nmemb == 0 || siz == 0) {
-		return nullptr;
-	}
-	return calloc((size_t)nmemb, (size_t)siz);
-}
-
-void
-_TIFFfree(void *p) {
-	free(p);
-}
-
-void*
-_TIFFrealloc(void* p, tmsize_t s) {
-	return realloc(p, s);
-}
-
-void
-_TIFFmemset(void* p, int v, tmsize_t c) {
-	memset(p, v, (size_t) c);
-}
-
-void
-_TIFFmemcpy(void* d, const void* s, tmsize_t c) {
-	memcpy(d, s, (size_t) c);
-}
-
-int
-_TIFFmemcmp(const void* p1, const void* p2, tmsize_t c) {
-	return (memcmp(p1, p2, (size_t) c));
 }
 
 // ----------------------------------------------------------
@@ -255,8 +204,6 @@ _TIFFmemcmp(const void* p1, const void* p2, tmsize_t c) {
 static void
 msdosWarningHandler(const char* module, const char* fmt, va_list ap) {
 }
-
-TIFFErrorHandler _TIFFwarningHandler = msdosWarningHandler;
 
 static void
 msdosErrorHandler(const char* module, const char* fmt, va_list ap) {
@@ -270,8 +217,6 @@ msdosErrorHandler(const char* module, const char* fmt, va_list ap) {
 	}
 	*/
 }
-
-TIFFErrorHandler _TIFFerrorHandler = msdosErrorHandler;
 
 // ----------------------------------------------------------
 
@@ -1470,7 +1415,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (!header_only) {
 
-				raster = static_cast<uint32_t*>(_TIFFmalloc(width * sizeof(uint32_t) * height));
+				raster = static_cast<uint32_t*>(malloc(width * sizeof(uint32_t) * height));
 				if (!raster) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1478,7 +1423,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// read the image in one chunk into an RGBA array
 
 				if (!TIFFReadRGBAImage(tif, width, height, raster, 1)) {
-					_TIFFfree(raster);
+					free(raster);
 					throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
 				}
 			}
@@ -1503,7 +1448,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			if (!dib) {
 				// free the raster pointer and output an error if allocation failed
 				if (raster) {
-					_TIFFfree(raster);
+					free(raster);
 				}
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
@@ -1554,7 +1499,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				_TIFFfree(raster);
+				free(raster);
 			}
 
 			// ### Not correct when header only
@@ -2498,7 +2443,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 			uint16_t nColors = (uint16_t)FreeImage_GetColorsUsed(dib);
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
-			r = static_cast<uint16_t*>(_TIFFmalloc(sizeof(uint16_t) * 3 * nColors));
+			r = static_cast<uint16_t*>(malloc(sizeof(uint16_t) * 3 * nColors));
 			if (!r) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
@@ -2513,7 +2458,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 
 			TIFFSetField(out, TIFFTAG_COLORMAP, r, g, b);
 
-			_TIFFfree(r);
+			free(r);
 		}
 
 		// compression tag
@@ -2711,6 +2656,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 void DLL_CALLCONV
 InitTIFF(Plugin *plugin, int format_id) {
+	_TIFFwarningHandler = msdosWarningHandler;
+	_TIFFerrorHandler = msdosErrorHandler;
 	s_format_id = format_id;
 
     // Set up the callback for extended TIFF directory tag support (see XTIFF.cpp)
@@ -2732,7 +2679,7 @@ InitTIFF(Plugin *plugin, int format_id) {
 	plugin->supports_export_bpp_proc = SupportsExportDepth;
 	plugin->supports_export_type_proc = SupportsExportType;
 	plugin->supports_icc_profiles_proc = SupportsICCProfiles;
-	plugin->supports_no_pixels_proc = SupportsNoPixels; 
+	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
 
 

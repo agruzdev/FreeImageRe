@@ -32,7 +32,7 @@
 void DLL_CALLCONV
 FreeImage_ConvertLine1To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
+		const int index = ((source[cols >> 3] >> (7 - (cols & 7))) & 1);
 
 		target[FI_RGBA_BLUE]	= palette[index].blue;
 		target[FI_RGBA_GREEN]	= palette[index].green;
@@ -55,9 +55,11 @@ FreeImage_ConvertLine4To32(uint8_t *target, uint8_t *source, int width_in_pixels
 void DLL_CALLCONV
 FreeImage_ConvertLine8To32(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		target[FI_RGBA_BLUE]	= palette[source[cols]].blue;
-		target[FI_RGBA_GREEN]	= palette[source[cols]].green;
-		target[FI_RGBA_RED]		= palette[source[cols]].red;
+		const uint8_t idx = source[cols];
+
+		target[FI_RGBA_BLUE]	= palette[idx].blue;
+		target[FI_RGBA_GREEN]	= palette[idx].green;
+		target[FI_RGBA_RED]		= palette[idx].red;
 		target[FI_RGBA_ALPHA]	= 0xFF;
 		target += 4;
 	}
@@ -120,7 +122,7 @@ FreeImage_ConvertLine24To32(uint8_t *target, uint8_t *source, int width_in_pixel
 void DLL_CALLCONV
 FreeImage_ConvertLine1To32MapTransparency(uint8_t *target, uint8_t *source, int width_in_pixels, FIRGBA8 *palette, uint8_t *table, int transparent_pixels) {
 	for (int cols = 0; cols < width_in_pixels; cols++) {
-		const int index = (source[cols>>3] & (0x80 >> (cols & 0x07))) != 0 ? 1 : 0;
+		const int index = ((source[cols >> 3] >> (7 - (cols & 7))) & 1);
 
 		target[FI_RGBA_BLUE]	= palette[index].blue;
 		target[FI_RGBA_GREEN]	= palette[index].green;
