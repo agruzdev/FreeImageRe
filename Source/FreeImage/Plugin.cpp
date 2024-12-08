@@ -74,6 +74,16 @@ FreeImage_stricmp(const char *s1, const char *s2) {
 //  Implementation of Plugin
 // =====================================================================
 
+
+PluginNodeBase::~PluginNodeBase() {
+#ifdef _WIN32
+	if (mInstance) {
+		FreeLibrary((HINSTANCE)mInstance);
+	}
+#endif
+}
+
+
 class PluginNodeV1
 	: public PluginNodeBase
 {
@@ -212,7 +222,9 @@ public:
 	PluginNodeV2(FI_InitProc2 func, void* ctx, int /*id*/, void* instance, const char* format, const char* description, const char* extension, const char* regexpr)
 		: PluginNodeBase(instance, format, description, extension, regexpr), mContext(ctx)
 	{
-		func(mPlugin.get(), ctx);
+		if (!func(mPlugin.get(), ctx)) {
+			throw std::runtime_error("Failed to init plugin");
+		}
 	}
 
 	~PluginNodeV2() override {
@@ -410,7 +422,8 @@ template <typename PluginType_, typename InitFunc_>
 bool PluginsRegistry::ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void* ctx, bool force, void* instance, const char* format, const char* description, const char* extension, const char* regexpr)
 {
 	if (!init_proc) {
-		return false;
+		// clear plugin node
+		return (mPlugins.erase(fif) > 0);
 	}
 
 	std::unique_ptr<PluginNodeBase> new_node{ nullptr };

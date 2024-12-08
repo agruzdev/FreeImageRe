@@ -47,7 +47,7 @@ public:
 	PluginNodeBase(const PluginNodeBase&) = delete;
 	PluginNodeBase(PluginNodeBase&&) = delete;
 
-	virtual ~PluginNodeBase() = default;
+	virtual ~PluginNodeBase();
 
 	PluginNodeBase& operator=(const PluginNodeBase&) = delete;
 	PluginNodeBase& operator=(PluginNodeBase&&) = delete;

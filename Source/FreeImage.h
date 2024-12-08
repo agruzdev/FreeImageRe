@@ -670,17 +670,17 @@ typedef const char* (DLL_CALLCONV* FI_ExtensionListProc2)(void* ctx);
 typedef const char* (DLL_CALLCONV* FI_RegExprProc2)(void* ctx);
 typedef void* (DLL_CALLCONV* FI_OpenProc2)(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read);
 typedef void (DLL_CALLCONV* FI_CloseProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
-typedef int (DLL_CALLCONV* FI_PageCountProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
-typedef int (DLL_CALLCONV* FI_PageCapabilityProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
-typedef FIBITMAP* (DLL_CALLCONV* FI_LoadProc2)(void* ctx, FreeImageIO* io, fi_handle handle, int page, int flags, void* data);
-typedef FIBOOL(DLL_CALLCONV* FI_SaveProc2)(void* ctx, FreeImageIO* io, FIBITMAP* dib, fi_handle handle, int page, int flags, void* data);
+typedef uint32_t(DLL_CALLCONV* FI_PageCountProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
+typedef uint32_t(DLL_CALLCONV* FI_PageCapabilityProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
+typedef FIBITMAP* (DLL_CALLCONV* FI_LoadProc2)(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data);
+typedef FIBOOL(DLL_CALLCONV* FI_SaveProc2)(void* ctx, FreeImageIO* io, FIBITMAP* dib, fi_handle handle, uint32_t page, uint32_t flags, void* data);
 typedef FIBOOL(DLL_CALLCONV* FI_ValidateProc2)(void* ctx, FreeImageIO* io, fi_handle handle);
 typedef const char* (DLL_CALLCONV* FI_MimeProc2)(void* ctx);
-typedef FIBOOL(DLL_CALLCONV* FI_SupportsExportBPPProc2)(void* ctx, int bpp);
+typedef FIBOOL(DLL_CALLCONV* FI_SupportsExportBPPProc2)(void* ctx, uint32_t bpp);
 typedef FIBOOL(DLL_CALLCONV* FI_SupportsExportTypeProc2)(void* ctx, FREE_IMAGE_TYPE type);
 typedef FIBOOL(DLL_CALLCONV* FI_SupportsICCProfilesProc2)(void* ctx);
 typedef FIBOOL(DLL_CALLCONV* FI_SupportsNoPixelsProc2)(void* ctx);
-typedef void(DLL_CALLCONV* FI_ReleasePlugin2)(void* ctx);
+typedef void(DLL_CALLCONV* FI_ReleaseProc2)(void* ctx);
 
 FI_STRUCT(Plugin2) {
 	FI_FormatProc2 format_proc FI_DEFAULT(NULL);
@@ -699,11 +699,11 @@ FI_STRUCT(Plugin2) {
 	FI_SupportsExportTypeProc2 supports_export_type_proc FI_DEFAULT(NULL);
 	FI_SupportsICCProfilesProc2 supports_icc_profiles_proc FI_DEFAULT(NULL);
 	FI_SupportsNoPixelsProc2 supports_no_pixels_proc FI_DEFAULT(NULL);
-	FI_ReleasePlugin2 release_proc FI_DEFAULT(NULL);
+	FI_ReleaseProc2 release_proc FI_DEFAULT(NULL);
 };
 
 // Plugin behaviour hould be invariant to FIF_SOMETHING enum value
-typedef void (DLL_CALLCONV* FI_InitProc2)(Plugin2* plugin, void* ctx);
+typedef FIBOOL (DLL_CALLCONV* FI_InitProc2)(Plugin2* plugin, void* ctx);
 
 #endif // PLUGINS
 
@@ -929,7 +929,7 @@ DLL_API FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_RegisterLocalPlugin2(FI_InitPro
  * If 'fif' is already used then if force=true then plugin is replaced and 'true' is returned, otherwise 'false' is returned.
  * If 'proc_address' is NULL, then only existing plugin is unregistered.
  */
-DLL_API FIBOOL DLL_CALLCONV FreeImage_ResetLocalPlugin2(FREE_IMAGE_FORMAT fif, FI_InitProc2 proc_address, void* ctx FI_DEFAULT(0), FIBOOL force FI_DEFAULT(false));
+DLL_API FIBOOL DLL_CALLCONV FreeImage_ResetLocalPlugin2(FREE_IMAGE_FORMAT fif, FI_InitProc2 proc_address, void* ctx FI_DEFAULT(0), FIBOOL force FI_DEFAULT(FALSE));
 
 DLL_API int DLL_CALLCONV FreeImage_GetFIFCount(void);
 DLL_API int DLL_CALLCONV FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable);
