@@ -1459,7 +1459,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// We use macros for extracting components from the packed ABGR 
 				// form returned by TIFFReadRGBAImage.
 
-				uint32_t *row = static_cast<uint32_t*>(safeRaster.get());
+				auto *row = static_cast<const uint32_t*>(safeRaster.get());
 
 				if (samplesperpixel == 4) {
 					// 32-bit RGBA
