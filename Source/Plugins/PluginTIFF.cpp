@@ -1411,19 +1411,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// convert it to a DIB. This is using the traditional
 			// TIFFReadRGBAImage() API that we trust.
 
-			uint32_t *raster{};
+			std::unique_ptr<void, decltype(&free)> safeRaster(nullptr, &free);
 
 			if (!header_only) {
 
-				raster = static_cast<uint32_t*>(malloc(width * sizeof(uint32_t) * height));
-				if (!raster) {
+				safeRaster.reset(malloc(width * sizeof(uint32_t) * height));
+				if (!safeRaster) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 
 				// read the image in one chunk into an RGBA array
 
-				if (!TIFFReadRGBAImage(tif, width, height, raster, 1)) {
-					free(raster);
+				if (!TIFFReadRGBAImage(tif, width, height, static_cast<uint32_t*>(safeRaster.get()), 1)) {
 					throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
 				}
 			}
@@ -1446,10 +1445,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, samplesperpixel);
 			if (!dib) {
-				// free the raster pointer and output an error if allocation failed
-				if (raster) {
-					free(raster);
-				}
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			
@@ -1464,7 +1459,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// We use macros for extracting components from the packed ABGR 
 				// form returned by TIFFReadRGBAImage.
 
-				uint32_t *row = &raster[0];
+				uint32_t *row = static_cast<uint32_t*>(safeRaster.get());
 
 				if (samplesperpixel == 4) {
 					// 32-bit RGBA
@@ -1499,7 +1494,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				free(raster);
+				safeRaster.reset();
 			}
 
 			// ### Not correct when header only
@@ -2439,26 +2434,24 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		// palettes (image colormaps are automatically scaled to 16-bits)
 
 		if (photometric == PHOTOMETRIC_PALETTE) {
-			uint16_t *r, *g, *b;
 			uint16_t nColors = (uint16_t)FreeImage_GetColorsUsed(dib);
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
-			r = static_cast<uint16_t*>(malloc(sizeof(uint16_t) * 3 * nColors));
+			std::unique_ptr<void, decltype(&free)> safeBuffer(malloc(sizeof(uint16_t) * 3 * nColors), &free);
+			uint16_t *r = static_cast<uint16_t*>(safeBuffer.get());
 			if (!r) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
-			g = r + nColors;
-			b = g + nColors;
+			uint16_t *g = r + nColors;
+			uint16_t *b = g + nColors;
 
-			for (int i = nColors - 1; i >= 0; i--) {
+			for (int i = nColors; i-- > 0; ) {
 				r[i] = SCALE((uint16_t)pal[i].red);
 				g[i] = SCALE((uint16_t)pal[i].green);
 				b[i] = SCALE((uint16_t)pal[i].blue);
 			}
 
 			TIFFSetField(out, TIFFTAG_COLORMAP, r, g, b);
-
-			free(r);
 		}
 
 		// compression tag
