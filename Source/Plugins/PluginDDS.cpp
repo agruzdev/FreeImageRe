@@ -632,7 +632,7 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	const long delta = (long)filePitch - (long)line;
 
 	if (bpp == 16) {
-	    std::unique_ptr<void, decltype(&free)> safePixels(malloc(line * sizeof(uint8_t)), &free);
+		std::unique_ptr<void, decltype(&free)> safePixels(malloc(line * sizeof(uint8_t)), &free);
 		if (safePixels) {
 			auto *pixels = static_cast<uint8_t*>(safePixels.get());
 			for (int y = 0; y < height; y++) {
