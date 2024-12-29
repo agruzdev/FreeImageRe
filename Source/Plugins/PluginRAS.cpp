@@ -304,8 +304,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case RMT_EQUAL_RGB:
 			{
-				uint8_t *r, *g, *b;
-
 				// Read SUN raster colormap
 
 				int numcolors = 1 << header.depth;
@@ -316,13 +314,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					throw "Invalid palette";
 				}
 
-				r = (uint8_t*)malloc(3 * sizeof(uint8_t) * numcolors);
-				g = r + numcolors;
-				b = g + numcolors;
+				auto safeBuffer = std::make_unique<uint8_t[]>(3 * numcolors);
+				const auto *r = safeBuffer.get();
+				const auto *g = r + numcolors;
+				const auto *b = g + numcolors;
 
 				FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
-				io->read_proc(r, 3 * numcolors, 1, handle);
+				io->read_proc(safeBuffer.get(), 3 * numcolors, 1, handle);
 
 				for (int i = 0; i < numcolors; i++) {
 					pal[i].red	= r[i];
@@ -330,7 +329,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					pal[i].blue	= b[i];
 				}
 
-				free(r);
 				break;
 			}
 
@@ -338,11 +336,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			{
 				// Read (skip) SUN raster colormap.
 
-				auto *colormap = (uint8_t *)malloc(header.maplength * sizeof(uint8_t));
+				auto colormap = std::make_unique<uint8_t[]>(header.maplength);
 
-				io->read_proc(colormap, header.maplength, 1, handle);
+				io->read_proc(colormap.get(), header.maplength, 1, handle);
 
-				free(colormap);
 				break;
 			}
 		}
@@ -388,14 +385,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 24:
 			{
-				auto *buf = (uint8_t*)malloc(header.width * 3);
+				auto buf = std::make_unique<uint8_t[]>(header.width * 3);
 
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
 
-					ReadData(io, handle, buf, header.width * 3, rle);
+					ReadData(io, handle, buf.get(), header.width * 3, rle);
 
-					auto *bp = buf;
+					const auto *bp = buf.get();
 
 					if (isRGB) {
 						for (x = 0; x < header.width; x++) {
@@ -420,20 +417,19 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				free(buf);
 				break;
 			}
 
 			case 32:
 			{
-				auto *buf = (uint8_t*)malloc(header.width * 4);
+				auto buf = std::make_unique<uint8_t[]>(header.width * 4);
 
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
 
-					ReadData(io, handle, buf, header.width * 4, rle);
+					ReadData(io, handle, buf.get(), header.width * 4, rle);
 
-					auto *bp = buf;
+					const auto *bp = buf.get();
 
 					if (isRGB) {
 						for (x = 0; x < header.width; x++) {
@@ -462,7 +458,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				free(buf);
 				break;
 			}
 		}

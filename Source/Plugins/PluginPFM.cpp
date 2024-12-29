@@ -199,7 +199,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char line_buffer[PFM_MAXLINE];
 	char id_one = 0, id_two = 0;
 	FIBITMAP *dib{};
-	float *lineBuffer{};
 
 	if (!handle) {
 		return nullptr;
@@ -257,7 +256,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (image_type == FIT_RGBF) {
 			const unsigned lineWidth = 3 * width;
-			lineBuffer = (float*)malloc(lineWidth * sizeof(float));
+			std::unique_ptr<void, decltype(&free)> lineBuffer(malloc(lineWidth * sizeof(float)), &free);
 			if (!lineBuffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
@@ -265,10 +264,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			for (unsigned y = 0; y < height; y++) {	
 				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib, height - 1 - y);
 
-				if (io->read_proc(lineBuffer, sizeof(float), lineWidth, handle) != lineWidth) {
+				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
 				}
-				float *channel = lineBuffer;
+				auto *channel = static_cast<const float *>(lineBuffer.get());
 				if (scalefactor > 0) {
 					// MSB
 					for (unsigned x = 0; x < width; x++) {
@@ -285,24 +284,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-
-			free(lineBuffer);
-			lineBuffer = nullptr;
-
 		} else if (image_type == FIT_FLOAT) {
 			const unsigned lineWidth = width;
-			lineBuffer = (float*)malloc(lineWidth * sizeof(float));
+			std::unique_ptr<void, decltype(&free)> lineBuffer(malloc(lineWidth * sizeof(float)), &free);
 			if (!lineBuffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 
-			for (unsigned y = 0; y < height; y++) {	
+			for (unsigned y = 0; y < height; y++) {
 				float *bits = (float*)FreeImage_GetScanLine(dib, height - 1 - y);
 
-				if (io->read_proc(lineBuffer, sizeof(float), lineWidth, handle) != lineWidth) {
+				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
 				}
-				float *channel = lineBuffer;
+				auto *channel = static_cast<const float *>(lineBuffer.get());
 				if (scalefactor > 0) {
 					// MSB - File is Big endian
 					for (unsigned x = 0; x < width; x++) {
@@ -315,15 +310,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-
-			free(lineBuffer);
-			lineBuffer = nullptr;
 		}
 		
 		return dib;
 
 	} catch (const char *text)  {
-		if (lineBuffer) free(lineBuffer);
 		if (dib) FreeImage_Unload(dib);
 
 		if (text) {

@@ -455,13 +455,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				io->read_proc(&palette_id, 1, 1, handle);
 
 				if (palette_id == 0x0C) {
-					auto *cmap = (uint8_t*)malloc(768 * sizeof(uint8_t));
 
-					if (cmap) {
-						io->read_proc(cmap, 768, 1, handle);
+					if (std::unique_ptr<void, decltype(&free)> cmap(malloc(768 * sizeof(uint8_t)), &free); cmap) {
+						io->read_proc(cmap.get(), 768, 1, handle);
 
 						pal = FreeImage_GetPalette(dib);
-						uint8_t *pColormap = &cmap[0];
+						auto *pColormap = static_cast<const uint8_t *>(cmap.get());
 
 						for (int i = 0; i < 256; i++) {
 							pal[i].red   = pColormap[0];
@@ -469,8 +468,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							pal[i].blue  = pColormap[2];
 							pColormap += 3;
 						}
-
-						free(cmap);
 					}
 
 				}

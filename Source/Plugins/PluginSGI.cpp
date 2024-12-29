@@ -219,7 +219,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	SGIHeader sgiHeader;
 	RLEStatus my_rle_status;
 	FIBITMAP *dib{};
-	int32_t *pRowIndex{};
 
 	try {
 		// read the header
@@ -260,23 +259,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} else {
 			height = sgiHeader.ysize;
 		}
-		
+
+		std::unique_ptr<void, decltype(&free)> pRowIndex(nullptr, &free);
 		if (bIsRLE) {
 			// read the Offset Tables 
 			int index_len = height * zsize;
-			pRowIndex = (int32_t*)malloc(index_len * sizeof(int32_t));
+			pRowIndex.reset(malloc(index_len * sizeof(int32_t)));
 			if (!pRowIndex) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
 			
-			if ((unsigned)index_len != io->read_proc(pRowIndex, sizeof(int32_t), index_len, handle)) {
+			if ((unsigned)index_len != io->read_proc(pRowIndex.get(), sizeof(int32_t), index_len, handle)) {
 				throw SGI_EOF_IN_RLE_INDEX;
 			}
 			
 #ifndef FREEIMAGE_BIGENDIAN		
 			// Fix byte order in index
 			for (i = 0; i < index_len; i++) {
-				SwapLong((uint32_t*)&pRowIndex[i]);
+				SwapLong(static_cast<uint32_t*>(pRowIndex.get()) + i);
 			}
 #endif
 			// Discard row size index
@@ -343,8 +343,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			offset_table[1] = 3;
 			numChannels = 4;
 		}
-		
-		int32_t *pri = pRowIndex;
+
+		auto *pri = static_cast<int32_t *>(pRowIndex.get());
 		for (i = 0; i < zsize; i++) {
 			uint8_t *pRow = pStartRow + offset_table[i];
 			for (int j = 0; j < height; j++, pRow += ns, pri++) {
@@ -385,13 +385,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			}
 		}
-		if (pRowIndex)
-			free(pRowIndex);
 
 		return dib;
 
 	} catch(const char *text) {
-		if (pRowIndex) free(pRowIndex);
 		if (dib) FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;

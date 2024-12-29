@@ -44,32 +44,27 @@ Read the whole file into memory
 */
 static FIBOOL
 ReadFileToWebPData(FreeImageIO *io, fi_handle handle, WebPData * const bitstream) {
-  uint8_t *raw_data{};
-
   try {
 	  // Read the input file and put it in memory
 	  long start_pos = io->tell_proc(handle);
 	  io->seek_proc(handle, 0, SEEK_END);
 	  size_t file_length = (size_t)(io->tell_proc(handle) - start_pos);
 	  io->seek_proc(handle, start_pos, SEEK_SET);
-	  raw_data = (uint8_t*)malloc(file_length * sizeof(uint8_t));
+	  std::unique_ptr<void, decltype(&free)> raw_data(malloc(file_length * sizeof(uint8_t)), &free);
 	  if (!raw_data) {
 		  throw FI_MSG_ERROR_MEMORY;
 	  }
-	  if (io->read_proc(raw_data, 1, (unsigned)file_length, handle) != file_length) {
+	  if (io->read_proc(raw_data.get(), 1, (unsigned)file_length, handle) != file_length) {
 		  throw "Error while reading input stream";
 	  }
 	  
 	  // copy pointers (must be released later using free)
-	  bitstream->bytes = raw_data;
+	  bitstream->bytes = static_cast<const uint8_t *>(raw_data.release());
 	  bitstream->size = file_length;
 
 	  return TRUE;
 
   } catch(const char *text) {
-	  if (raw_data) {
-		  free(raw_data);
-	  }
 	  memset(bitstream, 0, sizeof(WebPData));
 	  if (text) {
 		  FreeImage_OutputMessageProc(s_format_id, text);

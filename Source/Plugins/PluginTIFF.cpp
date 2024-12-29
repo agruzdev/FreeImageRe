@@ -1017,8 +1017,8 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 	}
 	if (!fio->tif) {
 		free(fio);
+		fio = nullptr;
 		FreeImage_OutputMessageProc(s_format_id, "Error while opening TIFF: data is invalid");
-		return nullptr;
 	}
 	return fio;
 }
@@ -2438,12 +2438,12 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 			FIRGBA8 *pal = FreeImage_GetPalette(dib);
 
 			std::unique_ptr<void, decltype(&free)> safeBuffer(malloc(sizeof(uint16_t) * 3 * nColors), &free);
-			uint16_t *r = static_cast<uint16_t*>(safeBuffer.get());
+			auto *r = static_cast<uint16_t*>(safeBuffer.get());
 			if (!r) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
-			uint16_t *g = r + nColors;
-			uint16_t *b = g + nColors;
+			auto *g = r + nColors;
+			auto *b = g + nColors;
 
 			for (int i = nColors; i-- > 0; ) {
 				r[i] = SCALE((uint16_t)pal[i].red);

@@ -942,7 +942,7 @@ jpeg_write_exif_profile_raw(j_compress_ptr cinfo, FIBITMAP *dib) {
 
 			free(profile);
 
-			return TRUE;	
+			return TRUE;
 		}
 	}
 
