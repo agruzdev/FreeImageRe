@@ -129,11 +129,7 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	J2KFIO_t *fio = (J2KFIO_t*)data;
 	if (handle && fio) {
-		opj_codec_t *d_codec{};	// handle to a decompressor
 		opj_dparameters_t parameters;	// decompression parameters
-		opj_image_t *image{};		// decoded image 
-
-		FIBITMAP *dib{};
 
 		// check the file format
 		if (!Validate(io, handle)) {
@@ -152,72 +148,55 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// decode the JPEG-2000 codestream
 
 			// get a decoder handle
-			d_codec = opj_create_decompress(OPJ_CODEC_J2K);
+			std::unique_ptr<opj_codec_t, decltype(&opj_destroy_codec)> d_codec(opj_create_decompress(OPJ_CODEC_J2K), &opj_destroy_codec);
 			
 			// configure the event callbacks
 			// catch events using our callbacks (no local context needed here)
-			opj_set_info_handler(d_codec, nullptr, nullptr);
-			opj_set_warning_handler(d_codec, j2k_warning_callback, nullptr);
-			opj_set_error_handler(d_codec, j2k_error_callback, nullptr);
+			opj_set_info_handler(d_codec.get(), nullptr, nullptr);
+			opj_set_warning_handler(d_codec.get(), j2k_warning_callback, nullptr);
+			opj_set_error_handler(d_codec.get(), j2k_error_callback, nullptr);
 
 			// setup the decoder decoding parameters using user parameters
-			if (!opj_setup_decoder(d_codec, &parameters)) {
+			if (!opj_setup_decoder(d_codec.get(), &parameters)) {
 				throw "Failed to setup the decoder\n";
 			}
-			
+
 			// read the main header of the codestream and if necessary the JP2 boxes
-			if (!opj_read_header(d_stream, d_codec, &image)) {
+			opj_image_t *image{};		// decoded image 
+			if (!opj_read_header(d_stream, d_codec.get(), &image)) {
 				throw "Failed to read the header\n";
 			}
+			std::unique_ptr<opj_image_t, decltype(&opj_image_destroy)> safeImage(image, &opj_image_destroy);
+
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 
 			// --- header only mode
-
 			if (header_only) {
 				// create output image 
-				dib = J2KImageToFIBITMAP(s_format_id, image, header_only);
+				dib.reset(J2KImageToFIBITMAP(s_format_id, image, header_only));
 				if (!dib) {
 					throw "Failed to import JPEG2000 image";
 				}
-				// clean-up and return header data
-				opj_destroy_codec(d_codec);
-				opj_image_destroy(image);
-				return dib;
+				return dib.release();
 			}
 
 			// decode the stream and fill the image structure 
-			if (!(opj_decode(d_codec, d_stream, image) && opj_end_decompress(d_codec, d_stream))) {
+			if (!(opj_decode(d_codec.get(), d_stream, image) && opj_end_decompress(d_codec.get(), d_stream))) {
 				throw "Failed to decode image!\n";
 			}
 
-			// free the codec context
-			opj_destroy_codec(d_codec);
-			d_codec = nullptr;
-
 			// create output image 
-			dib = J2KImageToFIBITMAP(s_format_id, image, header_only);
+			dib.reset(J2KImageToFIBITMAP(s_format_id, image, header_only));
 			if (!dib) {
 				throw "Failed to import JPEG2000 image";
 			}
 
-			// free image data structure
-			opj_image_destroy(image);
-
-			return dib;
+			return dib.release();
 
 		} catch (const char *text) {
-			if (dib) {
-				FreeImage_Unload(dib);
-			}
-			// free remaining structures
-			opj_destroy_codec(d_codec);
-			opj_image_destroy(image);
-
 			FreeImage_OutputMessageProc(s_format_id, text);
-
-			return nullptr;
 		}
 	}
-
 	return nullptr;
 }
 

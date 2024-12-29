@@ -1062,9 +1062,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	} catch (const char *msg) {
 		if (dib) {
 			FreeImage_Unload(dib);
+			dib = nullptr;
 		}
 		FreeImage_OutputMessageProc(s_format_id, msg);
-		return nullptr;
 	}
 
 	return dib;

@@ -191,8 +191,8 @@ libraw_ConvertProcessedRawToDib(LibRaw *RawProcessor) {
 
 	} catch(const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
-		return nullptr;
 	}
+	return nullptr;
 }
 
 
@@ -670,7 +670,6 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
 	LibRaw *RawProcessor{};
 
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
@@ -703,41 +702,42 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw "LibRaw : failed to open input stream (unknown format)";
 		}
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (header_only) {
 			// header only mode
-			dib = FreeImage_AllocateHeaderT(header_only, FIT_RGB16, RawProcessor->imgdata.sizes.width, RawProcessor->imgdata.sizes.height);
+			dib.reset(FreeImage_AllocateHeaderT(header_only, FIT_RGB16, RawProcessor->imgdata.sizes.width, RawProcessor->imgdata.sizes.height));
 		}
 		else if ((flags & RAW_UNPROCESSED) == RAW_UNPROCESSED) {
 			// load raw data without post-processing (i.e. as a Bayer matrix)
-			dib = libraw_LoadUnprocessedData(RawProcessor);
+			dib.reset(libraw_LoadUnprocessedData(RawProcessor));
 		}
 		else if ((flags & RAW_PREVIEW) == RAW_PREVIEW) {
 			// try to get the embedded JPEG
-			dib = libraw_LoadEmbeddedPreview(RawProcessor, 0);
+			dib.reset(libraw_LoadEmbeddedPreview(RawProcessor, 0));
 			if (!dib) {
 				// no JPEG preview: try to load as 8-bit/sample (i.e. RGB 24-bit)
-				dib = libraw_LoadRawData(RawProcessor, 8);
+				dib.reset(libraw_LoadRawData(RawProcessor, 8));
 			}
 		} 
 		else if ((flags & RAW_DISPLAY) == RAW_DISPLAY) {
 			// load raw data as 8-bit/sample (i.e. RGB 24-bit)
-			dib = libraw_LoadRawData(RawProcessor, 8);
+			dib.reset(libraw_LoadRawData(RawProcessor, 8));
 		} 
 		else {
 			// default: load raw data as linear 16-bit/sample (i.e. RGB 48-bit)
-			dib = libraw_LoadRawData(RawProcessor, 16);
+			dib.reset(libraw_LoadRawData(RawProcessor, 16));
 		}
 
 		// save ICC profile if present
 		if (dib && RawProcessor->imgdata.color.profile) {
-			FreeImage_CreateICCProfile(dib, RawProcessor->imgdata.color.profile, RawProcessor->imgdata.color.profile_length);
+			FreeImage_CreateICCProfile(dib.get(), RawProcessor->imgdata.color.profile, RawProcessor->imgdata.color.profile_length);
 		}
 
 		// try to get JPEG embedded Exif metadata
 		if (dib && ((flags & RAW_PREVIEW) != RAW_PREVIEW)) {
 			FIBITMAP *metadata_dib = libraw_LoadEmbeddedPreview(RawProcessor, FIF_LOAD_NOPIXELS);
 			if (metadata_dib) {
-				FreeImage_CloneMetadata(dib, metadata_dib);
+				FreeImage_CloneMetadata(dib.get(), metadata_dib);
 				FreeImage_Unload(metadata_dib);
 			}
 		}
@@ -746,15 +746,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		RawProcessor->recycle();
 		delete RawProcessor;
 
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
 		if (RawProcessor) {
 			RawProcessor->recycle();
 			delete RawProcessor;
-		}
-		if (dib) {
-			FreeImage_Unload(dib);
 		}
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}

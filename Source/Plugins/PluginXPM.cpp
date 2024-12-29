@@ -342,9 +342,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return dib.release();
 	} catch(const char *text) {
        FreeImage_OutputMessageProc(s_format_id, text);
-
-       return nullptr;
     }
+    return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV

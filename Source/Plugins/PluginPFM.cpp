@@ -198,7 +198,6 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char line_buffer[PFM_MAXLINE];
 	char id_one = 0, id_two = 0;
-	FIBITMAP *dib{};
 
 	if (!handle) {
 		return nullptr;
@@ -242,14 +241,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Create a new DIB
-		dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, image_type, width, height), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// Read the image...
@@ -262,7 +261,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 
 			for (unsigned y = 0; y < height; y++) {	
-				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib, height - 1 - y);
+				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
@@ -292,7 +291,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 
 			for (unsigned y = 0; y < height; y++) {
-				float *bits = (float*)FreeImage_GetScanLine(dib, height - 1 - y);
+				float *bits = (float*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
@@ -312,11 +311,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 		
-		return dib;
+		return dib.release();
 
 	} catch (const char *text)  {
-		if (dib) FreeImage_Unload(dib);
-
 		if (text) {
 			FreeImage_OutputMessageProc(s_format_id, text);
 		}

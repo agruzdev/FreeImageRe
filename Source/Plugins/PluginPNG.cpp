@@ -795,7 +795,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		try {
 			// create the chunk manage structure
 
-			png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, (png_voidp)nullptr, error_handler, warning_handler);
+			std::unique_ptr<png_struct, std::function<void(png_structp)>> png_ptr(png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, error_handler, warning_handler), [](png_structp v){ png_destroy_write_struct(&v, nullptr); });
 
 			if (!png_ptr)  {
 				return FALSE;
@@ -803,27 +803,23 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 			// allocate/initialize the image information data.
 
-			info_ptr = png_create_info_struct(png_ptr);
+			std::unique_ptr<png_info, std::function<void(png_infop)>> info_ptr(png_create_info_struct(png_ptr.get()), [&png_ptr](png_infop v){ png_destroy_info_struct(png_ptr.get(), &v); });
 
 			if (!info_ptr)  {
-				png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
 				return FALSE;
 			}
 
 			// Set error handling.  REQUIRED if you aren't supplying your own
 			// error handling functions in the png_create_write_struct() call.
 
-			if (setjmp(png_jmpbuf(png_ptr)))  {
+			if (setjmp(png_jmpbuf(png_ptr.get())))  {
 				// if we get here, we had a problem reading the file
-
-				png_destroy_write_struct(&png_ptr, &info_ptr);
-
 				return FALSE;
 			}
 
 			// init the IO
 
-			png_set_write_fn(png_ptr, &fio, _WriteProc, _FlushProc);
+			png_set_write_fn(png_ptr.get(), &fio, _WriteProc, _FlushProc);
 
 			// set physical resolution
 
@@ -831,7 +827,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			png_uint_32 res_y = (png_uint_32)FreeImage_GetDotsPerMeterY(dib);
 
 			if ((res_x > 0) && (res_y > 0))  {
-				png_set_pHYs(png_ptr, info_ptr, res_x, res_y, PNG_RESOLUTION_METER);
+				png_set_pHYs(png_ptr.get(), info_ptr.get(), res_x, res_y, PNG_RESOLUTION_METER);
 			}
 	
 			// Set the image information here.  Width and height are up to 2^31,
@@ -857,17 +853,17 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			// set the ZLIB compression level or default to PNG default compression level (ZLIB level = 6)
 			int zlib_level = flags & 0x0F;
 			if ((zlib_level >= 1) && (zlib_level <= 9)) {
-				png_set_compression_level(png_ptr, zlib_level);
+				png_set_compression_level(png_ptr.get(), zlib_level);
 			} else if ((flags & PNG_Z_NO_COMPRESSION) == PNG_Z_NO_COMPRESSION) {
-				png_set_compression_level(png_ptr, Z_NO_COMPRESSION);
+				png_set_compression_level(png_ptr.get(), Z_NO_COMPRESSION);
 			}
 
 			// filtered strategy works better for high color images
 			if (pixel_depth >= 16){
-				png_set_compression_strategy(png_ptr, Z_FILTERED);
-				png_set_filter(png_ptr, 0, PNG_FILTER_NONE|PNG_FILTER_SUB|PNG_FILTER_PAETH);
+				png_set_compression_strategy(png_ptr.get(), Z_FILTERED);
+				png_set_filter(png_ptr.get(), 0, PNG_FILTER_NONE|PNG_FILTER_SUB|PNG_FILTER_PAETH);
 			} else {
-				png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
+				png_set_compression_strategy(png_ptr.get(), Z_DEFAULT_STRATEGY);
 			}
 
 			FREE_IMAGE_TYPE image_type = FreeImage_GetImageType(dib);
@@ -887,13 +883,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				case FIC_MINISWHITE:
 					if (!bIsTransparent) {
 						// Invert monochrome files to have 0 as black and 1 as white (no break here)
-						png_set_invert_mono(png_ptr);
+						png_set_invert_mono(png_ptr.get());
 					}
 					// (fall through)
 
 				case FIC_MINISBLACK:
 					if (!bIsTransparent) {
-						png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
+						png_set_IHDR(png_ptr.get(), info_ptr.get(), width, height, bit_depth, 
 							PNG_COLOR_TYPE_GRAY, interlace_type, 
 							PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 						break;
@@ -903,14 +899,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 				case FIC_PALETTE:
 				{
-					png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
+					png_set_IHDR(png_ptr.get(), info_ptr.get(), width, height, bit_depth, 
 						PNG_COLOR_TYPE_PALETTE, interlace_type, 
 						PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
 					// set the palette
 
 					palette_entries = 1 << bit_depth;
-					palette = (png_colorp)png_malloc(png_ptr, palette_entries * sizeof (png_color));
+					palette = (png_colorp)png_malloc(png_ptr.get(), palette_entries * sizeof (png_color));
 					pal = FreeImage_GetPalette(dib);
 
 					for (int i = 0; i < palette_entries; i++) {
@@ -919,7 +915,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						palette[i].blue  = pal[i].blue;
 					}
 					
-					png_set_PLTE(png_ptr, info_ptr, palette, palette_entries);
+					png_set_PLTE(png_ptr.get(), info_ptr.get(), palette, palette_entries);
 
 					// You must not free palette here, because png_set_PLTE only makes a link to
 					// the palette that you malloced.  Wait until you are about to destroy
@@ -931,7 +927,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				case FIC_RGBALPHA :
 					has_alpha_channel = TRUE;
 
-					png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
+					png_set_IHDR(png_ptr.get(), info_ptr.get(), width, height, bit_depth, 
 						PNG_COLOR_TYPE_RGBA, interlace_type, 
 						PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
@@ -944,14 +940,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					break;
 	
 				case FIC_RGB:
-					png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth, 
+					png_set_IHDR(png_ptr.get(), info_ptr.get(), width, height, bit_depth, 
 						PNG_COLOR_TYPE_RGB, interlace_type, 
 						PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// flip BGR pixels to RGB
 					if (image_type == FIT_BITMAP) {
-						png_set_bgr(png_ptr);
+						png_set_bgr(png_ptr.get());
 					}
 #endif
 					break;
@@ -965,13 +961,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			FIICCPROFILE *iccProfile = FreeImage_GetICCProfile(dib);
 			if (iccProfile->size && iccProfile->data) {
 				// skip ICC profile check
-				png_set_option(png_ptr, PNG_SKIP_sRGB_CHECK_PROFILE, 1);
-				png_set_iCCP(png_ptr, info_ptr, "Embedded Profile", 0, (png_const_bytep)iccProfile->data, iccProfile->size);
+				png_set_option(png_ptr.get(), PNG_SKIP_sRGB_CHECK_PROFILE, 1);
+				png_set_iCCP(png_ptr.get(), info_ptr.get(), "Embedded Profile", 0, (png_const_bytep)iccProfile->data, iccProfile->size);
 			}
 
 			// write metadata
 
-			WriteMetadata(png_ptr, info_ptr, dib);
+			WriteMetadata(png_ptr.get(), info_ptr.get(), dib);
 
 			// Optional gamma chunk is strongly suggested if you have any guess
 			// as to the correct gamma of the image.
@@ -980,7 +976,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			// set the transparency table
 
 			if (bIsTransparent) {
-				png_set_tRNS(png_ptr, info_ptr, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), nullptr);
+				png_set_tRNS(png_ptr.get(), info_ptr.get(), FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib), nullptr);
 			}
 
 			// set the background color
@@ -996,44 +992,43 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				image_background.red   = rgbBkColor.red;
 				image_background.index = rgbBkColor.alpha;
 
-				png_set_bKGD(png_ptr, info_ptr, &image_background);
+				png_set_bKGD(png_ptr.get(), info_ptr.get(), &image_background);
 			}
 			
 			// Write the file header information.
 
-			png_write_info(png_ptr, info_ptr);
+			png_write_info(png_ptr.get(), info_ptr.get());
 
 			// write out the image data
 
 #ifndef FREEIMAGE_BIGENDIAN
 			if (bit_depth == 16) {
 				// turn on 16 bit byte swapping
-				png_set_swap(png_ptr);
+				png_set_swap(png_ptr.get());
 			}
 #endif
 
 			int number_passes = 1;
 			if (bInterlaced) {
-				number_passes = png_set_interlace_handling(png_ptr);
+				number_passes = png_set_interlace_handling(png_ptr.get());
 			}
 
 			if ((pixel_depth == 32) && (!has_alpha_channel)) {
-				auto *buffer = (uint8_t *)malloc(width * 3);
+				auto buffer = std::make_unique<uint8_t[]>(width * 3);
 
 				// transparent conversion to 24-bit
 				// the number of passes is either 1 for non-interlaced images, or 7 for interlaced images
 				for (int pass = 0; pass < number_passes; pass++) {
 					for (png_uint_32 k = 0; k < height; k++) {
-						FreeImage_ConvertLine32To24(buffer, FreeImage_GetScanLine(dib, height - k - 1), width);
-						png_write_row(png_ptr, buffer);
+						FreeImage_ConvertLine32To24(buffer.get(), FreeImage_GetScanLine(dib, height - k - 1), width);
+						png_write_row(png_ptr.get(), buffer.get());
 					}
 				}
-				free(buffer);
 			} else {
 				// the number of passes is either 1 for non-interlaced images, or 7 for interlaced images
 				for (int pass = 0; pass < number_passes; pass++) {
 					for (png_uint_32 k = 0; k < height; k++) {
-						png_write_row(png_ptr, FreeImage_GetScanLine(dib, height - k - 1));
+						png_write_row(png_ptr.get(), FreeImage_GetScanLine(dib, height - k - 1));
 					}
 				}
 			}
@@ -1041,21 +1036,16 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			// It is REQUIRED to call this to finish writing the rest of the file
 			// Bug with png_flush
 
-			png_write_end(png_ptr, info_ptr);
+			png_write_end(png_ptr.get(), info_ptr.get());
 
 			// clean up after the write, and free any memory allocated
 			if (palette) {
-				png_free(png_ptr, palette);
+				png_free(png_ptr.get(), palette);
 			}
-
-			png_destroy_write_struct(&png_ptr, &info_ptr);
 
 			return TRUE;
 
 		} catch (const char *text) {
-			if (png_ptr) {
-				png_destroy_write_struct(&png_ptr, &info_ptr);
-			}
 			FreeImage_OutputMessageProc(s_format_id, text);
 		}
 	}

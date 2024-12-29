@@ -430,7 +430,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			FreeImage_Unload(dib);
 	}
 
-	return 0;
+	return nullptr;
 }
 
 // ==========================================================

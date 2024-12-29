@@ -1121,11 +1121,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	PKImageDecode *pDecoder{};	// decoder interface
 	ERR error_code = 0;				// error code as returned by the interface
 	PKPixelFormatGUID guid_format;	// loaded pixel format (== input file pixel format if no conversion needed)
-	
+
 	FREE_IMAGE_TYPE image_type = FIT_UNKNOWN;	// input image type
 	unsigned bpp = 0;							// input image bit depth
-	FIBITMAP *dib{};
-	
+
 	// get the I/O stream wrapper
 	WMPStream *pDecodeStream = (WMPStream*)data;
 
@@ -1159,17 +1158,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		pDecoder->GetSize(pDecoder, &width, &height);
 
 		// allocate dst image
-		{			
-			dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, bpp, red_mask, green_mask, blue_mask);
-			if (!dib) {
-				throw FI_MSG_ERROR_DIB_MEMORY;
-			}
-			if (FreeImage_GetBPP(dib) == 1) {
-				// BD_1 - build a FIC_MINISBLACK palette
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				pal[0].red = pal[0].green = pal[0].blue = 0;
-				pal[1].red = pal[1].green = pal[1].blue = 255;
-			}
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, image_type, width, height, bpp, red_mask, green_mask, blue_mask), &FreeImage_Unload);
+		if (!dib) {
+			throw FI_MSG_ERROR_DIB_MEMORY;
+		}
+		if (FreeImage_GetBPP(dib.get()) == 1) {
+			// BD_1 - build a FIC_MINISBLACK palette
+			FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 
 		// get image resolution
@@ -1177,37 +1174,35 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			float resX, resY;	// image resolution (in dots per inch)
 			// convert from English units, i.e. dots per inch to universal units, i.e. dots per meter
 			pDecoder->GetResolution(pDecoder, &resX, &resY);
-			FreeImage_SetDotsPerMeterX(dib, (unsigned)(resX / 0.0254F + 0.5F));
-			FreeImage_SetDotsPerMeterY(dib, (unsigned)(resY / 0.0254F + 0.5F));
+			FreeImage_SetDotsPerMeterX(dib.get(), (unsigned)(resX / 0.0254F + 0.5F));
+			FreeImage_SetDotsPerMeterY(dib.get(), (unsigned)(resY / 0.0254F + 0.5F));
 		}
 
 		// get metadata & ICC profile
-		error_code = ReadMetadata(pDecoder, dib);
+		error_code = ReadMetadata(pDecoder, dib.get());
 		JXR_CHECK(error_code);
 
 		if (header_only) {
 			// header only mode ...
-			
+
 			// free the decoder
 			pDecoder->Release(&pDecoder);
 			assert(!pDecoder);
 
-			return dib;
+			return dib.release();
 		}
 		
 		// copy pixels into the dib, perform pixel conversion if needed
-		error_code = CopyPixels(pDecoder, guid_format, dib, width, height);
+		error_code = CopyPixels(pDecoder, guid_format, dib.get(), width, height);
 		JXR_CHECK(error_code);
 
 		// free the decoder
 		pDecoder->Release(&pDecoder);
 		assert(!pDecoder);
 
-		return dib;
+		return dib.release();
 
 	} catch (const char *message) {
-		// unload the dib
-		FreeImage_Unload(dib);
 		// free the decoder
 		pDecoder->Release(&pDecoder);
 

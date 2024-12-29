@@ -277,7 +277,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// read the bitmap data
 			
-			int line = FreeImage_GetLine(dib);
+			const int line = FreeImage_GetLine(dib);
 
 			for (y = 0; y < height; y++) {
 				bits = FreeImage_GetScanLine(dib, height - 1 - y);
@@ -291,12 +291,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		} catch(const char *text)  {
 			FreeImage_OutputMessageProc(s_format_id, text);
-
-			return nullptr;
 		}
-
 	}
-
 	return nullptr;
 }
 

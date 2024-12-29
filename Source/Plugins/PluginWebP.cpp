@@ -69,8 +69,8 @@ ReadFileToWebPData(FreeImageIO *io, fi_handle handle, WebPData * const bitstream
 	  if (text) {
 		  FreeImage_OutputMessageProc(s_format_id, text);
 	  }
-	  return FALSE;
   }
+  return FALSE;
 }
 
 // ----------------------------------------------------------
@@ -177,17 +177,15 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 		free((void*)bitstream.bytes);
 		if (!mux) {
 			FreeImage_OutputMessageProc(s_format_id, "Failed to create mux object from file");
-			return nullptr;
 		}
 	} else {
 		// creates an empty mux object
 		mux = WebPMuxNew();
 		if (!mux) {
 			FreeImage_OutputMessageProc(s_format_id, "Failed to create empty mux object");
-			return nullptr;
 		}
 	}
-	
+
 	return mux;
 }
 
@@ -316,9 +314,8 @@ DecodeImage(WebPData *webp_image, int flags) {
 		if (text) {
 			FreeImage_OutputMessageProc(s_format_id, text);
 		}
-
-		return nullptr;
 	}
+	return nullptr;
 }
 
 static FIBITMAP * DLL_CALLCONV
@@ -654,9 +651,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		}
 		
 		WebPDataClear(&output_data);
-
-		return FALSE;
 	}
+	return FALSE;
 }
 
 // ==========================================================
