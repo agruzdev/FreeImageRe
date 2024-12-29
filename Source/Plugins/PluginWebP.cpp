@@ -210,8 +210,6 @@ Decode a WebP image and returns a FIBITMAP image
 */
 static FIBITMAP *
 DecodeImage(WebPData *webp_image, int flags) {
-	FIBITMAP *dib{};
-
 	const uint8_t* data = webp_image->bytes;	// raw image data
 	const size_t data_size = webp_image->size;	// raw image size
 
@@ -246,14 +244,14 @@ DecodeImage(WebPData *webp_image, int flags) {
 		unsigned width = (unsigned)bitstream->width;
 		unsigned height = (unsigned)bitstream->height;
 
-		dib = FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
 		if (header_only) {
 			WebPFreeDecBuffer(output_buffer);
-			return dib;
+			return dib.release();
 		}
 
 		// --- Set decoding options ---
@@ -280,8 +278,8 @@ DecodeImage(WebPData *webp_image, int flags) {
 		switch (bpp) {
 			case 24:
 				for (unsigned y = 0; y < height; y++) {
-					const uint8_t *src_bits = src_bitmap + y * src_pitch;						
-					auto *dst_bits = (uint8_t*)FreeImage_GetScanLine(dib, height-1-y);
+					const uint8_t *src_bits = src_bitmap + y * src_pitch;
+					auto *dst_bits = (uint8_t*)FreeImage_GetScanLine(dib.get(), height-1-y);
 					for (unsigned x = 0; x < width; x++) {
 						dst_bits[FI_RGBA_BLUE]	= src_bits[0];	// B
 						dst_bits[FI_RGBA_GREEN]	= src_bits[1];	// G
@@ -293,8 +291,8 @@ DecodeImage(WebPData *webp_image, int flags) {
 				break;
 			case 32:
 				for (unsigned y = 0; y < height; y++) {
-					const uint8_t *src_bits = src_bitmap + y * src_pitch;						
-					auto *dst_bits = (uint8_t*)FreeImage_GetScanLine(dib, height-1-y);
+					const uint8_t *src_bits = src_bitmap + y * src_pitch;
+					auto *dst_bits = (uint8_t*)FreeImage_GetScanLine(dib.get(), height-1-y);
 					for (unsigned x = 0; x < width; x++) {
 						dst_bits[FI_RGBA_BLUE]	= src_bits[0];	// B
 						dst_bits[FI_RGBA_GREEN]	= src_bits[1];	// G
@@ -310,12 +308,9 @@ DecodeImage(WebPData *webp_image, int flags) {
 		// Free the decoder
 		WebPFreeDecBuffer(output_buffer);
 
-		return dib;
+		return dib.release();
 
 	} catch (const char *text) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		WebPFreeDecBuffer(output_buffer);
 
 		if (text) {

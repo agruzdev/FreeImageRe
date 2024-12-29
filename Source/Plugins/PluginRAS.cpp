@@ -234,19 +234,19 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Allocate a new DIB
-
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		switch (header.depth) {
 			case 1:
 			case 8:
-				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth);
+				dib.reset(FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth));
 				break;
 
 			case 24:
-				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				break;
 
 			case 32:
-				dib = FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				break;
 		}
 
@@ -288,7 +288,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (header.depth < 24) {
 					// Create linear color ramp
 
-					FIRGBA8 *pal = FreeImage_GetPalette(dib);
+					FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 
 					int numcolors = 1 << header.depth;
 
@@ -315,13 +315,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 
 				auto safeBuffer = std::make_unique<uint8_t[]>(3 * numcolors);
+				io->read_proc(safeBuffer.get(), 3 * numcolors, 1, handle);
+
 				const auto *r = safeBuffer.get();
 				const auto *g = r + numcolors;
 				const auto *b = g + numcolors;
 
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-
-				io->read_proc(safeBuffer.get(), 3 * numcolors, 1, handle);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 
 				for (int i = 0; i < numcolors; i++) {
 					pal[i].red	= r[i];
@@ -346,7 +346,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// Calculate the line + pitch
@@ -360,20 +360,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		fill = (linelength % 2) ? 1 : 0;
 
-		unsigned pitch = FreeImage_GetPitch(dib);
-
 		// Read the image data
 		
 		switch (header.depth) {
 			case 1:
 			case 8:
 			{
-				bits = FreeImage_GetBits(dib) + (header.height - 1) * pitch;
-
 				for (y = 0; y < header.height; y++) {
-					ReadData(io, handle, bits, linelength, rle);
+					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-					bits -= pitch;
+					ReadData(io, handle, bits, linelength, rle);
 
 					if (fill) {
 						ReadData(io, handle, &fillchar, fill, rle);
@@ -388,7 +384,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				auto buf = std::make_unique<uint8_t[]>(header.width * 3);
 
 				for (y = 0; y < header.height; y++) {
-					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
+					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
 					ReadData(io, handle, buf.get(), header.width * 3, rle);
 
@@ -425,7 +421,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				auto buf = std::make_unique<uint8_t[]>(header.width * 4);
 
 				for (y = 0; y < header.height; y++) {
-					bits = FreeImage_GetBits(dib) + (header.height - 1 - y) * pitch;
+					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
 					ReadData(io, handle, buf.get(), header.width * 4, rle);
 
@@ -462,12 +458,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 		
-		return dib;
+		return dib.release();
 
 	} catch (const char *text) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}
 

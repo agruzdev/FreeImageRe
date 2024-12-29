@@ -314,7 +314,6 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int width, height;
-	FIBITMAP *dib{};
 
 	try {
 		std::unique_ptr<void, decltype(&free)> buffer(nullptr, &free);
@@ -325,11 +324,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 
 		// allocate a new dib
-		dib = FreeImage_Allocate(width, height, 1);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_Allocate(width, height, 1), &FreeImage_Unload);
 		if (!dib) throw (char*)ERR_XBM_MEMORY;
 
 		// write the palette data
-		FIRGBA8 *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 		pal[0].red = pal[0].green = pal[0].blue = 0;
 		pal[1].red = pal[1].green = pal[1].blue = 255;
 
@@ -338,7 +337,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		for (int y = 0; y < height; y++) {
 			uint8_t count = 0;
 			uint8_t mask = 1;
-			uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+			uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 			for (int x = 0; x < width; x++) {
 				if (count >= 8) {
@@ -359,10 +358,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			bP++;
 		}
 
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		if (dib)		FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;
 	}

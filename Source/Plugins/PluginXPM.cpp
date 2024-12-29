@@ -156,15 +156,14 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char msg[256];
-    FIBITMAP *dib{};
 
     if (!handle) return nullptr;
 
     try {
 		char *str;
-		
+
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
-		
+
 		//find the starting brace
 		if (!FindChar(io, handle,'{'))
 			throw "Could not find starting brace";
@@ -186,10 +185,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw "Improperly formed info string";
 		}
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
         if (colors > 256) {
-			dib = FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+			dib.reset(FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 		} else {
-			dib = FreeImage_AllocateHeader(header_only, width, height, 8);
+			dib.reset(FreeImage_AllocateHeader(header_only, width, height, 8));
 		}
 
 		//build a map of color chars to rgb values
@@ -294,7 +294,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//build palette if needed
 			if (colors <= 256) {
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				pal[i].blue = rgba.b;
 				pal[i].green = rgba.g;
 				pal[i].red = rgba.r;
@@ -306,12 +306,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		//read in pixel data
 		for (int y = 0; y < height; y++) {
-			uint8_t *line = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *line = FreeImage_GetScanLine(dib.get(), height - y - 1);
 			str = ReadString(io, handle);
 			if (!str)
 				throw "Error reading pixel strings";
@@ -339,12 +339,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 		//done reading pixel data
 
-		return dib;
+		return dib.release();
 	} catch(const char *text) {
        FreeImage_OutputMessageProc(s_format_id, text);
-
-       if (dib)
-           FreeImage_Unload(dib);
 
        return nullptr;
     }

@@ -218,7 +218,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int bitcount;
 	SGIHeader sgiHeader;
 	RLEStatus my_rle_status;
-	FIBITMAP *dib{};
 
 	try {
 		// read the header
@@ -306,7 +305,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				throw SGI_INVALID_CHANNEL_COUNT;
 		}
 		
-		dib = FreeImage_Allocate(width, height, bitcount);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_Allocate(width, height, bitcount), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
@@ -314,7 +313,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (bitcount == 8) {
 			// 8-bit SGI files are grayscale images, so we'll generate
 			// a grayscale palette.
-			FIRGBA8 *pclrs = FreeImage_GetPalette(dib);
+			FIRGBA8 *pclrs = FreeImage_GetPalette(dib.get());
 			for (i = 0; i < 256; i++) {
 				pclrs[i].red = (uint8_t)i;
 				pclrs[i].green = (uint8_t)i;
@@ -327,8 +326,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		memset(&my_rle_status, 0, sizeof(RLEStatus));
 		
-		int ns = FreeImage_GetPitch(dib);                                                    
-		uint8_t *pStartRow = FreeImage_GetScanLine(dib, 0);
+		int ns = FreeImage_GetPitch(dib.get());
+		uint8_t *pStartRow = FreeImage_GetScanLine(dib.get(), 0);
 		int offset_table[] = { 2, 1, 0, 3 };
 		int numChannels = zsize;
 		if (zsize < 3) {
@@ -386,10 +385,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		if (dib) FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;
 	}

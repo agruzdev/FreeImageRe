@@ -146,7 +146,6 @@ Convert a processed raw data array to a FIBITMAP
 */
 static FIBITMAP * 
 libraw_ConvertProcessedRawToDib(LibRaw *RawProcessor) {
-	FIBITMAP *dib{};
     int width, height, colors, bpp;
 
 	try {
@@ -160,9 +159,10 @@ libraw_ConvertProcessedRawToDib(LibRaw *RawProcessor) {
 			throw "LibRaw : only 3-color images supported";
 		}
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (bpp == 16) {
 			// allocate output dib
-			dib = FreeImage_AllocateT(FIT_RGB16, width, height);
+			dib.reset(FreeImage_AllocateT(FIT_RGB16, width, height));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
@@ -173,24 +173,23 @@ libraw_ConvertProcessedRawToDib(LibRaw *RawProcessor) {
 #endif
 
 			// allocate output dib
-			dib = FreeImage_AllocateT(FIT_BITMAP, width, height, 24);
+			dib.reset(FreeImage_AllocateT(FIT_BITMAP, width, height, 24));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 		}
 
 		// copy post-processed bitmap data into FIBITMAP buffer
-		if (RawProcessor->copy_mem_image(FreeImage_GetBits(dib), FreeImage_GetPitch(dib), bgr) != LIBRAW_SUCCESS) {
+		if (RawProcessor->copy_mem_image(FreeImage_GetBits(dib.get()), FreeImage_GetPitch(dib.get()), bgr) != LIBRAW_SUCCESS) {
 			throw "LibRaw : failed to copy data into dib";
 		}
 
 		// flip vertically
-		FreeImage_FlipVertical(dib);
+		FreeImage_FlipVertical(dib.get());
 
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;
 	}
@@ -205,22 +204,21 @@ Convert a processed raw image to a FIBITMAP
 */
 static FIBITMAP * 
 libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
-	FIBITMAP *dib{};
-
 	try {
 		const unsigned width = image->width;
 		const unsigned height = image->height;
 		const unsigned bpp = image->bits;
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (bpp == 16) {
 			// allocate output dib
-			dib = FreeImage_AllocateT(FIT_RGB16, width, height);
+			dib.reset(FreeImage_AllocateT(FIT_RGB16, width, height));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			// write data
-			uint16_t *raw_data = (uint16_t*)image->data;
+			auto *raw_data = (const uint16_t*)image->data;
 			for (unsigned y = 0; y < height; y++) {
-				auto *output = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
+				auto *output = (FIRGB16*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 				for (unsigned x = 0; x < width; x++) {
 					output[x].red   = raw_data[0];
 					output[x].green = raw_data[1];
@@ -230,14 +228,14 @@ libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
 			}
 		} else if (bpp == 8) {
 			// allocate output dib
-			dib = FreeImage_AllocateT(FIT_BITMAP, width, height, 24);
+			dib.reset(FreeImage_AllocateT(FIT_BITMAP, width, height, 24));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
 			// write data
-			uint8_t *raw_data = (uint8_t*)image->data;
+			auto *raw_data = (const uint8_t*)image->data;
 			for (unsigned y = 0; y < height; y++) {
-				auto *output = (FIRGB8*)FreeImage_GetScanLine(dib, height - 1 - y);
+				auto *output = (FIRGB8*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 				for (unsigned x = 0; x < width; x++) {
 					output[x].red   = raw_data[0];
 					output[x].green = raw_data[1];
@@ -247,10 +245,9 @@ libraw_ConvertProcessedImageToDib(libraw_processed_image_t *image) {
 			}
 		}
 		
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;
 	}
@@ -380,8 +377,6 @@ Note that some formats don't have a Bayer matrix (e.g. Foveon, Canon sRAW, demos
 */
 static FIBITMAP * 
 libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
-	FIBITMAP *dib{};
-
 	try {
 		// unpack data
 		if (RawProcessor->unpack() != LIBRAW_SUCCESS) {
@@ -397,10 +392,11 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 		const unsigned width = RawProcessor->imgdata.sizes.raw_width;
 		const unsigned height = RawProcessor->imgdata.sizes.raw_height;
 		const size_t line_size = width * sizeof(uint16_t);
-		const uint16_t *src_bits = (uint16_t*)RawProcessor->imgdata.rawdata.raw_image;
+		auto *src_bits = (const uint16_t*)RawProcessor->imgdata.rawdata.raw_image;
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (src_bits) {
-			dib = FreeImage_AllocateT(FIT_UINT16, width, height);
+			dib.reset(FreeImage_AllocateT(FIT_UINT16, width, height));
 		}
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
@@ -408,7 +404,7 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 
 		// retrieve the raw image
 		for (unsigned y = 0; y < height; y++) {
-			uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
+			uint16_t *dst_bits = (uint16_t*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 			memcpy(dst_bits, src_bits, line_size);
 			src_bits += width;
 		}
@@ -422,10 +418,10 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 			// image output width & height
 			{
 				sprintf(value, "%d", sizes->iwidth);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Output.Width", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Output.Width", value);
 				
 				sprintf(value, "%d", sizes->iheight);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Output.Height", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Output.Height", value);
 			}
 
 			// image output frame
@@ -436,16 +432,16 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 				const unsigned f_height = sizes->height;
 				
 				sprintf(value, "%d", f_left);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Frame.Left", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Left", value);
 
 				sprintf(value, "%d", f_top);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Frame.Top", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Top", value);
 
 				sprintf(value, "%d", f_width);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Frame.Width", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Width", value);
 
 				sprintf(value, "%d", f_height);
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.Frame.Height", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Height", value);
 			}
 
 			// Bayer pattern
@@ -464,14 +460,13 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 				}
 				pattern[16] = 0;
 
-				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib, "Raw.BayerPattern", value);
+				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.BayerPattern", value);
 			}
 		}
 	
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return nullptr;
 	}

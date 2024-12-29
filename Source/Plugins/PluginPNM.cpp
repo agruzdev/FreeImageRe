@@ -215,7 +215,6 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char id_one = 0, id_two = 0;
 	int x, y;
-	FIBITMAP *dib{};
 	FIRGBA8 *pal;	// pointer to dib palette
 	int i;
 
@@ -255,12 +254,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Create a new DIB
-
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		switch (id_two) {
 			case '1':
 			case '4':
 				// 1-bit
-				dib = FreeImage_AllocateHeader(header_only, width, height, 1);
+				dib.reset(FreeImage_AllocateHeader(header_only, width, height, 1));
 				break;
 
 			case '2':
@@ -268,10 +267,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (maxval > 255) {
 					// 16-bit greyscale
 					image_type = FIT_UINT16;
-					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
+					dib.reset(FreeImage_AllocateHeaderT(header_only, image_type, width, height));
 				} else {
 					// 8-bit greyscale
-					dib = FreeImage_AllocateHeader(header_only, width, height, 8);
+					dib.reset(FreeImage_AllocateHeader(header_only, width, height, 8));
 				}
 				break;
 
@@ -280,10 +279,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (maxval > 255) {
 					// 48-bit RGB
 					image_type = FIT_RGB16;
-					dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
+					dib.reset(FreeImage_AllocateHeaderT(header_only, image_type, width, height));
 				} else {
 					// 24-bit RGB
-					dib = FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				}
 				break;
 		}
@@ -298,14 +297,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			switch (id_two)  {
 				case '1':
 				case '4':
-					pal = FreeImage_GetPalette(dib);
+					pal = FreeImage_GetPalette(dib.get());
 					pal[0].red = pal[0].green = pal[0].blue = 0;
 					pal[1].red = pal[1].green = pal[1].blue = 255;
 					break;
 
 				case '2':
 				case '5':
-					pal = FreeImage_GetPalette(dib);
+					pal = FreeImage_GetPalette(dib.get());
 					for (i = 0; i < 256; i++) {
 						pal[i].red	=
 						pal[i].green =
@@ -320,7 +319,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// Read the image...
@@ -332,7 +331,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (id_two == '1') {	// ASCII bitmap
 					for (y = 0; y < height; y++) {		
-						uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+						uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 						for (x = 0; x < width; x++) {
 							if (GetInt(io, handle) == 0)
@@ -345,7 +344,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					int line = CalculateLine(width, 1);
 
 					for (y = 0; y < height; y++) {	
-						uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+						uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 						for (x = 0; x < line; x++) {
 							io->read_proc(&bits[x], 1, 1, handle);
@@ -355,7 +354,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				return dib;
+				return dib.release();
 
 			case '2':
 			case '5':
@@ -366,7 +365,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+							uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -377,7 +376,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint8_t level = 0;
 
 						for (y = 0; y < height; y++) {		
-							uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+							uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								io->read_proc(&level, 1, 1, handle);
@@ -393,7 +392,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -404,7 +403,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint16_t level = 0;
 
 						for (y = 0; y < height; y++) {		
-							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (uint16_t*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = ReadWord(io, handle);
@@ -414,7 +413,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				return dib;
+				return dib.release();
 
 			case '3':
 			case '6':
@@ -425,7 +424,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+							uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -442,7 +441,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint8_t level = 0;
 
 						for (y = 0; y < height; y++) {	
-							uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
+							uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								io->read_proc(&level, 1, 1, handle); 
@@ -466,7 +465,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						int level = 0;
 
 						for (y = 0; y < height; y++) {	
-							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = GetInt(io, handle);
@@ -481,7 +480,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint16_t level = 0;
 
 						for (y = 0; y < height; y++) {	
-							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
+							auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
 							for (x = 0; x < width; x++) {
 								level = ReadWord(io, handle);
@@ -495,12 +494,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 
-				return dib;
+				return dib.release();
 		}
 
 	} catch (const char *text)  {
-		if (dib) FreeImage_Unload(dib);
-
 		if (text) {
 			switch (id_two)  {
 				case '1':

@@ -2491,16 +2491,15 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 						// get the transparency table
 						uint8_t *trns = FreeImage_GetTransparencyTable(dib);
 
-						auto * const buffer = static_cast<uint8_t*>(malloc(width * sizeof(uint8_t) * 2));
+						std::unique_ptr<void, decltype(&free)> buffer(malloc(width * sizeof(uint8_t) * 2), &free);
 						if (!buffer) {
 							throw FI_MSG_ERROR_MEMORY;
 						}
-						std::unique_ptr<void, decltype(&free)> safeBuf(buffer, &free);
 
 						for (int y = height - 1; y >= 0; y--) {
 							uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
-							uint8_t *p = bits, *b = buffer;
+							uint8_t *p = bits, *b = static_cast<uint8_t*>(buffer.get());
 
 							for (uint32_t x = 0; x < width; x++) {
 								// copy the 8-bit layer
@@ -2514,22 +2513,21 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 
 							// write the scanline to disc
 
-							TIFFWriteScanline(out, buffer, height - y - 1, 0);
+							TIFFWriteScanline(out, buffer.get(), height - y - 1, 0);
 						}
 					}
 					else {
 						// other cases
-						auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
+						std::unique_ptr<void, decltype(&free)> buffer(malloc(pitch * sizeof(uint8_t)), &free);
 						if (!buffer) {
 							throw FI_MSG_ERROR_MEMORY;
 						}
-						std::unique_ptr<void, decltype(&free)> safeBuf(buffer, &free);
 
 						for (uint32_t y = 0; y < height; y++) {
 							// get a copy of the scanline
-							memcpy(buffer, FreeImage_GetScanLine(dib, height - y - 1), pitch);
+							memcpy(buffer.get(), FreeImage_GetScanLine(dib, height - y - 1), pitch);
 							// write the scanline to disc
-							TIFFWriteScanline(out, buffer, y, 0);
+							TIFFWriteScanline(out, buffer.get(), y, 0);
 						}
 					}
 
@@ -2539,22 +2537,21 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 				case 24:
 				case 32:
 				{
-					auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
+					std::unique_ptr<void, decltype(&free)> buffer(malloc(pitch * sizeof(uint8_t)), &free);
 					if (!buffer) {
 						throw FI_MSG_ERROR_MEMORY;
 					}
-					std::unique_ptr<void, decltype(&free)> safeBuf(buffer, &free);
 
 					for (uint32_t y = 0; y < height; y++) {
 						// get a copy of the scanline
 
-						memcpy(buffer, FreeImage_GetScanLine(dib, height - y - 1), pitch);
+						memcpy(buffer.get(), FreeImage_GetScanLine(dib, height - y - 1), pitch);
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 						if (photometric != PHOTOMETRIC_SEPARATED) {
 							// TIFFs store color data RGB(A) instead of BGR(A)
 		
-							uint8_t *pBuf = buffer;
+							auto *pBuf = static_cast<uint8_t*>(buffer.get());
 		
 							for (uint32_t x = 0; x < width; x++) {
 								INPLACESWAP(pBuf[0], pBuf[2]);
@@ -2564,7 +2561,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 #endif
 						// write the scanline to disc
 
-						TIFFWriteScanline(out, buffer, y, 0);
+						TIFFWriteScanline(out, buffer.get(), y, 0);
 					}
 
 					break;
@@ -2574,32 +2571,30 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 		} else if (image_type == FIT_RGBF && (flags & TIFF_LOGLUV) == TIFF_LOGLUV) {
 			// RGBF image => store as XYZ using a LogLuv encoding
 
-			auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
+			std::unique_ptr<void, decltype(&free)> buffer(malloc(pitch * sizeof(uint8_t)), &free);
 			if (!buffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
-			std::unique_ptr<void, decltype(&free)> safeBuf(buffer, &free);
 
 			for (uint32_t y = 0; y < height; y++) {
 				// get a copy of the scanline and convert from RGB to XYZ
-				tiff_ConvertLineRGBToXYZ(buffer, FreeImage_GetScanLine(dib, height - y - 1), width);
+				tiff_ConvertLineRGBToXYZ(static_cast<uint8_t*>(buffer.get()), FreeImage_GetScanLine(dib, height - y - 1), width);
 				// write the scanline to disc
-				TIFFWriteScanline(out, buffer, y, 0);
+				TIFFWriteScanline(out, buffer.get(), y, 0);
 			}
 		} else {
 			// just dump the dib (tiff supports all dib types)
 			
-			auto * const buffer = static_cast<uint8_t*>(malloc(pitch * sizeof(uint8_t)));
+			std::unique_ptr<void, decltype(&free)> buffer(malloc(pitch * sizeof(uint8_t)), &free);
 			if (!buffer) {
 				throw FI_MSG_ERROR_MEMORY;
 			}
-			std::unique_ptr<void, decltype(&free)> safeBuf(buffer, &free);
 
 			for (uint32_t y = 0; y < height; y++) {
 				// get a copy of the scanline
-				memcpy(buffer, FreeImage_GetScanLine(dib, height - y - 1), pitch);
+				memcpy(buffer.get(), FreeImage_GetScanLine(dib, height - y - 1), pitch);
 				// write the scanline to disc
-				TIFFWriteScanline(out, buffer, y, 0);
+				TIFFWriteScanline(out, buffer.get(), y, 0);
 			}
 		}
 
