@@ -416,17 +416,19 @@ Read a JPEG-XR IFD as a buffer
 @see ReadMetadata
 */
 static ERR
-ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, uint8_t **ppbProfile) {
+ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, std::unique_ptr<void, decltype(&free)> &safeProfile) {
 	// (re-)allocate profile buffer
-	uint8_t *pbProfile = *ppbProfile;
-	pbProfile = (uint8_t*)realloc(pbProfile, cbByteCount);
+	void *pbProfile = safeProfile.get();
+	pbProfile = realloc(pbProfile, cbByteCount);
 	if (!pbProfile) {
 		return WMP_errOutOfMemory;
+	}
+	if (safeProfile.get() != pbProfile) {
+		safeProfile.reset(pbProfile);
 	}
 	// read the profile
 	if (WMP_errSuccess == pStream->SetPos(pStream, uOffset)) {
 		if (WMP_errSuccess == pStream->Read(pStream, pbProfile, cbByteCount)) {
-			*ppbProfile = pbProfile;
 			return WMP_errSuccess;
 		}
 	}
@@ -542,7 +544,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 	
 	WMPStream *pStream = pID->pStream;
 	WmpDEMisc *wmiDEMisc = &pID->WMP.wmiDEMisc;
-	uint8_t *pbProfile{};
+	std::unique_ptr<void, decltype(&free)> safeProfile(nullptr, &free);
 
 	try {
 		// save current position
@@ -553,23 +555,23 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		if (0 != wmiDEMisc->uColorProfileByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uColorProfileByteCount;
 			unsigned uOffset = wmiDEMisc->uColorProfileOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
-			FreeImage_CreateICCProfile(dib, pbProfile, cbByteCount);
+			FreeImage_CreateICCProfile(dib, safeProfile.get(), cbByteCount);
 		}
 
 		// XMP metadata
 		if (0 != wmiDEMisc->uXMPMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uXMPMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uXMPMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
 			if (auto *tag = FreeImage_CreateTag()) {
 				FreeImage_SetTagLength(tag, cbByteCount);
 				FreeImage_SetTagCount(tag, cbByteCount);
 				FreeImage_SetTagType(tag, FIDT_ASCII);
-				FreeImage_SetTagValue(tag, pbProfile);
+				FreeImage_SetTagValue(tag, safeProfile.get());
 				FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 				FreeImage_DeleteTag(tag);
@@ -580,34 +582,32 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		if (0 != wmiDEMisc->uIPTCNAAMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uIPTCNAAMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uIPTCNAAMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the IPTC profile
-			read_iptc_profile(dib, pbProfile, cbByteCount);
+			read_iptc_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount);
 		}
 
 		// Exif metadata
 		if (0 != wmiDEMisc->uEXIFMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uEXIFMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uEXIFMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the Exif profile
-			jpegxr_read_exif_profile(dib, pbProfile, cbByteCount, uOffset);
+			jpegxr_read_exif_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount, uOffset);
 		}
 
 		// Exif-GPS metadata
 		if (0 != wmiDEMisc->uGPSInfoMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uGPSInfoMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uGPSInfoMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the Exif-GPS profile
-			jpegxr_read_exif_gps_profile(dib, pbProfile, cbByteCount, uOffset);
+			jpegxr_read_exif_gps_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount, uOffset);
 		}
 
-		// free profile buffer
-		free(pbProfile);
 		// restore initial position
 		error_code = pID->pStream->SetPos(pID->pStream, currentPos);
 		JXR_CHECK(error_code);
@@ -619,8 +619,6 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		return ReadDescriptiveMetadata(pID, dib);
 
 	} catch(...) {
-		// free profile buffer
-		free(pbProfile);
 		if (currentPos) {
 			// restore initial position
 			pStream->SetPos(pStream, currentPos);
