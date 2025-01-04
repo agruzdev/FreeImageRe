@@ -167,15 +167,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// temporary stuff to load PCD
 
-		std::unique_ptr<void, decltype(&free)> safeY1(malloc(width * sizeof(uint8_t)), &free);
-		std::unique_ptr<void, decltype(&free)> safeY2(malloc(width * sizeof(uint8_t)), &free);
-		std::unique_ptr<void, decltype(&free)> safeCbCr(malloc(width * sizeof(uint8_t)), &free);
-		if (!safeY1 || !safeY2 || !safeCbCr) throw FI_MSG_ERROR_MEMORY;
-		auto *y1 = static_cast<uint8_t*>(safeY1.get());
-		auto *y2 = static_cast<uint8_t*>(safeY2.get());
-		auto *cbcr = static_cast<uint8_t*>(safeCbCr.get());
+		auto y1(std::make_unique<uint8_t[]>(width));
+		auto y2(std::make_unique<uint8_t[]>(width));
+		auto cbcr(std::make_unique<uint8_t[]>(width));
 
-		uint8_t *yl[] = { y1, y2 };
+		uint8_t *yl[] = { y1.get(), y2.get() };
 
 		// seek to the part where the bitmap data begins
 
@@ -185,9 +181,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// read the data
 
 		for (unsigned y = 0; y < height / 2; y++) {
-			io->read_proc(y1, width, 1, handle);
-			io->read_proc(y2, width, 1, handle);
-			io->read_proc(cbcr, width, 1, handle);
+			io->read_proc(y1.get(), width, 1, handle);
+			io->read_proc(y2.get(), width, 1, handle);
+			io->read_proc(cbcr.get(), width, 1, handle);
 
 			for (int i = 0; i < 2; i++) {
 				uint8_t *bits = FreeImage_GetScanLine(dib.get(), start_scan_line);
@@ -208,8 +204,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		return dib.release();
 
-	} catch(const char *text) {
+	}
+	catch(const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
 	}
 	return nullptr;
 }
