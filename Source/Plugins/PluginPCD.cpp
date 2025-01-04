@@ -23,6 +23,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include <array>
 
 // ==========================================================
 // Internal functions
@@ -162,16 +163,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (VerticalOrientation(io, handle)) {
 			scan_line_add = -1;
-			start_scan_line = height - 1;		
+			start_scan_line = height - 1;
 		}
 
 		// temporary stuff to load PCD
 
-		auto y1(std::make_unique<uint8_t[]>(width));
-		auto y2(std::make_unique<uint8_t[]>(width));
 		auto cbcr(std::make_unique<uint8_t[]>(width));
-
-		uint8_t *yl[] = { y1.get(), y2.get() };
+		std::array<std::unique_ptr<uint8_t[]>, 2> yl{{ std::make_unique<uint8_t[]>(width), std::make_unique<uint8_t[]>(width) }};
 
 		// seek to the part where the bitmap data begins
 
@@ -181,8 +179,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// read the data
 
 		for (unsigned y = 0; y < height / 2; y++) {
-			io->read_proc(y1.get(), width, 1, handle);
-			io->read_proc(y2.get(), width, 1, handle);
+			io->read_proc(yl[0].get(), width, 1, handle);
+			io->read_proc(yl[1].get(), width, 1, handle);
 			io->read_proc(cbcr.get(), width, 1, handle);
 
 			for (int i = 0; i < 2; i++) {
