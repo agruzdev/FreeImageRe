@@ -631,7 +631,6 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 			} //< packet_count
 		} //< has_rle
 	} //< while height
-	return;
 }
 
 // --------------------------------------------------------------------------
