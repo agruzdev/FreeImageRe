@@ -548,7 +548,7 @@ _assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 Generic RLE loader
 */
 template<int bPP>
-static bool 
+static void 
 loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle, long eof, FIBOOL as24bit) {
 	const int file_pixel_size = bPP/8;
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
@@ -572,7 +572,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 	// ...and allocate cache of this size (yields good results)
 	IOCache cache(io, handle, sz);
 	if (cache.isNull()) {
-		return false;
+		throw FI_MSG_ERROR_MEMORY;
 	}
 
 	int x = 0, y = 0;
@@ -593,7 +593,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 		if ((line_bits+x) + packet_count*pixel_size > dib_end) {
 			FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_CORRUPTED);
 			// return what is left from the bitmap
-			return true;
+			return;
 		}
 
 		if (has_rle) {
@@ -631,7 +631,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 			} //< packet_count
 		} //< has_rle
 	} //< while height
-	return true;
+	return;
 }
 
 // --------------------------------------------------------------------------
@@ -825,9 +825,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					case TGA_RLECMAP:
 					case TGA_RLEMONO: { //(8 bit)
-						if (!loadRLE<8>(dib.get(), header.is_width, header.is_height, io, handle, eof, FALSE)) {
-							return nullptr;
-						}
+						loadRLE<8>(dib.get(), header.is_width, header.is_height, io, handle, eof, FALSE);
 					}
 					break;
 
@@ -917,9 +915,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(16 bit)
-						if (!loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags)) {
-							return nullptr;
-						}
+						loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
 
@@ -955,9 +951,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(24 bit)
-						if (!loadRLE<24>(dib.get(), header.is_width, header.is_height, io, handle, eof, TRUE)) {
-							return nullptr;
-						}
+						loadRLE<24>(dib.get(), header.is_width, header.is_height, io, handle, eof, TRUE);
 					}
 					break;
 
@@ -1004,9 +998,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(32 bit)
-						if (!loadRLE<32>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags)) {
-							return nullptr;
-						}
+						loadRLE<32>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
 
