@@ -415,7 +415,7 @@ CreateImageType(FIBOOL header_only, FREE_IMAGE_TYPE fit, int width, int height, 
 
 	} else {
 		// other bitmap types
-		
+
 		dib = FreeImage_AllocateHeaderT(header_only, fit, width, height, bpp);
 	}
 
@@ -1409,7 +1409,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			if (!header_only) {
 
-				safeRaster.reset(new uint32_t[width * height]);
+				safeRaster.reset(new uint32_t[static_cast<size_t>(width) * height]);
 
 				// read the image in one chunk into an RGBA array
 
@@ -2439,20 +2439,20 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 						// get the transparency table
 						uint8_t *trns = FreeImage_GetTransparencyTable(dib);
 
-						auto buffer(std::make_unique<uint8_t[]>(width * 2));
+						auto buffer(std::make_unique<uint8_t[]>(static_cast<size_t>(width) * 2));
 
 						for (int y = height - 1; y >= 0; y--) {
-							uint8_t *bits = FreeImage_GetScanLine(dib, y);
+							const uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
-							uint8_t *p = bits, *b = static_cast<uint8_t*>(buffer.get());
+							auto *b = buffer.get();
 
 							for (uint32_t x = 0; x < width; x++) {
 								// copy the 8-bit layer
-								b[0] = *p;
+								b[0] = *bits;
 								// convert the trns table to a 8-bit alpha layer
 								b[1] = trns[ b[0] ];
 
-								p++;
+								bits++;
 								b += samplesperpixel;
 							}
 
