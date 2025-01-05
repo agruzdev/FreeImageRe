@@ -152,8 +152,8 @@ readExtHeader(FreeImageIO *io, fi_handle handle, uint8_t b) {
 			uint8_t sizeParamIdent = (b & 0x70) >> 4;	// Size of Parameter Identifier (in bytes)
 			uint8_t sizeParamValue = (b & 0x0F);		// Size of Parameter Value (in bytes)
 			
-			std::unique_ptr<void , decltype(&free)> Ident(malloc(sizeParamIdent * sizeof(uint8_t)), &free);
-			std::unique_ptr<void , decltype(&free)> Value(malloc(sizeParamValue * sizeof(uint8_t)), &free);
+			auto Ident(std::make_unique<uint8_t[]>(sizeParamIdent));
+			auto Value(std::make_unique<uint8_t[]>(sizeParamValue));
 
 			io->read_proc(Ident.get(), sizeParamIdent, 1, handle);
 			io->read_proc(Value.get(), sizeParamValue, 1, handle);

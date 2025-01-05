@@ -497,21 +497,21 @@ We use a specific overload based on bits-per-pixel for each type of pixel
 
 template <int nBITS>
 inline static void 
-_assignPixel(uint8_t* bits, uint8_t* val, FIBOOL as24bit = FALSE) {
+_assignPixel(uint8_t* bits, const uint8_t* val, FIBOOL as24bit = FALSE) {
 	// static assert should go here
 	assert(FALSE);
 }
 
 template <>
 inline void 
-_assignPixel<8>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<8>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	*bits = *val;
 }
 
 template <>
 inline void 
-_assignPixel<16>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
-	uint16_t value(*reinterpret_cast<uint16_t*>(val));
+_assignPixel<16>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
+	uint16_t value(*reinterpret_cast<const uint16_t*>(val));
 
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapShort(&value);
@@ -529,7 +529,7 @@ _assignPixel<16>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 
 template <>
 inline void 
-_assignPixel<24>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<24>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	bits[FI_RGBA_BLUE]	= val[0];
 	bits[FI_RGBA_GREEN] = val[1];
 	bits[FI_RGBA_RED]	= val[2];
@@ -537,7 +537,7 @@ _assignPixel<24>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 
 template <>
 inline void 
-_assignPixel<32>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	if (as24bit) {
 		_assignPixel<24>(bits, val, TRUE);
 
@@ -912,10 +912,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_RGB: { //(16 bit)
 						// input line cache
-						std::unique_ptr<void, decltype(&free)> in_line(malloc(header.is_width * sizeof(uint16_t)), &free);
-
-						if (!in_line)
-							throw FI_MSG_ERROR_MEMORY;
+						auto in_line(std::make_unique<uint8_t[]>(header.is_width * sizeof(uint16_t)));
 
 						const int h = header.is_height;
 
@@ -924,7 +921,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							uint8_t *bits = FreeImage_GetScanLine(dib.get(), y);
 							io->read_proc(in_line.get(), src_pixel_size, header.is_width, handle);
 
-							auto *val = static_cast<uint8_t*>(in_line.get());
+							const auto *val = in_line.get();
 							for (int x = 0; x < line; x += pixel_size) {
 
 								_assignPixel<16>(bits+x, val, TARGA_LOAD_RGB888 & flags);

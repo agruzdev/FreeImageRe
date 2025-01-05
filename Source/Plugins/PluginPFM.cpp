@@ -255,10 +255,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (image_type == FIT_RGBF) {
 			const unsigned lineWidth = 3 * width;
-			std::unique_ptr<void, decltype(&free)> lineBuffer(malloc(lineWidth * sizeof(float)), &free);
-			if (!lineBuffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			auto lineBuffer(std::make_unique<float[]>(lineWidth));
 
 			for (unsigned y = 0; y < height; y++) {	
 				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
@@ -266,7 +263,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
 				}
-				auto *channel = static_cast<const float *>(lineBuffer.get());
+				const auto *channel = lineBuffer.get();
 				if (scalefactor > 0) {
 					// MSB
 					for (unsigned x = 0; x < width; x++) {
@@ -285,10 +282,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		} else if (image_type == FIT_FLOAT) {
 			const unsigned lineWidth = width;
-			std::unique_ptr<void, decltype(&free)> lineBuffer(malloc(lineWidth * sizeof(float)), &free);
-			if (!lineBuffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			auto lineBuffer(std::make_unique<float[]>(lineWidth));
 
 			for (unsigned y = 0; y < height; y++) {
 				float *bits = (float*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
@@ -313,14 +307,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		
 		return dib.release();
 
-	} catch (const char *text)  {
+	}
+	catch (const char *text)  {
 		if (text) {
 			FreeImage_OutputMessageProc(s_format_id, text);
 		}
-
-		return nullptr;
 	}
-
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
