@@ -506,17 +506,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// load image data
 		// ---------------
 
-		std::unique_ptr<void, decltype(&free)> safeLine(malloc(lineLength * sizeof(uint8_t)), &free);
-		if (!safeLine) {
-			throw FI_MSG_ERROR_MEMORY;
-		}
-		auto *line = static_cast<uint8_t*>(safeLine.get()); // PCX raster line
+		auto line(std::make_unique<uint8_t[]>(lineLength));
 
-		std::unique_ptr<void, decltype(&free)> safeReadBuf(malloc(PCX_IO_BUF_SIZE * sizeof(uint8_t)), &free);
-		if (!safeReadBuf) {
-			throw FI_MSG_ERROR_MEMORY;
-		}
-		auto *ReadBuf = static_cast<uint8_t*>(safeReadBuf.get()); // buffer;
+		auto ReadBuf(std::make_unique<uint8_t[]>(PCX_IO_BUF_SIZE));
 
 		bits = FreeImage_GetScanLine(dib.get(), height - 1);
 
@@ -528,9 +520,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			for (unsigned y = 0; y < height; y++) {
 				// do a safe copy of the scanline into 'line'
-				written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
+				written = readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 				// sometimes (already encountered), PCX images can have a lineLength > pitch
-				memcpy(bits, line, MIN(pitch, lineLength));
+				memcpy(bits, line.get(), MIN(pitch, lineLength));
 
 				// skip trailing garbage at the end of the scanline
 
@@ -548,18 +540,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			uint8_t bit,  mask, skip;
 			unsigned index;
 
-			std::unique_ptr<void, decltype(&free)> safeBuffer(malloc(width * sizeof(uint8_t)), &free);
-			if (!safeBuffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
-			auto *buffer = static_cast<uint8_t*>(safeBuffer.get());
+			auto buffer(std::make_unique<uint8_t[]>(width));
 
 			for (unsigned y = 0; y < height; y++) {
-				unsigned written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
+				unsigned written = readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 
 				// build a nibble using the 4 planes
 
-				memset(buffer, 0, width * sizeof(uint8_t));
+				memset(buffer.get(), 0, width * sizeof(uint8_t));
 
 				for (int plane = 0; plane < 4; plane++) {
 					bit = (uint8_t)(1 << plane);
@@ -591,15 +579,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 
 		} else if ((header.planes == 3) && (header.bpp == 8)) {
-			uint8_t *pLine;
-
 			for (unsigned y = 0; y < height; y++) {
-				readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
+				readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 
 				// convert the plane stream to BGR (RRRRGGGGBBBB -> BGRBGRBGRBGR)
 				// well, now with the FI_RGBA_x macros, on BIGENDIAN we convert to RGB
 
-				pLine = line;
+				const auto *pLine = line.get();
 				unsigned x;
 
 				for (x = 0; x < width; x++) {
@@ -625,8 +611,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		return dib.release();
 
-	} catch (const char *text) {
+	}
+	catch (const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
 	}
 
 	return nullptr;
