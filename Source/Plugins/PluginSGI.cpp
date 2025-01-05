@@ -259,23 +259,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			height = sgiHeader.ysize;
 		}
 
-		std::unique_ptr<void, decltype(&free)> pRowIndex(nullptr, &free);
+		std::unique_ptr<int32_t[]> pRowIndex;
 		if (bIsRLE) {
 			// read the Offset Tables 
 			int index_len = height * zsize;
-			pRowIndex.reset(malloc(index_len * sizeof(int32_t)));
-			if (!pRowIndex) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			pRowIndex.reset(new int32_t[index_len]);
 			
 			if ((unsigned)index_len != io->read_proc(pRowIndex.get(), sizeof(int32_t), index_len, handle)) {
 				throw SGI_EOF_IN_RLE_INDEX;
 			}
 			
-#ifndef FREEIMAGE_BIGENDIAN		
+#ifndef FREEIMAGE_BIGENDIAN
 			// Fix byte order in index
 			for (i = 0; i < index_len; i++) {
-				SwapLong(static_cast<uint32_t*>(pRowIndex.get()) + i);
+				SwapLong(static_cast<uint32_t*>(static_cast<void*>(pRowIndex.get())) + i);
 			}
 #endif
 			// Discard row size index
@@ -343,7 +340,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			numChannels = 4;
 		}
 
-		auto *pri = static_cast<int32_t *>(pRowIndex.get());
+		auto *pri = pRowIndex.get();
 		for (i = 0; i < zsize; i++) {
 			uint8_t *pRow = pStartRow + offset_table[i];
 			for (int j = 0; j < height; j++, pRow += ns, pri++) {
@@ -387,8 +384,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		return dib.release();
 
-	} catch(const char *text) {
+	}
+	catch(const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
 	}
 	return nullptr;
 }
