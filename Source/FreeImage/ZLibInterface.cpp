@@ -105,7 +105,7 @@ FreeImage_ZLibGZip(uint8_t *target, uint32_t target_size, uint8_t *source, uint3
 	uint32_t crc = crc32(0L, nullptr, 0);
 
     // set up header (stolen from zlib/gzio.c)
-    sprintf((char *)target, "%c%c%c%c%c%c%c%c", 0x1f, 0x8b,
+    snprintf((char *)target, target_size / sizeof(char), "%c%c%c%c%c%c%c%c", 0x1f, 0x8b,
          Z_DEFLATED, 0 /*flags*/, 0,0,0,0 /*time*/);
     int zerr = compress2(target + 8, &dest_len, source, source_size, Z_BEST_COMPRESSION);
 	switch (zerr) {

@@ -143,7 +143,7 @@ readExtHeader(FreeImageIO *io, fi_handle handle, uint8_t b) {
 		{
 			uint32_t info = multiByteRead(io, handle);
 			break;
-		}		
+		}
 
 		// Type 11: read a sequence of parameter/value pairs.
 
@@ -152,16 +152,14 @@ readExtHeader(FreeImageIO *io, fi_handle handle, uint8_t b) {
 			uint8_t sizeParamIdent = (b & 0x70) >> 4;	// Size of Parameter Identifier (in bytes)
 			uint8_t sizeParamValue = (b & 0x0F);		// Size of Parameter Value (in bytes)
 			
-			auto *Ident = (uint8_t*)malloc(sizeParamIdent * sizeof(uint8_t));
-			auto *Value = (uint8_t*)malloc(sizeParamValue * sizeof(uint8_t));
-		
-			io->read_proc(Ident, sizeParamIdent, 1, handle);
-			io->read_proc(Value, sizeParamValue, 1, handle);
-			
-			free(Ident);
-			free(Value);
+			auto Ident(std::make_unique<uint8_t[]>(sizeParamIdent));
+			auto Value(std::make_unique<uint8_t[]>(sizeParamValue));
+
+			io->read_proc(Ident.get(), sizeParamIdent, 1, handle);
+			io->read_proc(Value.get(), sizeParamValue, 1, handle);
+
 			break;
-		}		
+		}
 
 		// reserved for future use
 
@@ -279,7 +277,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// read the bitmap data
 			
-			int line = FreeImage_GetLine(dib);
+			const int line = FreeImage_GetLine(dib);
 
 			for (y = 0; y < height; y++) {
 				bits = FreeImage_GetScanLine(dib, height - 1 - y);
@@ -293,12 +291,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		} catch(const char *text)  {
 			FreeImage_OutputMessageProc(s_format_id, text);
-
-			return nullptr;
 		}
-
 	}
-
 	return nullptr;
 }
 

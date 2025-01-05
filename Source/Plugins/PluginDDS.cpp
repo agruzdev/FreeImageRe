@@ -632,8 +632,9 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	const long delta = (long)filePitch - (long)line;
 
 	if (bpp == 16) {
-		auto *pixels = (uint8_t*)malloc(line * sizeof(uint8_t));
-		if (pixels) {
+		std::unique_ptr<void, decltype(&free)> safePixels(malloc(line * sizeof(uint8_t)), &free);
+		if (safePixels) {
+			auto *pixels = static_cast<uint8_t*>(safePixels.get());
 			for (int y = 0; y < height; y++) {
 				uint8_t *dst_bits = FreeImage_GetScanLine(dib, height - y - 1);
 				// get the 16-bit RGB pixels
@@ -643,7 +644,6 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 				ConvertLine16To24(dst_bits, (const uint16_t*)pixels, format16, width);
 			}
 		}
-		free(pixels);
 	}
 	else {
 		for (int y = 0; y < height; y++) {

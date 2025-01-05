@@ -156,15 +156,14 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char msg[256];
-    FIBITMAP *dib{};
 
     if (!handle) return nullptr;
 
     try {
 		char *str;
-		
+
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
-		
+
 		//find the starting brace
 		if (!FindChar(io, handle,'{'))
 			throw "Could not find starting brace";
@@ -186,10 +185,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw "Improperly formed info string";
 		}
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
         if (colors > 256) {
-			dib = FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+			dib.reset(FreeImage_AllocateHeader(header_only, width, height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 		} else {
-			dib = FreeImage_AllocateHeader(header_only, width, height, 8);
+			dib.reset(FreeImage_AllocateHeader(header_only, width, height, 8));
 		}
 
 		//build a map of color chars to rgb values
@@ -278,7 +278,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 
 					if (!FreeImage_LookupX11Color(clr,  &rgba.r, &rgba.g, &rgba.b)) {
-						sprintf(msg, "Unknown color name '%s'", str);
+						snprintf(msg, std::size(msg), "Unknown color name '%s'", str);
 						free(str);
 						throw msg;
 					}
@@ -294,7 +294,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			//build palette if needed
 			if (colors <= 256) {
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				pal[i].blue = rgba.b;
 				pal[i].green = rgba.g;
 				pal[i].red = rgba.r;
@@ -306,12 +306,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		//read in pixel data
 		for (int y = 0; y < height; y++) {
-			uint8_t *line = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *line = FreeImage_GetScanLine(dib.get(), height - y - 1);
 			str = ReadString(io, handle);
 			if (!str)
 				throw "Error reading pixel strings";
@@ -339,15 +339,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 		//done reading pixel data
 
-		return dib;
+		return dib.release();
 	} catch(const char *text) {
        FreeImage_OutputMessageProc(s_format_id, text);
-
-       if (dib)
-           FreeImage_Unload(dib);
-
-       return nullptr;
     }
+    return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
@@ -358,7 +354,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		start_pixels[] = "\",\n/* pixels */\n\"",
 		new_line[] = "\",\n\"",
 		footer[] = "\"\n};\n",
-		buf[256]; //256 is more then enough to sprintf 4 ints into, or the base-92 chars and #rrggbb line
+		buf[256]; //256 is more then enough to snprintf 4 ints into, or the base-92 chars and #rrggbb line
 
 		if (io->write_proc(header, (unsigned int)strlen(header), 1, handle) != 1)
 			return FALSE;
@@ -409,7 +405,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		int cpp = (int)(log((double)num_colors)/log(92.0)) + 1;
 
-		sprintf(buf, "%d %d %d %d", FreeImage_GetWidth(dib), FreeImage_GetHeight(dib), num_colors, cpp );
+		snprintf(buf, std::size(buf), "%d %d %d %d", FreeImage_GetWidth(dib), FreeImage_GetHeight(dib), num_colors, cpp );
 		if (io->write_proc(buf, (unsigned int)strlen(buf), 1, handle) != 1)
 			return FALSE;
 
@@ -418,7 +414,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		//write colors, using map of chrs->rgb
 		for (x = 0; x < num_colors; x++) {
-			sprintf(buf, "%*s c #%02x%02x%02x", cpp, Base92(x), chrs2color[x].r, chrs2color[x].g, chrs2color[x].b );
+			snprintf(buf, std::size(buf), "%*s c #%02x%02x%02x", cpp, Base92(x), chrs2color[x].r, chrs2color[x].g, chrs2color[x].b );
 			if (io->write_proc(buf, (unsigned int)strlen(buf), 1, handle) != 1)
 				return FALSE;
 			if (x == num_colors - 1) {
@@ -446,7 +442,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					u.index = *line;
 					line++;
 				}
-				sprintf(buf, "%*s", cpp, (char *)color2chrs[u.index].c_str());
+				snprintf(buf, std::size(buf), "%*s", cpp, (char *)color2chrs[u.index].c_str());
 				if (io->write_proc(buf, cpp, 1, handle) != 1)
 					return FALSE;
 			}

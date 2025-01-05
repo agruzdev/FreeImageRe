@@ -416,17 +416,18 @@ Read a JPEG-XR IFD as a buffer
 @see ReadMetadata
 */
 static ERR
-ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, uint8_t **ppbProfile) {
+ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, std::unique_ptr<void, decltype(&free)> &safeProfile) {
 	// (re-)allocate profile buffer
-	uint8_t *pbProfile = *ppbProfile;
-	pbProfile = (uint8_t*)realloc(pbProfile, cbByteCount);
+	auto *tmp = safeProfile.release();
+	auto *pbProfile = realloc(tmp, cbByteCount);
 	if (!pbProfile) {
+		safeProfile.reset(tmp);
 		return WMP_errOutOfMemory;
 	}
+	safeProfile.reset(pbProfile);
 	// read the profile
 	if (WMP_errSuccess == pStream->SetPos(pStream, uOffset)) {
 		if (WMP_errSuccess == pStream->Read(pStream, pbProfile, cbByteCount)) {
-			*ppbProfile = pbProfile;
 			return WMP_errSuccess;
 		}
 	}
@@ -542,7 +543,7 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 	
 	WMPStream *pStream = pID->pStream;
 	WmpDEMisc *wmiDEMisc = &pID->WMP.wmiDEMisc;
-	uint8_t *pbProfile{};
+	std::unique_ptr<void, decltype(&free)> safeProfile(nullptr, &free);
 
 	try {
 		// save current position
@@ -553,23 +554,23 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		if (0 != wmiDEMisc->uColorProfileByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uColorProfileByteCount;
 			unsigned uOffset = wmiDEMisc->uColorProfileOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
-			FreeImage_CreateICCProfile(dib, pbProfile, cbByteCount);
+			FreeImage_CreateICCProfile(dib, safeProfile.get(), cbByteCount);
 		}
 
 		// XMP metadata
 		if (0 != wmiDEMisc->uXMPMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uXMPMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uXMPMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
 			if (auto *tag = FreeImage_CreateTag()) {
 				FreeImage_SetTagLength(tag, cbByteCount);
 				FreeImage_SetTagCount(tag, cbByteCount);
 				FreeImage_SetTagType(tag, FIDT_ASCII);
-				FreeImage_SetTagValue(tag, pbProfile);
+				FreeImage_SetTagValue(tag, safeProfile.get());
 				FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
 				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
 				FreeImage_DeleteTag(tag);
@@ -580,34 +581,32 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		if (0 != wmiDEMisc->uIPTCNAAMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uIPTCNAAMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uIPTCNAAMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the IPTC profile
-			read_iptc_profile(dib, pbProfile, cbByteCount);
+			read_iptc_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount);
 		}
 
 		// Exif metadata
 		if (0 != wmiDEMisc->uEXIFMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uEXIFMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uEXIFMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the Exif profile
-			jpegxr_read_exif_profile(dib, pbProfile, cbByteCount, uOffset);
+			jpegxr_read_exif_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount, uOffset);
 		}
 
 		// Exif-GPS metadata
 		if (0 != wmiDEMisc->uGPSInfoMetadataByteCount) {
 			unsigned cbByteCount = wmiDEMisc->uGPSInfoMetadataByteCount;
 			unsigned uOffset = wmiDEMisc->uGPSInfoMetadataOffset;
-			error_code = ReadProfile(pStream, cbByteCount, uOffset, &pbProfile);
+			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// decode the Exif-GPS profile
-			jpegxr_read_exif_gps_profile(dib, pbProfile, cbByteCount, uOffset);
+			jpegxr_read_exif_gps_profile(dib, static_cast<const uint8_t *>(safeProfile.get()), cbByteCount, uOffset);
 		}
 
-		// free profile buffer
-		free(pbProfile);
 		// restore initial position
 		error_code = pID->pStream->SetPos(pID->pStream, currentPos);
 		JXR_CHECK(error_code);
@@ -619,8 +618,6 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 		return ReadDescriptiveMetadata(pID, dib);
 
 	} catch(...) {
-		// free profile buffer
-		free(pbProfile);
 		if (currentPos) {
 			// restore initial position
 			pStream->SetPos(pStream, currentPos);
@@ -1121,11 +1118,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	PKImageDecode *pDecoder{};	// decoder interface
 	ERR error_code = 0;				// error code as returned by the interface
 	PKPixelFormatGUID guid_format;	// loaded pixel format (== input file pixel format if no conversion needed)
-	
+
 	FREE_IMAGE_TYPE image_type = FIT_UNKNOWN;	// input image type
 	unsigned bpp = 0;							// input image bit depth
-	FIBITMAP *dib{};
-	
+
 	// get the I/O stream wrapper
 	WMPStream *pDecodeStream = (WMPStream*)data;
 
@@ -1159,17 +1155,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		pDecoder->GetSize(pDecoder, &width, &height);
 
 		// allocate dst image
-		{			
-			dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, bpp, red_mask, green_mask, blue_mask);
-			if (!dib) {
-				throw FI_MSG_ERROR_DIB_MEMORY;
-			}
-			if (FreeImage_GetBPP(dib) == 1) {
-				// BD_1 - build a FIC_MINISBLACK palette
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
-				pal[0].red = pal[0].green = pal[0].blue = 0;
-				pal[1].red = pal[1].green = pal[1].blue = 255;
-			}
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, image_type, width, height, bpp, red_mask, green_mask, blue_mask), &FreeImage_Unload);
+		if (!dib) {
+			throw FI_MSG_ERROR_DIB_MEMORY;
+		}
+		if (FreeImage_GetBPP(dib.get()) == 1) {
+			// BD_1 - build a FIC_MINISBLACK palette
+			FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
+			pal[0].red = pal[0].green = pal[0].blue = 0;
+			pal[1].red = pal[1].green = pal[1].blue = 255;
 		}
 
 		// get image resolution
@@ -1177,37 +1171,35 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			float resX, resY;	// image resolution (in dots per inch)
 			// convert from English units, i.e. dots per inch to universal units, i.e. dots per meter
 			pDecoder->GetResolution(pDecoder, &resX, &resY);
-			FreeImage_SetDotsPerMeterX(dib, (unsigned)(resX / 0.0254F + 0.5F));
-			FreeImage_SetDotsPerMeterY(dib, (unsigned)(resY / 0.0254F + 0.5F));
+			FreeImage_SetDotsPerMeterX(dib.get(), (unsigned)(resX / 0.0254F + 0.5F));
+			FreeImage_SetDotsPerMeterY(dib.get(), (unsigned)(resY / 0.0254F + 0.5F));
 		}
 
 		// get metadata & ICC profile
-		error_code = ReadMetadata(pDecoder, dib);
+		error_code = ReadMetadata(pDecoder, dib.get());
 		JXR_CHECK(error_code);
 
 		if (header_only) {
 			// header only mode ...
-			
+
 			// free the decoder
 			pDecoder->Release(&pDecoder);
 			assert(!pDecoder);
 
-			return dib;
+			return dib.release();
 		}
 		
 		// copy pixels into the dib, perform pixel conversion if needed
-		error_code = CopyPixels(pDecoder, guid_format, dib, width, height);
+		error_code = CopyPixels(pDecoder, guid_format, dib.get(), width, height);
 		JXR_CHECK(error_code);
 
 		// free the decoder
 		pDecoder->Release(&pDecoder);
 		assert(!pDecoder);
 
-		return dib;
+		return dib.release();
 
 	} catch (const char *message) {
-		// unload the dib
-		FreeImage_Unload(dib);
 		// free the decoder
 		pDecoder->Release(&pDecoder);
 

@@ -23,6 +23,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include <array>
 
 // ==========================================================
 // Internal functions
@@ -114,15 +115,12 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
 	unsigned width;
 	unsigned height;
 	const unsigned bpp = 24;
 	int scan_line_add   = 1;
 	int start_scan_line = 0;
 	
-	uint8_t *y1{}, *y2{}, *cbcr{};
-
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	// to make absolute seeks possible we store the current position in the file
@@ -154,28 +152,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 	try {
 		// allocate the dib and write out the header
-		dib = FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeader(header_only, width, height, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK), &FreeImage_Unload);
 		if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
 		if (header_only) {
-			return dib;
+			return dib.release();
 		}
 
 		// check if the PCD is bottom-up
 
 		if (VerticalOrientation(io, handle)) {
 			scan_line_add = -1;
-			start_scan_line = height - 1;		
+			start_scan_line = height - 1;
 		}
 
 		// temporary stuff to load PCD
 
-		auto *y1 = (uint8_t*)malloc(width * sizeof(uint8_t));
-		auto *y2 = (uint8_t*)malloc(width * sizeof(uint8_t));
-		auto *cbcr = (uint8_t*)malloc(width * sizeof(uint8_t));
-		if (!y1 || !y2 || !cbcr) throw FI_MSG_ERROR_MEMORY;
-
-		uint8_t *yl[] = { y1, y2 };
+		auto cbcr(std::make_unique<uint8_t[]>(width));
+		std::array<std::unique_ptr<uint8_t[]>, 2> yl{{ std::make_unique<uint8_t[]>(width), std::make_unique<uint8_t[]>(width) }};
 
 		// seek to the part where the bitmap data begins
 
@@ -185,12 +179,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// read the data
 
 		for (unsigned y = 0; y < height / 2; y++) {
-			io->read_proc(y1, width, 1, handle);
-			io->read_proc(y2, width, 1, handle);
-			io->read_proc(cbcr, width, 1, handle);
+			io->read_proc(yl[0].get(), width, 1, handle);
+			io->read_proc(yl[1].get(), width, 1, handle);
+			io->read_proc(cbcr.get(), width, 1, handle);
 
 			for (int i = 0; i < 2; i++) {
-				uint8_t *bits = FreeImage_GetScanLine(dib, start_scan_line);
+				uint8_t *bits = FreeImage_GetScanLine(dib.get(), start_scan_line);
 				for (unsigned x = 0; x < width; x++) {
 					int r, g, b;
 
@@ -206,22 +200,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 		}
 
-		free(cbcr);
-		free(y2);
-		free(y1);
+		return dib.release();
 
-		return dib;
-
-	} catch(const char *text) {
-		if (dib) FreeImage_Unload(dib);
-		if (cbcr) free(cbcr);
-		if (y2) free(y2);
-		if (y1) free(y1);
-
-		FreeImage_OutputMessageProc(s_format_id, text);
-
-		return nullptr;
 	}
+	catch(const char *text) {
+		FreeImage_OutputMessageProc(s_format_id, text);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+	return nullptr;
 }
 
 // ==========================================================

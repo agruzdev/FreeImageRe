@@ -107,7 +107,7 @@ Build a crop string.
 @return Returns TRUE if successful, returns FALSE otherwise
 */
 static FIBOOL
-getCropString(char* crop, int* left, int* top, int* right, int* bottom, int width, int height) {
+getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int* bottom, int width, int height) {
 	if (!left || !top || !right || !bottom) {
 		return FALSE;
 	}
@@ -149,7 +149,7 @@ getCropString(char* crop, int* left, int* top, int* right, int* bottom, int widt
 	}
 
 	// build the crop option
-	sprintf(crop, "%dx%d+%d+%d", *right - *left, *bottom - *top, *left, *top);
+	snprintf(crop, cropSize, "%dx%d+%d+%d", *right - *left, *bottom - *top, *left, *top);
 
 	return TRUE;
 }
@@ -257,7 +257,7 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 
 		// crop option
 		char crop[64];
-		const FIBOOL hasCrop = getCropString(crop, left, top, right, bottom, swappedDim ? srcinfo.image_height : srcinfo.image_width, swappedDim ? srcinfo.image_width : srcinfo.image_height);
+		const FIBOOL hasCrop = getCropString(crop, std::size(crop), left, top, right, bottom, swappedDim ? srcinfo.image_height : srcinfo.image_width, swappedDim ? srcinfo.image_width : srcinfo.image_height);
 
 		if (hasCrop) {
 			if (!jtransform_parse_crop_spec(&transfoptions, crop)) {
