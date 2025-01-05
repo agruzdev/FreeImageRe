@@ -113,11 +113,11 @@ public:
 	FIBOOL isNull() const {
 		return !_data;
 	}
-	
+
 	FIBOOL read(FreeImageIO *io, fi_handle handle, size_t size) {
 		io->read_proc(&_w, 1, 1, handle);
 		io->read_proc(&_h, 1, 1, handle);
-		
+
 		const size_t sizeofData = size - 2;
 		_data.reset(malloc(sizeofData));
 		if (_data) {
@@ -125,13 +125,13 @@ public:
 		}
 		return FALSE;
 	}
-	
+
 	void setDepth(uint8_t dp) {
 		_depth = dp;
 	}
-	
+
 	FIBITMAP* toFIBITMAP();
-	
+
 private:
 	std::unique_ptr<void, decltype(&free)> _data;
 	uint8_t _w;
@@ -145,16 +145,16 @@ swapShortPixels(FIBITMAP* dib) {
 	if (FreeImage_GetImageType(dib) != FIT_BITMAP) {
 		return;
 	}
-		
+
 	const unsigned Bpp = FreeImage_GetBPP(dib)/8;
 	if (Bpp != 2) {
 		return;
 	}
-		
+
 	uint8_t* bits = FreeImage_GetBits(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pitch = FreeImage_GetPitch(dib);
-	
+
 	uint8_t* line = bits;
 	for (unsigned y = 0; y < height; y++, line += pitch) {
 		for (uint8_t* pixel = line; pixel < line + pitch ; pixel += Bpp) {
@@ -168,7 +168,7 @@ FIBITMAP* TargaThumbnail::toFIBITMAP() {
 	if (isNull() || _depth == 0) {
 		return nullptr;
 	}
-		
+
 	const unsigned line_size = _depth * _w / 8;
 	FIBITMAP* dib = FreeImage_Allocate(_w, _h, _depth);
 	if (!dib) {
@@ -185,7 +185,7 @@ FIBITMAP* TargaThumbnail::toFIBITMAP() {
 #ifdef FREEIMAGE_BIGENDIAN
 	swapShortPixels(dib);
 #endif
-	
+
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	SwapRedBlue32(dib);
 #endif
@@ -226,7 +226,7 @@ public:
 	inline
 	uint8_t* getBytes(size_t count /*must be < _size!*/) {
 		if (_ptr + count >= _end) {
-			
+
 			// need refill
 
 			// 'count' bytes might span two cache bounds,
@@ -357,7 +357,7 @@ isTARGA20(FreeImageIO *io, fi_handle handle) {
 	}
 	// rewind
 	io->seek_proc(handle, start_offset, SEEK_SET);
-		
+
 	return (memcmp(tga_signature, signature, sizeofSig) == 0);
 }
 
@@ -366,11 +366,11 @@ Validate(FreeImageIO *io, fi_handle handle) {
 	if (isTARGA20(io, handle)) {
 		return TRUE;
 	}
-		
+
 	// not a 2.0 image, try testing if it's a valid TGA anyway (not robust)
 	{
 		const long start_offset = io->tell_proc(handle);
-		
+
 		// get the header
 		TGAHEADER header;
 		if (io->read_proc(&header, sizeof(tagTGAHEADER), 1, handle) < 1) {
@@ -557,9 +557,6 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 	// Note, many of the params can be computed inside the function.
 	// However, because this is a template function, it will lead to redundant code duplication.
 
-	uint8_t rle;
-	uint8_t *line_bits;
-
 	// this is used to guard against writing beyond the end of the image (on corrupted rle block)
 	const uint8_t* dib_end = FreeImage_GetScanLine(dib, height);//< one-past-end row
 
@@ -572,16 +569,16 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 	int x = 0, y = 0;
 
-	line_bits = FreeImage_GetScanLine(dib, y);
+	uint8_t *line_bits = FreeImage_GetScanLine(dib, y);
 
 	while (y < height) {
 
-		rle = cache.getByte();
+		uint8_t rle = cache.getByte();
 
-		FIBOOL has_rle = rle & 0x80;
+		const FIBOOL has_rle = rle & 0x80;
 		rle &= ~0x80; // remove type-bit
 
-		uint8_t packet_count = rle + 1;
+		const uint8_t packet_count = rle + 1;
 
 		//packet_count might be corrupt, test if we are not about to write beyond the last image bit
 
@@ -594,7 +591,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 		if (has_rle) {
 
 			// read a pixel value from file...
-			uint8_t *val = cache.getBytes(file_pixel_size);
+			const uint8_t *val = cache.getBytes(file_pixel_size);
 
 			//...and fill packet_count pixels with it
 
@@ -614,7 +611,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 			// copy packet_count pixels from file to dib
 			for (int ix = 0; ix < packet_count; ix++) {
-				uint8_t *val = cache.getBytes(file_pixel_size);
+				const uint8_t *val = cache.getBytes(file_pixel_size);
 				_assignPixel<bPP>((line_bits+x), val, as24bit);
 				x += pixel_size;
 
@@ -1072,7 +1069,7 @@ flushPacket(uint8_t*& dest, unsigned pixel_size, uint8_t* packet_begin, uint8_t*
 
 
 static inline void 
-writeToPacket(uint8_t* packet, uint8_t* pixel, unsigned pixel_size) {
+writeToPacket(uint8_t*& packet, const uint8_t* pixel, unsigned pixel_size) {
 	// Take care of channel and byte order here, because packet will be flushed straight to the file
 	switch (pixel_size) {
 		case 1:
@@ -1110,6 +1107,7 @@ writeToPacket(uint8_t* packet, uint8_t* pixel, unsigned pixel_size) {
 		default:
 			assert(FALSE);
 	}
+	packet += pixel_size;
 }
 
 static inline FIBOOL 
@@ -1136,13 +1134,13 @@ isEqualPixel(uint8_t* lhs, uint8_t* rhs, unsigned pixel_size) {
 static void 
 saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 	// Image is compressed line by line, packets don't span multiple lines (TGA2.0 recommendation)
-		
+
 	const unsigned width = FreeImage_GetWidth(dib);
 	const unsigned height = FreeImage_GetHeight(dib);
 	const unsigned pixel_size = FreeImage_GetBPP(dib)/8;
 	const unsigned line_size = FreeImage_GetLine(dib);
 
-	const uint8_t max_packet_size = 128;
+	constexpr uint8_t max_packet_size = 128;
 	uint8_t packet_count = 0;
 	FIBOOL has_rle = FALSE;
 
@@ -1159,14 +1157,14 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 	// In the end we gain no bytes from compression, but also must insert a byte at every 3th pixel
 
 	// add extra space for anti-commpressed lines
-	size_t extra_space = (size_t)ceil(width / 3.0);
+	const size_t extra_space = (size_t)ceil(width / 3.0);
 	auto line_begin(std::make_unique<uint8_t[]>(width * pixel_size + extra_space));
 
 	auto current(std::make_unique<uint8_t[]>(pixel_size));
 	auto next(std::make_unique<uint8_t[]>(pixel_size));
 
 	for (unsigned y = 0; y < height; y++) {
-		uint8_t *bits = FreeImage_GetScanLine(dib, y);
+		const uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		// rewind line pointer
 		auto *line = line_begin.get();
@@ -1177,8 +1175,8 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 			// read next pixel from dib
 
-			if (x + 1*pixel_size < line_size) {
-				AssignPixel(next.get(), (bits + x + 1*pixel_size), pixel_size);
+			if (x + pixel_size < line_size) {
+				AssignPixel(next.get(), (bits + x + pixel_size), pixel_size);
 
 			} else {
 				// last pixel in line
@@ -1187,7 +1185,6 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 				if (!has_rle) {
 
 					writeToPacket(packet, current.get(), pixel_size);
-					packet += pixel_size;
 
 				}
 
@@ -1215,7 +1212,6 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 					has_rle = TRUE;
 
 					writeToPacket(packet, current.get(), pixel_size);
-					packet += pixel_size;
 				}
 
 				// otherwise do nothing. We will just increase the count at the end
@@ -1239,9 +1235,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 				} else {
 
 					writeToPacket(packet, current.get(), pixel_size);
-					packet += pixel_size;
 				}
-
 			}
 
 			// increase counter on every pixel
@@ -1251,7 +1245,6 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 			if (packet_count == max_packet_size) {
 				flushPacket(line, pixel_size, packet_begin.get(), packet, packet_count, has_rle);
 			}
-
 		}//for width
 
 		// write line to disk
@@ -1346,13 +1339,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 
 	if (TARGA_SAVE_RLE & flags) {
-		
+
 		saveRLE(dib, io, handle);
 
 	} else {
-		
+
 		// -- no rle compression --
-		
+
 		const unsigned width = header.is_width;
 		const unsigned height = header.is_height;
 		const unsigned pixel_size = bpp/8;
@@ -1391,7 +1384,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 						line_source = scanline;
-#else 
+#else
 					for (unsigned x = 0; x < width; ++x) {
 						FIRGB8* trip = ((FIRGB8 *)scanline) + x;
 						line[0] = trip->blue;
@@ -1408,7 +1401,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					line_source = scanline;
-#else 
+#else
 					for (unsigned x = 0; x < width; ++x) {
 						FIRGBA8* quad = ((FIRGBA8 *)scanline) + x;
 						line[0] = quad->blue;
@@ -1431,48 +1424,47 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		}//for height
 	}
 
-	
 	long extension_offset = 0 ;
 	if (hasValidThumbnail(dib)) {
 		// write extension area
-		
+
 		extension_offset = io->tell_proc(handle);
-		
+
 		TGAEXTENSIONAREA ex;
 		memset(&ex, 0, sizeof(ex));
-		
+
 		assert(sizeof(ex) == 495);
 		ex.extension_size = sizeof(ex);
 		ex.postage_stamp_offset = extension_offset + ex.extension_size + 0 /*< no Scan Line Table*/;
 		ex.attributes_type = FreeImage_GetBPP(dib) == 32 ? 3 /*< useful Alpha channel data*/ : 0 /*< no Alpha data*/;
-		
+
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapExtensionArea(&ex);
 #endif
 
 		io->write_proc(&ex, sizeof(ex), 1, handle); 
-		
+
 		// (no Scan Line Table)
-		
+
 		// write thumbnail
-		
+
 		io->seek_proc(handle, ex.postage_stamp_offset, SEEK_SET);
-		
+
 		FIBITMAP* thumbnail = FreeImage_GetThumbnail(dib);
 		uint8_t width = (uint8_t)FreeImage_GetWidth(thumbnail);
 		uint8_t height = (uint8_t)FreeImage_GetHeight(thumbnail);
-		
+
 		io->write_proc(&width, 1, 1, handle); 
 		io->write_proc(&height, 1, 1, handle); 
 		
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 		SwapRedBlue32(dib); 
 #endif
-		
+
 #ifdef FREEIMAGE_BIGENDIAN
 		swapShortPixels(dib); 
 #endif
-		
+
 		const unsigned line_size = FreeImage_GetLine(thumbnail);
 
 		for (uint8_t h = 0; h < height; ++h) {
