@@ -776,8 +776,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	png_structp png_ptr;
-	png_infop info_ptr;
 	png_colorp palette{};
 	png_uint_32 width, height;
 	FIBOOL has_alpha_channel = FALSE;

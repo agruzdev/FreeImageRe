@@ -335,7 +335,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					unsigned n_width=(width+15)&~15;
 					unsigned plane_size = n_width/8;
 					unsigned src_size = plane_size * planes;
-					auto *src = (uint8_t*)malloc(src_size);
+					auto src(std::make_unique<uint8_t[]>(src_size));
 					uint8_t *dest = FreeImage_GetBits(dib);
 
 					dest += FreeImage_GetPitch(dib) * height;
@@ -361,10 +361,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									if ((size_to_read + x) > src_size) {
 										// sanity check for buffer overruns 
 										size_to_read = src_size - x;
-										io->read_proc(src + x, size_to_read, 1, handle);
+										io->read_proc(src.get() + x, size_to_read, 1, handle);
 										x += (t + 1);
 									} else {
-										io->read_proc(src + x, size_to_read, 1, handle);
+										io->read_proc(src.get() + x, size_to_read, 1, handle);
 										x += size_to_read;
 									}
 								} else if (t != -128) {
@@ -376,17 +376,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									if ((size_to_copy + x) > src_size) {
 										// sanity check for buffer overruns 
 										size_to_copy = src_size - x;
-										memset(src + x, b, size_to_copy);
+										memset(src.get() + x, b, size_to_copy);
 										x += (unsigned)(-(int)t + 1);
 									} else {
-										memset(src + x, b, size_to_copy);
+										memset(src.get() + x, b, size_to_copy);
 										x += size_to_copy;
 									}
 								}
 								// t = -128 => noop
 							}
 						} else {
-							io->read_proc(src, src_size, 1, handle);
+							io->read_proc(src.get(), src_size, 1, handle);
 						}
 
 						// lazy planar->chunky...
@@ -407,8 +407,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 #endif
 					}
-
-					free(src);
 
 					return dib;
 				}
