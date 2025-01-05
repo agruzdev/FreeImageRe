@@ -599,7 +599,7 @@ static int s_format_id;
 */
 static FIBITMAP *
 LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
-	FIBITMAP *dib{};
+	std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 	DDSFormat16 format16 = RGB_UNKNOWN;	// for 16-bit formats
 
 	const DDPIXELFORMAT *ddspf = &(desc->ddspf);
@@ -615,10 +615,10 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 		// get the 16-bit format
 		format16 = GetRGB16Format(ddspf->dwRBitMask, ddspf->dwGBitMask, ddspf->dwBBitMask);
 		// allocate a 24-bit dib, conversion from 16- to 24-bit will be done later
-		dib = FreeImage_Allocate(width, height, 24);
+		dib.reset(FreeImage_Allocate(width, height, 24));
 	}
 	else {
-		dib = FreeImage_Allocate(width, height, bpp, ddspf->dwRBitMask, ddspf->dwGBitMask, ddspf->dwBBitMask);
+		dib.reset(FreeImage_Allocate(width, height, bpp, ddspf->dwRBitMask, ddspf->dwGBitMask, ddspf->dwBBitMask));
 	}
 	if (!dib) {
 		return nullptr;
@@ -636,7 +636,7 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 		if (safePixels) {
 			auto *pixels = static_cast<uint8_t*>(safePixels.get());
 			for (int y = 0; y < height; y++) {
-				uint8_t *dst_bits = FreeImage_GetScanLine(dib, height - y - 1);
+				uint8_t *dst_bits = FreeImage_GetScanLine(dib.get(), height - y - 1);
 				// get the 16-bit RGB pixels
 				io->read_proc(pixels, 1, line, handle);
 				io->seek_proc(handle, delta, SEEK_CUR);
@@ -647,7 +647,7 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	}
 	else {
 		for (int y = 0; y < height; y++) {
-			uint8_t *pixels = FreeImage_GetScanLine(dib, height - y - 1);
+			uint8_t *pixels = FreeImage_GetScanLine(dib.get(), height - y - 1);
 			io->read_proc(pixels, 1, line, handle);
 			io->seek_proc(handle, delta, SEEK_CUR);
 		}
@@ -655,10 +655,10 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	// Calculate the number of bytes per pixel (3 for 24-bit or 4 for 32-bit)
-	const int bytespp = FreeImage_GetLine(dib) / width;
+	const int bytespp = FreeImage_GetLine(dib.get()) / width;
 
 	for (int y = 0; y < height; y++) {
-		uint8_t *pixels = FreeImage_GetScanLine(dib, y);
+		uint8_t *pixels = FreeImage_GetScanLine(dib.get(), y);
 		for (int x = 0; x < width; x++) {
 			INPLACESWAP(pixels[FI_RGBA_RED], pixels[FI_RGBA_BLUE]);
 			pixels += bytespp;
@@ -668,16 +668,15 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	
 	// enable transparency
 	FIBOOL bIsTransparent = (bpp != 16) && ((ddspf->dwFlags & DDPF_ALPHAPIXELS) == DDPF_ALPHAPIXELS) ? TRUE : FALSE;
-	FreeImage_SetTransparent(dib, bIsTransparent);
+	FreeImage_SetTransparent(dib.get(), bIsTransparent);
 
 	if (!bIsTransparent && bpp == 32) {
 		// no transparency: convert to 24-bit
-		FIBITMAP *old = dib;
-		dib = FreeImage_ConvertTo24Bits(old);
-		FreeImage_Unload(old);
+		auto *tmp = FreeImage_ConvertTo24Bits(dib.get());
+		dib.reset(tmp);
 	}
 
-	return dib;
+	return dib.release();
 }
 
 /**

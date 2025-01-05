@@ -148,22 +148,21 @@ static FIBOOL
 FreeImage_SetMetadataEx(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, uint16_t id, FREE_IMAGE_MDTYPE type, uint32_t count, uint32_t length, const void *value)
 {
 	bool bSuccess{};
-	if (auto *tag = FreeImage_CreateTag()) {
-		bSuccess = FreeImage_SetTagKey(tag, key);
-		bSuccess = bSuccess && FreeImage_SetTagID(tag, id);
-		bSuccess = bSuccess && FreeImage_SetTagType(tag, type);
-		bSuccess = bSuccess && FreeImage_SetTagCount(tag, count);
-		bSuccess = bSuccess && FreeImage_SetTagLength(tag, length);
-		bSuccess = bSuccess && FreeImage_SetTagValue(tag, value);
+	if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+		bSuccess = FreeImage_SetTagKey(tag.get(), key);
+		bSuccess = bSuccess && FreeImage_SetTagID(tag.get(), id);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), type);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), count);
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), length);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), value);
 		if (model == FIMD_ANIMATION) {
 			const TagLib& s = TagLib::instance();
 			// get the tag description
 			const char *description = s.getTagDescription(TagLib::ANIMATION, id);
-			bSuccess = bSuccess && FreeImage_SetTagDescription(tag, description);
+			bSuccess = bSuccess && FreeImage_SetTagDescription(tag.get(), description);
 		}
 		// store the tag
-		bSuccess = bSuccess && FreeImage_SetMetadata(model, dib, key, tag);
-		FreeImage_DeleteTag(tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(model, dib, key, tag.get());
 	}
 	return bSuccess ? TRUE : FALSE;
 }

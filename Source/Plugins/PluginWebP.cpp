@@ -370,18 +370,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				error_status = WebPMuxGetChunk(mux, "XMP ", &xmp_metadata);
 				if (error_status == WEBP_MUX_OK) {
 					// create a tag
-					if (auto *tag = FreeImage_CreateTag()) {
-						FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-						FreeImage_SetTagLength(tag, (uint32_t)xmp_metadata.size);
-						FreeImage_SetTagCount(tag, (uint32_t)xmp_metadata.size);
-						FreeImage_SetTagType(tag, FIDT_ASCII);
-						FreeImage_SetTagValue(tag, xmp_metadata.bytes);
+					if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+						FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+						FreeImage_SetTagLength(tag.get(), (uint32_t)xmp_metadata.size);
+						FreeImage_SetTagCount(tag.get(), (uint32_t)xmp_metadata.size);
+						FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+						FreeImage_SetTagValue(tag.get(), xmp_metadata.bytes);
 						
 						// store the tag
-						FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
-
-						// destroy the tag
-						FreeImage_DeleteTag(tag);
+						FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 					}
 				}
 			}

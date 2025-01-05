@@ -314,11 +314,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			const unsigned thWidth = preview.width();
 			const unsigned thHeight = preview.height();
 
-			FIBITMAP* thumbnail = FreeImage_Allocate(thWidth, thHeight, 32);
-			if (thumbnail) {
+			if (std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> thumbnail(FreeImage_Allocate(thWidth, thHeight, 32), &FreeImage_Unload); thumbnail) {
 				const Imf::PreviewRgba *src_line = preview.pixels();
-				uint8_t *dst_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
-				const unsigned dstPitch = FreeImage_GetPitch(thumbnail);
+				uint8_t *dst_line = FreeImage_GetScanLine(thumbnail.get(), thHeight - 1);
+				const unsigned dstPitch = FreeImage_GetPitch(thumbnail.get());
 
 				for (unsigned y = 0; y < thHeight; ++y) {
 					const Imf::PreviewRgba *src_pixel = src_line;
@@ -335,8 +334,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					src_line += thWidth;
 					dst_line -= dstPitch;
 				}
-				FreeImage_SetThumbnail(dib.get(), thumbnail);
-				FreeImage_Unload(thumbnail);
+				FreeImage_SetThumbnail(dib.get(), thumbnail.get());
 			}
 		}
 

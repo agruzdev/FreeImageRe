@@ -455,39 +455,39 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 
 	bool bSuccess{};
 	// create a tag
-	if (auto *tag = FreeImage_CreateTag()) {
+	if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
 		// set tag ID
-		bSuccess = FreeImage_SetTagID(tag, tag_id);
+		bSuccess = FreeImage_SetTagID(tag.get(), tag_id);
 		// set tag type, count, length and value
 		switch (varSrc.vt) {
 			case DPKVT_LPSTR:
-				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
 				dwSize = (uint32_t)strlen(varSrc.VT.pszVal) + 1;
-				bSuccess = bSuccess && FreeImage_SetTagCount(tag, dwSize);
-				bSuccess = bSuccess && FreeImage_SetTagLength(tag, dwSize);
-				bSuccess = bSuccess && FreeImage_SetTagValue(tag, varSrc.VT.pszVal);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), varSrc.VT.pszVal);
 				break;
 
 			case DPKVT_LPWSTR:
-				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_UNDEFINED);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_UNDEFINED);
 				dwSize = (uint32_t)(sizeof(U16) * (wcslen((wchar_t *) varSrc.VT.pwszVal) + 1)); // +1 for NULL term
-				bSuccess = bSuccess && FreeImage_SetTagCount(tag, dwSize);
-				bSuccess = bSuccess && FreeImage_SetTagLength(tag, dwSize);
-				bSuccess = bSuccess && FreeImage_SetTagValue(tag, varSrc.VT.pwszVal);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), dwSize);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), varSrc.VT.pwszVal);
 				break;
 
 			case DPKVT_UI2:
-				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_SHORT);
-				bSuccess = bSuccess && FreeImage_SetTagCount(tag, 1);
-				bSuccess = bSuccess && FreeImage_SetTagLength(tag, 2);
-				bSuccess = bSuccess && FreeImage_SetTagValue(tag, &varSrc.VT.uiVal);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_SHORT);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), 1);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), 2);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), &varSrc.VT.uiVal);
 				break;
 
 			case DPKVT_UI4:
-				bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_LONG);
-				bSuccess = bSuccess && FreeImage_SetTagCount(tag, 1);
-				bSuccess = bSuccess && FreeImage_SetTagLength(tag, 4);
-				bSuccess = bSuccess && FreeImage_SetTagValue(tag, &varSrc.VT.ulVal);
+				bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_LONG);
+				bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), 1);
+				bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), 4);
+				bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), &varSrc.VT.ulVal);
 				break;
 
 			default:
@@ -496,12 +496,10 @@ ReadPropVariant(uint16_t tag_id, const DPKPROPVARIANT & varSrc, FIBITMAP *dib) {
 		}
 		// get the tag desctiption
 		const char *description = s.getTagDescription(TagLib::EXIF_MAIN, tag_id);
-		bSuccess = bSuccess && FreeImage_SetTagDescription(tag, description);
+		bSuccess = bSuccess && FreeImage_SetTagDescription(tag.get(), description);
 
 		// store the tag
-		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, key, tag);
-
-		FreeImage_DeleteTag(tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, key, tag.get());
 	}
 	return bSuccess ? TRUE : FALSE;
 }
@@ -566,14 +564,13 @@ ReadMetadata(PKImageDecode *pID, FIBITMAP *dib) {
 			error_code = ReadProfile(pStream, cbByteCount, uOffset, safeProfile);
 			JXR_CHECK(error_code);
 			// store the tag as XMP
-			if (auto *tag = FreeImage_CreateTag()) {
-				FreeImage_SetTagLength(tag, cbByteCount);
-				FreeImage_SetTagCount(tag, cbByteCount);
-				FreeImage_SetTagType(tag, FIDT_ASCII);
-				FreeImage_SetTagValue(tag, safeProfile.get());
-				FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
-				FreeImage_DeleteTag(tag);
+			if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+				FreeImage_SetTagLength(tag.get(), cbByteCount);
+				FreeImage_SetTagCount(tag.get(), cbByteCount);
+				FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+				FreeImage_SetTagValue(tag.get(), safeProfile.get());
+				FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 			}
 		}
 

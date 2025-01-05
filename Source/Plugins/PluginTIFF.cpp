@@ -746,19 +746,16 @@ tiff_read_xmp_profile(TIFF *tiff, FIBITMAP *dib) {
 	bool bSuccess{};
 	if (TIFFGetField(tiff, TIFFTAG_XMLPACKET, &profile_size, &profile) == 1) {
 		// create a tag
-		if (auto *tag = FreeImage_CreateTag()) {
-			bSuccess = FreeImage_SetTagID(tag, TIFFTAG_XMLPACKET);	// 700
-			bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-			bSuccess = bSuccess && FreeImage_SetTagLength(tag, profile_size);
-			bSuccess = bSuccess && FreeImage_SetTagCount(tag, profile_size);
-			bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
-			bSuccess = bSuccess && FreeImage_SetTagValue(tag, profile);
+		if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+			bSuccess = FreeImage_SetTagID(tag.get(), TIFFTAG_XMLPACKET);	// 700
+			bSuccess = bSuccess && FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+			bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), profile_size);
+			bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), profile_size);
+			bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+			bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), profile);
 
 			// store the tag
-			bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
-
-			// destroy the tag
-			FreeImage_DeleteTag(tag);
+			bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 		}
 	}
 
@@ -1204,7 +1201,7 @@ Read embedded thumbnail
 */
 static void 
 ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMAP *dib) {
-	FIBITMAP* thumbnail{};
+	std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> thumbnail(nullptr, &FreeImage_Unload);
 
 	// read exif thumbnail (IFD 1) ...
 
@@ -1223,9 +1220,9 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 			// load the thumbnail
 			int page = 1;
 			int flags = TIFF_DEFAULT;
-			thumbnail = Load(io, handle, page, flags, data);
+			thumbnail.reset(Load(io, handle, page, flags, data));
 			// store the thumbnail (remember to release it before return)
-			FreeImage_SetThumbnail(dib, thumbnail);
+			FreeImage_SetThumbnail(dib, thumbnail.get());
 			
 			// restore current position
 			io->seek_proc(handle, tell_pos, SEEK_SET);
@@ -1253,9 +1250,9 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 					// load the thumbnail
 					int page = -1; 
 					int flags = TIFF_DEFAULT;
-					thumbnail = Load(io, handle, page, flags, data);
+					thumbnail.reset(Load(io, handle, page, flags, data));
 					// store the thumbnail (remember to release it before return)
-					FreeImage_SetThumbnail(dib, thumbnail);
+					FreeImage_SetThumbnail(dib, thumbnail.get());
 				}
 
 				// restore current position
@@ -1285,9 +1282,6 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 			FreeImage_CloseMemory(handle);
 		}
 	}
-	
-	// release thumbnail
-	FreeImage_Unload(thumbnail);
 }
 
 // --------------------------------------------------------------------------

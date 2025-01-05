@@ -139,24 +139,21 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 			if (TIFFGetField(tif, fieldInfo->field_tag, &params)) {
 				// create a tag
-				FITAG *tag = FreeImage_CreateTag();
+				std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 				if (!tag) {
 					return FALSE;
 				}
 
 				uint16_t tag_id = (uint16_t)fieldInfo->field_tag;
 
-				FreeImage_SetTagType(tag, (FREE_IMAGE_MDTYPE)fieldInfo->field_type);
-				FreeImage_SetTagID(tag, tag_id);
-				FreeImage_SetTagKey(tag, tag_lib.getTagFieldName(TagLib::GEOTIFF, tag_id, defaultKey));
-				FreeImage_SetTagDescription(tag, tag_lib.getTagDescription(TagLib::GEOTIFF, tag_id));
-				FreeImage_SetTagLength(tag, (uint32_t)strlen(params) + 1);
-				FreeImage_SetTagCount(tag, FreeImage_GetTagLength(tag));
-				FreeImage_SetTagValue(tag, params);
-				FreeImage_SetMetadata(FIMD_GEOTIFF, dib, FreeImage_GetTagKey(tag), tag);
-
-				// delete the tag
-				FreeImage_DeleteTag(tag);
+				FreeImage_SetTagType(tag.get(), (FREE_IMAGE_MDTYPE)fieldInfo->field_type);
+				FreeImage_SetTagID(tag.get(), tag_id);
+				FreeImage_SetTagKey(tag.get(), tag_lib.getTagFieldName(TagLib::GEOTIFF, tag_id, defaultKey));
+				FreeImage_SetTagDescription(tag.get(), tag_lib.getTagDescription(TagLib::GEOTIFF, tag_id));
+				FreeImage_SetTagLength(tag.get(), (uint32_t)strlen(params) + 1);
+				FreeImage_SetTagCount(tag.get(), FreeImage_GetTagLength(tag.get()));
+				FreeImage_SetTagValue(tag.get(), params);
+				FreeImage_SetMetadata(FIMD_GEOTIFF, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 			}
 		} else {
 			short tag_count = 0;
@@ -164,7 +161,7 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 
 			if (TIFFGetField(tif, fieldInfo->field_tag, &tag_count, &data)) {
 				// create a tag
-				FITAG *tag = FreeImage_CreateTag();
+				std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 				if (!tag) {
 					return FALSE;
 				}
@@ -172,17 +169,14 @@ tiff_read_geotiff_profile(TIFF *tif, FIBITMAP *dib) {
 				uint16_t tag_id = (uint16_t)fieldInfo->field_tag;
 				FREE_IMAGE_MDTYPE tag_type = (FREE_IMAGE_MDTYPE)fieldInfo->field_type;
 
-				FreeImage_SetTagType(tag, tag_type);
-				FreeImage_SetTagID(tag, tag_id);
-				FreeImage_SetTagKey(tag, tag_lib.getTagFieldName(TagLib::GEOTIFF, tag_id, defaultKey));
-				FreeImage_SetTagDescription(tag, tag_lib.getTagDescription(TagLib::GEOTIFF, tag_id));
-				FreeImage_SetTagLength(tag, FreeImage_TagDataWidth(tag_type) * tag_count);
-				FreeImage_SetTagCount(tag, tag_count);
-				FreeImage_SetTagValue(tag, data);
-				FreeImage_SetMetadata(FIMD_GEOTIFF, dib, FreeImage_GetTagKey(tag), tag);
-
-				// delete the tag
-				FreeImage_DeleteTag(tag);
+				FreeImage_SetTagType(tag.get(), tag_type);
+				FreeImage_SetTagID(tag.get(), tag_id);
+				FreeImage_SetTagKey(tag.get(), tag_lib.getTagFieldName(TagLib::GEOTIFF, tag_id, defaultKey));
+				FreeImage_SetTagDescription(tag.get(), tag_lib.getTagDescription(TagLib::GEOTIFF, tag_id));
+				FreeImage_SetTagLength(tag.get(), FreeImage_TagDataWidth(tag_type) * tag_count);
+				FreeImage_SetTagCount(tag.get(), tag_count);
+				FreeImage_SetTagValue(tag.get(), data);
+				FreeImage_SetMetadata(FIMD_GEOTIFF, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 			}
 		}
 	} // for (tag_size)
@@ -376,7 +370,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 	// build FreeImage tag from Tiff Tag data we collected
 
-	FITAG *fitag = FreeImage_CreateTag();
+	std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> fitag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 	if (!fitag) {
 		if (mem_alloc) {
 			_TIFFfree(raw_data);
@@ -384,64 +378,64 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 		return FALSE;
 	}
 
-	FreeImage_SetTagID(fitag, (uint16_t)tag_id);
-	FreeImage_SetTagKey(fitag, key);
+	FreeImage_SetTagID(fitag.get(), (uint16_t)tag_id);
+	FreeImage_SetTagKey(fitag.get(), key);
 
 	switch (TIFFFieldDataType(fip)) {
 		case TIFF_BYTE:
-			FreeImage_SetTagType(fitag, FIDT_BYTE);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_BYTE);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_UNDEFINED:
-			FreeImage_SetTagType(fitag, FIDT_UNDEFINED);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_UNDEFINED);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_SBYTE:
-			FreeImage_SetTagType(fitag, FIDT_SBYTE);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_SBYTE);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_SHORT:
-			FreeImage_SetTagType(fitag, FIDT_SHORT);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_SHORT);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_SSHORT:
-			FreeImage_SetTagType(fitag, FIDT_SSHORT);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_SSHORT);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_LONG:
-			FreeImage_SetTagType(fitag, FIDT_LONG);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_LONG);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_IFD:
-			FreeImage_SetTagType(fitag, FIDT_IFD);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_IFD);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_SLONG:
-			FreeImage_SetTagType(fitag, FIDT_SLONG);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_SLONG);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_RATIONAL: {
@@ -453,10 +447,10 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
 			}
-			FreeImage_SetTagType(fitag, FIDT_RATIONAL);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, rvalue.get());
+			FreeImage_SetTagType(fitag.get(), FIDT_RATIONAL);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), rvalue.get());
 		}
 		break;
 
@@ -469,46 +463,46 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
 			}
-			FreeImage_SetTagType(fitag, FIDT_RATIONAL);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, rvalue.get());
+			FreeImage_SetTagType(fitag.get(), FIDT_RATIONAL);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), rvalue.get());
 		}
 		break;
 
 		case TIFF_FLOAT:
-			FreeImage_SetTagType(fitag, FIDT_FLOAT);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_FLOAT);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_DOUBLE:
-			FreeImage_SetTagType(fitag, FIDT_DOUBLE);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_DOUBLE);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_LONG8:	// BigTIFF 64-bit unsigned integer 
-			FreeImage_SetTagType(fitag, FIDT_LONG8);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_LONG8);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_IFD8:		// BigTIFF 64-bit unsigned integer (offset) 
-			FreeImage_SetTagType(fitag, FIDT_IFD8);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_IFD8);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_SLONG8:		// BigTIFF 64-bit signed integer 
-			FreeImage_SetTagType(fitag, FIDT_SLONG8);
-			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
-			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_SLONG8);
+			FreeImage_SetTagLength(fitag.get(), TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
+			FreeImage_SetTagCount(fitag.get(), value_count);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 			break;
 
 		case TIFF_ASCII:
@@ -525,23 +519,20 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 				const int value_size = TIFFDataWidth( TIFFFieldDataType(fip) );
 				length = value_size * value_count;
 			}
-			FreeImage_SetTagType(fitag, FIDT_ASCII);
-			FreeImage_SetTagLength(fitag, (uint32_t)length);
-			FreeImage_SetTagCount(fitag, (uint32_t)length);
-			FreeImage_SetTagValue(fitag, raw_data);
+			FreeImage_SetTagType(fitag.get(), FIDT_ASCII);
+			FreeImage_SetTagLength(fitag.get(), (uint32_t)length);
+			FreeImage_SetTagCount(fitag.get(), (uint32_t)length);
+			FreeImage_SetTagValue(fitag.get(), raw_data);
 		}
 		break;
 	}
 
 	const char *description = tagLib.getTagDescription(md_model, (uint16_t)tag_id);
 	if (description) {
-		FreeImage_SetTagDescription(fitag, description);
+		FreeImage_SetTagDescription(fitag.get(), description);
 	}
 	// store the tag
-	FreeImage_SetMetadata(tagLib.getFreeImageModel(md_model), dib, FreeImage_GetTagKey(fitag), fitag);
-
-	// destroy the tag
-	FreeImage_DeleteTag(fitag);
+	FreeImage_SetMetadata(tagLib.getFreeImageModel(md_model), dib, FreeImage_GetTagKey(fitag.get()), fitag.get());
 
 	if (mem_alloc) {
 		_TIFFfree(raw_data);

@@ -615,8 +615,6 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
-
 	if (!handle) {
 		return nullptr;
 	}
@@ -634,38 +632,35 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// allocate a RGBF image
-		dib = FreeImage_AllocateHeaderT(header_only, FIT_RGBF, width, height);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, FIT_RGBF, width, height), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 
 		// set the metadata as comments
-		rgbe_ReadMetadata(dib, &header_info);
+		rgbe_ReadMetadata(dib.get(), &header_info);
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// read the image pixels and fill the dib
 		
 		for (unsigned y = 0; y < height; y++) {
-			FIRGBF *scanline = (FIRGBF*)FreeImage_GetScanLine(dib, height - 1 - y);
+			FIRGBF *scanline = (FIRGBF*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 			if (!rgbe_ReadPixels_RLE(io, handle, scanline, width, 1)) {
-				FreeImage_Unload(dib);
 				return nullptr;
 			}
 		}
 
+		return dib.release();
 	}
 	catch(const char *text) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}
 
-	return dib;
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
