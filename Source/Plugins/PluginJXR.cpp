@@ -421,7 +421,7 @@ ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, std::uni
 	auto *tmp = safeProfile.release();
 	auto *pbProfile = realloc(tmp, cbByteCount);
 	if (!pbProfile) {
-		safeProfile.reset(tmp)
+		safeProfile.reset(tmp);
 		return WMP_errOutOfMemory;
 	}
 	safeProfile.reset(pbProfile);

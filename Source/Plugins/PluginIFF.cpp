@@ -198,7 +198,7 @@ SupportsExportType(FREE_IMAGE_TYPE type) {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (handle) {
-		FIBITMAP *dib{};
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 
 		uint32_t type, size;
 
@@ -243,8 +243,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			unsigned ch_end = io->tell_proc(handle) + ch_size;
 
 			if (ch_type == ID_BMHD) {			// Bitmap Header
-				if (dib)
-					FreeImage_Unload(dib);
+				if (dib) {
+					dib.reset();
+				}
 
 				BMHD bmhd;
 
@@ -267,34 +268,36 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				depth = planes > 8 ? 24 : 8;
 
 				if ( depth == 24 ) {
-					dib = FreeImage_Allocate(width, height, depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_Allocate(width, height, depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				} else {
-					dib = FreeImage_Allocate(width, height, depth);
+					dib.reset(FreeImage_Allocate(width, height, depth));
 				}
 			} else if (ch_type == ID_CMAP) {	// Palette (Color Map)
-				if (!dib)
+				if (!dib) {
 					return nullptr;
+				}
 
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				if (pal) {
-					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib));
-					for (unsigned k = 0; k < palette_entries; k++) {					
+					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib.get()));
+					for (unsigned k = 0; k < palette_entries; k++) {
 						io->read_proc(&pal[k].red, 1, 1, handle );
 						io->read_proc(&pal[k].green, 1, 1, handle );
 						io->read_proc(&pal[k].blue, 1, 1, handle );
 					}
 				}
 			} else if (ch_type == ID_BODY) {
-				if (!dib)
+				if (!dib) {
 					return nullptr;
+				}
 
 				if (type == ID_PBM) {
 					// NON INTERLACED (LBM)
 
-					unsigned line = FreeImage_GetLine(dib) + 1 & ~1;
+					unsigned line = FreeImage_GetLine(dib.get()) + 1 & ~1;
 					
-					for (unsigned i = 0; i < FreeImage_GetHeight(dib); i++) {
-						uint8_t *bits = FreeImage_GetScanLine(dib, FreeImage_GetHeight(dib) - i - 1);
+					for (unsigned i = 0; i < FreeImage_GetHeight(dib.get()); i++) {
+						uint8_t *bits = FreeImage_GetScanLine(dib.get(), FreeImage_GetHeight(dib.get()) - i - 1);
 
 						if (comp == 1) {
 							// use RLE compression
@@ -327,7 +330,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 
-					return dib;
+					return dib.release();
 				} else {
 					// INTERLACED (ILBM)
 
@@ -336,12 +339,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					unsigned plane_size = n_width/8;
 					unsigned src_size = plane_size * planes;
 					auto src(std::make_unique<uint8_t[]>(src_size));
-					uint8_t *dest = FreeImage_GetBits(dib);
+					uint8_t *dest = FreeImage_GetBits(dib.get());
 
-					dest += FreeImage_GetPitch(dib) * height;
+					dest += FreeImage_GetPitch(dib.get()) * height;
 
 					for (unsigned y = 0; y < height; y++) {
-						dest -= FreeImage_GetPitch(dib);
+						dest -= FreeImage_GetPitch(dib.get());
 
 						// read all planes in one hit,
 						// 'coz PSP compresses across planes...
@@ -408,7 +411,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #endif
 					}
 
-					return dib;
+					return dib.release();
 				}
 			}
 
@@ -424,8 +427,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			size -= ch_size + 8;
 		}
 
-		if (dib)
-			FreeImage_Unload(dib);
+		if (dib) {
+			dib.reset();
+		}
 	}
 
 	return nullptr;
