@@ -198,8 +198,6 @@ static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	char line_buffer[PFM_MAXLINE];
 	char id_one = 0, id_two = 0;
-	FIBITMAP *dib{};
-	float *lineBuffer{};
 
 	if (!handle) {
 		return nullptr;
@@ -243,32 +241,29 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Create a new DIB
-		dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, image_type, width, height), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// Read the image...
 
 		if (image_type == FIT_RGBF) {
 			const unsigned lineWidth = 3 * width;
-			lineBuffer = (float*)malloc(lineWidth * sizeof(float));
-			if (!lineBuffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			auto lineBuffer(std::make_unique<float[]>(lineWidth));
 
 			for (unsigned y = 0; y < height; y++) {	
-				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib, height - 1 - y);
+				FIRGBF *bits = (FIRGBF*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
-				if (io->read_proc(lineBuffer, sizeof(float), lineWidth, handle) != lineWidth) {
+				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
 				}
-				float *channel = lineBuffer;
+				const auto *channel = lineBuffer.get();
 				if (scalefactor > 0) {
 					// MSB
 					for (unsigned x = 0; x < width; x++) {
@@ -285,24 +280,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-
-			free(lineBuffer);
-			lineBuffer = nullptr;
-
 		} else if (image_type == FIT_FLOAT) {
 			const unsigned lineWidth = width;
-			lineBuffer = (float*)malloc(lineWidth * sizeof(float));
-			if (!lineBuffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			auto lineBuffer(std::make_unique<float[]>(lineWidth));
 
-			for (unsigned y = 0; y < height; y++) {	
-				float *bits = (float*)FreeImage_GetScanLine(dib, height - 1 - y);
+			for (unsigned y = 0; y < height; y++) {
+				float *bits = (float*)FreeImage_GetScanLine(dib.get(), height - 1 - y);
 
-				if (io->read_proc(lineBuffer, sizeof(float), lineWidth, handle) != lineWidth) {
+				if (io->read_proc(lineBuffer.get(), sizeof(float), lineWidth, handle) != lineWidth) {
 					throw "Read error";
 				}
-				float *channel = lineBuffer;
+				auto *channel = static_cast<const float *>(lineBuffer.get());
 				if (scalefactor > 0) {
 					// MSB - File is Big endian
 					for (unsigned x = 0; x < width; x++) {
@@ -315,24 +303,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-
-			free(lineBuffer);
-			lineBuffer = nullptr;
 		}
 		
-		return dib;
+		return dib.release();
 
-	} catch (const char *text)  {
-		if (lineBuffer) free(lineBuffer);
-		if (dib) FreeImage_Unload(dib);
-
+	}
+	catch (const char *text)  {
 		if (text) {
 			FreeImage_OutputMessageProc(s_format_id, text);
 		}
-
-		return nullptr;
 	}
-
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV
@@ -370,7 +354,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	// Write the header info
 
-	sprintf(buffer, "P%c\n%d %d\n%f\n", magic, width, height, scalefactor);
+	snprintf(buffer, std::size(buffer), "P%c\n%d %d\n%f\n", magic, width, height, scalefactor);
 	io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
 	// Write the image data

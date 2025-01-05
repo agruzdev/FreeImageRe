@@ -107,16 +107,11 @@ static const char *FI_MSG_ERROR_CORRUPTED = "Image data corrupted";
 class TargaThumbnail
 {
 public:
-	TargaThumbnail() : _w(0), _h(0), _depth(0), _data{} { 
-	}
-	~TargaThumbnail() { 
-		if (_data) {
-			free(_data); 
-		}
+	TargaThumbnail() : _data(nullptr, &free), _w(0), _h(0), _depth(0) { 
 	}
 
-	FIBOOL isNull() const { 
-		return !_data; 
+	FIBOOL isNull() const {
+		return !_data;
 	}
 	
 	FIBOOL read(FreeImageIO *io, fi_handle handle, size_t size) {
@@ -124,24 +119,24 @@ public:
 		io->read_proc(&_h, 1, 1, handle);
 		
 		const size_t sizeofData = size - 2;
-		_data = (uint8_t*)malloc(sizeofData);
+		_data.reset(malloc(sizeofData));
 		if (_data) {
-			return (io->read_proc(_data, 1, (unsigned)sizeofData, handle) == sizeofData);
+			return (io->read_proc(_data.get(), 1, (unsigned)sizeofData, handle) == sizeofData);
 		}
 		return FALSE;
 	}
 	
-	void setDepth(uint8_t dp) { 
+	void setDepth(uint8_t dp) {
 		_depth = dp;
 	}
 	
 	FIBITMAP* toFIBITMAP();
 	
 private:
+	std::unique_ptr<void, decltype(&free)> _data;
 	uint8_t _w;
 	uint8_t _h;
 	uint8_t _depth;
-	uint8_t* _data;
 };
 
 #ifdef FREEIMAGE_BIGENDIAN
@@ -180,7 +175,7 @@ FIBITMAP* TargaThumbnail::toFIBITMAP() {
 		return nullptr;
 	}
 
-	const uint8_t* line = _data;
+	auto *line = static_cast<const uint8_t *>(_data.get());
 	const uint8_t height = _h;
 	for (uint8_t h = 0; h < height; ++h, line += line_size) {
 		uint8_t* dst_line = FreeImage_GetScanLine(dib, height - 1 - h);
@@ -210,22 +205,16 @@ class IOCache
 {
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
-		_ptr{}, _begin{}, _end{}, _size(size), _io(io), _handle(handle)	{
-			_begin = (uint8_t*)malloc(size);
-			if (_begin) {
+		_safeBuffer(malloc(size), &free), _ptr{}, _begin{}, _end{}, _size(size), _io(io), _handle(handle)	{
+		if (_safeBuffer) {
+			_begin = static_cast<uint8_t*>(_safeBuffer.get());
 			_end = _begin + _size;
 			_ptr = _end;	// will force refill on first access
 		}
 	}
-	
-	~IOCache() {
-		if (_begin) {
-			free(_begin);
-		}	
-	}
-		
+
 	FIBOOL isNull() { return !_begin;}
-	
+
 	inline
 	uint8_t getByte() {
 		if (_ptr >= _end) {
@@ -271,6 +260,7 @@ private:
 	IOCache(const IOCache& other); // deleted
 
 private:
+	std::unique_ptr<void, decltype(&free)> _safeBuffer;
 	uint8_t *_ptr;
 	uint8_t *_begin;
 	uint8_t *_end;
@@ -472,16 +462,12 @@ loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeIma
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
 
 	// input line cache
-	auto* file_line = (uint8_t*)malloc( width * file_pixel_size);
-
-	if (!file_line) {
-		throw FI_MSG_ERROR_MEMORY;
-	}
+	auto file_line(std::make_unique<uint8_t[]>(width * file_pixel_size));
 
 	for (int y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);
-		io->read_proc(file_line, file_pixel_size, width, handle);
-		uint8_t *bgra = file_line;
+		io->read_proc(file_line.get(), file_pixel_size, width, handle);
+		const auto *bgra = file_line.get();
 
 		for (int x = 0; x < width; x++) {
 
@@ -498,8 +484,6 @@ loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeIma
 			bits += pixel_size;
 		}
 	}
-
-	free(file_line);
 }
 
 /**
@@ -509,21 +493,21 @@ We use a specific overload based on bits-per-pixel for each type of pixel
 
 template <int nBITS>
 inline static void 
-_assignPixel(uint8_t* bits, uint8_t* val, FIBOOL as24bit = FALSE) {
+_assignPixel(uint8_t* bits, const uint8_t* val, FIBOOL as24bit = FALSE) {
 	// static assert should go here
 	assert(FALSE);
 }
 
 template <>
 inline void 
-_assignPixel<8>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<8>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	*bits = *val;
 }
 
 template <>
 inline void 
-_assignPixel<16>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
-	uint16_t value(*reinterpret_cast<uint16_t*>(val));
+_assignPixel<16>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
+	uint16_t value(*reinterpret_cast<const uint16_t*>(val));
 
 #ifdef FREEIMAGE_BIGENDIAN
 	SwapShort(&value);
@@ -541,7 +525,7 @@ _assignPixel<16>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 
 template <>
 inline void 
-_assignPixel<24>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<24>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	bits[FI_RGBA_BLUE]	= val[0];
 	bits[FI_RGBA_GREEN] = val[1];
 	bits[FI_RGBA_RED]	= val[2];
@@ -549,7 +533,7 @@ _assignPixel<24>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
 
 template <>
 inline void 
-_assignPixel<32>(uint8_t* bits, uint8_t* val, FIBOOL as24bit) {
+_assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	if (as24bit) {
 		_assignPixel<24>(bits, val, TRUE);
 
@@ -662,16 +646,14 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
-
 	if (!handle) {
 		return nullptr;
 	}
 
 	try {
-		
+
 		const FIBOOL header_only =  (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
-				
+
 		// remember the start offset
 		long start_offset = io->tell_proc(handle);
 
@@ -686,7 +668,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (isTARGA20(io, handle)) {
 			TGAFOOTER footer;
 			const long footer_offset = start_offset + eof - sizeof(footer);
-			
+
 			io->seek_proc(handle, footer_offset, SEEK_SET);
 			io->read_proc(&footer, sizeof(tagTGAFOOTER), 1, handle);
 			
@@ -724,7 +706,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #endif
 
 		thumbnail.setDepth(header.is_pixel_depth);
-			
+
 		const int line = CalculateLine(header.is_width, header.is_pixel_depth);
 		const int pixel_bits = header.is_pixel_depth;
 		const int pixel_size = pixel_bits/8;
@@ -735,17 +717,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// skip comment
 		io->seek_proc(handle, header.id_length, SEEK_CUR);
 
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		switch (header.is_pixel_depth) {
 			case 8 : {
-				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, 8);
-				
+				dib.reset(FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, 8));
+
 				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
-					
+
 				// read the palette (even if header only)
 
-				FIRGBA8 *palette = FreeImage_GetPalette(dib);
+				FIRGBA8 *palette = FreeImage_GetPalette(dib.get());
 
 				if (header.color_map_type > 0) {
 					unsigned count, csize;
@@ -754,17 +737,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					csize = header.cm_length * header.cm_size / 8;
 					
 					// read the color map
-					auto *cmap = (uint8_t*)malloc(csize * sizeof(uint8_t));
-					if (!cmap) {
-						throw FI_MSG_ERROR_DIB_MEMORY;
-					}
-					io->read_proc(cmap, sizeof(uint8_t), csize, handle);
+					auto cmap(std::make_unique<uint8_t[]>(csize));
+					io->read_proc(cmap.get(), sizeof(uint8_t), csize, handle);
 
 					// build the palette
 
 					switch (header.cm_size) {
 						case 16: {
-							uint16_t *rgb555 = (uint16_t*)&cmap[0];
+							uint16_t *rgb555 = static_cast<uint16_t *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
@@ -778,7 +758,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						break;
 
 						case 24: {
-							FILE_BGR *bgr = (FILE_BGR*)&cmap[0];
+							FILE_BGR *bgr = static_cast<FILE_BGR *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
@@ -797,7 +777,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							// clear the transparency table
 							memset(trns, 0xFF, 256);
 
-							FILE_BGRA *bgra = (FILE_BGRA*)&cmap[0];
+							FILE_BGRA *bgra = static_cast<FILE_BGRA *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
 							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
 
@@ -811,37 +791,35 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 
 							// set the tranparency table
-							FreeImage_SetTransparencyTable(dib, trns, 256);
+							FreeImage_SetTransparencyTable(dib.get(), trns, 256);
 						}
 						break;
 
 					} // switch (header.cm_size)
-
-					free(cmap);
 				}
 				
 				// handle thumbnail
 				
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if (th) {
-					FIRGBA8* pal = FreeImage_GetPalette(dib);
+					FIRGBA8* pal = FreeImage_GetPalette(dib.get());
 					FIRGBA8* dst_pal = FreeImage_GetPalette(th);
 					if (dst_pal && pal) {
-						for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib); i++) {
+						for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib.get()); i++) {
 							dst_pal[i] = pal[i];
 						}
 					}
 
-					FreeImage_SetTransparencyTable(th, FreeImage_GetTransparencyTable(dib), FreeImage_GetTransparencyCount(dib));
-					
-					FreeImage_SetThumbnail(dib, th);
-					FreeImage_Unload(th);				
+					FreeImage_SetTransparencyTable(th, FreeImage_GetTransparencyTable(dib.get()), FreeImage_GetTransparencyCount(dib.get()));
+
+					FreeImage_SetThumbnail(dib.get(), th);
+					FreeImage_Unload(th);
 				}
 
 				if (header_only) {
-					return dib;
+					return dib.release();
 				}
-					
+
 				// read in the bitmap bits
 
 				switch (header.image_type) {
@@ -850,7 +828,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						uint8_t *bits{};
 
 						for (unsigned count = 0; count < header.is_height; count++) {
-							bits = FreeImage_GetScanLine(dib, count);
+							bits = FreeImage_GetScanLine(dib.get(), count);
 							io->read_proc(bits, sizeof(uint8_t), line, handle);
 						}
 					}
@@ -858,12 +836,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					case TGA_RLECMAP:
 					case TGA_RLEMONO: { //(8 bit)
-						loadRLE<8>(dib, header.is_width, header.is_height, io, handle, eof, FALSE);
+						loadRLE<8>(dib.get(), header.is_width, header.is_height, io, handle, eof, FALSE);
 					}
 					break;
 
 					default :
-						FreeImage_Unload(dib);
 						return nullptr;
 				}
 			}
@@ -878,18 +855,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (TARGA_LOAD_RGB888 & flags) {
 					pixel_bits = 24;
-					dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 
 				} else {
-					dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI16_555_RED_MASK, FI16_555_GREEN_MASK, FI16_555_BLUE_MASK));
 				}
 
 				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
-				
+
 				// handle thumbnail
-				
+
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if (th) {
 					if (TARGA_LOAD_RGB888 & flags) {
@@ -898,12 +875,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						th = t;
 					}
 
-					FreeImage_SetThumbnail(dib, th);
+					FreeImage_SetThumbnail(dib.get(), th);
 					FreeImage_Unload(th);
 				}
-						
+
 				if (header_only) {
-					return dib;
+					return dib.release();
 				}
 
 				int line = CalculateLine(header.is_width, pixel_bits);
@@ -931,19 +908,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				switch (header.image_type) {
 					case TGA_RGB: { //(16 bit)
 						// input line cache
-						auto *in_line = (uint8_t*)malloc(header.is_width * sizeof(uint16_t));
-
-						if (!in_line)
-							throw FI_MSG_ERROR_MEMORY;
+						auto in_line(std::make_unique<uint8_t[]>(header.is_width * sizeof(uint16_t)));
 
 						const int h = header.is_height;
 
 						for (int y = 0; y < h; y++) {
-							
-							uint8_t *bits = FreeImage_GetScanLine(dib, y);
-							io->read_proc(in_line, src_pixel_size, header.is_width, handle);
-							
-							uint8_t *val = in_line;
+
+							uint8_t *bits = FreeImage_GetScanLine(dib.get(), y);
+							io->read_proc(in_line.get(), src_pixel_size, header.is_width, handle);
+
+							const auto *val = in_line.get();
 							for (int x = 0; x < line; x += pixel_size) {
 
 								_assignPixel<16>(bits+x, val, TARGA_LOAD_RGB888 & flags);
@@ -951,18 +925,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								val += src_pixel_size;
 							}
 						}
-
-						free(in_line);
 					}
 					break;
 
 					case TGA_RLERGB: { //(16 bit)
-						loadRLE<16>(dib, header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
+						loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
 
 					default :
-						FreeImage_Unload(dib);
 						return nullptr;
 				}
 			}
@@ -970,38 +941,37 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 24 : {
 
-				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 
 				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
-				
+
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if (th) {
-					FreeImage_SetThumbnail(dib, th);
+					FreeImage_SetThumbnail(dib.get(), th);
 					FreeImage_Unload(th);
 				}
-				
+
 				if (header_only) {
-					return dib;
+					return dib.release();
 				}
-					
+
 				// read in the bitmap bits
 
 				switch (header.image_type) {
 					case TGA_RGB: { //(24 bit)
 						//uncompressed
-						loadTrueColor(dib, header.is_width, header.is_height, pixel_size,io, handle, TRUE);
+						loadTrueColor(dib.get(), header.is_width, header.is_height, pixel_size,io, handle, TRUE);
 					}
 					break;
 
 					case TGA_RLERGB: { //(24 bit)
-						loadRLE<24>(dib, header.is_width, header.is_height, io, handle, eof, TRUE);
+						loadRLE<24>(dib.get(), header.is_width, header.is_height, io, handle, eof, TRUE);
 					}
 					break;
 
 					default :
-						FreeImage_Unload(dib);
 						return nullptr;
 				}
 			}
@@ -1014,14 +984,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					pixel_bits = 24;
 				}
 
-				dib = FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, header.is_width, header.is_height, pixel_bits, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 
 				if (!dib) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
-				
+
 				// handle thumbnail
-				
+
 				FIBITMAP* th = thumbnail.toFIBITMAP();
 				if (th) {
 					if (TARGA_LOAD_RGB888 & flags) {
@@ -1029,30 +999,29 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						FreeImage_Unload(th);
 						th = t;
 					}
-					FreeImage_SetThumbnail(dib, th);
+					FreeImage_SetThumbnail(dib.get(), th);
 					FreeImage_Unload(th);
 				}
 
 				if (header_only) {
-					return dib;
+					return dib.release();
 				}
-					
+
 				// read in the bitmap bits
 
 				switch (header.image_type) {
 					case TGA_RGB: { //(32 bit)
 						// uncompressed
-						loadTrueColor(dib, header.is_width, header.is_height, 4 /*file_pixel_size*/, io, handle, TARGA_LOAD_RGB888 & flags);
+						loadTrueColor(dib.get(), header.is_width, header.is_height, 4 /*file_pixel_size*/, io, handle, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
 
 					case TGA_RLERGB: { //(32 bit)
-						loadRLE<32>(dib, header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
+						loadRLE<32>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
 
 					default :
-						FreeImage_Unload(dib);
 						return nullptr;
 				}
 			}
@@ -1061,24 +1030,23 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} // switch (header.is_pixel_depth)
 
 		if (flipvert) {
-			FreeImage_FlipVertical(dib);
+			FreeImage_FlipVertical(dib.get());
 		}
 
 		if (fliphoriz) {
-			FreeImage_FlipHorizontal(dib);
+			FreeImage_FlipHorizontal(dib.get());
 		}
 
-		return dib;
+		return dib.release();
 
-	} catch (const char *message) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
-
-		FreeImage_OutputMessageProc(s_format_id, message);
-
-		return nullptr;
 	}
+	catch (const char *message) {
+		FreeImage_OutputMessageProc(s_format_id, message);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------
@@ -1378,7 +1346,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	if (palette) {
 		if (FreeImage_IsTransparent(dib)) {
-			auto *bgra_pal = (FILE_BGRA*)malloc(header.cm_length * sizeof(FILE_BGRA));
+			auto bgra_pal = std::make_unique<FILE_BGRA[]>(header.cm_length);
 
 			// get the transparency table
 			uint8_t *trns = FreeImage_GetTransparencyTable(dib);
@@ -1390,12 +1358,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				bgra_pal[i].a = trns[i];
 			}
 
-			io->write_proc(bgra_pal, sizeof(FILE_BGRA), header.cm_length, handle);
-
-			free(bgra_pal);
-
+			io->write_proc(bgra_pal.get(), sizeof(FILE_BGRA), header.cm_length, handle);
 		} else {
-			auto *bgr_pal = (FILE_BGR*)malloc(header.cm_length * sizeof(FILE_BGR));
+			auto bgr_pal = std::make_unique<FILE_BGR[]>(header.cm_length);
 
 			for (unsigned i = 0; i < header.cm_length; i++) {
 				bgr_pal[i].b = palette[i].blue;
@@ -1403,9 +1368,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				bgr_pal[i].r = palette[i].red;
 			}
 
-			io->write_proc(bgr_pal, sizeof(FILE_BGR), header.cm_length, handle);
-
-			free(bgr_pal);
+			io->write_proc(bgr_pal.get(), sizeof(FILE_BGR), header.cm_length, handle);
 		}
 	}
 
@@ -1424,14 +1387,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		const unsigned height = header.is_height;
 		const unsigned pixel_size = bpp/8;
 
-		auto *const line_begin = (uint8_t*)malloc(width * pixel_size);
-		uint8_t *line_source = line_begin;
+		auto line_begin = std::make_unique<uint8_t[]>(width * pixel_size);
+		auto *line_source = line_begin.get();
 
 		for (unsigned y = 0; y < height; y++) {
 			uint8_t *scanline = FreeImage_GetScanLine(dib, y);
 
 			// rewind the line pointer
-			auto *line = line_begin;
+			auto *line = line_begin.get();
 
 			switch (bpp) {
 				case 8: {
@@ -1496,8 +1459,6 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			io->write_proc(line_source, pixel_size, width, handle);
 
 		}//for height
-
-		free(line_begin);
 	}
 
 	

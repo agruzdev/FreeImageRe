@@ -793,17 +793,16 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 		// kRawRGB thumbnail image
 		_dib = FreeImage_Allocate(_Width, _Height, _BitPerPixel);
 		uint8_t* dst_line_start = FreeImage_GetScanLine(_dib, _Height - 1);//<*** flipped
-		uint8_t* line_start = new uint8_t[_WidthBytes];
+		auto line_start = std::make_unique<uint8_t[]>(_WidthBytes);
 		const unsigned dstLineSize = FreeImage_GetPitch(_dib);
 		for (unsigned h = 0; h < (unsigned)_Height; ++h, dst_line_start -= dstLineSize) {//<*** flipped
-			io->read_proc(line_start, _WidthBytes, 1, handle);
+			io->read_proc(line_start.get(), _WidthBytes, 1, handle);
 			iTotalData -= _WidthBytes;
-			memcpy(dst_line_start, line_start, _Width * _BitPerPixel / 8);
+			memcpy(dst_line_start, line_start.get(), _Width * _BitPerPixel / 8);
 		}
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 		SwapRedBlue32(_dib);
 #endif
-		SAFE_DELETE_ARRAY(line_start);
 
 		// skip any remaining data
 		io->seek_proc(handle, iTotalData, SEEK_CUR);
@@ -1386,7 +1385,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 	// build output buffer
 
-	FIBITMAP* bitmap{};
+	std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> safeBitmap(nullptr, &FreeImage_Unload);
 	unsigned dstCh = 0;
 
 	short mode = _headerInfo._ColourMode;
@@ -1405,14 +1404,14 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			dstCh = 1;
 			switch (depth) {
 				case 16:
-				bitmap = FreeImage_AllocateHeaderT(header_only, FIT_UINT16, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeaderT(header_only, FIT_UINT16, nWidth, nHeight, depth*dstCh));
 				break;
 				case 32:
-				bitmap = FreeImage_AllocateHeaderT(header_only, FIT_FLOAT, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeaderT(header_only, FIT_FLOAT, nWidth, nHeight, depth*dstCh));
 				break;
 				default: // 1-, 8-
 				needPalette = true;
-				bitmap = FreeImage_AllocateHeader(header_only, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeader(header_only, nWidth, nHeight, depth*dstCh));
 				break;
 			}
 			break;
@@ -1428,13 +1427,13 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 			switch (depth) {
 				case 16:
-				bitmap = FreeImage_AllocateHeaderT(header_only, dstCh < 4 ? FIT_RGB16 : FIT_RGBA16, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeaderT(header_only, dstCh < 4 ? FIT_RGB16 : FIT_RGBA16, nWidth, nHeight, depth*dstCh));
 				break;
 				case 32:
-				bitmap = FreeImage_AllocateHeaderT(header_only, dstCh < 4 ? FIT_RGBF : FIT_RGBAF, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeaderT(header_only, dstCh < 4 ? FIT_RGBF : FIT_RGBAF, nWidth, nHeight, depth*dstCh));
 				break;
 				default:
-				bitmap = FreeImage_AllocateHeader(header_only, nWidth, nHeight, depth*dstCh);
+				safeBitmap.reset(FreeImage_AllocateHeader(header_only, nWidth, nHeight, depth*dstCh));
 				break;
 			}
 			break;
@@ -1442,9 +1441,10 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			throw "Unsupported color mode";
 			break;
 	}
-	if (!bitmap) {
+	if (!safeBitmap) {
 		throw FI_MSG_ERROR_DIB_MEMORY;
 	}
+	FIBITMAP* bitmap = safeBitmap.get();
 
 	// write thumbnail
 	FreeImage_SetThumbnail(bitmap, _thumbnail.getDib());
@@ -1452,7 +1452,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	// @todo Add some metadata model
 
 	if (header_only) {
-		return bitmap;
+		return safeBitmap.release();
 	}
 
 	// Load pixels data
@@ -1463,7 +1463,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	const unsigned dstLineSize = FreeImage_GetPitch(bitmap);
 	uint8_t* const dst_first_line = FreeImage_GetScanLine(bitmap, nHeight - 1);//<*** flipped
 
-	uint8_t* line_start = new uint8_t[lineSize]; //< fileline cache
+	auto line_start = std::make_unique<uint8_t[]>(lineSize); //< fileline cache
 
 	switch ( nCompression ) {
 		case PSDP_COMPRESSION_NONE: // raw data
@@ -1478,13 +1478,10 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 				uint8_t* dst_line_start = dst_first_line + channelOffset;
 				for (unsigned h = 0; h < nHeight; ++h, dst_line_start -= dstLineSize) {//<*** flipped
-					io->read_proc(line_start, lineSize, 1, handle);
-					ReadImageLine(dst_line_start, line_start, lineSize, dstBpp, bytes);
+					io->read_proc(line_start.get(), lineSize, 1, handle);
+					ReadImageLine(dst_line_start, line_start.get(), lineSize, dstBpp, bytes);
 				} //< h
 			}//< ch
-
-			SAFE_DELETE_ARRAY(line_start);
-
 		}
 		break;
 
@@ -1496,30 +1493,19 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			// Version 2 has 4-byte line sizes.
 
 			// later use this array as uint32_t rleLineSizeList[nChannels][nHeight];
-			uint32_t *rleLineSizeList = new (std::nothrow) uint32_t[nChannels*nHeight];
+			auto rleLineSizeList = std::make_unique<uint32_t[]>(nChannels * nHeight);
 
-			if (!rleLineSizeList) {
-				FreeImage_Unload(bitmap);
-				SAFE_DELETE_ARRAY(line_start);
-				throw std::bad_alloc();
-			}
 			if (_headerInfo._Version == 1) {
-				uint16_t *rleLineSizeList2 = new (std::nothrow) uint16_t[nChannels*nHeight];
-				if (!rleLineSizeList2) {
-					FreeImage_Unload(bitmap);
-					SAFE_DELETE_ARRAY(line_start);
-					throw std::bad_alloc();
-				}
-				io->read_proc(rleLineSizeList2, 2, nChannels * nHeight, handle);
+				auto rleLineSizeList2 = std::make_unique<uint16_t[]>(nChannels * nHeight);
+				io->read_proc(rleLineSizeList2.get(), 2, nChannels * nHeight, handle);
 				for (unsigned index = 0; index < nChannels * nHeight; ++index) {
 #ifndef FREEIMAGE_BIGENDIAN
 					SwapShort(&rleLineSizeList2[index]);
 #endif
 					rleLineSizeList[index] = rleLineSizeList2[index];
 				}
-				SAFE_DELETE_ARRAY(rleLineSizeList2);
 			} else {
-				io->read_proc(rleLineSizeList, 4, nChannels * nHeight, handle);
+				io->read_proc(rleLineSizeList.get(), 4, nChannels * nHeight, handle);
 #ifndef FREEIMAGE_BIGENDIAN
 				for (unsigned index = 0; index < nChannels * nHeight; ++index) {
 					SwapLong(&rleLineSizeList[index]);
@@ -1538,13 +1524,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 				}
 			}
 
-			uint8_t* rle_line_start = new (std::nothrow) uint8_t[largestRLELine];
-			if (!rle_line_start) {
-				FreeImage_Unload(bitmap);
-				SAFE_DELETE_ARRAY(line_start);
-				SAFE_DELETE_ARRAY(rleLineSizeList);
-				throw std::bad_alloc();
-			}
+			auto rle_line_start = std::make_unique<uint8_t[]>(largestRLELine);
 
 			// Read the RLE data
 			for (unsigned ch = 0; ch < nChannels; ch++) {
@@ -1552,7 +1532,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 					// @todo write to extra channels
 					break;
 				}
-				const uint8_t* const line_end = line_start + lineSize;
+				const uint8_t* const line_end = line_start.get() + lineSize;
 
 				const unsigned channelOffset = GetChannelOffset(bitmap, ch) * bytes;
 
@@ -1564,18 +1544,14 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 					const uint32_t rleLineSize = rleLineSizeList[index];
 
-					io->read_proc(rle_line_start, rleLineSize, 1, handle);
+					io->read_proc(rle_line_start.get(), rleLineSize, 1, handle);
 
 					// - write line to destination -
 
-					UnpackRLE(line_start, rle_line_start, line_start + lineSize, rleLineSize);
-					ReadImageLine(dst_line_start, line_start, lineSize, dstBpp, bytes);
+					UnpackRLE(line_start.get(), rle_line_start.get(), line_end, rleLineSize);
+					ReadImageLine(dst_line_start, line_start.get(), lineSize, dstBpp, bytes);
 				}//< h
 			}//< ch
-
-			SAFE_DELETE_ARRAY(line_start);
-			SAFE_DELETE_ARRAY(rleLineSizeList);
-			SAFE_DELETE_ARRAY(rle_line_start);
 		}
 		break;
 
@@ -1639,7 +1615,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 			if (nChannels == 4 || nChannels == 3 ) {
 				FIBITMAP* t = RemoveAlphaChannel(bitmap);
 				if (t) {
-					FreeImage_Unload(bitmap);
+					safeBitmap.reset(t);
 					bitmap = t;
 				} // else: silently fail
 			}
@@ -1665,7 +1641,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 		}
 	}
 
-	return bitmap;
+	return safeBitmap.release();
 }
 
 bool psdParser::WriteLayerAndMaskInfoSection(FreeImageIO *io, fi_handle handle)	{

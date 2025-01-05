@@ -87,12 +87,14 @@ opj_freeimage_stream_create(FreeImageIO *io, fi_handle handle, FIBOOL bRead) {
 			opj_stream_set_skip_function(l_stream, (opj_stream_skip_fn)_SkipProc);
 			opj_stream_set_seek_function(l_stream, (opj_stream_seek_fn)_SeekProc);
 			fio->stream = l_stream;
-			return fio;
 		}
-		free(fio);
+		else {
+			free(fio);
+			fio = nullptr;
+		}
 	}
 
-	return nullptr;
+	return fio;
 }
 
 void 

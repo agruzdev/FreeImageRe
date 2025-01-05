@@ -668,7 +668,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return nullptr;
 	}
 
-	FIBITMAP *dib{};
 	try {
 		bool have_transparent = false, no_local_palette = false, interlaced = false;
 		int disposal_method = GIF_DISPOSAL_LEAVE, delay_time = 0, transparent_color = 0;
@@ -702,7 +701,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			background.alpha = 0;
 
 			//allocate entire logical area
-			dib = FreeImage_Allocate(logicalwidth, logicalheight, 32);
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_Allocate(logicalwidth, logicalheight, 32), &FreeImage_Unload);
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
@@ -711,7 +710,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			int x, y;
 			FIRGBA8 *scanline;
 			for (y = 0; y < logicalheight; y++) {
-				scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, y);
+				scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib.get(), y);
 				for (x = 0; x < logicalwidth; x++) {
 					*scanline++ = background;
 				}
@@ -775,7 +774,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							if (scanidx < 0) {
 								break;  // If data is corrupt, don't calculate in invalid scanline
 							}
-							scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
+							scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib.get(), scanidx) + info.left;
 							for (x = 0; x < info.width; x++) {
 								*scanline++ = background;
 							}
@@ -787,6 +786,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				//decode page
 				FIBITMAP *pagedib = Load(io, handle, page, GIF_LOAD256, data);
 				if (pagedib) {
+					std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> safePagedib(pagedib, &FreeImage_Unload);
 					const FIRGBA8 *pal = FreeImage_GetPalette(pagedib);
 					have_transparent = false;
 					if (FreeImage_IsTransparent(pagedib)) {
@@ -806,7 +806,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						if (scanidx < 0) {
 							break;  // If data is corrupt, don't calculate in invalid scanline
 						}
-						scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib, scanidx) + info.left;
+						scanline = (FIRGBA8 *)FreeImage_GetScanLine(dib.get(), scanidx) + info.left;
 						uint8_t *pageline = FreeImage_GetScanLine(pagedib, info.height - y - 1);
 						for (x = 0; x < info.width; x++) {
 							if (!have_transparent || *pageline != transparent_color) {
@@ -824,13 +824,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							delay_time = *(int32_t *)FreeImage_GetTagValue(tag);
 						}
 					}
-					FreeImage_Unload(pagedib);
 				}
 			}
 
 			//setup frame time
-			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "FrameTime", ANIMTAG_FRAMETIME, FIDT_LONG, 1, 4, &delay_time);
-			return dib;
+			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "FrameTime", ANIMTAG_FRAMETIME, FIDT_LONG, 1, 4, &delay_time);
+			return dib.release();
 		}
 
 		//get the actual frame image data for a single frame
@@ -862,20 +861,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				else if (info->global_color_table_size <= 16) bpp = 4;
 			}
 		}
-		dib = FreeImage_Allocate(width, height, bpp);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_Allocate(width, height, bpp), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "FrameLeft", ANIMTAG_FRAMELEFT, FIDT_SHORT, 1, 2, &left);
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "FrameTop", ANIMTAG_FRAMETOP, FIDT_SHORT, 1, 2, &top);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "FrameLeft", ANIMTAG_FRAMELEFT, FIDT_SHORT, 1, 2, &left);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "FrameTop", ANIMTAG_FRAMETOP, FIDT_SHORT, 1, 2, &top);
 		b = no_local_palette ? 1 : 0;
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "NoLocalPalette", ANIMTAG_NOLOCALPALETTE, FIDT_BYTE, 1, 1, &b);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "NoLocalPalette", ANIMTAG_NOLOCALPALETTE, FIDT_BYTE, 1, 1, &b);
 		b = interlaced ? 1 : 0;
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "Interlaced", ANIMTAG_INTERLACED, FIDT_BYTE, 1, 1, &b);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "Interlaced", ANIMTAG_INTERLACED, FIDT_BYTE, 1, 1, &b);
 
 		//Palette
-		FIRGBA8 *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 		if (!no_local_palette) {
 			int size = 2 << (packed & GIF_PACKED_ID_LCTSIZE);
 
@@ -915,7 +914,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		//Image Data Sub-blocks
 		int x = 0, xpos = 0, y = 0, shift = 8 - bpp, mask = (1 << bpp) - 1, interlacepass = 0;
-		uint8_t *scanline = FreeImage_GetScanLine(dib, height - 1);
+		uint8_t *scanline = FreeImage_GetScanLine(dib.get(), height - 1);
 		uint8_t buf[4096];
 		io->read_proc(&b, 1, 1, handle);
 		while (b) {
@@ -935,7 +934,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							y += g_GifInterlaceIncrement[interlacepass];
 							if (y >= height && ++interlacepass < GIF_INTERLACE_PASSES) {
 								y = g_GifInterlaceOffset[interlacepass];
-							} 						
+							}
 						} else {
 							y++;
 						}
@@ -945,7 +944,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						x = xpos = 0;
 						shift = 8 - bpp;
-						scanline = FreeImage_GetScanLine(dib, height - y - 1);
+						scanline = FreeImage_GetScanLine(dib.get(), height - y - 1);
 					}
 				}
 				size = sizeof(buf);
@@ -965,8 +964,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			SwapShort(&logicalwidth);
 			SwapShort(&logicalheight);
 #endif
-			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "LogicalWidth", ANIMTAG_LOGICALWIDTH, FIDT_SHORT, 1, 2, &logicalwidth);
-			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "LogicalHeight", ANIMTAG_LOGICALHEIGHT, FIDT_SHORT, 1, 2, &logicalheight);
+			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "LogicalWidth", ANIMTAG_LOGICALWIDTH, FIDT_SHORT, 1, 2, &logicalwidth);
+			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "LogicalHeight", ANIMTAG_LOGICALHEIGHT, FIDT_SHORT, 1, 2, &logicalheight);
 
 			//Global Color Table
 			if (info->global_color_table_offset != 0) {
@@ -980,10 +979,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					globalpalette[i].alpha = 0;
 					i++;
 				}
-				FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "GlobalPalette", ANIMTAG_GLOBALPALETTE, FIDT_PALETTE, info->global_color_table_size, info->global_color_table_size * 4, globalpalette);
+				FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "GlobalPalette", ANIMTAG_GLOBALPALETTE, FIDT_PALETTE, info->global_color_table_size, info->global_color_table_size * 4, globalpalette);
 				//background color
 				if (info->background_color < info->global_color_table_size) {
-					FreeImage_SetBackgroundColor(dib, &globalpalette[info->background_color]);
+					FreeImage_SetBackgroundColor(dib.get(), &globalpalette[info->background_color]);
 				}
 			}
 
@@ -1010,7 +1009,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 				}
 			}
-			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "Loop", ANIMTAG_LOOP, FIDT_LONG, 1, 4, &loop);
+			FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "Loop", ANIMTAG_LOOP, FIDT_LONG, 1, 4, &loop);
 
 			//Comment Extension
 			for (idx = 0; idx < info->comment_extension_offsets.size(); idx++) {
@@ -1024,9 +1023,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					io->read_proc(&b, 1, 1, handle);
 				}
 				comment.append(1, '\0');
-				sprintf(buf, "Comment%zd", idx);
+				snprintf(buf, std::size(buf), "Comment%zd", idx);
 				uint32_t comment_size = (uint32_t)comment.size();
-				FreeImage_SetMetadataEx(FIMD_COMMENTS, dib, buf, 1, FIDT_ASCII, comment_size, comment_size, comment.c_str());
+				FreeImage_SetMetadataEx(FIMD_COMMENTS, dib.get(), buf, 1, FIDT_ASCII, comment_size, comment_size, comment.c_str());
 			}
 		}
 
@@ -1049,25 +1048,23 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					uint8_t table[256];
 					memset(table, 0xFF, size);
 					table[transparent_color] = 0;
-					FreeImage_SetTransparencyTable(dib, table, size);
+					FreeImage_SetTransparencyTable(dib.get(), table, size);
 				}
 			}
 		}
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "FrameTime", ANIMTAG_FRAMETIME, FIDT_LONG, 1, 4, &delay_time);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "FrameTime", ANIMTAG_FRAMETIME, FIDT_LONG, 1, 4, &delay_time);
 		b = (uint8_t)disposal_method;
-		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib, "DisposalMethod", ANIMTAG_DISPOSALMETHOD, FIDT_BYTE, 1, 1, &b);
+		FreeImage_SetMetadataEx(FIMD_ANIMATION, dib.get(), "DisposalMethod", ANIMTAG_DISPOSALMETHOD, FIDT_BYTE, 1, 1, &b);
 
 		delete stringtable;
 
+		return dib.release();
+
 	} catch (const char *msg) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, msg);
-		return nullptr;
 	}
 
-	return dib;
+	return nullptr;
 }
 
 static FIBOOL DLL_CALLCONV 

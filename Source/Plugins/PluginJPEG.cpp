@@ -942,7 +942,7 @@ jpeg_write_exif_profile_raw(j_compress_ptr cinfo, FIBITMAP *dib) {
 
 			free(profile);
 
-			return TRUE;	
+			return TRUE;
 		}
 	}
 
@@ -1063,7 +1063,7 @@ store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 	if (auto *tag = FreeImage_CreateTag()) {
 		size_t length = 0;
 		// set the original width
-		sprintf(buffer, "%d", (int)width);
+		snprintf(buffer, std::size(buffer), "%d", (int)width);
 		length = strlen(buffer) + 1;	// include the NULL/0 value
 		FreeImage_SetTagKey(tag, "OriginalJPEGWidth");
 		FreeImage_SetTagLength(tag, (uint32_t)length);
@@ -1072,7 +1072,7 @@ store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 		FreeImage_SetTagValue(tag, buffer);
 		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
 		// set the original height
-		sprintf(buffer, "%d", (int)height);
+		snprintf(buffer, std::size(buffer), "%d", (int)height);
 		length = strlen(buffer) + 1;	// include the NULL/0 value
 		FreeImage_SetTagKey(tag, "OriginalJPEGHeight");
 		FreeImage_SetTagLength(tag, (uint32_t)length);

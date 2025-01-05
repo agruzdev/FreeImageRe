@@ -1523,7 +1523,7 @@ TagLib::getTagFieldName(MDMODEL md_model, uint16_t tagID, char *defaultKey) cons
 	const TagInfo *info = getTagInfo(md_model, tagID);
 	if (!info) {
 		if (defaultKey) {
-			sprintf(defaultKey, "Tag 0x%04X", tagID);
+			snprintf(defaultKey, 16, "Tag 0x%04X", tagID);
 			return defaultKey;
 		} else {
 			return nullptr;

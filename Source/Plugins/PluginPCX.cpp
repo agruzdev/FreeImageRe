@@ -63,7 +63,7 @@ typedef struct tagPCXHEADER {
 	uint16_t  v_screen_size;
 	uint8_t  filler[54];		// Reserved filler
 } PCXHEADER;
-		
+
 #ifdef _WIN32
 #pragma pack(pop)
 #else
@@ -124,7 +124,7 @@ Note that a scanline always has an even number of bytes
 @return
 */
 static unsigned
-readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FIBOOL bIsRLE, uint8_t * ReadBuf, int * ReadPos) {
+readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FIBOOL bIsRLE, uint8_t * ReadBuf, int &ReadPos) {
 	uint8_t count = 0;
 	uint8_t value = 0;
 	unsigned written = 0;
@@ -134,8 +134,8 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 
 		while (length--) {
 			if (count == 0) {
-				if (*ReadPos >= PCX_IO_BUF_SIZE - 1 ) {
-					if (*ReadPos == PCX_IO_BUF_SIZE - 1) {
+				if (ReadPos >= PCX_IO_BUF_SIZE - 1 ) {
+					if (ReadPos == PCX_IO_BUF_SIZE - 1) {
 						// we still have one uint8_t, copy it to the start pos
 						*ReadBuf = ReadBuf[PCX_IO_BUF_SIZE - 1];
 						io->read_proc(ReadBuf + 1, 1, PCX_IO_BUF_SIZE - 1, handle);
@@ -144,14 +144,14 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 						io->read_proc(ReadBuf, 1, PCX_IO_BUF_SIZE, handle);
 					}
 
-					*ReadPos = 0;
+					ReadPos = 0;
 				}
 
-				value = *(ReadBuf + (*ReadPos)++);
+				value = ReadBuf[ReadPos++];
 
 				if ((value & 0xC0) == 0xC0) {
 					count = value & 0x3F;
-					value = *(ReadBuf + (*ReadPos)++);
+					value = ReadBuf[ReadPos++];
 				} else {
 					count = 1;
 				}
@@ -159,7 +159,7 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 
 			count--;
 
-			*(buffer + written++) = value;
+			buffer[written++] = value;
 		}
 
 	} else {
@@ -343,11 +343,8 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
 	uint8_t *bits;			  // Pointer to dib data
 	FIRGBA8 *pal;		  // Pointer to dib palette
-	uint8_t *line{};	  // PCX raster line
-	uint8_t *ReadBuf{}; // buffer;
 	FIBOOL bIsRLE;		  // True if the file is run-length encoded
 
 	if (!handle) {
@@ -395,14 +392,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		const unsigned bitcount = header.bpp * header.planes;
 
 		// allocate a new dib
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		switch (bitcount) {
 			case 1:
 			case 4:
 			case 8:
-				dib = FreeImage_AllocateHeader(header_only, width, height, bitcount);
+				dib.reset(FreeImage_AllocateHeader(header_only, width, height, bitcount));
 				break;
 			case 24:
-				dib = FreeImage_AllocateHeader(header_only, width, height, bitcount, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, width, height, bitcount, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				break;
 			default:
 				throw FI_MSG_ERROR_DIB_MEMORY;
@@ -416,8 +414,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// metrics handling code
 
-		FreeImage_SetDotsPerMeterX(dib, (unsigned) (((float)header.hdpi) / 0.0254000 + 0.5));
-		FreeImage_SetDotsPerMeterY(dib, (unsigned) (((float)header.vdpi) / 0.0254000 + 0.5));
+		FreeImage_SetDotsPerMeterX(dib.get(), (unsigned) (((float)header.hdpi) / 0.0254000 + 0.5));
+		FreeImage_SetDotsPerMeterY(dib.get(), (unsigned) (((float)header.vdpi) / 0.0254000 + 0.5));
 
 		// Set up the palette if needed
 		// ----------------------------
@@ -425,7 +423,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		switch (bitcount) {
 			case 1:
 			{
-				pal = FreeImage_GetPalette(dib);
+				pal = FreeImage_GetPalette(dib.get());
 				pal[0].red = pal[0].green = pal[0].blue = 0;
 				pal[1].red = pal[1].green = pal[1].blue = 255;
 				break;
@@ -433,7 +431,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 4:
 			{
-				pal = FreeImage_GetPalette(dib);
+				pal = FreeImage_GetPalette(dib.get());
 
 				uint8_t *pColormap = &header.color_map[0];
 
@@ -455,13 +453,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				io->read_proc(&palette_id, 1, 1, handle);
 
 				if (palette_id == 0x0C) {
-					auto *cmap = (uint8_t*)malloc(768 * sizeof(uint8_t));
 
-					if (cmap) {
-						io->read_proc(cmap, 768, 1, handle);
+					if (std::unique_ptr<void, decltype(&free)> cmap(malloc(768 * sizeof(uint8_t)), &free); cmap) {
+						io->read_proc(cmap.get(), 768, 1, handle);
 
-						pal = FreeImage_GetPalette(dib);
-						uint8_t *pColormap = &cmap[0];
+						pal = FreeImage_GetPalette(dib.get());
+						auto *pColormap = static_cast<const uint8_t *>(cmap.get());
 
 						for (int i = 0; i < 256; i++) {
 							pal[i].red   = pColormap[0];
@@ -469,8 +466,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							pal[i].blue  = pColormap[2];
 							pColormap += 3;
 						}
-
-						free(cmap);
 					}
 
 				}
@@ -478,7 +473,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// wrong palette ID, perhaps a gray scale is needed ?
 
 				else if (header.palette_info == 2) {
-					pal = FreeImage_GetPalette(dib);
+					pal = FreeImage_GetPalette(dib.get());
 
 					for (int i = 0; i < 256; i++) {
 						pal[i].red   = (uint8_t)i;
@@ -494,7 +489,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// calculate the line length for the PCX and the dib
@@ -502,7 +497,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// length of raster line in bytes
 		const unsigned lineLength = header.bytes_per_line * header.planes;
 		// length of dib line (rounded to uint32_t) in bytes
-		const unsigned pitch = FreeImage_GetPitch(dib);
+		const unsigned pitch = FreeImage_GetPitch(dib.get());
 
 		// run-length encoding ?
 
@@ -511,17 +506,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// load image data
 		// ---------------
 
-		line = (uint8_t*)malloc(lineLength * sizeof(uint8_t));
-		if (!line) {
-			throw FI_MSG_ERROR_MEMORY;
-		}
-		
-		ReadBuf = (uint8_t*)malloc(PCX_IO_BUF_SIZE * sizeof(uint8_t));
-		if (!ReadBuf) {
-			throw FI_MSG_ERROR_MEMORY;
-		}
-		
-		bits = FreeImage_GetScanLine(dib, height - 1);
+		auto line(std::make_unique<uint8_t[]>(lineLength));
+
+		auto ReadBuf(std::make_unique<uint8_t[]>(PCX_IO_BUF_SIZE));
+
+		bits = FreeImage_GetScanLine(dib.get(), height - 1);
 
 		int ReadPos = PCX_IO_BUF_SIZE;
 
@@ -531,9 +520,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			for (unsigned y = 0; y < height; y++) {
 				// do a safe copy of the scanline into 'line'
-				written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				written = readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 				// sometimes (already encountered), PCX images can have a lineLength > pitch
-				memcpy(bits, line, MIN(pitch, lineLength));
+				memcpy(bits, line.get(), MIN(pitch, lineLength));
 
 				// skip trailing garbage at the end of the scanline
 
@@ -550,19 +539,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} else if ((header.planes == 4) && (header.bpp == 1)) {
 			uint8_t bit,  mask, skip;
 			unsigned index;
-			uint8_t *buffer;
 
-			buffer = (uint8_t*)malloc(width * sizeof(uint8_t));
-			if (!buffer) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			auto buffer(std::make_unique<uint8_t[]>(width));
 
 			for (unsigned y = 0; y < height; y++) {
-				unsigned written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				unsigned written = readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 
 				// build a nibble using the 4 planes
 
-				memset(buffer, 0, width * sizeof(uint8_t));
+				memset(buffer.get(), 0, width * sizeof(uint8_t));
 
 				for (int plane = 0; plane < 4; plane++) {
 					bit = (uint8_t)(1 << plane);
@@ -593,22 +578,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				bits -= pitch;
 			}
 
-			free(buffer);
-
 		} else if ((header.planes == 3) && (header.bpp == 8)) {
-			uint8_t *pLine;
-
 			for (unsigned y = 0; y < height; y++) {
-				readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 
 				// convert the plane stream to BGR (RRRRGGGGBBBB -> BGRBGRBGRBGR)
 				// well, now with the FI_RGBA_x macros, on BIGENDIAN we convert to RGB
 
-				pLine = line;
+				const auto *pLine = line.get();
 				unsigned x;
 
 				for (x = 0; x < width; x++) {
-					bits[x * 3 + FI_RGBA_RED] = pLine[x];						
+					bits[x * 3 + FI_RGBA_RED] = pLine[x];
 				}
 				pLine += header.bytes_per_line;
 
@@ -628,27 +609,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw FI_MSG_ERROR_UNSUPPORTED_FORMAT;
 		}
 
-		free(line);
-		free(ReadBuf);
+		return dib.release();
 
-		return dib;
-
-	} catch (const char *text) {
-		// free allocated memory
-
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
-		if (line) {
-			free(line);
-		}
-		if (ReadBuf) {
-			free(ReadBuf);
-		}
-
+	}
+	catch (const char *text) {
 		FreeImage_OutputMessageProc(s_format_id, text);
 	}
-	
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+
 	return nullptr;
 }
 

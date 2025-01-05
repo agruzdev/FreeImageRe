@@ -174,7 +174,6 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	bool bUseRgbaInterface = false;
-	FIBITMAP *dib{};
 
 	if (!handle) {
 		return nullptr;
@@ -192,7 +191,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// open the file
 		Imf::InputFile file(istream);
 
-		// get file info			
+		// get file info
 		const Imath::Box2i &dataWindow = file.header().dataWindow();
 		int width  = dataWindow.max.x - dataWindow.min.x + 1;
 		int height = dataWindow.max.y - dataWindow.min.y + 1;
@@ -225,7 +224,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (bMixedComponents) {
 			bool bHandled = false;
-			// we may have a RGBZ or RGBAZ image ... 
+			// we may have a RGBZ or RGBAZ image ...
 			if (components > 4) {
 				if (channels.findChannel("R") && channels.findChannel("G") && channels.findChannel("B") && channels.findChannel("A")) {
 					std::string msg = "Warning: converting color model " + exr_color_model + " to RGBA color model";
@@ -242,7 +241,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			if (!bHandled) {
 				THROW (Iex::InputExc, "Unable to handle mixed component types (color model = " << exr_color_model << ")");
-			} 
+			}
 		}
 
 		switch (pixel_type) {
@@ -258,7 +257,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// check for supported image color models
 		// --------------------------------------------------------------
 
-		if ((components == 1) || (components == 2)) {				
+		if ((components == 1) || (components == 2)) {
 			// if the image is gray-alpha (YA), ignore the alpha channel
 			if ((components == 1) && channels.findChannel("Y")) {
 				image_type = FIT_FLOAT;
@@ -294,7 +293,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					image_type = FIT_RGBF;
 					// ignore other channels
-					components = 3;					
+					components = 3;
 				}
 			}
 		}
@@ -304,7 +303,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// allocate a new dib
-		dib = FreeImage_AllocateHeaderT(header_only, image_type, width, height, 0);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, image_type, width, height, 0), &FreeImage_Unload);
 		if (!dib) THROW (Iex::NullExc, FI_MSG_ERROR_MEMORY);
 
 		// try to load the preview image
@@ -314,53 +313,53 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			const Imf::PreviewImage& preview = file.header().previewImage();
 			const unsigned thWidth = preview.width();
 			const unsigned thHeight = preview.height();
-			
+
 			FIBITMAP* thumbnail = FreeImage_Allocate(thWidth, thHeight, 32);
 			if (thumbnail) {
 				const Imf::PreviewRgba *src_line = preview.pixels();
 				uint8_t *dst_line = FreeImage_GetScanLine(thumbnail, thHeight - 1);
 				const unsigned dstPitch = FreeImage_GetPitch(thumbnail);
-				
+
 				for (unsigned y = 0; y < thHeight; ++y) {
 					const Imf::PreviewRgba *src_pixel = src_line;
 					FIRGBA8* dst_pixel = (FIRGBA8*)dst_line;
-					
+
 					for (unsigned x = 0; x < thWidth; ++x) {
 						dst_pixel->red = src_pixel->r;
 						dst_pixel->green = src_pixel->g;
 						dst_pixel->blue = src_pixel->b;
-						dst_pixel->alpha = src_pixel->a;				
+						dst_pixel->alpha = src_pixel->a;
 						src_pixel++;
 						dst_pixel++;
 					}
 					src_line += thWidth;
 					dst_line -= dstPitch;
 				}
-				FreeImage_SetThumbnail(dib, thumbnail);
+				FreeImage_SetThumbnail(dib.get(), thumbnail);
 				FreeImage_Unload(thumbnail);
 			}
 		}
 
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// load pixels
 		// --------------------------------------------------------------
 
-		const uint8_t *bits = FreeImage_GetBits(dib);			// pointer to our pixel buffer
+		uint8_t *bits = FreeImage_GetBits(dib.get());			// pointer to our pixel buffer
 		const size_t bytespp = sizeof(float) * components;	// size of our pixel in bytes
-		const unsigned pitch = FreeImage_GetPitch(dib);		// size of our yStride in bytes
+		const unsigned pitch = FreeImage_GetPitch(dib.get());		// size of our yStride in bytes
 
 		Imf::PixelType pixelType = Imf::FLOAT;	// load as float data type;
-		
+
 		if (bUseRgbaInterface) {
 			// use the RGBA interface (used when loading RY BY Y images )
 
 			const int chunk_size = 16;
 
-			uint8_t *scanline = (uint8_t*)bits;
+			uint8_t *scanline = bits;
 
 			// re-open using the RGBA interface
 			io->seek_proc(handle, stream_start, SEEK_SET);
@@ -429,18 +428,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// lastly, flip dib lines
-		FreeImage_FlipVertical(dib);
+		FreeImage_FlipVertical(dib.get());
 
+		return dib.release();
 	}
 	catch(Iex::BaseExc & e) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, e.what());
-		return nullptr;
 	}
-
-	return dib;
+	return nullptr;
 }
 
 /**

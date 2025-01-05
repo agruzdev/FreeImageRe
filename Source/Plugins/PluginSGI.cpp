@@ -218,8 +218,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	int bitcount;
 	SGIHeader sgiHeader;
 	RLEStatus my_rle_status;
-	FIBITMAP *dib{};
-	int32_t *pRowIndex{};
 
 	try {
 		// read the header
@@ -260,23 +258,21 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		} else {
 			height = sgiHeader.ysize;
 		}
-		
+
+		std::unique_ptr<int32_t[]> pRowIndex;
 		if (bIsRLE) {
 			// read the Offset Tables 
 			int index_len = height * zsize;
-			pRowIndex = (int32_t*)malloc(index_len * sizeof(int32_t));
-			if (!pRowIndex) {
-				throw FI_MSG_ERROR_MEMORY;
-			}
+			pRowIndex.reset(new int32_t[index_len]);
 			
-			if ((unsigned)index_len != io->read_proc(pRowIndex, sizeof(int32_t), index_len, handle)) {
+			if ((unsigned)index_len != io->read_proc(pRowIndex.get(), sizeof(int32_t), index_len, handle)) {
 				throw SGI_EOF_IN_RLE_INDEX;
 			}
 			
-#ifndef FREEIMAGE_BIGENDIAN		
+#ifndef FREEIMAGE_BIGENDIAN
 			// Fix byte order in index
 			for (i = 0; i < index_len; i++) {
-				SwapLong((uint32_t*)&pRowIndex[i]);
+				SwapLong(static_cast<uint32_t*>(static_cast<void*>(pRowIndex.get())) + i);
 			}
 #endif
 			// Discard row size index
@@ -306,7 +302,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				throw SGI_INVALID_CHANNEL_COUNT;
 		}
 		
-		dib = FreeImage_Allocate(width, height, bitcount);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_Allocate(width, height, bitcount), &FreeImage_Unload);
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
@@ -314,7 +310,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (bitcount == 8) {
 			// 8-bit SGI files are grayscale images, so we'll generate
 			// a grayscale palette.
-			FIRGBA8 *pclrs = FreeImage_GetPalette(dib);
+			FIRGBA8 *pclrs = FreeImage_GetPalette(dib.get());
 			for (i = 0; i < 256; i++) {
 				pclrs[i].red = (uint8_t)i;
 				pclrs[i].green = (uint8_t)i;
@@ -327,8 +323,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		memset(&my_rle_status, 0, sizeof(RLEStatus));
 		
-		int ns = FreeImage_GetPitch(dib);                                                    
-		uint8_t *pStartRow = FreeImage_GetScanLine(dib, 0);
+		int ns = FreeImage_GetPitch(dib.get());
+		uint8_t *pStartRow = FreeImage_GetScanLine(dib.get(), 0);
 		int offset_table[] = { 2, 1, 0, 3 };
 		int numChannels = zsize;
 		if (zsize < 3) {
@@ -343,8 +339,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			offset_table[1] = 3;
 			numChannels = 4;
 		}
-		
-		int32_t *pri = pRowIndex;
+
+		auto *pri = pRowIndex.get();
 		for (i = 0; i < zsize; i++) {
 			uint8_t *pRow = pStartRow + offset_table[i];
 			for (int j = 0; j < height; j++, pRow += ns, pri++) {
@@ -385,17 +381,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 			}
 		}
-		if (pRowIndex)
-			free(pRowIndex);
 
-		return dib;
+		return dib.release();
 
-	} catch(const char *text) {
-		if (pRowIndex) free(pRowIndex);
-		if (dib) FreeImage_Unload(dib);
-		FreeImage_OutputMessageProc(s_format_id, text);
-		return nullptr;
 	}
+	catch(const char *text) {
+		FreeImage_OutputMessageProc(s_format_id, text);
+	}
+	catch (const std::bad_alloc &) {
+		FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
+	}
+	return nullptr;
 }
 
 // ==========================================================

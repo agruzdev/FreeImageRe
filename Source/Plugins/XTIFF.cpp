@@ -446,9 +446,9 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 
 		case TIFF_RATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			auto *rvalue = (uint32_t*)malloc(2 * sizeof(uint32_t) * value_count);
+			auto rvalue = std::make_unique<uint32_t[]>(2 * value_count);
+			auto *fv = (const float*)raw_data;
 			for (uint32_t i = 0; i < value_count; i++) {
-				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
@@ -456,16 +456,15 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			FreeImage_SetTagType(fitag, FIDT_RATIONAL);
 			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
 			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, rvalue);
-			free(rvalue);
+			FreeImage_SetTagValue(fitag, rvalue.get());
 		}
 		break;
 
 		case TIFF_SRATIONAL: {
 			// LibTIFF converts rational to floats : reconvert floats to rationals
-			auto *rvalue = (int32_t*)malloc(2 * sizeof(uint32_t) * value_count);
+			auto rvalue = std::make_unique<int32_t[]>(2 * value_count);
+			auto *fv = (const float*)raw_data;
 			for (uint32_t i = 0; i < value_count; i++) {
-				auto *fv = (const float*)raw_data;
 				FIRational rational(fv[i]);
 				rvalue[2*i] = rational.getNumerator();
 				rvalue[2*i+1] = rational.getDenominator();
@@ -473,8 +472,7 @@ tiff_read_exif_tag(TIFF *tif, uint32_t tag_id, FIBITMAP *dib, TagLib::MDMODEL md
 			FreeImage_SetTagType(fitag, FIDT_RATIONAL);
 			FreeImage_SetTagLength(fitag, TIFFDataWidth( TIFFFieldDataType(fip) ) * value_count);
 			FreeImage_SetTagCount(fitag, value_count);
-			FreeImage_SetTagValue(fitag, rvalue);
-			free(rvalue);
+			FreeImage_SetTagValue(fitag, rvalue.get());
 		}
 		break;
 
