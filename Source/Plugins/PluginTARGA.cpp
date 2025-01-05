@@ -205,12 +205,7 @@ class IOCache
 {
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
-		_safeBuffer(malloc(size), &free), _ptr{}, _begin{}, _end{}, _size(size), _io(io), _handle(handle)	{
-		if (_safeBuffer) {
-			_begin = static_cast<uint8_t*>(_safeBuffer.get());
-			_end = _begin + _size;
-			_ptr = _end;	// will force refill on first access
-		}
+		_safeBuffer(malloc(size), &free), _begin{static_cast<uint8_t*>(_safeBuffer.get())}, _end{_begin ? _begin + _size : nullptr}, _ptr{_end}, _size(size), _io(io), _handle(handle)	{
 	}
 
 	FIBOOL isNull() { return !_begin;}
@@ -261,9 +256,9 @@ private:
 
 private:
 	std::unique_ptr<void, decltype(&free)> _safeBuffer;
-	uint8_t *_ptr;
-	uint8_t *_begin;
-	uint8_t *_end;
+	uint8_t * const _begin{};
+	uint8_t * const _end{};
+	uint8_t *_ptr{};
 	const size_t _size;
 	const FreeImageIO *_io;	
 	const fi_handle _handle;	
@@ -553,7 +548,7 @@ _assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 Generic RLE loader
 */
 template<int bPP>
-static void 
+static bool 
 loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle, long eof, FIBOOL as24bit) {
 	const int file_pixel_size = bPP/8;
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
@@ -577,11 +572,9 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 	// ...and allocate cache of this size (yields good results)
 	IOCache cache(io, handle, sz);
 	if (cache.isNull()) {
-		FreeImage_Unload(dib);
-		dib = nullptr;
-		return;
+		return false;
 	}
-		
+
 	int x = 0, y = 0;
 
 	line_bits = FreeImage_GetScanLine(dib, y);
@@ -600,7 +593,7 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 		if ((line_bits+x) + packet_count*pixel_size > dib_end) {
 			FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_CORRUPTED);
 			// return what is left from the bitmap
-			return;
+			return true;
 		}
 
 		if (has_rle) {
@@ -637,9 +630,8 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 				}
 			} //< packet_count
 		} //< has_rle
-
 	} //< while height
-
+	return true;
 }
 
 // --------------------------------------------------------------------------
@@ -797,23 +789,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					} // switch (header.cm_size)
 				}
-				
+
 				// handle thumbnail
-				
-				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if (th) {
+				if (std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> th(thumbnail.toFIBITMAP(), &FreeImage_Unload); th) {
 					FIRGBA8* pal = FreeImage_GetPalette(dib.get());
-					FIRGBA8* dst_pal = FreeImage_GetPalette(th);
+					FIRGBA8* dst_pal = FreeImage_GetPalette(th.get());
 					if (dst_pal && pal) {
 						for (unsigned i = 0; i < FreeImage_GetColorsUsed(dib.get()); i++) {
 							dst_pal[i] = pal[i];
 						}
 					}
 
-					FreeImage_SetTransparencyTable(th, FreeImage_GetTransparencyTable(dib.get()), FreeImage_GetTransparencyCount(dib.get()));
+					FreeImage_SetTransparencyTable(th.get(), FreeImage_GetTransparencyTable(dib.get()), FreeImage_GetTransparencyCount(dib.get()));
 
-					FreeImage_SetThumbnail(dib.get(), th);
-					FreeImage_Unload(th);
+					FreeImage_SetThumbnail(dib.get(), th.get());
 				}
 
 				if (header_only) {
@@ -836,7 +825,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 					case TGA_RLECMAP:
 					case TGA_RLEMONO: { //(8 bit)
-						loadRLE<8>(dib.get(), header.is_width, header.is_height, io, handle, eof, FALSE);
+						if (!loadRLE<8>(dib.get(), header.is_width, header.is_height, io, handle, eof, FALSE)) {
+							return nullptr;
+						}
 					}
 					break;
 
@@ -867,16 +858,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// handle thumbnail
 
-				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if (th) {
+				if (std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> th(thumbnail.toFIBITMAP(), &FreeImage_Unload); th) {
 					if (TARGA_LOAD_RGB888 & flags) {
-						FIBITMAP* t = FreeImage_ConvertTo24Bits(th);
-						FreeImage_Unload(th);
-						th = t;
+						FIBITMAP* t = FreeImage_ConvertTo24Bits(th.get());
+						th.reset(t);
 					}
 
-					FreeImage_SetThumbnail(dib.get(), th);
-					FreeImage_Unload(th);
+					FreeImage_SetThumbnail(dib.get(), th.get());
 				}
 
 				if (header_only) {
@@ -929,7 +917,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(16 bit)
-						loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
+						if (!loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags)) {
+							return nullptr;
+						}
 					}
 					break;
 
@@ -947,10 +937,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 
-				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if (th) {
-					FreeImage_SetThumbnail(dib.get(), th);
-					FreeImage_Unload(th);
+				if (std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> th(thumbnail.toFIBITMAP(), &FreeImage_Unload); th) {
+					FreeImage_SetThumbnail(dib.get(), th.get());
 				}
 
 				if (header_only) {
@@ -967,7 +955,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(24 bit)
-						loadRLE<24>(dib.get(), header.is_width, header.is_height, io, handle, eof, TRUE);
+						if (!loadRLE<24>(dib.get(), header.is_width, header.is_height, io, handle, eof, TRUE)) {
+							return nullptr;
+						}
 					}
 					break;
 
@@ -992,15 +982,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// handle thumbnail
 
-				FIBITMAP* th = thumbnail.toFIBITMAP();
-				if (th) {
+				if (std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> th(thumbnail.toFIBITMAP(), &FreeImage_Unload); th) {
 					if (TARGA_LOAD_RGB888 & flags) {
-						FIBITMAP* t = FreeImage_ConvertTo24Bits(th);
-						FreeImage_Unload(th);
-						th = t;
+						FIBITMAP* t = FreeImage_ConvertTo24Bits(th.get());
+						th.reset(t);
 					}
-					FreeImage_SetThumbnail(dib.get(), th);
-					FreeImage_Unload(th);
+					FreeImage_SetThumbnail(dib.get(), th.get());
 				}
 
 				if (header_only) {
@@ -1017,7 +1004,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					break;
 
 					case TGA_RLERGB: { //(32 bit)
-						loadRLE<32>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
+						if (!loadRLE<32>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags)) {
+							return nullptr;
+						}
 					}
 					break;
 
@@ -1172,8 +1161,8 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 	// packet (compressed or not) to be written to line
 
-	auto* const packet_begin = (uint8_t*)malloc(max_packet_size * pixel_size);
-	uint8_t* packet = packet_begin;
+	auto packet_begin(std::make_unique<uint8_t[]>(max_packet_size * pixel_size));
+	auto *packet = packet_begin.get();
 
 	// line to be written to disk
 	// Note: we need some extra bytes for anti-commpressed lines. The worst case is:
@@ -1184,26 +1173,25 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 	// add extra space for anti-commpressed lines
 	size_t extra_space = (size_t)ceil(width / 3.0);
-	auto* const line_begin = (uint8_t*)malloc(width * pixel_size + extra_space);
-	uint8_t* line = line_begin;
+	auto line_begin(std::make_unique<uint8_t[]>(width * pixel_size + extra_space));
 
-	auto *current = (uint8_t*)malloc(pixel_size);
-	auto *next    = (uint8_t*)malloc(pixel_size);
+	auto current(std::make_unique<uint8_t[]>(pixel_size));
+	auto next(std::make_unique<uint8_t[]>(pixel_size));
 
 	for (unsigned y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 
 		// rewind line pointer
-		line = line_begin;
+		auto *line = line_begin.get();
 
 		for (unsigned x = 0; x < line_size; x += pixel_size) {
 
-			AssignPixel(current, (bits + x), pixel_size);
+			AssignPixel(current.get(), (bits + x), pixel_size);
 
 			// read next pixel from dib
 
 			if (x + 1*pixel_size < line_size) {
-				AssignPixel(next, (bits + x + 1*pixel_size), pixel_size);
+				AssignPixel(next.get(), (bits + x + 1*pixel_size), pixel_size);
 
 			} else {
 				// last pixel in line
@@ -1211,7 +1199,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 				// include current pixel and flush
 				if (!has_rle) {
 
-					writeToPacket(packet, current, pixel_size);
+					writeToPacket(packet, current.get(), pixel_size);
 					packet += pixel_size;
 
 				}
@@ -1220,26 +1208,26 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 
 				++packet_count;
 
-				flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
+				flushPacket(line, pixel_size, packet_begin.get(), packet, packet_count, has_rle);
 
 				// start anew on next line
 				break;
 			}
 
-			if (isEqualPixel(current, next, pixel_size)) {
+			if (isEqualPixel(current.get(), next.get(), pixel_size)) {
 
 				// has rle
 
 				if (!has_rle) {
 					// flush non rle packet
 
-					flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
+					flushPacket(line, pixel_size, packet_begin.get(), packet, packet_count, has_rle);
 
 					// start a rle packet
 
 					has_rle = TRUE;
 
-					writeToPacket(packet, current, pixel_size);
+					writeToPacket(packet, current.get(), pixel_size);
 					packet += pixel_size;
 				}
 
@@ -1256,14 +1244,14 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 					assert(packet_count < max_packet_size);
 					++packet_count;
 
-					flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
+					flushPacket(line, pixel_size, packet_begin.get(), packet, packet_count, has_rle);
 
 					// start anew on the next pixel
 					continue;
 
 				} else {
 
-					writeToPacket(packet, current, pixel_size);
+					writeToPacket(packet, current.get(), pixel_size);
 					packet += pixel_size;
 				}
 
@@ -1274,20 +1262,15 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 			++packet_count;
 
 			if (packet_count == max_packet_size) {
-				flushPacket(line, pixel_size, packet_begin, packet, packet_count, has_rle);
+				flushPacket(line, pixel_size, packet_begin.get(), packet, packet_count, has_rle);
 			}
 
 		}//for width
 
 		// write line to disk
-		io->write_proc(line_begin, 1, (unsigned)(line - line_begin), handle);
+		io->write_proc(line_begin.get(), 1, std::distance(line_begin.get(), line), handle);
 
 	}//for height
-
-	free(line_begin);
-	free(packet_begin);
-	free(current);
-	free(next);
 }
 
 static FIBOOL DLL_CALLCONV
