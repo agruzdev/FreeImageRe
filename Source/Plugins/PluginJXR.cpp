@@ -418,12 +418,12 @@ Read a JPEG-XR IFD as a buffer
 static ERR
 ReadProfile(WMPStream* pStream, unsigned cbByteCount, unsigned uOffset, std::unique_ptr<void, decltype(&free)> &safeProfile) {
 	// (re-)allocate profile buffer
-	void *pbProfile = safeProfile.get();
-	pbProfile = realloc(pbProfile, cbByteCount);
+	auto *tmp = safeProfile.release();
+	auto *pbProfile = realloc(tmp, cbByteCount);
 	if (!pbProfile) {
+		safeProfile.reset(tmp)
 		return WMP_errOutOfMemory;
 	}
-	safeProfile.release();
 	safeProfile.reset(pbProfile);
 	// read the profile
 	if (WMP_errSuccess == pStream->SetPos(pStream, uOffset)) {
