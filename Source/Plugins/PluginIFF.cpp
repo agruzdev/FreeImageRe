@@ -426,10 +426,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			size -= ch_size + 8;
 		}
-
-		if (dib) {
-			dib.reset();
-		}
 	}
 
 	return nullptr;
