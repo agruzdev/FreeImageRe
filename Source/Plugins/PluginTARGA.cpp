@@ -641,11 +641,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		const FIBOOL header_only =  (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 		// remember the start offset
-		long start_offset = io->tell_proc(handle);
+		const long start_offset = io->tell_proc(handle);
 
 		// remember end-of-file (used for RLE cache)
 		io->seek_proc(handle, 0, SEEK_END);
-		long eof = io->tell_proc(handle);
+		const long eof = io->tell_proc(handle);
 		io->seek_proc(handle, start_offset, SEEK_SET);
 
 		// read and process the bitmap's footer
@@ -697,8 +697,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		const int pixel_bits = header.is_pixel_depth;
 		const int pixel_size = pixel_bits/8;
 
-		int fliphoriz = (header.is_image_descriptor & 0x10) ? 1 : 0;
-		int flipvert = (header.is_image_descriptor & 0x20) ? 1 : 0;
+		const int fliphoriz = (header.is_image_descriptor & 0x10) ? 1 : 0;
+		const int flipvert = (header.is_image_descriptor & 0x20) ? 1 : 0;
 
 		// skip comment
 		io->seek_proc(handle, header.id_length, SEEK_CUR);
@@ -863,7 +863,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					return dib.release();
 				}
 
-				int line = CalculateLine(header.is_width, pixel_bits);
+				const int line = CalculateLine(header.is_width, pixel_bits);
 
 				const unsigned pixel_size = unsigned(pixel_bits) / 8;
 				const unsigned src_pixel_size = sizeof(uint16_t);
@@ -908,7 +908,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 					break;
 
-					case TGA_RLERGB: { //(16 bit)
+					case TGA_RLERGB:
+					case TGA_RLEMONO: { //(16 bit)
 						loadRLE<16>(dib.get(), header.is_width, header.is_height, io, handle, eof, TARGA_LOAD_RGB888 & flags);
 					}
 					break;
