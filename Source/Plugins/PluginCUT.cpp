@@ -103,7 +103,6 @@ SupportsNoPixels() {
 
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
-	FIBITMAP *dib{};
 
 	if (!handle) {
 		return nullptr;
@@ -131,7 +130,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// allocate a new bitmap
 
-		dib = FreeImage_AllocateHeader(header_only, header.width, header.height, 8);
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeader(header_only, header.width, header.height, 8), &FreeImage_Unload);
 
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
@@ -139,7 +138,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// stuff it with a palette
 
-		FIRGBA8 *palette = FreeImage_GetPalette(dib);
+		FIRGBA8 *palette = FreeImage_GetPalette(dib.get());
 
 		for (int j = 0; j < 256; ++j) {
 			palette[j].blue = palette[j].green = palette[j].red = (uint8_t)j;
@@ -147,15 +146,15 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		
 		if (header_only) {
 			// header only mode
-			return dib;
+			return dib.release();
 		}
 
 		// unpack the RLE bitmap bits
 
-		uint8_t *bits = FreeImage_GetScanLine(dib, header.height - 1);
+		uint8_t *bits = FreeImage_GetScanLine(dib.get(), header.height - 1);
 
 		unsigned i = 0, k = 0;
-		unsigned pitch = FreeImage_GetPitch(dib);
+		unsigned pitch = FreeImage_GetPitch(dib.get());
 		unsigned size = header.width * header.height;
 		uint8_t count = 0, run = 0;
 
@@ -202,15 +201,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			i += count;
 		}
 
-		return dib;
+		return dib.release();
 
 	} catch(const char* text) {
-		if (dib) {
-			FreeImage_Unload(dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, text);
-		return nullptr;
 	}
+	return nullptr;
 }
 
 // ==========================================================

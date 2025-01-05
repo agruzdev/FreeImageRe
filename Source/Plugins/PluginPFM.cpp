@@ -358,7 +358,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	// Write the header info
 
-	sprintf(buffer, "P%c\n%d %d\n%f\n", magic, width, height, scalefactor);
+	snprintf(buffer, std::size(buffer), "P%c\n%d %d\n%f\n", magic, width, height, scalefactor);
 	io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
 	// Write the image data

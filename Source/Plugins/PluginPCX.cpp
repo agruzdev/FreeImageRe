@@ -63,7 +63,7 @@ typedef struct tagPCXHEADER {
 	uint16_t  v_screen_size;
 	uint8_t  filler[54];		// Reserved filler
 } PCXHEADER;
-		
+
 #ifdef _WIN32
 #pragma pack(pop)
 #else
@@ -124,7 +124,7 @@ Note that a scanline always has an even number of bytes
 @return
 */
 static unsigned
-readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FIBOOL bIsRLE, uint8_t * ReadBuf, int * ReadPos) {
+readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FIBOOL bIsRLE, uint8_t * ReadBuf, int &ReadPos) {
 	uint8_t count = 0;
 	uint8_t value = 0;
 	unsigned written = 0;
@@ -134,8 +134,8 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 
 		while (length--) {
 			if (count == 0) {
-				if (*ReadPos >= PCX_IO_BUF_SIZE - 1 ) {
-					if (*ReadPos == PCX_IO_BUF_SIZE - 1) {
+				if (ReadPos >= PCX_IO_BUF_SIZE - 1 ) {
+					if (ReadPos == PCX_IO_BUF_SIZE - 1) {
 						// we still have one uint8_t, copy it to the start pos
 						*ReadBuf = ReadBuf[PCX_IO_BUF_SIZE - 1];
 						io->read_proc(ReadBuf + 1, 1, PCX_IO_BUF_SIZE - 1, handle);
@@ -144,14 +144,14 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 						io->read_proc(ReadBuf, 1, PCX_IO_BUF_SIZE, handle);
 					}
 
-					*ReadPos = 0;
+					ReadPos = 0;
 				}
 
-				value = *(ReadBuf + (*ReadPos)++);
+				value = ReadBuf[ReadPos++];
 
 				if ((value & 0xC0) == 0xC0) {
 					count = value & 0x3F;
-					value = *(ReadBuf + (*ReadPos)++);
+					value = ReadBuf[ReadPos++];
 				} else {
 					count = 1;
 				}
@@ -159,7 +159,7 @@ readLine(FreeImageIO *io, fi_handle handle, uint8_t *buffer, unsigned length, FI
 
 			count--;
 
-			*(buffer + written++) = value;
+			buffer[written++] = value;
 		}
 
 	} else {
@@ -517,7 +517,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
 		auto *ReadBuf = static_cast<uint8_t*>(safeReadBuf.get()); // buffer;
-		
+
 		bits = FreeImage_GetScanLine(dib.get(), height - 1);
 
 		int ReadPos = PCX_IO_BUF_SIZE;
@@ -528,7 +528,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			for (unsigned y = 0; y < height; y++) {
 				// do a safe copy of the scanline into 'line'
-				written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
 				// sometimes (already encountered), PCX images can have a lineLength > pitch
 				memcpy(bits, line, MIN(pitch, lineLength));
 
@@ -555,7 +555,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			auto *buffer = static_cast<uint8_t*>(safeBuffer.get());
 
 			for (unsigned y = 0; y < height; y++) {
-				unsigned written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				unsigned written = readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
 
 				// build a nibble using the 4 planes
 
@@ -594,7 +594,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			uint8_t *pLine;
 
 			for (unsigned y = 0; y < height; y++) {
-				readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, &ReadPos);
+				readLine(io, handle, line, lineLength, bIsRLE, ReadBuf, ReadPos);
 
 				// convert the plane stream to BGR (RRRRGGGGBBBB -> BGRBGRBGRBGR)
 				// well, now with the FI_RGBA_x macros, on BIGENDIAN we convert to RGB
@@ -603,7 +603,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				unsigned x;
 
 				for (x = 0; x < width; x++) {
-					bits[x * 3 + FI_RGBA_RED] = pLine[x];						
+					bits[x * 3 + FI_RGBA_RED] = pLine[x];
 				}
 				pLine += header.bytes_per_line;
 

@@ -417,10 +417,10 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 
 			// image output width & height
 			{
-				sprintf(value, "%d", sizes->iwidth);
+				snprintf(value, std::size(value), "%d", sizes->iwidth);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Output.Width", value);
 				
-				sprintf(value, "%d", sizes->iheight);
+				snprintf(value, std::size(value), "%d", sizes->iheight);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Output.Height", value);
 			}
 
@@ -431,16 +431,16 @@ libraw_LoadUnprocessedData(LibRaw *RawProcessor) {
 				const unsigned f_width = sizes->width;
 				const unsigned f_height = sizes->height;
 				
-				sprintf(value, "%d", f_left);
+				snprintf(value, std::size(value), "%d", f_left);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Left", value);
 
-				sprintf(value, "%d", f_top);
+				snprintf(value, std::size(value), "%d", f_top);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Top", value);
 
-				sprintf(value, "%d", f_width);
+				snprintf(value, std::size(value), "%d", f_width);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Width", value);
 
-				sprintf(value, "%d", f_height);
+				snprintf(value, std::size(value), "%d", f_height);
 				FreeImage_SetMetadataKeyValue(FIMD_COMMENTS, dib.get(), "Raw.Frame.Height", value);
 			}
 

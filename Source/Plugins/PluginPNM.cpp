@@ -562,7 +562,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				case 1 :
 					magic = 1;	// PBM file (B & W)
 					break;
-				case 8 : 			
+				case 8 :
 					magic = 2;	// PGM file	(Greyscale)
 					break;
 
@@ -595,11 +595,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 	// Write the header info
 
-	sprintf(buffer, "P%d\n%d %d\n", magic, width, height);
+	snprintf(buffer, std::size(buffer), "P%d\n%d %d\n", magic, width, height);
 	io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
 	if (bpp != 1) {
-		sprintf(buffer, "%d\n", maxval);
+		snprintf(buffer, std::size(buffer), "%d\n", maxval);
 		io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 	}
 
@@ -631,7 +631,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 						
 						for (x = 0; x < width; x++) {
-							sprintf(buffer, "%3d %3d %3d ", bits[FI_RGBA_RED], bits[FI_RGBA_GREEN], bits[FI_RGBA_BLUE]);
+							snprintf(buffer, std::size(buffer), "%3d %3d %3d ", bits[FI_RGBA_RED], bits[FI_RGBA_GREEN], bits[FI_RGBA_BLUE]);
 
 							io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
@@ -639,13 +639,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 							if (length > 58) {
 								// No line should be longer than 70 characters
-								sprintf(buffer, "\n");
+								snprintf(buffer, std::size(buffer), "\n");
 								io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 								length = 0;
 							}
 
 							bits += 3;
-						}					
+						}
 					}
 
 				}
@@ -671,7 +671,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						uint8_t *bits = FreeImage_GetScanLine(dib, height - 1 - y);
 
 						for (x = 0; x < width; x++) {
-							sprintf(buffer, "%3d ", bits[x]);
+							snprintf(buffer, std::size(buffer), "%3d ", bits[x]);
 
 							io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
@@ -679,7 +679,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 							if (length > 66) {
 								// No line should be longer than 70 characters
-								sprintf(buffer, "\n");
+								snprintf(buffer, std::size(buffer), "\n");
 								io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 								length = 0;
 							}
@@ -711,7 +711,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 						for (x = 0; x < (int)FreeImage_GetLine(dib) * 8; x++)	{
 							color = (bits[x>>3] & (0x80 >> (x & 0x07))) != 0;
 
-							sprintf(buffer, "%c ", color ? '1':'0');
+							snprintf(buffer, std::size(buffer), "%c ", color ? '1':'0');
 
 							io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
@@ -719,7 +719,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 							if (length > 68) {
 								// No line should be longer than 70 characters
-								sprintf(buffer, "\n");
+								snprintf(buffer, std::size(buffer), "\n");
 								io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 								length = 0;
 							}
@@ -750,7 +750,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				uint16_t *bits = (uint16_t*)FreeImage_GetScanLine(dib, height - 1 - y);
 
 				for (x = 0; x < width; x++) {
-					sprintf(buffer, "%5d ", bits[x]);
+					snprintf(buffer, std::size(buffer), "%5d ", bits[x]);
 
 					io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
@@ -758,7 +758,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 					if (length > 64) {
 						// No line should be longer than 70 characters
-						sprintf(buffer, "\n");
+						snprintf(buffer, std::size(buffer), "\n");
 						io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 						length = 0;
 					}
@@ -787,7 +787,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				FIRGB16 *bits = (FIRGB16*)FreeImage_GetScanLine(dib, height - 1 - y);
 				
 				for (x = 0; x < width; x++) {
-					sprintf(buffer, "%5d %5d %5d ", bits[x].red, bits[x].green, bits[x].blue);
+					snprintf(buffer, std::size(buffer), "%5d %5d %5d ", bits[x].red, bits[x].green, bits[x].blue);
 
 					io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 
@@ -795,11 +795,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 					if (length > 52) {
 						// No line should be longer than 70 characters
-						sprintf(buffer, "\n");
+						snprintf(buffer, std::size(buffer), "\n");
 						io->write_proc(&buffer, (unsigned int)strlen(buffer), 1, handle);
 						length = 0;
 					}
-				}					
+				}
 			}
 
 		}

@@ -84,7 +84,7 @@ void FreeImage_SO_DeInitialise() {
 const char * DLL_CALLCONV
 FreeImage_GetVersion() {
 	static char s_version[16];
-	sprintf(s_version, "%d.%d.%d", FREEIMAGE_MAJOR_VERSION, FREEIMAGE_MINOR_VERSION, FREEIMAGE_RELEASE_SERIAL);
+	snprintf(s_version, std::size(s_version), "%d.%d.%d", FREEIMAGE_MAJOR_VERSION, FREEIMAGE_MINOR_VERSION, FREEIMAGE_RELEASE_SERIAL);
 	return s_version;
 }
 

@@ -212,7 +212,7 @@ msdosErrorHandler(const char* module, const char* fmt, va_list ap) {
 	/*
 	if (module) {
 		char msg[1024];
-		vsprintf(msg, fmt, ap);
+		vsnprintf(msg, std::size(msg), fmt, ap);
 		FreeImage_OutputMessageProc(s_format_id, "%s: %s", module, msg);
 	}
 	*/
@@ -1627,24 +1627,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// NOTE this is until we have Extra channels implementation.
 			// Also then it will be possible to merge LoadAsCMYK with LoadAsGenericStrip
 
-			FIBITMAP *alpha{};
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> alpha(nullptr, &FreeImage_Unload);
 			unsigned alpha_pitch = 0;
 			uint8_t *alpha_bits{};
 			unsigned alpha_Bpp = 0;
 
 			if (isCMYKA && !asCMYK && !header_only) {
 				if (bitspersample == 16) {
-					alpha = FreeImage_AllocateT(FIT_UINT16, width, height);
+					alpha.reset(FreeImage_AllocateT(FIT_UINT16, width, height));
 				} else if (bitspersample == 8) {
-					alpha = FreeImage_Allocate(width, height, 8);
+					alpha.reset(FreeImage_Allocate(width, height, 8));
 				}
 
 				if (!alpha) {
 					FreeImage_OutputMessageProc(s_format_id, "Failed to allocate temporary alpha channel");
 				} else {
-					alpha_bits = FreeImage_GetScanLine(alpha, height - 1);
-					alpha_pitch = FreeImage_GetPitch(alpha);
-					alpha_Bpp = FreeImage_GetBPP(alpha) / 8;
+					alpha_bits = FreeImage_GetScanLine(alpha.get(), height - 1);
+					alpha_pitch = FreeImage_GetPitch(alpha.get());
+					alpha_Bpp = FreeImage_GetBPP(alpha.get()) / 8;
 				}
 				
 			}
@@ -1653,7 +1653,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			const uint16_t chCount = std::min<uint16_t>(samplesperpixel, 4);
 			dib = CreateImageType(header_only, image_type, width, height, bitspersample, chCount);
 			if (!dib) {
-				FreeImage_Unload(alpha);
 				throw FI_MSG_ERROR_MEMORY;
 			}
 
@@ -1683,7 +1682,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				auto * const buf = static_cast<uint8_t*>(malloc(TIFFStripSize(tif) * sizeof(uint8_t)));
 				if (!buf) {
-					FreeImage_Unload(alpha);
 					throw FI_MSG_ERROR_MEMORY;
 				}
 				std::unique_ptr<void, decltype(&free)> safeBuf(buf, &free);
@@ -1696,7 +1694,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						const uint32_t strips = std::min(height - y, rowsperstrip);
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf, strips * src_line) == -1) {
-							FreeImage_Unload(alpha);
 							throw FI_MSG_ERROR_PARSING;
 						}
 
@@ -1719,7 +1716,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 										if (Bpc > 1) {
 											al_pixel[1] = src_pixel[b + 1];
 										}
-										
 									}
 									bits -= dib_pitch;
 									alpha_bits -= alpha_pitch;
@@ -1762,7 +1758,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						for (uint16_t sample = 0; sample < samplesperpixel; sample++) {
 							
 							if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, sample), buf, strips * src_line) == -1) {
-								FreeImage_Unload(alpha);
 								throw FI_MSG_ERROR_PARSING;
 							} 
 									
@@ -1801,9 +1796,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								for (uint8_t *src_bits = src_line_begin, * dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
 									AssignPixel(dst_bits + channelOffset, src_bits, Bpc);
 								} // line
-								
 							} // strips
-
 						} // channels
 
 						// done with a strip block, incr to the next
@@ -1811,7 +1804,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						al_strip -= strips * alpha_pitch;
 
 					} //< height
-					
 				}
 
 				if (!asCMYK) {
@@ -1824,9 +1816,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					if (isCMYKA) {
 						// HACK until we have Extra channels. (ConvertCMYKtoRGBA will then do the work)
 
-						FreeImage_SetChannel(dib, alpha, FICC_ALPHA);
-						FreeImage_Unload(alpha);
-						alpha = nullptr;
+						FreeImage_SetChannel(dib, alpha.get(), FICC_ALPHA);
 					}
 					else {
 						FIBITMAP *t = RemoveAlphaChannel(dib);
@@ -1839,7 +1829,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 					}
 				}
-				
 			} // !header_only
 
 		} else if (loadMethod == LoadAsGenericStrip) {
@@ -2420,7 +2409,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 
 		if (page >= 0) {
 			char page_number[20];
-			sprintf(page_number, "Page %d", page);
+			snprintf(page_number, std::size(page_number), "Page %d", page);
 
 			TIFFSetField(out, TIFFTAG_SUBFILETYPE, (uint32_t)FILETYPE_PAGE);
 			TIFFSetField(out, TIFFTAG_PAGENUMBER, (uint16_t)page, (uint16_t)0);
