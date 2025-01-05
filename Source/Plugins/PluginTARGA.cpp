@@ -462,16 +462,12 @@ loadTrueColor(FIBITMAP* dib, int width, int height, int file_pixel_size, FreeIma
 	const int pixel_size = as24bit ? 3 : file_pixel_size;
 
 	// input line cache
-	std::unique_ptr<void, decltype(&free)> file_line(malloc(width * file_pixel_size), &free);
-
-	if (!file_line) {
-		throw FI_MSG_ERROR_MEMORY;
-	}
+	auto file_line(std::make_unique<uint8_t[]>(width * file_pixel_size));
 
 	for (int y = 0; y < height; y++) {
 		uint8_t *bits = FreeImage_GetScanLine(dib, y);
 		io->read_proc(file_line.get(), file_pixel_size, width, handle);
-		auto *bgra = static_cast<const uint8_t *>(file_line.get());
+		const auto *bgra = file_line.get();
 
 		for (int x = 0; x < width; x++) {
 

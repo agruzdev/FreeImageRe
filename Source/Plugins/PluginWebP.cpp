@@ -50,25 +50,26 @@ ReadFileToWebPData(FreeImageIO *io, fi_handle handle, WebPData * const bitstream
 	  io->seek_proc(handle, 0, SEEK_END);
 	  size_t file_length = (size_t)(io->tell_proc(handle) - start_pos);
 	  io->seek_proc(handle, start_pos, SEEK_SET);
-	  std::unique_ptr<void, decltype(&free)> raw_data(malloc(file_length * sizeof(uint8_t)), &free);
-	  if (!raw_data) {
-		  throw FI_MSG_ERROR_MEMORY;
-	  }
+	  auto raw_data(std::make_unique<uint8_t[]>(file_length));
 	  if (io->read_proc(raw_data.get(), 1, (unsigned)file_length, handle) != file_length) {
 		  throw "Error while reading input stream";
 	  }
-	  
+
 	  // copy pointers (must be released later using free)
-	  bitstream->bytes = static_cast<const uint8_t *>(raw_data.release());
+	  bitstream->bytes = raw_data.release();
 	  bitstream->size = file_length;
 
 	  return TRUE;
 
-  } catch(const char *text) {
+  }
+  catch(const char *text) {
 	  memset(bitstream, 0, sizeof(WebPData));
 	  if (text) {
 		  FreeImage_OutputMessageProc(s_format_id, text);
 	  }
+  }
+  catch (const std::bad_alloc &) {
+	  FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_MEMORY);
   }
   return FALSE;
 }
