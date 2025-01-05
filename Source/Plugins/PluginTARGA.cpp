@@ -205,10 +205,8 @@ class IOCache
 {
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
-		_safeBuffer(malloc(size), &free), _begin{static_cast<uint8_t*>(_safeBuffer.get())}, _end{_begin ? _begin + _size : nullptr}, _ptr{_end}, _size(size), _io(io), _handle(handle)	{
+		_safeBuffer(new uint8_t[size]), _begin{_safeBuffer.get()}, _end{_begin + size}, _ptr{_end}, _size(size), _io(io), _handle(handle)	{
 	}
-
-	FIBOOL isNull() { return !_begin;}
 
 	inline
 	uint8_t getByte() {
@@ -255,7 +253,7 @@ private:
 	IOCache(const IOCache& other); // deleted
 
 private:
-	std::unique_ptr<void, decltype(&free)> _safeBuffer;
+	std::unique_ptr<uint8_t[]> _safeBuffer;
 	uint8_t * const _begin{};
 	uint8_t * const _end{};
 	uint8_t *_ptr{};
@@ -571,9 +569,6 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 	// ...and allocate cache of this size (yields good results)
 	IOCache cache(io, handle, sz);
-	if (cache.isNull()) {
-		throw FI_MSG_ERROR_MEMORY;
-	}
 
 	int x = 0, y = 0;
 
