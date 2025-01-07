@@ -260,19 +260,16 @@ static FIBOOL
 psd_set_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	// create a tag
 	bool bSuccess{};
-	if (auto *tag = FreeImage_CreateTag()) {
-		bSuccess = FreeImage_SetTagID(tag, PSDP_RES_XMP);
-		bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-		bSuccess = bSuccess && FreeImage_SetTagLength(tag, (uint32_t)datalen);
-		bSuccess = bSuccess && FreeImage_SetTagCount(tag, (uint32_t)datalen);
-		bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
-		bSuccess = bSuccess && FreeImage_SetTagValue(tag, dataptr);
+	if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+		bSuccess = FreeImage_SetTagID(tag.get(), PSDP_RES_XMP);
+		bSuccess = bSuccess && FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), (uint32_t)datalen);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), (uint32_t)datalen);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), dataptr);
 
 		// store the tag
-		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
-
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 	}
 
 	return bSuccess ? TRUE : FALSE;

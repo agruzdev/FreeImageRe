@@ -125,8 +125,6 @@ Convert a OpenJPEG image to a FIBITMAP
 @return Returns the converted image if successful, returns NULL otherwise
 */
 FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL header_only) {
-	FIBITMAP *dib{};
-
 	try {
 		// compute image width and height
 
@@ -165,29 +163,29 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 		}
 
 		// create a new DIB
-
+		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (image->comps[0].prec <= 8) {
 			switch (numcomps) {
 				case 1:
-					dib = FreeImage_AllocateHeader(header_only, wrr, hrr, 8);
+					dib.reset(FreeImage_AllocateHeader(header_only, wrr, hrr, 8));
 					break;
 				case 3:
-					dib = FreeImage_AllocateHeader(header_only, wrr, hrr, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, wrr, hrr, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 					break;
 				case 4:
-					dib = FreeImage_AllocateHeader(header_only, wrr, hrr, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, wrr, hrr, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 					break;
 			}
 		} else if (image->comps[0].prec <= 16) {
 			switch (numcomps) {
 				case 1:
-					dib = FreeImage_AllocateHeaderT(header_only, FIT_UINT16, wrr, hrr);
+					dib.reset(FreeImage_AllocateHeaderT(header_only, FIT_UINT16, wrr, hrr));
 					break;
 				case 3:
-					dib = FreeImage_AllocateHeaderT(header_only, FIT_RGB16, wrr, hrr);
+					dib.reset(FreeImage_AllocateHeaderT(header_only, FIT_RGB16, wrr, hrr));
 					break;
 				case 4:
-					dib = FreeImage_AllocateHeaderT(header_only, FIT_RGBA16, wrr, hrr);
+					dib.reset(FreeImage_AllocateHeaderT(header_only, FIT_RGBA16, wrr, hrr));
 					break;
 			}
 		} else {
@@ -199,7 +197,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 
 		// "header only" FIBITMAP ?
 		if (header_only) {
-			return dib;
+			return dib.release();
 		}
 		
 		if (image->comps[0].prec <= 8) {
@@ -209,7 +207,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 
 				// build a greyscale palette
 				
-				FIRGBA8 *pal = FreeImage_GetPalette(dib);
+				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				for (int i = 0; i < 256; i++) {
 					pal[i].red	= (uint8_t)i;
 					pal[i].green = (uint8_t)i;
@@ -221,7 +219,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					uint8_t *bits = FreeImage_GetScanLine(dib, hrr - 1 - y);
+					uint8_t *bits = FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -245,7 +243,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					uint8_t *bits = FreeImage_GetScanLine(dib, hrr - 1 - y);
+					uint8_t *bits = FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -278,7 +276,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					uint8_t *bits = FreeImage_GetScanLine(dib, hrr - 1 - y);
+					uint8_t *bits = FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -316,7 +314,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					auto *bits = (uint16_t*)FreeImage_GetScanLine(dib, hrr - 1 - y);
+					auto *bits = (uint16_t*)FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -340,7 +338,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib, hrr - 1 - y);
+					auto *bits = (FIRGB16*)FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -372,7 +370,7 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 				unsigned pixel_count = 0;
 
 				for (int y = 0; y < hrr; y++) {		
-					auto *bits = (FIRGBA16*)FreeImage_GetScanLine(dib, hrr - 1 - y);
+					auto *bits = (FIRGBA16*)FreeImage_GetScanLine(dib.get(), hrr - 1 - y);
 
 					for (int x = 0; x < wrr; x++) {
 						const unsigned pixel_pos = pixel_count / wrr * wr + pixel_count % wrr;
@@ -400,14 +398,12 @@ FIBITMAP* J2KImageToFIBITMAP(int format_id, const opj_image_t *image, FIBOOL hea
 			}
 		}
 
-		return dib;
+		return dib.release();
 
 	} catch(const char *text) {
-		if (dib) FreeImage_Unload(dib);
 		FreeImage_OutputMessageProc(format_id, text);
-		return nullptr;
 	}
-
+	return nullptr;
 }
 
 /**
