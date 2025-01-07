@@ -1379,6 +1379,125 @@ namespace fi
     };
 
 
+    class Plugin2
+    {
+    public:
+        static ImageFormat RegisterLocal(std::shared_ptr<Plugin2> plugin);
+        static bool ResetLocalPlugin(ImageFormat fif, std::shared_ptr<Plugin2> plugin, bool force = false);
+
+        virtual ~Plugin2() = default;
+
+        // Plugin2 API
+        virtual const char* FormatProc() { return nullptr; };
+        virtual const char* DescriptionProc() { return nullptr; };
+        virtual const char* ExtensionListProc() { return nullptr; };
+        virtual const char* RegExprProc() { return nullptr; };
+        virtual void* OpenProc(FreeImageIO* /*io*/, fi_handle /*handle*/, bool /*read*/) { return nullptr; };
+        virtual void CloseProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) {};
+        virtual uint32_t PageCountProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) { return 1U; };
+        virtual uint32_t PageCapabilityProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) { return 1U; };
+        virtual FIBITMAP* LoadProc(FreeImageIO* /*io*/, fi_handle /*handle*/, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) { return nullptr; };
+        virtual bool SaveProc(FreeImageIO* /*io*/, FIBITMAP* /*dib*/, fi_handle /*handle*/, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) { return false; };
+        virtual bool ValidateProc(FreeImageIO* /*io*/, fi_handle /*handle*/) { return false; };
+        virtual const char* MimeProc() { return nullptr; };
+        virtual bool SupportsExportBPPProc(uint32_t /*bpp*/) { return false; };
+        virtual bool SupportsExportTypeProc(FREE_IMAGE_TYPE /*type*/) { return false; };
+        virtual bool SupportsICCProfilesProc() { return false; };
+        virtual bool SupportsNoPixelsProc() { return false; };
+    };
+
+
+    namespace details {
+
+        class Plugin2Wrapper
+        {
+        public:
+            // catch any exception to not cross DLL boundry
+            static const char* FormatProc(void* ctx) try { return unwrap(ctx).FormatProc(); } catch (...) { return nullptr; };
+            static const char* DescriptionProc(void* ctx) try { return unwrap(ctx).DescriptionProc(); } catch (...) { return nullptr; };
+            static const char* ExtensionListProc(void* ctx) try { return unwrap(ctx).ExtensionListProc(); } catch (...) { return nullptr; };
+            static const char* RegExprProc(void* ctx) try { return unwrap(ctx).RegExprProc(); } catch (...) { return nullptr; };
+            static void* OpenProc(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read) try { return unwrap(ctx).OpenProc(io, handle, read); } catch (...) { return nullptr; };
+            static void CloseProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { unwrap(ctx).CloseProc(io, handle, data); } catch (...) { };
+            static uint32_t PageCountProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCountProc(io, handle, data); } catch (...) { return 1U; };
+            static uint32_t PageCapabilityProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCapabilityProc(io, handle, data); } catch (...) { return 1U; };
+            static FIBITMAP* LoadProc(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).LoadProc(io, handle, page, flags, data); } catch (...) { return nullptr; };
+            static FIBOOL SaveProc(void* ctx, FreeImageIO* io, FIBITMAP* dib, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).SaveProc(io, dib, handle, page, flags, data); } catch (...) { return FALSE; };
+            static FIBOOL ValidateProc(void* ctx, FreeImageIO* io, fi_handle handle) try { return unwrap(ctx).ValidateProc(io, handle); } catch (...) { return FALSE; };
+            static const char* MimeProc(void* ctx) try { return unwrap(ctx).MimeProc(); } catch (...) { return nullptr; };
+            static FIBOOL SupportsExportBPPProc(void* ctx, uint32_t bpp) try { return unwrap(ctx).SupportsExportBPPProc(bpp); } catch (...) { return FALSE; };
+            static FIBOOL SupportsExportTypeProc(void* ctx, FREE_IMAGE_TYPE type) try { return unwrap(ctx).SupportsExportTypeProc(type); } catch (...) { return FALSE; };
+            static FIBOOL SupportsICCProfilesProc(void* ctx) try { return unwrap(ctx).SupportsICCProfilesProc(); } catch (...) { return FALSE; };
+            static FIBOOL SupportsNoPixelsProc(void* ctx) try { return unwrap(ctx).SupportsNoPixelsProc(); } catch (...) { return FALSE; };
+
+            static void DLL_CALLCONV ReleaseProc(void* ctx) {
+                delete static_cast<Plugin2Wrapper*>(ctx);
+            }
+
+            static FIBOOL DLL_CALLCONV InitProc(::Plugin2* plugin, void* ctx) {
+                if (!plugin) {
+                    return FALSE;
+                }
+
+                using This = fi::details::Plugin2Wrapper;
+                plugin->format_proc = &This::FormatProc;
+                plugin->description_proc = &This::DescriptionProc;
+                plugin->extension_proc = &This::ExtensionListProc;
+                plugin->regexpr_proc = &This::RegExprProc;
+                plugin->open_proc = &This::OpenProc;
+                plugin->close_proc = &This::CloseProc;
+                plugin->pagecount_proc = &This::PageCountProc;
+                plugin->pagecapability_proc = &This::PageCapabilityProc;
+                plugin->load_proc = &This::LoadProc;
+                plugin->save_proc = &This::SaveProc;
+                plugin->validate_proc = &This::ValidateProc;
+                plugin->mime_proc = &This::MimeProc;
+                plugin->supports_export_bpp_proc = &This::SupportsExportBPPProc;
+                plugin->supports_export_type_proc = &This::SupportsExportTypeProc;
+                plugin->supports_icc_profiles_proc = &This::SupportsICCProfilesProc;
+                plugin->supports_no_pixels_proc = &This::SupportsNoPixelsProc;
+                plugin->release_proc = &This::ReleaseProc;
+
+                return TRUE;
+            }
+
+            Plugin2Wrapper(std::shared_ptr<fi::Plugin2> pluginImpl)
+                : mPluginImpl(std::move(pluginImpl))
+            { 
+                if (!mPluginImpl) {
+                    throw std::logic_error("Plugin is empty");
+                }
+            }
+
+            ~Plugin2Wrapper() = default;
+
+        private:
+            static fi::Plugin2& unwrap(void* ctx) { return *(static_cast<Plugin2Wrapper*>(ctx)->mPluginImpl); };
+
+            std::shared_ptr<fi::Plugin2> mPluginImpl;
+        };
+
+
+    } // namespace details
+
+    inline
+    ImageFormat Plugin2::RegisterLocal(std::shared_ptr<Plugin2> plugin)
+    {
+        auto wrapper = std::make_unique<details::Plugin2Wrapper>(std::move(plugin));
+        return static_cast<ImageFormat>(FreeImage_RegisterLocalPlugin2(&details::Plugin2Wrapper::InitProc, wrapper.release()));
+    }
+
+    inline
+    bool Plugin2::ResetLocalPlugin(ImageFormat fif, std::shared_ptr<Plugin2> plugin, bool force)
+    {
+        if (plugin) {
+            auto wrapper = std::make_unique<details::Plugin2Wrapper>(std::move(plugin));
+            return FreeImage_ResetLocalPlugin2(static_cast<FREE_IMAGE_FORMAT>(fif), &details::Plugin2Wrapper::InitProc, wrapper.release(), static_cast<FIBOOL>(force));
+        }
+        else {
+            return FreeImage_ResetLocalPlugin2(static_cast<FREE_IMAGE_FORMAT>(fif), nullptr, nullptr, static_cast<FIBOOL>(force));
+        }
+    }
 
 } // fi
 
