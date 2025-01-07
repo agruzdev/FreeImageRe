@@ -735,10 +735,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// try to get JPEG embedded Exif metadata
 		if (dib && ((flags & RAW_PREVIEW) != RAW_PREVIEW)) {
-			FIBITMAP *metadata_dib = libraw_LoadEmbeddedPreview(RawProcessor, FIF_LOAD_NOPIXELS);
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> metadata_dib(libraw_LoadEmbeddedPreview(RawProcessor, FIF_LOAD_NOPIXELS), &FreeImage_Unload);
 			if (metadata_dib) {
-				FreeImage_CloneMetadata(dib.get(), metadata_dib);
-				FreeImage_Unload(metadata_dib);
+				FreeImage_CloneMetadata(dib.get(), metadata_dib.get());
 			}
 		}
 

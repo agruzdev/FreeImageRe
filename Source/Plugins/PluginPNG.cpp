@@ -105,7 +105,6 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	// XMP keyword
 	const char *g_png_xmp_keyword = "XML:com.adobe.xmp";
 
-	FITAG *tag{};
 	png_textp text_ptr{};
 	png_timep mod_time{};
 	int num_text = 0;
@@ -114,28 +113,25 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	if (png_get_text(png_ptr, info_ptr, &text_ptr, &num_text) > 0) {
 		for (int i = 0; i < num_text; i++) {
 			// create a tag
-			tag = FreeImage_CreateTag();
+			std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 			if (!tag) return FALSE;
 
 			uint32_t tag_length = (uint32_t) MAX(text_ptr[i].text_length, text_ptr[i].itxt_length);
 
-			FreeImage_SetTagLength(tag, tag_length);
-			FreeImage_SetTagCount(tag, tag_length);
-			FreeImage_SetTagType(tag, FIDT_ASCII);
-			FreeImage_SetTagValue(tag, text_ptr[i].text);
+			FreeImage_SetTagLength(tag.get(), tag_length);
+			FreeImage_SetTagCount(tag.get(), tag_length);
+			FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+			FreeImage_SetTagValue(tag.get(), text_ptr[i].text);
 
 			if (strcmp(text_ptr[i].key, g_png_xmp_keyword) == 0) {
 				// store the tag as XMP
-				FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
+				FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+				FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 			} else {
 				// store the tag as a comment
-				FreeImage_SetTagKey(tag, text_ptr[i].key);
-				FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
+				FreeImage_SetTagKey(tag.get(), text_ptr[i].key);
+				FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 			}
-			
-			// destroy the tag
-			FreeImage_DeleteTag(tag);
 		}
 	}
 
@@ -143,25 +139,22 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 	if (png_get_tIME(png_ptr, info_ptr, &mod_time)) {
 		char timestamp[32];
 		// create a tag
-		tag = FreeImage_CreateTag();
+		std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 		if (!tag) return FALSE;
 
 		// convert as 'yyyy:MM:dd hh:mm:ss'
 		snprintf(timestamp, std::size(timestamp), "%4d:%02d:%02d %2d:%02d:%02d", mod_time->year, mod_time->month, mod_time->day, mod_time->hour, mod_time->minute, mod_time->second);
 
 		uint32_t tag_length = (uint32_t)strlen(timestamp) + 1;
-		FreeImage_SetTagLength(tag, tag_length);
-		FreeImage_SetTagCount(tag, tag_length);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagID(tag, TAG_DATETIME);
-		FreeImage_SetTagValue(tag, timestamp);
+		FreeImage_SetTagLength(tag.get(), tag_length);
+		FreeImage_SetTagCount(tag.get(), tag_length);
+		FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+		FreeImage_SetTagID(tag.get(), TAG_DATETIME);
+		FreeImage_SetTagValue(tag.get(), timestamp);
 
 		// store the tag as Exif-TIFF
-		FreeImage_SetTagKey(tag, "DateTime");
-		FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, FreeImage_GetTagKey(tag), tag);
-
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
+		FreeImage_SetTagKey(tag.get(), "DateTime");
+		FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 	}
 
 	return TRUE;
@@ -742,7 +735,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// check if the bitmap contains transparency, if so enable it in the header
 
 			if (FreeImage_GetBPP(dib.get()) == 32) {
-				FreeImage_SetTransparent(dib.get(), (FIC_RGBALPHA == FreeImage_GetColorType(dib.get()))? TRUE: FALSE);
+				FreeImage_SetTransparent(dib.get(), FIC_RGBALPHA == FreeImage_GetColorType(dib.get()));
 			}
 
 			// cleanup

@@ -433,31 +433,27 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	uint8_t *profile = (uint8_t*)dataptr;
 
 	// read the comment
-	auto *value = (char*)malloc((length + 1) * sizeof(char));
-	if (!value) return FALSE;
+	std::unique_ptr<void, decltype(&free)> safeValue(malloc((length + 1) * sizeof(char)), &free);
+	if (!safeValue) return FALSE;
+	auto *value = static_cast<char*>(safeValue.get());
 	memcpy(value, profile, length);
 	value[length] = '\0';
 
 	bool bSuccess{};
 	// create a tag
-	if (auto *tag = FreeImage_CreateTag()) {
+	if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
 		unsigned int count = (unsigned int)length + 1;	// includes the null value
 
-		bSuccess = FreeImage_SetTagID(tag, JPEG_COM);
-		bSuccess = bSuccess && FreeImage_SetTagKey(tag, "Comment");
-		bSuccess = bSuccess && FreeImage_SetTagLength(tag, count);
-		bSuccess = bSuccess && FreeImage_SetTagCount(tag, count);
-		bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
-		bSuccess = bSuccess && FreeImage_SetTagValue(tag, value);
+		bSuccess = FreeImage_SetTagID(tag.get(), JPEG_COM);
+		bSuccess = bSuccess && FreeImage_SetTagKey(tag.get(), "Comment");
+		bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), count);
+		bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), count);
+		bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), value);
 
 		// store the tag
-		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
-
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
+		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 	}
-
-	free(value);
 
 	return bSuccess ? TRUE : FALSE;
 }
@@ -637,19 +633,16 @@ jpeg_read_xmp_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datale
 		length  -= xmp_signature_size;
 
 		// create a tag
-		if (auto *tag = FreeImage_CreateTag()) {
-			bSuccess = FreeImage_SetTagID(tag, JPEG_APP0+1);	// 0xFFE1
-			bSuccess = bSuccess && FreeImage_SetTagKey(tag, g_TagLib_XMPFieldName);
-			bSuccess = bSuccess && FreeImage_SetTagLength(tag, (uint32_t)length);
-			bSuccess = bSuccess && FreeImage_SetTagCount(tag, (uint32_t)length);
-			bSuccess = bSuccess && FreeImage_SetTagType(tag, FIDT_ASCII);
-			bSuccess = bSuccess && FreeImage_SetTagValue(tag, profile);
+		if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
+			bSuccess = FreeImage_SetTagID(tag.get(), JPEG_APP0+1);	// 0xFFE1
+			bSuccess = bSuccess && FreeImage_SetTagKey(tag.get(), g_TagLib_XMPFieldName);
+			bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), (uint32_t)length);
+			bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), (uint32_t)length);
+			bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+			bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), profile);
 			
 			// store the tag
-			bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag), tag);
-
-			// destroy the tag
-			FreeImage_DeleteTag(tag);
+			bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_XMP, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 		}
 	}
 
@@ -681,12 +674,10 @@ jpeg_read_jfxx(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 		{
 			// load the thumbnail
 			FIMEMORY* hmem = FreeImage_OpenMemory(const_cast<uint8_t*>(data), remaining);
-			FIBITMAP* thumbnail = FreeImage_LoadFromMemory(FIF_JPEG, hmem);
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> thumbnail(FreeImage_LoadFromMemory(FIF_JPEG, hmem), &FreeImage_Unload);
 			FreeImage_CloseMemory(hmem);
 			// store the thumbnail
-			FreeImage_SetThumbnail(dib, thumbnail);
-			// then delete it
-			FreeImage_Unload(thumbnail);
+			FreeImage_SetThumbnail(dib, thumbnail.get());
 			break;
 		}
 		case JFXX_TYPE_8bit:
@@ -1060,28 +1051,26 @@ static void
 store_size_info(FIBITMAP *dib, JDIMENSION width, JDIMENSION height) {
 	char buffer[256];
 	// create a tag
-	if (auto *tag = FreeImage_CreateTag()) {
+	if (std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag); tag) {
 		size_t length = 0;
 		// set the original width
 		snprintf(buffer, std::size(buffer), "%d", (int)width);
 		length = strlen(buffer) + 1;	// include the NULL/0 value
-		FreeImage_SetTagKey(tag, "OriginalJPEGWidth");
-		FreeImage_SetTagLength(tag, (uint32_t)length);
-		FreeImage_SetTagCount(tag, (uint32_t)length);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, buffer);
-		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
+		FreeImage_SetTagKey(tag.get(), "OriginalJPEGWidth");
+		FreeImage_SetTagLength(tag.get(), (uint32_t)length);
+		FreeImage_SetTagCount(tag.get(), (uint32_t)length);
+		FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+		FreeImage_SetTagValue(tag.get(), buffer);
+		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 		// set the original height
 		snprintf(buffer, std::size(buffer), "%d", (int)height);
 		length = strlen(buffer) + 1;	// include the NULL/0 value
-		FreeImage_SetTagKey(tag, "OriginalJPEGHeight");
-		FreeImage_SetTagLength(tag, (uint32_t)length);
-		FreeImage_SetTagCount(tag, (uint32_t)length);
-		FreeImage_SetTagType(tag, FIDT_ASCII);
-		FreeImage_SetTagValue(tag, buffer);
-		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag), tag);
-		// destroy the tag
-		FreeImage_DeleteTag(tag);
+		FreeImage_SetTagKey(tag.get(), "OriginalJPEGHeight");
+		FreeImage_SetTagLength(tag.get(), (uint32_t)length);
+		FreeImage_SetTagCount(tag.get(), (uint32_t)length);
+		FreeImage_SetTagType(tag.get(), FIDT_ASCII);
+		FreeImage_SetTagValue(tag.get(), buffer);
+		FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag.get()), tag.get());
 	}
 }
 
@@ -1153,8 +1142,6 @@ SupportsNoPixels() {
 static FIBITMAP * DLL_CALLCONV
 Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	if (handle) {
-		FIBITMAP *dib{};
-
 		FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 		// set up the jpeglib structures
@@ -1234,27 +1221,27 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			jpeg_start_decompress(&cinfo);
 
 			// step 5b: allocate dib and init header
-
+			std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 			if ((cinfo.output_components == 4) && (cinfo.out_color_space == JCS_CMYK)) {
 				// CMYK image
 				if ((flags & JPEG_CMYK) == JPEG_CMYK) {
 					// load as CMYK
-					dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 32, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 					if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
-					FreeImage_GetICCProfile(dib)->flags |= FIICC_COLOR_IS_CMYK;
+					FreeImage_GetICCProfile(dib.get())->flags |= FIICC_COLOR_IS_CMYK;
 				} else {
 					// load as CMYK and convert to RGB
-					dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+					dib.reset(FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 					if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 				}
 			} else {
 				// RGB or greyscale image
-				dib = FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 8 * cinfo.output_components, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK);
+				dib.reset(FreeImage_AllocateHeader(header_only, cinfo.output_width, cinfo.output_height, 8 * cinfo.output_components, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				if (!dib) throw FI_MSG_ERROR_DIB_MEMORY;
 
 				if (cinfo.output_components == 1) {
 					// build a greyscale palette
-					FIRGBA8 *colors = FreeImage_GetPalette(dib);
+					FIRGBA8 *colors = FreeImage_GetPalette(dib.get());
 
 					for (int i = 0; i < 256; i++) {
 						colors[i].red   = (uint8_t)i;
@@ -1265,24 +1252,24 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			}
 			if (scale_denom != 1) {
 				// store original size info if a scaling was requested
-				store_size_info(dib, cinfo.image_width, cinfo.image_height);
+				store_size_info(dib.get(), cinfo.image_width, cinfo.image_height);
 			}
 
 			// step 5c: handle metrices
 
 			if (cinfo.density_unit == 1) {
 				// dots/inch
-				FreeImage_SetDotsPerMeterX(dib, (unsigned) (((float)cinfo.X_density) / 0.0254000 + 0.5));
-				FreeImage_SetDotsPerMeterY(dib, (unsigned) (((float)cinfo.Y_density) / 0.0254000 + 0.5));
+				FreeImage_SetDotsPerMeterX(dib.get(), (unsigned) (((float)cinfo.X_density) / 0.0254000 + 0.5));
+				FreeImage_SetDotsPerMeterY(dib.get(), (unsigned) (((float)cinfo.Y_density) / 0.0254000 + 0.5));
 			} else if (cinfo.density_unit == 2) {
 				// dots/cm
-				FreeImage_SetDotsPerMeterX(dib, (unsigned) (cinfo.X_density * 100));
-				FreeImage_SetDotsPerMeterY(dib, (unsigned) (cinfo.Y_density * 100));
+				FreeImage_SetDotsPerMeterX(dib.get(), (unsigned) (cinfo.X_density * 100));
+				FreeImage_SetDotsPerMeterY(dib.get(), (unsigned) (cinfo.Y_density * 100));
 			}
 			
 			// step 6: read special markers
 			
-			read_markers(&cinfo, dib);
+			read_markers(&cinfo, dib.get());
 
 			// --- header only mode => clean-up and return
 
@@ -1290,7 +1277,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// release JPEG decompression object
 				jpeg_destroy_decompress(&cinfo);
 				// return header data
-				return dib;
+				return dib.release();
 			}
 
 			// step 7a: while (scan lines remain to be read) jpeg_read_scanlines(...);
@@ -1308,7 +1295,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				while (cinfo.output_scanline < cinfo.output_height) {
 					JSAMPROW src = buffer[0];
-					JSAMPROW dst = FreeImage_GetScanLine(dib, cinfo.output_height - cinfo.output_scanline - 1);
+					JSAMPROW dst = FreeImage_GetScanLine(dib.get(), cinfo.output_height - cinfo.output_scanline - 1);
 
 					jpeg_read_scanlines(&cinfo, buffer, 1);
 
@@ -1323,7 +1310,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				}
 				
 				// if original image is CMYK but is converted to RGB, remove ICC profile from Exif-TIFF metadata
-				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib, "InterColorProfile", nullptr);
+				FreeImage_SetMetadata(FIMD_EXIF_MAIN, dib.get(), "InterColorProfile", nullptr);
 
 			} else if ((cinfo.out_color_space == JCS_CMYK) && ((flags & JPEG_CMYK) == JPEG_CMYK)) {
 				// convert from LibJPEG CMYK to standard CMYK
@@ -1338,7 +1325,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				while (cinfo.output_scanline < cinfo.output_height) {
 					JSAMPROW src = buffer[0];
-					JSAMPROW dst = FreeImage_GetScanLine(dib, cinfo.output_height - cinfo.output_scanline - 1);
+					JSAMPROW dst = FreeImage_GetScanLine(dib.get(), cinfo.output_height - cinfo.output_scanline - 1);
 
 					jpeg_read_scanlines(&cinfo, buffer, 1);
 
@@ -1357,7 +1344,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// normal case (RGB or greyscale image)
 
 				while (cinfo.output_scanline < cinfo.output_height) {
-					JSAMPROW dst = FreeImage_GetScanLine(dib, cinfo.output_height - cinfo.output_scanline - 1);
+					JSAMPROW dst = FreeImage_GetScanLine(dib.get(), cinfo.output_height - cinfo.output_scanline - 1);
 
 					jpeg_read_scanlines(&cinfo, &dst, 1);
 				}
@@ -1367,7 +1354,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// LibJPEG "as is".
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-				SwapRedBlue32(dib);
+				SwapRedBlue32(dib.get());
 #endif
 			}
 
@@ -1381,18 +1368,17 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			// check for automatic Exif rotation
 			if (!header_only && ((flags & JPEG_EXIFROTATE) == JPEG_EXIFROTATE)) {
-				RotateExif(&dib);
+				auto *tmp(dib.release());
+				RotateExif(&tmp);
+				dib.reset(tmp);
 			}
 
 			// everything went well. return the loaded dib
 
-			return dib;
+			return dib.release();
 
 		} catch (const char *text) {
 			jpeg_destroy_decompress(&cinfo);
-			if (dib) {
-				FreeImage_Unload(dib);
-			}
 			if (text) {
 				FreeImage_OutputMessageProc(s_format_id, text);
 			}

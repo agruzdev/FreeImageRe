@@ -94,16 +94,14 @@ CalculateImageSize(FIBITMAP* icon_dib) {
 @return Returns the file offset for that image
 */
 static uint32_t 
-CalculateImageOffset(std::vector<FIBITMAP*>& vPages, int nIndex ) {
-	uint32_t	dwSize;
-
+CalculateImageOffset(const std::vector<std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)>> &vPages, int nIndex ) {
     // calculate the ICO header size
-    dwSize = sizeof(ICONHEADER); 
+    uint32_t dwSize = sizeof(ICONHEADER); 
     // add the ICONDIRENTRY's
     dwSize += (uint32_t)( vPages.size() * sizeof(ICONDIRENTRY) );
     // add the sizes of the previous images
     for (int k = 0; k < nIndex; k++) {
-		FIBITMAP *icon_dib = (FIBITMAP*)vPages[k];
+		auto *icon_dib = vPages[k].get();
 		dwSize += CalculateImageSize(icon_dib);
 	}
 
@@ -288,8 +286,6 @@ PageCount(FreeImageIO *io, fi_handle handle, void *data) {
 
 static FIBITMAP*
 LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_only) {
-	FIBITMAP *dib{};
-
 	// load the BITMAPINFOHEADER
 	FIBITMAPINFOHEADER bmih;
 	io->read_proc(&bmih, sizeof(FIBITMAPINFOHEADER), 1, handle);
@@ -306,7 +302,7 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 
 	// allocate memory for one icon
 
-	dib = FreeImage_AllocateHeader(header_only, width, height, bit_count);
+	std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeader(header_only, width, height, bit_count), &FreeImage_Unload);
 
 	if (!dib) {
 		return nullptr;
@@ -314,9 +310,9 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 
 	if (bmih.biBitCount <= 8) {
 		// read the palette data
-		io->read_proc(FreeImage_GetPalette(dib), CalculateUsedPaletteEntries(bit_count) * sizeof(FIRGBA8), 1, handle);
+		io->read_proc(FreeImage_GetPalette(dib.get()), CalculateUsedPaletteEntries(bit_count) * sizeof(FIRGBA8), 1, handle);
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
-		FIRGBA8 *pal = FreeImage_GetPalette(dib);
+		FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 		for (unsigned i = 0; i < CalculateUsedPaletteEntries(bit_count); i++) {
 			INPLACESWAP(pal[i].red, pal[i].blue);
 		}
@@ -325,16 +321,16 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 	
 	if (header_only) {
 		// header only mode
-		return dib;
+		return dib.release();
 	}
 
 	// read the icon
-	io->read_proc(FreeImage_GetBits(dib), height * pitch, 1, handle);
+	io->read_proc(FreeImage_GetBits(dib.get()), height * pitch, 1, handle);
 
 #ifdef FREEIMAGE_BIGENDIAN
 	if (bit_count == 16) {
 		for (int y = 0; y < height; y++) {
-			uint16_t *pixel = (uint16_t *)FreeImage_GetScanLine(dib, y);
+			uint16_t *pixel = (uint16_t *)FreeImage_GetScanLine(dib.get(), y);
 			for (int x = 0; x < width; x++) {
 				SwapShort(pixel);
 				pixel++;
@@ -345,7 +341,7 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 	if (bit_count == 24 || bit_count == 32) {
 		for (int y = 0; y < height; y++) {
-			uint8_t *pixel = FreeImage_GetScanLine(dib, y);
+			uint8_t *pixel = FreeImage_GetScanLine(dib.get(), y);
 			for (int x = 0; x < width; x++) {
 				INPLACESWAP(pixel[0], pixel[2]);
 				pixel += (bit_count>>3);
@@ -358,24 +354,23 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 	// convert to 32bpp and generate an alpha channel
 	// apply the AND mask only if the image is not 32 bpp
 	if (((flags & ICO_MAKEALPHA) == ICO_MAKEALPHA) && (bit_count < 32)) {
-		FIBITMAP *dib32 = FreeImage_ConvertTo32Bits(dib);
-		FreeImage_Unload(dib);
+		FIBITMAP *dib32 = FreeImage_ConvertTo32Bits(dib.get());
+		dib.reset(dib32);
 
-		if (!dib32) {
+		if (!dib) {
 			return nullptr;
 		}
 
 		int width_and	= WidthBytes(width);
-		auto *line_and	= (uint8_t *)malloc(width_and);
-
-		if (!line_and) {
-			FreeImage_Unload(dib32);
+		std::unique_ptr<void, decltype(&free)>safeLine(malloc(width_and), &free);
+		if (!safeLine) {
 			return nullptr;
 		}
+		auto *line_and = static_cast<uint8_t*>(safeLine.get());
 
 		//loop through each line of the AND-mask generating the alpha channel, invert XOR-mask
 		for (int y = 0; y < height; y++) {
-			FIRGBA8 *quad = (FIRGBA8 *)FreeImage_GetScanLine(dib32, y);
+			FIRGBA8 *quad = (FIRGBA8 *)FreeImage_GetScanLine(dib.get(), y);
 			io->read_proc(line_and, width_and, 1, handle);
 			for (int x = 0; x < width; x++) {
 				quad->alpha = (line_and[x>>3] & (0x80 >> (x & 0x07))) != 0 ? 0 : 0xFF;
@@ -387,12 +382,9 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 				quad++;
 			}
 		}
-		free(line_and);
-
-		return dib32;
 	}
 
-	return dib;
+	return dib.release();
 }
 
 static FIBITMAP * DLL_CALLCONV
@@ -404,17 +396,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	if (handle) {
-		FIBITMAP *dib{};
-
 		// get the icon header
 		ICONHEADER *icon_header = (ICONHEADER*)data;
 
 		if (icon_header) {
 			// load the icon descriptions
-			auto *icon_list = (ICONDIRENTRY*)malloc(icon_header->idCount * sizeof(ICONDIRENTRY));
-			if (!icon_list) {
+			std::unique_ptr<void, decltype(&free)> safeList(malloc(icon_header->idCount * sizeof(ICONDIRENTRY)), &free);
+			if (!safeList) {
 				return nullptr;
 			}
+			auto *icon_list = static_cast<ICONDIRENTRY*>(safeList.get());
 			io->seek_proc(handle, sizeof(ICONHEADER), SEEK_SET);
 			io->read_proc(icon_list, icon_header->idCount * sizeof(ICONDIRENTRY), 1, handle);
 #ifdef FREEIMAGE_BIGENDIAN
@@ -426,6 +417,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// seek to the start of the bitmap data for the icon
 				io->seek_proc(handle, icon_list[page].dwImageOffset, SEEK_SET);
 
+				FIBITMAP *dib{};
 				if ( IsPNG(io, handle) ) {
 					// Vista icon support
 					// see http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
@@ -438,12 +430,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					dib = LoadStandardIcon(io, handle, flags, header_only);
 				}
 
-				free(icon_list);
-
 				return dib;
 
 			} else {
-				free(icon_list);
 				FreeImage_OutputMessageProc(s_format_id, "Page doesn't exist");
 			}
 		} else {
@@ -546,10 +535,11 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	}
 #endif
 	// AND mask
-	auto *and_mask = (uint8_t*)malloc(size_and);
-	if (!and_mask) {
+	std::unique_ptr<void, decltype(&free)>safeMask(malloc(size_and), &free);
+	if (!safeMask) {
 		return FALSE;
 	}
+	auto *and_mask = static_cast<uint8_t*>(safeMask.get());
 
 	if (FreeImage_IsTransparent(dib)) {
 
@@ -648,7 +638,6 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	}
 
 	io->write_proc(and_mask, size_and, 1, handle);
-	free(and_mask);
 
 	return TRUE;
 }
@@ -656,7 +645,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
 	ICONHEADER *icon_header{};
-	std::vector<FIBITMAP*> vPages;
+	std::vector<std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)>> vPages;
 	int k;
 
 	if (!dib || !handle || !data) {
@@ -687,12 +676,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			if (!icon_dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
-			vPages.push_back(icon_dib);
+			vPages.emplace_back(icon_dib, &FreeImage_Unload);
 		}
 
 		// add the page
 		icon_dib = FreeImage_Clone(dib);
-		vPages.push_back(icon_dib);
+		vPages.emplace_back(icon_dib, &FreeImage_Unload);
 		icon_header->idCount++;
 
 		// write the header
@@ -710,13 +699,14 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		
 		// save the icon descriptions
 
-		auto *icon_list = static_cast<ICONDIRENTRY*>(calloc(icon_header->idCount, sizeof(ICONDIRENTRY)));
-		if (!icon_list) {
+		std::unique_ptr<void, decltype(&free)> safeList(calloc(icon_header->idCount, sizeof(ICONDIRENTRY)), &free);
+		if (!safeList) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
+		auto *icon_list = static_cast<ICONDIRENTRY*>(safeList.get());
 
 		for (k = 0; k < icon_header->idCount; k++) {
-			icon_dib = (FIBITMAP*)vPages[k];
+			icon_dib = vPages[k].get();
 
 			// convert internal format to ICONDIRENTRY
 			// take into account Vista icons whose size is 256x256
@@ -745,7 +735,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		uint32_t dwImageOffset = (uint32_t)io->tell_proc(handle);
 
 		for (k = 0; k < icon_header->idCount; k++) {
-			icon_dib = (FIBITMAP*)vPages[k];
+			icon_dib = vPages[k].get();
 			
 			if ((icon_list[k].bWidth == 0) && (icon_list[k].bHeight == 0)) {
 				// Vista icon support
@@ -773,22 +763,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		io->write_proc(icon_list, sizeof(ICONDIRENTRY) * icon_header->idCount, 1, handle);
 		io->seek_proc(handle, current_pos, SEEK_SET);
 
-		free(icon_list);
-
-		// free the vector class
-		for (k = 0; k < icon_header->idCount; k++) {
-			icon_dib = (FIBITMAP*)vPages[k];
-			FreeImage_Unload(icon_dib);
-		}
-
 		return TRUE;
 
 	} catch(const char *text) {
-		// free the vector class
-		for (size_t k = 0; k < vPages.size(); k++) {
-			auto *icon_dib = (FIBITMAP*)vPages[k];
-			FreeImage_Unload(icon_dib);
-		}
 		FreeImage_OutputMessageProc(s_format_id, text);
 		return FALSE;
 	}
