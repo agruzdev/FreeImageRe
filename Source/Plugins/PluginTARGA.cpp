@@ -1248,7 +1248,7 @@ saveRLE(FIBITMAP* dib, FreeImageIO* io, fi_handle handle) {
 		}//for width
 
 		// write line to disk
-		io->write_proc(line_begin.get(), 1, std::distance(line_begin.get(), line), handle);
+		io->write_proc(line_begin.get(), 1, static_cast<unsigned>(std::distance(line_begin.get(), line)), handle);
 
 	}//for height
 }
