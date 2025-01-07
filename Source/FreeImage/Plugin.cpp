@@ -163,7 +163,7 @@ private:
 		if (mPlugin->save_proc) {
 			return mPlugin->save_proc(io, dib, handle, page, flags, data);
 		}
-		return nullptr;
+		return false;
 	}
 
 	int DoGetPageCount(FreeImageIO* io, fi_handle handle, void* data) override {
@@ -300,7 +300,7 @@ private:
 		if (mPlugin->save_proc) {
 			return mPlugin->save_proc(mContext, io, dib, handle, page, flags, data);
 		}
-		return nullptr;
+		return false;
 	}
 
 	int DoGetPageCount(FreeImageIO* io, fi_handle handle, void* data) override {
