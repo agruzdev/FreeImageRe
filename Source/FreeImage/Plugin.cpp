@@ -411,6 +411,10 @@ PluginsRegistry::PluginsRegistry()
 #if FREEIMAGE_WITH_LIBJXR
 	Put(FIF_JXR, InitJXR);
 #endif
+#if FREEIMAGE_WITH_LIBHEIF
+	Put(FIF_HEIF, CreatePluginHEIF());
+	Put(FIF_AVIF, CreatepluginAVIF());
+#endif
 
 	mNextId = FIF_JXR + 1;
 }
@@ -426,6 +430,13 @@ bool PluginsRegistry::ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void
 		return (mPlugins.erase(fif) > 0);
 	}
 
+	// instert or assign new
+	std::unique_ptr<PluginNodeBase>& dst_node = mPlugins[fif];
+	if (dst_node && !force) {
+		// already in use
+		return false;
+	}
+
 	std::unique_ptr<PluginNodeBase> new_node{ nullptr };
 	try {
 		new_node = std::make_unique<PluginType_>(init_proc, ctx, fif, instance, format, description, extension, regexpr);
@@ -434,22 +445,8 @@ bool PluginsRegistry::ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void
 		// ToDo: report error here
 		return false;
 	}
-	if (!new_node->GetFormat()) {
-		return false;
-	}
 
-	std::unique_ptr<PluginNodeBase>& dst_node = mPlugins[fif];
-	if (!dst_node || (dst_node && force)) {
-		dst_node.swap(new_node);
-	}
-	else {
-		return false;
-	}
-
-	if (fif >= mNextId) {
-		mNextId = fif + 1;
-	}
-
+	dst_node.swap(new_node);
 	return true;
 }
 
@@ -463,13 +460,27 @@ bool PluginsRegistry::Put(FREE_IMAGE_FORMAT fif, FI_InitProc2 init_proc, void* c
 	return ResetImpl<PluginNodeV2>(fif, init_proc, ctx, force, instance);
 }
 
+bool PluginsRegistry::Put(FREE_IMAGE_FORMAT fif, std::unique_ptr<fi::Plugin2> plugin)
+{
+	if (!plugin) {
+		return ResetImpl<PluginNodeV2>(fif, nullptr, nullptr, false, nullptr);
+	}
+	auto wrapper = std::make_unique<fi::details::Plugin2Wrapper>(std::move(plugin));
+	const auto success = ResetImpl<PluginNodeV2>(fif, &fi::details::Plugin2Wrapper::InitProc, wrapper.get(), false, nullptr);
+	if (success) {
+		wrapper.release();
+	}
+	return success;
+}
+
 FREE_IMAGE_FORMAT PluginsRegistry::Append(FI_InitProc init_proc, void* instance, const char* format, const char* description, const char* extension, const char* regexpr)
 {
-	if (mNextId >= std::numeric_limits<std::underlying_type_t<FREE_IMAGE_FORMAT>>::max()) {
+	if (mNextId >= FIF_MAX_USER_ID) {
 		return FIF_UNKNOWN;
 	}
 	FREE_IMAGE_FORMAT curr_id = static_cast<FREE_IMAGE_FORMAT>(mNextId);
 	if (ResetImpl<PluginNodeV1>(curr_id, init_proc, /* ctx = */nullptr, /* force = */ false, instance, format, description, extension, regexpr)) {
+		++mNextId;
 		return curr_id;
 	}
 	return FIF_UNKNOWN;
@@ -477,11 +488,12 @@ FREE_IMAGE_FORMAT PluginsRegistry::Append(FI_InitProc init_proc, void* instance,
 
 FREE_IMAGE_FORMAT PluginsRegistry::Append(FI_InitProc2 init_proc, void* ctx, void* instance)
 {
-	if (mNextId >= std::numeric_limits<std::underlying_type_t<FREE_IMAGE_FORMAT>>::max()) {
+	if (mNextId >= FIF_MAX_USER_ID) {
 		return FIF_UNKNOWN;
 	}
 	FREE_IMAGE_FORMAT curr_id = static_cast<FREE_IMAGE_FORMAT>(mNextId);
 	if (ResetImpl<PluginNodeV2>(curr_id, init_proc, ctx, /* force = */ false, instance)) {
+		++mNextId;
 		return curr_id;
 	}
 	return FIF_UNKNOWN;
@@ -847,10 +859,27 @@ FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif) {
 // Plugin Access Functions
 // =====================================================================
 
+
+int DLL_CALLCONV 
+FreeImage_GetFIFCount2() {
+	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
+		return static_cast<int>(plugins->GetFifCount2());
+	}
+	return 0;
+}
+
+FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_GetFIFFromIndex(int idx) {
+	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
+		return plugins->GetFifFromIndex(idx);
+	}
+	return FIF_UNKNOWN;
+}
+
 int DLL_CALLCONV
 FreeImage_GetFIFCount() {
+	// Legacy behavior: FIF_JXR + registered plugins count
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		return static_cast<int>(plugins->GetFifCount());
+		return static_cast<int>(plugins->GetNextFif());
 	}
 	return 0;
 }
@@ -972,45 +1001,39 @@ FreeImage_FIFSupportsNoPixels(FREE_IMAGE_FORMAT fif) {
 
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFIFFromFilename(const char *filename) {
+	if (!filename) {
+		return FIF_UNKNOWN;
+	}
+
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		if (filename) {
-			const char* extension;
+		// get the proper extension if we received a filename
+		char* place = strrchr((char*)filename, '.');
+		const char* extension = (place ? ++place : filename);
 
-			// get the proper extension if we received a filename
+		// look for the extension in the plugin table
 
-			char* place = strrchr((char*)filename, '.');
-			extension = (place ? ++place : filename);
+		//for (int i = 0; i < FreeImage_GetFIFCount(); ++i) {
+		for (auto nodeIt = plugins->NodesCBegin(); nodeIt != plugins->NodesCEnd(); ++nodeIt) {
+			const auto& fif  = nodeIt->first;
+			const auto& node = nodeIt->second;
 
-			// look for the extension in the plugin table
+			if (node && node->IsEnabled()) {
 
-			for (int i = 0; i < FreeImage_GetFIFCount(); ++i) {
+				// compare the format id with the extension
+				if (FreeImage_stricmp(node->GetFormat(), extension) == 0) {
+					return fif;
+				}
 
-				auto node = plugins->FindFromFIF(static_cast<FREE_IMAGE_FORMAT>(i));
-				if (node && node->IsEnabled()) {
-
-					// compare the format id with the extension
-
-					if (FreeImage_stricmp(FreeImage_GetFormatFromFIF(static_cast<FREE_IMAGE_FORMAT>(i)), extension) == 0) {
-						return static_cast<FREE_IMAGE_FORMAT>(i);
-					}
-					else {
-						// make a copy of the extension list and split it
-
-						const char* extension_list = FreeImage_GetFIFExtensionList(static_cast<FREE_IMAGE_FORMAT>(i));
-						if (extension_list == nullptr) {
-							continue;
+				// make a copy of the extension list and split it
+				if (const char* extension_list = node->GetExtension()) {
+					auto copy = std::string(extension_list);
+					// get the first token
+					char* token = strtok(copy.data(), ",");
+					while (token) {
+						if (FreeImage_stricmp(token, extension) == 0) {
+							return fif;
 						}
-						auto copy = std::string(extension_list);
-
-						// get the first token
-
-						char* token = strtok(copy.data(), ",");
-						while (token) {
-							if (FreeImage_stricmp(token, extension) == 0) {
-								return static_cast<FREE_IMAGE_FORMAT>(i);
-							}
-							token = strtok(nullptr, ",");
-						}
+						token = strtok(nullptr, ",");
 					}
 				}
 			}

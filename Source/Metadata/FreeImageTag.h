@@ -477,8 +477,8 @@ extern "C" {
 
 // JPEG / JPEG-XR Exif profile (see Exif.cpp)
 // --------------------------------------------------------------------------
-FIBOOL jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned datalen);
-FIBOOL jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned length);
+FIBOOL jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *dataptr, unsigned datalen, bool optional_signature = false);
+FIBOOL jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned length, bool optional_signature = false);
 FIBOOL jpegxr_read_exif_profile(FIBITMAP *dib, const uint8_t *profile, unsigned length, unsigned file_offset);
 FIBOOL jpegxr_read_exif_gps_profile(FIBITMAP *dib, const uint8_t *profile, unsigned length, unsigned file_offset);
 

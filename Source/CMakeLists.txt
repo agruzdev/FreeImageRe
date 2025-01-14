@@ -60,6 +60,7 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_link_libraries(FreeImage PRIVATE LibPybind ${Python3_LIBRARIES})
 endif()
 
+target_include_directories(FreeImage PRIVATE ${CMAKE_SOURCE_DIR}/3rdParty/Yato/include)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 
 if (FREEIMAGE_WITH_LIBOPENEXR)
@@ -102,6 +103,12 @@ if (FREEIMAGE_WITH_LIBRAW)
     target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBRAW=1")
     target_link_libraries(FreeImage PRIVATE LibRAW)
     list(APPEND freeimage_plugins Plugins/PluginRAW.cpp)
+endif()
+
+if (FREEIMAGE_WITH_LIBHEIF)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBHEIF=1")
+    target_link_libraries(FreeImage PRIVATE LibHEIF)
+    list(APPEND freeimage_plugins Plugins/PluginHEIF.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBJXR)

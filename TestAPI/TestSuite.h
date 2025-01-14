@@ -103,7 +103,8 @@ void testFindMinMax();
 void testTmoClamp();
 void testTmoLinear();
 void testHistogram();
-
+void testHeif(const char* path);
+void testAvif(const char* path);
 
 #endif // TEST_FREEIMAGE_API_H
 

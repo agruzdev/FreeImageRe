@@ -1484,7 +1484,11 @@ namespace fi
     ImageFormat Plugin2::RegisterLocal(std::shared_ptr<Plugin2> plugin)
     {
         auto wrapper = std::make_unique<details::Plugin2Wrapper>(std::move(plugin));
-        return static_cast<ImageFormat>(FreeImage_RegisterLocalPlugin2(&details::Plugin2Wrapper::InitProc, wrapper.release()));
+        const auto fif = FreeImage_RegisterLocalPlugin2(&details::Plugin2Wrapper::InitProc, wrapper.get());
+        if (fif != FIF_UNKNOWN) {
+            wrapper.release();  // ownership is transferred
+        }
+        return static_cast<ImageFormat>(fif);
     }
 
     inline
@@ -1492,7 +1496,11 @@ namespace fi
     {
         if (plugin) {
             auto wrapper = std::make_unique<details::Plugin2Wrapper>(std::move(plugin));
-            return FreeImage_ResetLocalPlugin2(static_cast<FREE_IMAGE_FORMAT>(fif), &details::Plugin2Wrapper::InitProc, wrapper.release(), static_cast<FIBOOL>(force));
+            const bool success = FreeImage_ResetLocalPlugin2(static_cast<FREE_IMAGE_FORMAT>(fif), &details::Plugin2Wrapper::InitProc, wrapper.get(), static_cast<FIBOOL>(force));
+            if (success) {
+                wrapper.release(); // ownership is transferred
+            }
+            return success;
         }
         else {
             return FreeImage_ResetLocalPlugin2(static_cast<FREE_IMAGE_FORMAT>(fif), nullptr, nullptr, static_cast<FIBOOL>(force));

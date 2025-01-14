@@ -62,6 +62,11 @@ if (FREEIMAGE_WITH_LIBRAW)
     include(${CMAKE_SOURCE_DIR}/cmake/dependency.raw.cmake)
 endif()
 
+option(FREEIMAGE_WITH_LIBHEIF "Compile with the LibHEIF backend" ON)
+if (FREEIMAGE_WITH_LIBHEIF)
+    include(${CMAKE_SOURCE_DIR}/cmake/dependency.heif.cmake)
+endif()
+
 option(FREEIMAGE_WITH_PYTHON_BINDINGS "Build pythin bindings" OFF)
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     find_package(Python3 COMPONENTS Development REQUIRED)

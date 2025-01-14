@@ -372,6 +372,11 @@ FI_STRUCT (FIICCPROFILE) {
 
 // Important enums ----------------------------------------------------------
 
+/**
+* FIF added by FreeImage_RegisterLocalPlugin (and similar methods) cannot be greater than FIF_MAX_USER_ID
+*/
+#define FIF_MAX_USER_ID 1000000000
+
 /** I/O image format identifiers.
 */
 FI_ENUM(FREE_IMAGE_FORMAT) {
@@ -413,7 +418,9 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_PICT	= 33,
 	FIF_RAW		= 34,
 	FIF_WEBP	= 35,
-	FIF_JXR		= 36
+	FIF_JXR		= 36,
+	FIF_HEIF	= FIF_MAX_USER_ID + 1,
+	FIF_AVIF,
 };
 
 /** Image type used in FreeImage.
@@ -931,6 +938,25 @@ DLL_API FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_RegisterLocalPlugin2(FI_InitPro
  */
 DLL_API FIBOOL DLL_CALLCONV FreeImage_ResetLocalPlugin2(FREE_IMAGE_FORMAT fif, FI_InitProc2 proc_address, void* ctx FI_DEFAULT(0), FIBOOL force FI_DEFAULT(FALSE));
 
+
+/**
+* Returns count of all registered plugins.
+* Use FIFITERATOR interface for enumerating all formats.
+* Map index to actual FREE_IMAGE_FORMAT via FreeImage_IndexToFIF.
+* Usage:
+* for (int idx = 0; idx < FreeImage_GetFIFCount2(); ++idx) {
+*     FREE_IMAGE_FORMAT fif = FreeImage_IndexToFIF(idx);
+*     const char* desc = FreeImage_GetFIFDescription(fif);
+* }
+*/
+DLL_API int DLL_CALLCONV FreeImage_GetFIFCount2(void);
+DLL_API FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_GetFIFFromIndex(int idx);
+
+/**
+* Legacy behaviour.
+* Returns count of FIF_JXR + user registered plugins. Ignores all plugins with fif >= FIF_MAX_USER_ID.
+* Use FIFITERATOR interface for enumerating all formats.
+*/
 DLL_API int DLL_CALLCONV FreeImage_GetFIFCount(void);
 DLL_API int DLL_CALLCONV FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable);
 DLL_API int DLL_CALLCONV FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif);

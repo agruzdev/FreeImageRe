@@ -97,4 +97,5 @@ Version 0.3:
 
 Version 0.4:
  - Building with libjpeg-turbo by default
-
+ - Introduced a new Plugin2 API for plugins with state
+ - Added a limited support for HEIC and AVIF formats

@@ -29,7 +29,7 @@
 
 #include <memory>
 #include <unordered_map>
-#include "FreeImage.h"
+#include "FreeImage.hpp"
 #include "Utilities.h"
 
 
@@ -227,6 +227,11 @@ private:
 class PluginsRegistry
 {
 public:
+	using PluginsMap = std::map<FREE_IMAGE_FORMAT, std::unique_ptr<PluginNodeBase>>;
+	using PluginNodeIterator = typename PluginsMap::iterator;
+	using PluginNodeConstIterator = typename PluginsMap::const_iterator;
+
+
 	PluginsRegistry();
 	~PluginsRegistry();
 
@@ -237,7 +242,8 @@ public:
 	PluginsRegistry& operator=(PluginsRegistry&&) = delete;
 	
 	bool Put(FREE_IMAGE_FORMAT fif, FI_InitProc init_proc, bool force = false, void* instance = nullptr, const char* format = 0, const char* description = 0, const char* extension = 0, const char* regexpr = 0);
-	bool Put(FREE_IMAGE_FORMAT fif, FI_InitProc2 init_proc, void* ctx, bool force = false, void* instance = nullptr);
+	bool Put(FREE_IMAGE_FORMAT fif, FI_InitProc2 init_proc, void* ctx = nullptr, bool force = false, void* instance = nullptr);
+	bool Put(FREE_IMAGE_FORMAT fif, std::unique_ptr<fi::Plugin2> plugin);
 
 	FREE_IMAGE_FORMAT Append(FI_InitProc init_proc, void* instance = nullptr, const char* format = 0, const char* description = 0, const char* extension = 0, const char* regexpr = 0);
 	FREE_IMAGE_FORMAT Append(FI_InitProc2 init_proc, void* ctx = nullptr, void* instance = nullptr);
@@ -250,9 +256,25 @@ public:
 
 	PluginNodeBase* FindFromFIF(FREE_IMAGE_FORMAT fif) const;
 
-	size_t GetFifCount() const
-	{
-		return mNextId;
+	PluginNodeConstIterator NodesCBegin() const {
+		return mPlugins.cbegin();
+	}
+
+	PluginNodeConstIterator NodesCEnd() const {
+		return mPlugins.cend();
+	}
+
+	size_t GetNextFif() const {
+		return mPlugins.size();
+	}
+
+	size_t GetFifCount2() const {
+		return mPlugins.size();
+	}
+
+	FREE_IMAGE_FORMAT GetFifFromIndex(size_t index) const {
+		// ToDo: consider refactoring to a O(1) complexity
+		return std::next(mPlugins.cbegin(), index)->first;
 	}
 
 private:
@@ -260,7 +282,8 @@ private:
 	bool ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void* ctx, bool force, void* instance,
 		const char* format = nullptr, const char* description = nullptr, const char* extension = nullptr, const char* regexpr = nullptr);
 
-	std::unordered_map<FREE_IMAGE_FORMAT, std::unique_ptr<PluginNodeBase>> mPlugins{ };
+
+	PluginsMap mPlugins{ };
 	int32_t mNextId = 0;
 };
 
@@ -366,5 +389,7 @@ void DLL_CALLCONV InitRAW(Plugin *plugin, int format_id);
 void DLL_CALLCONV InitJNG(Plugin *plugin, int format_id);
 void DLL_CALLCONV InitWEBP(Plugin *plugin, int format_id);
 void DLL_CALLCONV InitJXR(Plugin *plugin, int format_id);
+std::unique_ptr<fi::Plugin2> CreatePluginHEIF();
+std::unique_ptr<fi::Plugin2> CreatepluginAVIF();
 
 #endif //!PLUGIN_H

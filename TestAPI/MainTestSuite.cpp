@@ -116,6 +116,13 @@ int main(int argc, char *argv[]) {
 	testMemIO("exif.jxr");
 #endif
 
+#if FREEIMAGE_WITH_LIBHEIF
+	testHeif("exif.heic");
+	testAvif("exif.avif");
+	//testHeif("C:/Users/alexg/OneDrive/Рабочий стол/Test/shelf-christmas-decoration.heic");
+	//testHeif("C:/Users/alexg/OneDrive/Рабочий стол/Test/test_u8.heic");
+#endif
+
 #if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG
 	// test loading header only
 	testHeaderOnly();

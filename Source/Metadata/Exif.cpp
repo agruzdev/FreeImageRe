@@ -818,7 +818,7 @@ Read and decode JPEG_APP1 marker (Exif profile)
 @return Returns TRUE if successful, FALSE otherwise
 */
 FIBOOL  
-jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length) {
+jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length, bool optional_signature) {
     // marker identifying string for Exif = "Exif\0\0"
     uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 	uint8_t lsb_first[4] = { 0x49, 0x49, 0x2A, 0x00 };		// Classic TIFF signature - little-endian order
@@ -829,13 +829,15 @@ jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length) {
 	uint8_t *pbProfile = (uint8_t*)data;
 
 	// verify the identifying string
-	if (memcmp(exif_signature, pbProfile, sizeof(exif_signature)) == 0) {
+	const bool found_signature = (memcmp(exif_signature, pbProfile, sizeof(exif_signature)) == 0);
+	if (optional_signature || found_signature) {
 		// This is an Exif profile
 		// should contain a TIFF header with up to 2 IFDs (IFD stands for 'Image File Directory')
 		// 0th IFD : the image attributes, 1st IFD : may be used for thumbnail
-
-		pbProfile += sizeof(exif_signature);
-		dwProfileLength -= sizeof(exif_signature);
+		if (found_signature) {
+			pbProfile += sizeof(exif_signature);
+			dwProfileLength -= sizeof(exif_signature);
+		}
 
 		// read the TIFF header (8 bytes)
 
@@ -893,12 +895,12 @@ Read JPEG_APP1 marker (Exif profile)
 @return Returns TRUE if successful, FALSE otherwise
 */
 FIBOOL  
-jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned length) {
+jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned length, bool optional_signature) {
     // marker identifying string for Exif = "Exif\0\0"
     uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	// verify the identifying string
-	if (memcmp(exif_signature, profile, sizeof(exif_signature)) != 0) {
+	if (!optional_signature && (memcmp(exif_signature, profile, sizeof(exif_signature)) != 0)) {
 		// not an Exif profile
 		return FALSE;
 	}
