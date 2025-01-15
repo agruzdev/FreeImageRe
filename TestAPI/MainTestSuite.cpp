@@ -117,10 +117,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if FREEIMAGE_WITH_LIBHEIF
-	testHeif("exif.heic");
-	testAvif("exif.avif");
-	//testHeif("C:/Users/alexg/OneDrive/Рабочий стол/Test/shelf-christmas-decoration.heic");
-	//testHeif("C:/Users/alexg/OneDrive/Рабочий стол/Test/test_u8.heic");
+	testHeif(FIF_HEIF, "exif.heic", "heif_out.heic");
+	testHeif(FIF_AVIF, "exif.avif", "avif_out.avif");
 #endif
 
 #if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG

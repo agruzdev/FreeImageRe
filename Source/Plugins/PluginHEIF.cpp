@@ -18,6 +18,7 @@
 #include "Utilities.h"
 #include "Metadata/FreeImageTag.h"
 
+#include <array>
 #include "yato/types.h"
 #include "yato/finally.h"
 #include <libheif/heif.h>
@@ -93,6 +94,7 @@ public:
         heif_get_version_number_major_f = LoadSymbol<decltype(&::heif_get_version_number_major)>("heif_get_version_number_major");
         heif_get_version_number_minor_f = LoadSymbol<decltype(&::heif_get_version_number_minor)>("heif_get_version_number_minor");
         heif_get_version_number_maintenance_f = LoadSymbol<decltype(&::heif_get_version_number_maintenance)>("heif_get_version_number_maintenance");
+        heif_read_main_brand_f = LoadSymbol<decltype(&::heif_read_main_brand)>("heif_read_main_brand", /*required=*/false);
         heif_context_alloc_f = LoadSymbol<decltype(&::heif_context_alloc)>("heif_context_alloc");
         heif_context_free_f = LoadSymbol<decltype(&::heif_context_free)>("heif_context_free");
         heif_context_read_from_reader_f = LoadSymbol<decltype(&::heif_context_read_from_reader)>("heif_context_read_from_reader");
@@ -145,6 +147,7 @@ public:
     decltype(&::heif_get_version_number_major) heif_get_version_number_major_f{ nullptr };
     decltype(&::heif_get_version_number_minor) heif_get_version_number_minor_f{ nullptr };
     decltype(&::heif_get_version_number_maintenance) heif_get_version_number_maintenance_f{ nullptr };
+    decltype(&::heif_read_main_brand) heif_read_main_brand_f{ nullptr };
     decltype(&::heif_context_alloc) heif_context_alloc_f{ nullptr };
     decltype(&::heif_context_free) heif_context_free_f{ nullptr };
     decltype(&::heif_context_read_from_reader) heif_context_read_from_reader_f{ nullptr };
@@ -503,7 +506,31 @@ public:
         return true;
     }
 
-    //virtual bool ValidateProc(FreeImageIO* /*io*/, fi_handle /*handle*/) { return false; }
+    bool ValidateProc(FreeImageIO* io, fi_handle handle) override {
+        if (mLibHeif->heif_read_main_brand_f) {
+
+            heif_brand2 targetBrand{};
+            switch (mMode) {
+            default:
+            case Mode::eHeif:
+                targetBrand = heif_brand2_heic;
+                break;
+            case Mode::eAvif:
+                targetBrand = heif_brand2_avif;
+                break;
+            }
+
+            std::array<uint8_t, 12> header = {};
+            const unsigned readCount = io->read_proc(header.data(), 1U, header.size(), handle);
+            if (readCount >= 12) {
+                if (targetBrand == mLibHeif->heif_read_main_brand_f(header.data(), yato::narrow_cast<int>(readCount))) {
+                    return true;
+                }
+            }
+        }
+        return false; 
+    }
+
     //virtual bool SupportsExportBPPProc(uint32_t /*bpp*/) { return false; };
     //virtual bool SupportsExportTypeProc(FREE_IMAGE_TYPE /*type*/) { return false; };
     //virtual bool SupportsICCProfilesProc() { return false; };

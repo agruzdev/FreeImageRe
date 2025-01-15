@@ -1011,19 +1011,12 @@ FreeImage_GetFIFFromFilename(const char *filename) {
 		const char* extension = (place ? ++place : filename);
 
 		// look for the extension in the plugin table
-
-		//for (int i = 0; i < FreeImage_GetFIFCount(); ++i) {
-		for (auto nodeIt = plugins->NodesCBegin(); nodeIt != plugins->NodesCEnd(); ++nodeIt) {
-			const auto& fif  = nodeIt->first;
-			const auto& node = nodeIt->second;
-
+		for (const auto& [fif, node] : plugins->NodesCRange()) {
 			if (node && node->IsEnabled()) {
-
 				// compare the format id with the extension
 				if (FreeImage_stricmp(node->GetFormat(), extension) == 0) {
 					return fif;
 				}
-
 				// make a copy of the extension list and split it
 				if (const char* extension_list = node->GetExtension()) {
 					auto copy = std::string(extension_list);

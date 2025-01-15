@@ -27,22 +27,18 @@
 // Local test functions
 // ----------------------------------------------------------
 
-void testHeif(const char *src_file) 
+void testHeif(FREE_IMAGE_FORMAT fif, const char* src_path, const char* dst_path)
 {
-	std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> img_heic{ FreeImage_Load(FIF_HEIF, src_file, 0), &::FreeImage_Unload };
+	auto detected_fif = FreeImage_GetFIFFromFilename(src_path);
+	assert(detected_fif == fif);
+
+	detected_fif = FreeImage_GetFileType(src_path);
+	assert(detected_fif == fif);
+
+	std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> img_heic{ FreeImage_Load(fif, src_path, 0), &::FreeImage_Unload };
 	assert(img_heic != nullptr);
-	std::cout << "heic size = " << FreeImage_GetWidth(img_heic.get()) << "x" << FreeImage_GetHeight(img_heic.get()) << std::endl;
+	std::cout << "Test HEIF " << fif << ", size = " << FreeImage_GetWidth(img_heic.get()) << "x" << FreeImage_GetHeight(img_heic.get()) << std::endl;
 
-	const bool success = FreeImage_Save(FIF_HEIF, img_heic.get(), "heic_out.heic");
-	assert(success);
-}
-
-void testAvif(const char* src_file)
-{
-	std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> img_heic{ FreeImage_Load(FIF_AVIF, src_file, 0), &::FreeImage_Unload };
-	assert(img_heic != nullptr);
-	std::cout << "avis size = " << FreeImage_GetWidth(img_heic.get()) << "x" << FreeImage_GetHeight(img_heic.get()) << std::endl;
-
-	const bool success = FreeImage_Save(FIF_AVIF, img_heic.get(), "avif_out.avif");
+	const bool success = FreeImage_Save(fif, img_heic.get(), dst_path);
 	assert(success);
 }

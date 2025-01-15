@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include "yato/range.h"
 #include "FreeImage.hpp"
 #include "Utilities.h"
 
@@ -262,6 +263,10 @@ public:
 
 	PluginNodeConstIterator NodesCEnd() const {
 		return mPlugins.cend();
+	}
+
+	yato::range<PluginNodeConstIterator> NodesCRange() const {
+		return yato::make_range(NodesCBegin(), NodesCEnd());
 	}
 
 	size_t GetNextFif() const {

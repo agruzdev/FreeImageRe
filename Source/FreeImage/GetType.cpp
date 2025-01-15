@@ -35,25 +35,25 @@
 
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFileTypeFromHandle(FreeImageIO *io, fi_handle handle, int size) {
+	FREE_IMAGE_FORMAT deducedFif{ FIF_UNKNOWN };
 	if (handle) {
-		int fif_count = FreeImage_GetFIFCount();
-
-		for (int i = 0; i < fif_count; ++i) {
-			FREE_IMAGE_FORMAT fif = (FREE_IMAGE_FORMAT)i;
-			if (FreeImage_ValidateFIF(fif, io, handle)) {
-				if (fif == FIF_TIFF) {
-					// many camera raw files use a TIFF signature ...
-					// ... try to revalidate against FIF_RAW (even if it breaks the code genericity)
-					if (FreeImage_ValidateFIF(FIF_RAW, io, handle)) {
-						return FIF_RAW;
-					}
-				}
-				return fif;
+		for (const auto& [fif, node] : PluginsRegistrySingleton::Instance()->NodesCRange()) {
+			if (node && node->IsEnabled() && node->Validate(io, handle)) {
+				deducedFif = fif;
+				break;
 			}
 		}
 	}
 
-	return FIF_UNKNOWN;
+	if (deducedFif == FIF_TIFF) {
+		// many camera raw files use a TIFF signature ...
+		// ... try to revalidate against FIF_RAW (even if it breaks the code genericity)
+		if (FreeImage_ValidateFIF(FIF_RAW, io, handle)) {
+			deducedFif = FIF_RAW;
+		}
+	}
+
+	return deducedFif;
 }
 
 // =====================================================================
