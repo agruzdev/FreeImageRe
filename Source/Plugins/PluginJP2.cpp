@@ -303,11 +303,11 @@ InitJP2(Plugin *plugin, int format_id) {
 }
 
 
-FIDEPENDENCY MakeJpeg2kDependencyInfo() {
-	FIDEPENDENCY info{};
-	info.name = "OpenJPEG";
-	info.fullVersion = FI_QUOTE(OPJ_VERSION_MAJOR) "." FI_QUOTE(OPJ_VERSION_MINOR) "." FI_QUOTE(OPJ_VERSION_BUILD);
-	info.majorVersion = OPJ_VERSION_MAJOR;
-	info.minorVersion = OPJ_VERSION_MINOR;
+std::unique_ptr<FIDEPENDENCY> MakeJpeg2kDependencyInfo() {
+	auto info = std::make_unique<FIDEPENDENCY>();
+	info->name = "OpenJPEG";
+	info->fullVersion = FI_QUOTE(OPJ_VERSION_MAJOR) "." FI_QUOTE(OPJ_VERSION_MINOR) "." FI_QUOTE(OPJ_VERSION_BUILD);
+	info->majorVersion = OPJ_VERSION_MAJOR;
+	info->minorVersion = OPJ_VERSION_MINOR;
 	return info;
 }

@@ -1071,11 +1071,11 @@ InitPNG(Plugin *plugin, int format_id) {
 }
 
 
-FIDEPENDENCY MakePngDependencyInfo() {
-	FIDEPENDENCY info{};
-	info.name = "libpng";
-	info.fullVersion = PNG_LIBPNG_VER_STRING;
-	info.majorVersion = PNG_LIBPNG_VER_MAJOR;
-	info.minorVersion = PNG_LIBPNG_VER_MINOR;
+std::unique_ptr<FIDEPENDENCY> MakePngDependencyInfo() {
+	auto info = std::make_unique<FIDEPENDENCY>();
+	info->name = "libpng";
+	info->fullVersion = PNG_LIBPNG_VER_STRING;
+	info->majorVersion = PNG_LIBPNG_VER_MAJOR;
+	info->minorVersion = PNG_LIBPNG_VER_MINOR;
 	return info;
 }

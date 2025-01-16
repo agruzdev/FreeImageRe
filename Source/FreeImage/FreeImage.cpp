@@ -110,23 +110,25 @@ FreeImageRe_GetVersionNumbers(int* major, int* minor) {
 }
 
 // Forward declaration for version functions
-FIDEPENDENCY MakePngDependencyInfo();
-FIDEPENDENCY MakeJpegDependencyInfo();
-FIDEPENDENCY MakeJpeg2kDependencyInfo();
-FIDEPENDENCY MakeExrDependencyInfo();
-FIDEPENDENCY MakeTiffDependencyInfo();
-FIDEPENDENCY MakeRawDependencyInfo();
-FIDEPENDENCY MakeWebpDependencyInfo();
-FIDEPENDENCY MakeJxrDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakePngDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeJpegDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeJpeg2kDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeExrDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeTiffDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeRawDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeWebpDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeJxrDependencyInfo();
+std::unique_ptr<FIDEPENDENCY> MakeHeifDependencyInfo();
 
 namespace {
 	
-	FIDEPENDENCY MakeZLibDependencyInfo() {
-		FIDEPENDENCY info{};
-		info.name = "zlib";
-		info.fullVersion = ZLIB_VERSION;
-		info.majorVersion = ZLIB_VER_MAJOR;
-		info.minorVersion = ZLIB_VER_MINOR;
+	std::unique_ptr<FIDEPENDENCY> MakeZLibDependencyInfo() {
+		auto info = std::make_unique<FIDEPENDENCY>();
+		info->type = FIDEP_STATIC;
+		info->name = "zlib";
+		info->fullVersion  = ZLIB_VERSION;
+		info->majorVersion = ZLIB_VER_MAJOR;
+		info->minorVersion = ZLIB_VER_MINOR;
 		return info;
 	}
 
@@ -143,39 +145,48 @@ namespace {
 		}
 
 		const FIDEPENDENCY* GetByIndex(uint32_t index) const {
-			return &mEntries.at(index);
+			return mEntries.at(index).get();
 		}
 
 	private:
 		DependenciesTable() {
-			mEntries.emplace_back(MakeZLibDependencyInfo());
+			Append(MakeZLibDependencyInfo());
 #if FREEIMAGE_WITH_LIBPNG
-			mEntries.emplace_back(MakePngDependencyInfo());
+			Append(MakePngDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBJPEG
-			mEntries.emplace_back(MakeJpegDependencyInfo());
+			Append(MakeJpegDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBOPENJPEG
-			mEntries.emplace_back(MakeJpeg2kDependencyInfo());
+			Append(MakeJpeg2kDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBOPENEXR
-			mEntries.emplace_back(MakeExrDependencyInfo());
+			Append(MakeExrDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBTIFF
-			mEntries.emplace_back(MakeTiffDependencyInfo());
+			Append(MakeTiffDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBRAW
-			mEntries.emplace_back(MakeRawDependencyInfo());
+			Append(MakeRawDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBWEBP
-			mEntries.emplace_back(MakeWebpDependencyInfo());
+			Append(MakeWebpDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBJXR
-			mEntries.emplace_back(MakeJxrDependencyInfo());
+			Append(MakeJxrDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBHEIF
+			Append(MakeHeifDependencyInfo());
 #endif
 		}
 
-		std::vector<FIDEPENDENCY> mEntries;
+		void Append(std::unique_ptr<FIDEPENDENCY> dep) {
+			if (dep) {
+				mEntries.emplace_back(std::move(dep));
+			}
+		}
+
+		std::vector<std::unique_ptr<FIDEPENDENCY>> mEntries;	// not null
 	};
 
 } // namespace

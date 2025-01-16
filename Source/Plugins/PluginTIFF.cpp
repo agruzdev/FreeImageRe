@@ -2608,11 +2608,11 @@ InitTIFF(Plugin *plugin, int format_id) {
 }
 
 
-FIDEPENDENCY MakeTiffDependencyInfo() {
-	FIDEPENDENCY info{};
-	info.name = "LibTIFF";
-	info.fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
-	info.majorVersion = TIFFLIB_MAJOR_VERSION;
-	info.minorVersion = TIFFLIB_MINOR_VERSION;
+std::unique_ptr<FIDEPENDENCY> MakeTiffDependencyInfo() {
+	auto info = std::make_unique<FIDEPENDENCY>();
+	info->name = "LibTIFF";
+	info->fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
+	info->majorVersion = TIFFLIB_MAJOR_VERSION;
+	info->minorVersion = TIFFLIB_MINOR_VERSION;
 	return info;
 }

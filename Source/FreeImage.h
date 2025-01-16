@@ -716,11 +716,17 @@ typedef FIBOOL (DLL_CALLCONV* FI_InitProc2)(Plugin2* plugin, void* ctx);
 
 // Dependency info struct
 
+FI_ENUM(FREE_IMAGE_DEPENDENCY_TYPE) {
+	FIDEP_STATIC  = 0,	// statically linked in the FreeImage lib
+	FIDEP_DYNAMIC = 1	// loaded dynamically in the current application
+};
+
 FI_STRUCT (FIDEPENDENCY) {
-	const char* name;
-	const char* fullVersion;	// Might include more components than major and minor digits, depends on each library style
-	uint32_t majorVersion;
-	uint32_t minorVersion;
+	const char* name		FI_DEFAULT(NULL);
+	const char* fullVersion FI_DEFAULT(NULL);	// Might include more components than major and minor digits, depends on each library style
+	uint32_t majorVersion	FI_DEFAULT(0);
+	uint32_t minorVersion	FI_DEFAULT(0);
+	FREE_IMAGE_DEPENDENCY_TYPE type	FI_DEFAULT(FIDEP_STATIC);
 };
 
 

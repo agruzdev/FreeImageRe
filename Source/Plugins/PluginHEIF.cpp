@@ -86,11 +86,69 @@ class LibHeif
     : public LibraryLoader
 {
 public:
+    static
+    LibHeif& GetInstance()
+    {
+        static LibHeif instance;
+        return instance;
+    }
+
+    LibHeif(const LibHeif&) = delete;
+    LibHeif(LibHeif&&) = delete;
+
+    ~LibHeif() override {
+        // FreeImage is usually released from global destructor, it migth lead to crash in linheif.
+        //if (heif_deinit_f) {
+        //    heif_deinit_f();
+        //}
+    }
+
+    LibHeif& operator=(const LibHeif&) = delete;
+    LibHeif& operator=(LibHeif&&) = delete;
+
+
+    // lib symbols
+    decltype(&::heif_init) heif_init_f{ nullptr };
+    decltype(&::heif_deinit) heif_deinit_f{ nullptr };
+    decltype(&::heif_get_version) heif_get_version_f{ nullptr };
+    decltype(&::heif_get_version_number_major) heif_get_version_number_major_f{ nullptr };
+    decltype(&::heif_get_version_number_minor) heif_get_version_number_minor_f{ nullptr };
+    decltype(&::heif_get_version_number_maintenance) heif_get_version_number_maintenance_f{ nullptr };
+    decltype(&::heif_read_main_brand) heif_read_main_brand_f{ nullptr };
+    decltype(&::heif_context_alloc) heif_context_alloc_f{ nullptr };
+    decltype(&::heif_context_free) heif_context_free_f{ nullptr };
+    decltype(&::heif_context_read_from_reader) heif_context_read_from_reader_f{ nullptr };
+    decltype(&::heif_context_write) heif_context_write_f{ nullptr };
+    decltype(&::heif_context_get_primary_image_handle) heif_context_get_primary_image_handle_f{ nullptr };
+    decltype(&::heif_context_get_encoder_for_format) heif_context_get_encoder_for_format_f{ nullptr };
+    decltype(&::heif_context_encode_image) heif_context_encode_image_f{ nullptr };
+    decltype(&::heif_image_handle_release) heif_image_handle_release_f{ nullptr };
+    decltype(&::heif_image_handle_get_width) heif_image_handle_get_width_f{ nullptr };
+    decltype(&::heif_image_handle_get_height) heif_image_handle_get_height_f{ nullptr };
+    decltype(&::heif_image_handle_get_preferred_decoding_colorspace) heif_image_handle_get_preferred_decoding_colorspace_f{ nullptr };
+    decltype(&::heif_image_handle_has_alpha_channel) heif_image_handle_has_alpha_channel_f{ nullptr };
+    decltype(&::heif_image_handle_get_number_of_metadata_blocks) heif_image_handle_get_number_of_metadata_blocks_f{ nullptr };
+    decltype(&::heif_image_handle_get_metadata_type) heif_image_handle_get_metadata_type_f{ nullptr };
+    decltype(&::heif_image_handle_get_list_of_metadata_block_IDs) heif_image_handle_get_list_of_metadata_block_IDs_f{ nullptr };
+    decltype(&::heif_image_handle_get_metadata_size) heif_image_handle_get_metadata_size_f{ nullptr };
+    decltype(&::heif_image_handle_get_metadata) heif_image_handle_get_metadata_f{ nullptr };
+    decltype(&::heif_decode_image) heif_decode_image_f{ nullptr };
+    decltype(&::heif_image_create) heif_image_create_f{ nullptr };
+    decltype(&::heif_image_release) heif_image_release_f{ nullptr };
+    decltype(&::heif_image_add_plane) heif_image_add_plane_f{ nullptr };
+    decltype(&::heif_image_get_bits_per_pixel) heif_image_get_bits_per_pixel_f{ nullptr };
+    decltype(&::heif_image_get_plane_readonly) heif_image_get_plane_readonly_f{ nullptr };
+    decltype(&::heif_image_get_plane) heif_image_get_plane_f{ nullptr };
+    decltype(&::heif_encoder_release) heif_encoder_release_f{ nullptr };
+    decltype(&::heif_encoder_set_lossy_quality) heif_encoder_set_lossy_quality_f{ nullptr };
+
+private:
     LibHeif()
         : LibraryLoader("libheif.dll")
     {
         heif_init_f = LoadSymbol<decltype(&::heif_init)>("heif_init", /*required=*/false);
         heif_deinit_f = LoadSymbol<decltype(&::heif_deinit)>("heif_deinit", /*required=*/false);
+        heif_get_version_f = LoadSymbol<decltype(&::heif_get_version)>("heif_get_version");
         heif_get_version_number_major_f = LoadSymbol<decltype(&::heif_get_version_number_major)>("heif_get_version_number_major");
         heif_get_version_number_minor_f = LoadSymbol<decltype(&::heif_get_version_number_minor)>("heif_get_version_number_minor");
         heif_get_version_number_maintenance_f = LoadSymbol<decltype(&::heif_get_version_number_maintenance)>("heif_get_version_number_maintenance");
@@ -126,54 +184,6 @@ public:
             heif_init_f(nullptr);
         }
     }
-
-    LibHeif(const LibHeif&) = delete;
-    LibHeif(LibHeif&&) = delete;
-
-    ~LibHeif() override {
-        // FreeImage is usually released from global destructor, it migth lead to crash in linheif.
-        //if (heif_deinit_f) {
-        //    heif_deinit_f();
-        //}
-    }
-
-    LibHeif& operator=(const LibHeif&) = delete;
-    LibHeif& operator=(LibHeif&&) = delete;
-
-
-    // lib symbols
-    decltype(&::heif_init) heif_init_f{ nullptr };
-    decltype(&::heif_deinit) heif_deinit_f{ nullptr };
-    decltype(&::heif_get_version_number_major) heif_get_version_number_major_f{ nullptr };
-    decltype(&::heif_get_version_number_minor) heif_get_version_number_minor_f{ nullptr };
-    decltype(&::heif_get_version_number_maintenance) heif_get_version_number_maintenance_f{ nullptr };
-    decltype(&::heif_read_main_brand) heif_read_main_brand_f{ nullptr };
-    decltype(&::heif_context_alloc) heif_context_alloc_f{ nullptr };
-    decltype(&::heif_context_free) heif_context_free_f{ nullptr };
-    decltype(&::heif_context_read_from_reader) heif_context_read_from_reader_f{ nullptr };
-    decltype(&::heif_context_write) heif_context_write_f{ nullptr };
-    decltype(&::heif_context_get_primary_image_handle) heif_context_get_primary_image_handle_f{ nullptr };
-    decltype(&::heif_context_get_encoder_for_format) heif_context_get_encoder_for_format_f{ nullptr };
-    decltype(&::heif_context_encode_image) heif_context_encode_image_f{ nullptr };
-    decltype(&::heif_image_handle_release) heif_image_handle_release_f{ nullptr };
-    decltype(&::heif_image_handle_get_width) heif_image_handle_get_width_f{ nullptr };
-    decltype(&::heif_image_handle_get_height) heif_image_handle_get_height_f{ nullptr };
-    decltype(&::heif_image_handle_get_preferred_decoding_colorspace) heif_image_handle_get_preferred_decoding_colorspace_f{ nullptr };
-    decltype(&::heif_image_handle_has_alpha_channel) heif_image_handle_has_alpha_channel_f{ nullptr };
-    decltype(&::heif_image_handle_get_number_of_metadata_blocks) heif_image_handle_get_number_of_metadata_blocks_f{ nullptr };
-    decltype(&::heif_image_handle_get_metadata_type) heif_image_handle_get_metadata_type_f{ nullptr };
-    decltype(&::heif_image_handle_get_list_of_metadata_block_IDs) heif_image_handle_get_list_of_metadata_block_IDs_f{ nullptr };
-    decltype(&::heif_image_handle_get_metadata_size) heif_image_handle_get_metadata_size_f{ nullptr };
-    decltype(&::heif_image_handle_get_metadata) heif_image_handle_get_metadata_f{ nullptr };
-    decltype(&::heif_decode_image) heif_decode_image_f{ nullptr };
-    decltype(&::heif_image_create) heif_image_create_f{ nullptr };
-    decltype(&::heif_image_release) heif_image_release_f{ nullptr };
-    decltype(&::heif_image_add_plane) heif_image_add_plane_f{ nullptr };
-    decltype(&::heif_image_get_bits_per_pixel) heif_image_get_bits_per_pixel_f{ nullptr };
-    decltype(&::heif_image_get_plane_readonly) heif_image_get_plane_readonly_f{ nullptr };
-    decltype(&::heif_image_get_plane) heif_image_get_plane_f{ nullptr };
-    decltype(&::heif_encoder_release) heif_encoder_release_f{ nullptr };
-    decltype(&::heif_encoder_set_lossy_quality) heif_encoder_set_lossy_quality_f{ nullptr };
 };
 
 
@@ -189,7 +199,7 @@ public:
     PluginHeif(Mode mode)
         : mMode(mode)
     {
-        mLibHeif = std::make_unique<LibHeif>();
+        //mLibHeif = std::make_unique<LibHeif>();
     }
 
     PluginHeif(const PluginHeif&) = delete;
@@ -250,12 +260,13 @@ public:
         if (!io || !handle) {
             return nullptr;
         }
+        auto& libHeif = LibHeif::GetInstance();
 
-        heif_context* heifContext = mLibHeif->heif_context_alloc_f();
+        heif_context* heifContext = libHeif.heif_context_alloc_f();
         if (!heifContext) {
             throw std::runtime_error("PluginHeif[Load]: Failed to allocate heif_context.");
         }
-        yato_finally(([&, this]() { mLibHeif->heif_context_free_f(heifContext); }));
+        yato_finally(([&, this]() { libHeif.heif_context_free_f(heifContext); }));
 
         io->seek_proc(handle, 0, SEEK_END);
         const size_t fileSize = io->tell_proc(handle);
@@ -288,20 +299,20 @@ public:
             return heif_reader_grow_status::heif_reader_grow_status_size_beyond_eof;
         };
 
-        auto heifError = mLibHeif->heif_context_read_from_reader_f(heifContext, &heifReader, &ioContext, nullptr);
+        auto heifError = libHeif.heif_context_read_from_reader_f(heifContext, &heifReader, &ioContext, nullptr);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_context_read_from_reader(). ") + heifError.message);
         }
 
         heif_image_handle* heifImageHandle{};
-        heifError = mLibHeif->heif_context_get_primary_image_handle_f(heifContext, &heifImageHandle);
+        heifError = libHeif.heif_context_get_primary_image_handle_f(heifContext, &heifImageHandle);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_context_get_primary_image_handle(). ") + heifError.message);
         }
-        yato_finally(([&, this]() { mLibHeif->heif_image_handle_release_f(heifImageHandle); }));
+        yato_finally(([&, this]() { libHeif.heif_image_handle_release_f(heifImageHandle); }));
 
-        const int heifWidth  = mLibHeif->heif_image_handle_get_width_f(heifImageHandle);
-        const int heifHeight = mLibHeif->heif_image_handle_get_height_f(heifImageHandle);
+        const int heifWidth  = libHeif.heif_image_handle_get_width_f(heifImageHandle);
+        const int heifHeight = libHeif.heif_image_handle_get_height_f(heifImageHandle);
         if (heifWidth <= 0 || heifHeight <= 0) {
             throw std::runtime_error("PluginHeif[Load]: Invalid image size.");
         }
@@ -313,16 +324,16 @@ public:
         //    mLibHeif->heif_image_handle_get_preferred_decoding_colorspace_f(heifImageHandle, &heifPreferredColorspace, &heifPreferredChroma);
         //}
 
-        const heif_chroma targetHefChroma = mLibHeif->heif_image_handle_has_alpha_channel_f(heifImageHandle) ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB;
+        const heif_chroma targetHefChroma = libHeif.heif_image_handle_has_alpha_channel_f(heifImageHandle) ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB;
 
         heif_image* heifImage{};
-        heifError = mLibHeif->heif_decode_image_f(heifImageHandle, &heifImage, heif_colorspace_RGB, targetHefChroma, nullptr);
+        heifError = libHeif.heif_decode_image_f(heifImageHandle, &heifImage, heif_colorspace_RGB, targetHefChroma, nullptr);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_decode_image(). ") + heifError.message);
         }
-        yato_finally(([&, this]() { mLibHeif->heif_image_release_f(heifImage); }));
+        yato_finally(([&, this]() { libHeif.heif_image_release_f(heifImage); }));
 
-        const int heifBpp = mLibHeif->heif_image_get_bits_per_pixel_f(heifImage, heif_channel_interleaved);
+        const int heifBpp = libHeif.heif_image_get_bits_per_pixel_f(heifImage, heif_channel_interleaved);
         if (heifBpp != 8 && heifBpp != 24 && heifBpp != 32) {
             // ToDo: Add support for other bpp
             throw std::runtime_error("PluginHeif[Load]: Unsupported BPPs.");
@@ -333,7 +344,7 @@ public:
         // Copy pixels
         {
             int heifStride{};
-            const uint8_t* heifData = mLibHeif->heif_image_get_plane_readonly_f(heifImage, heif_channel_interleaved, &heifStride);
+            const uint8_t* heifData = libHeif.heif_image_get_plane_readonly_f(heifImage, heif_channel_interleaved, &heifStride);
             if (!heifData) {
                 throw std::runtime_error("PluginHeif[Load]: Error in heif_image_get_plane_readonly()");
             }
@@ -349,21 +360,21 @@ public:
         }
 
         // EXIF
-        const int heifMetaCount = mLibHeif->heif_image_handle_get_number_of_metadata_blocks_f(heifImageHandle, nullptr);
+        const int heifMetaCount = libHeif.heif_image_handle_get_number_of_metadata_blocks_f(heifImageHandle, nullptr);
         if (heifMetaCount > 0) {
             std::vector<heif_item_id> heifMetaIds;
             std::vector<uint8_t> heifMetaData;
             heifMetaIds.resize(yato::narrow_cast<size_t>(heifMetaCount));
-            if (heifMetaCount == mLibHeif->heif_image_handle_get_list_of_metadata_block_IDs_f(heifImageHandle, nullptr, heifMetaIds.data(), heifMetaCount)) {
+            if (heifMetaCount == libHeif.heif_image_handle_get_list_of_metadata_block_IDs_f(heifImageHandle, nullptr, heifMetaIds.data(), heifMetaCount)) {
                 for (const auto& itemId : heifMetaIds) {
-                    const char*  heifMetaType = mLibHeif->heif_image_handle_get_metadata_type_f(heifImageHandle, itemId);
-                    const size_t heifMetaSize = mLibHeif->heif_image_handle_get_metadata_size_f(heifImageHandle, itemId);
+                    const char*  heifMetaType = libHeif.heif_image_handle_get_metadata_type_f(heifImageHandle, itemId);
+                    const size_t heifMetaSize = libHeif.heif_image_handle_get_metadata_size_f(heifImageHandle, itemId);
                     if (heifMetaSize == 0) {
                         continue;
                     }
 
                     heifMetaData.resize(heifMetaSize);
-                    heifError = mLibHeif->heif_image_handle_get_metadata_f(heifImageHandle, itemId, heifMetaData.data());
+                    heifError = libHeif.heif_image_handle_get_metadata_f(heifImageHandle, itemId, heifMetaData.data());
                     if (heifError.code != heif_error_Ok) {
                         continue;
                     }
@@ -392,6 +403,7 @@ public:
         if (!io || !handle || !dib || !FreeImage_HasPixels(dib)) {
             return false;
         }
+        auto& libHeif = LibHeif::GetInstance();
 
         const int imgWidth  = FreeImage_GetWidth(dib);
         const int imgHeight = FreeImage_GetHeight(dib);
@@ -399,29 +411,29 @@ public:
             return false;
         }
 
-        heif_context* heifContext = mLibHeif->heif_context_alloc_f();
+        heif_context* heifContext = libHeif.heif_context_alloc_f();
         if (!heifContext) {
             throw std::runtime_error("PluginHeif[Save]: Failed to allocate heif_context.");
         }
-        yato_finally(([&, this]() { mLibHeif->heif_context_free_f(heifContext); }));
+        yato_finally(([&, this]() { libHeif.heif_context_free_f(heifContext); }));
 
         heif_error heifError{};
         heif_encoder* heifEncoder{};
         switch (mMode) {
         default:
         case Mode::eHeif:
-            heifError = mLibHeif->heif_context_get_encoder_for_format_f(heifContext, heif_compression_HEVC, &heifEncoder);
+            heifError = libHeif.heif_context_get_encoder_for_format_f(heifContext, heif_compression_HEVC, &heifEncoder);
             break;
         case Mode::eAvif:
-            heifError = mLibHeif->heif_context_get_encoder_for_format_f(heifContext, heif_compression_AV1, &heifEncoder);
+            heifError = libHeif.heif_context_get_encoder_for_format_f(heifContext, heif_compression_AV1, &heifEncoder);
             break;
         }
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_get_encoder_for_format(). ") + heifError.message);
         }
-        yato_finally(([&, this]() { mLibHeif->heif_encoder_release_f(heifEncoder); }));
+        yato_finally(([&, this]() { libHeif.heif_encoder_release_f(heifEncoder); }));
 
-        mLibHeif->heif_encoder_set_lossy_quality_f(heifEncoder, 75);
+        libHeif.heif_encoder_set_lossy_quality_f(heifEncoder, 75);
 
         const FREE_IMAGE_TYPE imgType{ FreeImage_GetImageType(dib) };
         if (imgType != FIT_BITMAP) {
@@ -444,13 +456,13 @@ public:
         }
 
         heif_image* heifImage{};
-        heifError = mLibHeif->heif_image_create_f(imgWidth, imgHeight, heif_colorspace_RGB, heifCromaType, &heifImage);
+        heifError = libHeif.heif_image_create_f(imgWidth, imgHeight, heif_colorspace_RGB, heifCromaType, &heifImage);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_image_create(). ") + heifError.message);
         }
-        yato_finally(([&, this]() { mLibHeif->heif_image_release_f(heifImage); }));
+        yato_finally(([&, this]() { libHeif.heif_image_release_f(heifImage); }));
 
-        heifError = mLibHeif->heif_image_add_plane_f(heifImage, heif_channel_interleaved, imgWidth, imgHeight, 8);
+        heifError = libHeif.heif_image_add_plane_f(heifImage, heif_channel_interleaved, imgWidth, imgHeight, 8);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_image_add_plane(). ") + heifError.message);
         }
@@ -458,7 +470,7 @@ public:
         // Fill pixels
         {
             int heifStride{};
-            uint8_t* heifData = mLibHeif->heif_image_get_plane_f(heifImage, heif_channel_interleaved, &heifStride);
+            uint8_t* heifData = libHeif.heif_image_get_plane_f(heifImage, heif_channel_interleaved, &heifStride);
             if (!heifData) {
                 throw std::runtime_error("PluginHeif[Save]: Error in heif_image_get_plane().");
             }
@@ -473,7 +485,7 @@ public:
             }
         }
 
-        heifError = mLibHeif->heif_context_encode_image_f(heifContext, heifImage, heifEncoder, nullptr, nullptr);
+        heifError = libHeif.heif_context_encode_image_f(heifContext, heifImage, heifEncoder, nullptr, nullptr);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_encode_image(). ") + heifError.message);
         }
@@ -495,7 +507,7 @@ public:
             return status;
         };
 
-        heifError = mLibHeif->heif_context_write_f(heifContext, &heifWriter, &ioContext);
+        heifError = libHeif.heif_context_write_f(heifContext, &heifWriter, &ioContext);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_write(). ") + heifError.message);
         }
@@ -507,7 +519,9 @@ public:
     }
 
     bool ValidateProc(FreeImageIO* io, fi_handle handle) override {
-        if (mLibHeif->heif_read_main_brand_f) {
+
+        auto& libHeif = LibHeif::GetInstance();
+        if (libHeif.heif_read_main_brand_f) {
 
             heif_brand2 targetBrand{};
             switch (mMode) {
@@ -523,7 +537,7 @@ public:
             std::array<uint8_t, 12> header = {};
             const unsigned readCount = io->read_proc(header.data(), 1U, header.size(), handle);
             if (readCount >= 12) {
-                if (targetBrand == mLibHeif->heif_read_main_brand_f(header.data(), yato::narrow_cast<int>(readCount))) {
+                if (targetBrand == libHeif.heif_read_main_brand_f(header.data(), yato::narrow_cast<int>(readCount))) {
                     return true;
                 }
             }
@@ -538,7 +552,6 @@ public:
 
 private:
     Mode mMode{ Mode::eHeif };
-    std::unique_ptr<LibHeif> mLibHeif;
 };
 
 
@@ -569,11 +582,17 @@ catch (...) {
 
 
 
-//FIDEPENDENCY MakeWebpDependencyInfo() {
-//	FIDEPENDENCY info{};
-//	info.name = "LibWebP";
-//	info.fullVersion = FI_QUOTE(DEC_MAJ_VERSION) "." FI_QUOTE(DEC_MIN_VERSION) "." FI_QUOTE(DEC_REV_VERSION);
-//	info.majorVersion = DEC_MAJ_VERSION;
-//	info.minorVersion = DEC_MIN_VERSION;
-//	return info;
-//}
+std::unique_ptr<FIDEPENDENCY> MakeHeifDependencyInfo() 
+try {
+    auto& libHeif = LibHeif::GetInstance();
+    auto info = std::make_unique<FIDEPENDENCY>();
+    info->type = FIDEP_DYNAMIC;
+    info->name = "LibHeif";
+    info->fullVersion  = libHeif.heif_get_version_f();
+    info->majorVersion = libHeif.heif_get_version_number_major_f();
+    info->minorVersion = libHeif.heif_get_version_number_minor_f();
+    return info;
+}
+catch (...) {
+    return nullptr;
+}

@@ -766,11 +766,11 @@ InitEXR(Plugin *plugin, int format_id) {
 }
 
 
-FIDEPENDENCY MakeExrDependencyInfo() {
-	FIDEPENDENCY info{};
-	info.name = "OpenEXR";
-	info.fullVersion = OPENEXR_VERSION_STRING;
-	info.majorVersion = OPENEXR_VERSION_MAJOR;
-	info.minorVersion = OPENEXR_VERSION_MINOR;
+std::unique_ptr<FIDEPENDENCY> MakeExrDependencyInfo() {
+	auto info = std::make_unique<FIDEPENDENCY>();
+	info->name = "OpenEXR";
+	info->fullVersion = OPENEXR_VERSION_STRING;
+	info->majorVersion = OPENEXR_VERSION_MAJOR;
+	info->minorVersion = OPENEXR_VERSION_MINOR;
 	return info;
 }
