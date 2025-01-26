@@ -1,0 +1,32 @@
+From ffb4c041ecdee240814086eabb3d3bbb34649d05 Mon Sep 17 00:00:00 2001
+From: Alexey Gruzdev <alex.gruzdev@hotmail.com>
+Date: Sun, 26 Jan 2025 10:22:34 +0300
+Subject: [PATCH] Added extra CMAKE flags for linking plugins statically:
+ plugin_DEBUG_LIBRARY and plugin_LINK_DIRS
+
+---
+ libheif/plugins/CMakeLists.txt | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/libheif/plugins/CMakeLists.txt b/libheif/plugins/CMakeLists.txt
+index 4a85fa20..7d08ad81 100644
+--- a/libheif/plugins/CMakeLists.txt
++++ b/libheif/plugins/CMakeLists.txt
+@@ -29,7 +29,13 @@ macro(plugin_compilation name varName foundName optionName defineName)
+             target_sources(heif PRIVATE ${${optionName}_sources})
+             target_compile_definitions(heif PRIVATE HAVE_${defineName}=1)
+             target_include_directories(heif PRIVATE ${${varName}_INCLUDE_DIRS})
+-            target_link_libraries(heif PRIVATE ${${varName}_LIBRARIES})
++            target_link_directories(heif PRIVATE ${${varName}_LINK_DIRS})
++            if (${varName}_DEBUG_LIBRARY)
++                target_link_libraries(heif PRIVATE debug ${${varName}_DEBUG_LIBRARY})
++                target_link_libraries(heif PRIVATE optimized ${${varName}_LIBRARIES})
++            else()
++                target_link_libraries(heif PRIVATE ${${varName}_LIBRARIES})
++            endif()
+         endif ()
+ 
+         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${${varName}_CFLAGS}")
+-- 
+2.41.0.windows.3
+

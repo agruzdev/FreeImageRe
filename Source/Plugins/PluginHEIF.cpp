@@ -19,6 +19,7 @@
 #include "Metadata/FreeImageTag.h"
 
 #include <array>
+#include <cstring>
 #include "yato/types.h"
 #include "yato/finally.h"
 #include <libheif/heif.h>

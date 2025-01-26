@@ -23,19 +23,22 @@ if(NOT _EXTERNAL_PROJECT_INCLUDE_GUARD_)
     set(BUILD_COMMAND_FOR_TARGET ${CMAKE_COMMAND} --build . )
     set(CMAKE_BUILD_TYPE_ARG "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
     set(CMAKE_BUILD_TYPE_RELEASE "-DCMAKE_BUILD_TYPE=Release")
+
+
     if (IS_MULTI_CONFIG)
         list(APPEND BUILD_COMMAND_FOR_TARGET --config $<CONFIG>)
         set(CMAKE_BUILD_TYPE_ARG "")
         set(CMAKE_BUILD_TYPE_RELEASE "")
+        set(CMAKE_DEBUG_POSTFIX_MULTICONF "-DCMAKE_DEBUG_POSTFIX=d")
     endif()
 
     if (MSVC)
         set(ZERO_WARNINGS_FLAG "/w")
+        set(DEF_FLAG "/D")
     else()
         set(ZERO_WARNINGS_FLAG "-w")
+        set(DEF_FLAG "-D")
     endif()
-
-
 
     macro(link_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
         if (IS_MULTI_CONFIG)

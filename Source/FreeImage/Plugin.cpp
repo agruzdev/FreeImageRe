@@ -425,7 +425,7 @@ PluginsRegistry::~PluginsRegistry() = default;
 template <typename PluginType_, typename InitFunc_>
 bool PluginsRegistry::ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void* ctx, bool force, void* instance, const char* format, const char* description, const char* extension, const char* regexpr)
 {
-	if (!init_proc) {
+	if (init_proc == nullptr) {
 		// clear plugin node
 		return (mPlugins.erase(fif) > 0);
 	}
