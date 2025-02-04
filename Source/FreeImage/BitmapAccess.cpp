@@ -808,6 +808,9 @@ FreeImage_GetColorType2(FIBITMAP* dib, FIBOOL scan_alpha) {
 
 		case 16:
 		case 24:
+			if (icc_profile && ((icc_profile->flags & FIICC_COLOR_IS_YUV) == FIICC_COLOR_IS_YUV)) {
+				return FIC_YUV;
+			}
 			return FIC_RGB;
 
 		case 32:
