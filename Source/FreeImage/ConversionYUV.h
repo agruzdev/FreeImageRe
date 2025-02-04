@@ -9,6 +9,7 @@
 
 #include "FreeImage.h"
 #include <type_traits>
+#include <algorithm>
 
 // ----------------------------------------------------------
 //  internal conversions from RGB to YUV
@@ -48,79 +49,93 @@ struct YuvJPEG
 		return 0x1 << 15;
 	}
 
+
+	template <typename Ty_>
+	static constexpr Ty_ FxPointClamp(int32_t val)
+	{
+		return static_cast<Ty_>(std::clamp(val, static_cast<int32_t>(std::numeric_limits<Ty_>::lowest()), static_cast<int32_t>(std::numeric_limits<Ty_>::max())));
+	}
+
+	template <typename FTy_>
+	static constexpr FTy_ FloatClamp(FTy_ val)
+	{
+		return std::clamp(val, static_cast<FTy_>(0.0), static_cast<FTy_>(1.0));
+	}
+
+
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> R(Ty_ y, Ty_ u, Ty_ v)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) + MakeFxPoint<Qb_>(1.402) * (v - MakeChromaOffset<Ty_>())));
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) + MakeFxPoint<Qb_>(1.402) * (v - MakeChromaOffset<Ty_>())));
 	}
 
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> G(Ty_ y, Ty_ u, Ty_ v)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) - MakeFxPoint<Qb_>(0.344136) * (u - MakeChromaOffset<Ty_>()) - MakeFxPoint<Qb_>(0.714136) * (v - MakeChromaOffset<Ty_>())));
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) - MakeFxPoint<Qb_>(0.344136) * (u - MakeChromaOffset<Ty_>()) - MakeFxPoint<Qb_>(0.714136) * (v - MakeChromaOffset<Ty_>())));
 	}
 
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> B(Ty_ y, Ty_ u, Ty_ v)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) + MakeFxPoint<Qb_>(1.772) * (u - MakeChromaOffset<Ty_>())));
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(y) + MakeFxPoint<Qb_>(1.772) * (u - MakeChromaOffset<Ty_>())));
 	}
 
 
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> Y(Ty_ r, Ty_ g, Ty_ b)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.114) * b + MakeFxPoint<Qb_>(0.587) * g + MakeFxPoint<Qb_>(0.299) * r));
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.114) * b + MakeFxPoint<Qb_>(0.587) * g + MakeFxPoint<Qb_>(0.299) * r));
 	}
 
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> U(Ty_ r, Ty_ g, Ty_ b)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.5) * b - MakeFxPoint<Qb_>(0.331264) * g - MakeFxPoint<Qb_>(0.168736) * r) + MakeChromaOffset<Ty_>());
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.5) * b - MakeFxPoint<Qb_>(0.331264) * g - MakeFxPoint<Qb_>(0.168736) * r) + MakeChromaOffset<Ty_>());
 	}
 
 	template <uint32_t Qb_ = kDefaultFractionalBits, typename Ty_>
 	static constexpr std::enable_if_t<!std::is_floating_point_v<Ty_>, Ty_> V(Ty_ r, Ty_ g, Ty_ b)
 	{
-		return static_cast<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.5) * r - MakeFxPoint<Qb_>(0.418688) * g - MakeFxPoint<Qb_>(0.081312) * b) + MakeChromaOffset<Ty_>());
+		return FxPointClamp<Ty_>(FxPointDivide<Qb_>(MakeFxPoint<Qb_>(0.5) * r - MakeFxPoint<Qb_>(0.418688) * g - MakeFxPoint<Qb_>(0.081312) * b) + MakeChromaOffset<Ty_>());
 	}
 
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> R(FTy_ y, FTy_ u, FTy_ v)
 	{
-		return y + static_cast<FTy_>(1.402) * (v - static_cast<FTy_>(0.5));
+		return FloatClamp<FTy_>(y + static_cast<FTy_>(1.402) * (v - static_cast<FTy_>(0.5)));
 	}
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> G(FTy_ y, FTy_ u, FTy_ v)
 	{
-		return y - static_cast<FTy_>(0.344136) * (u - static_cast<FTy_>(0.5)) - static_cast<FTy_>(0.714136) * (v - static_cast<FTy_>(0.5));
+		return FloatClamp<FTy_>(y - static_cast<FTy_>(0.344136) * (u - static_cast<FTy_>(0.5)) - static_cast<FTy_>(0.714136) * (v - static_cast<FTy_>(0.5)));
 	}
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> B(FTy_ y, FTy_ u, FTy_ v)
 	{
-		return y + static_cast<FTy_>(1.772) * (u - static_cast<FTy_>(0.5));
+		return FloatClamp<FTy_>(y + static_cast<FTy_>(1.772) * (u - static_cast<FTy_>(0.5)));
 	}
 
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> Y(FTy_ r, FTy_ g, FTy_ b)
 	{
-		return static_cast<FTy_>(0.114) * b + static_cast<FTy_>(0.587) * g + static_cast<FTy_>(0.299) * r;
+		return FloatClamp<FTy_>(static_cast<FTy_>(0.114) * b + static_cast<FTy_>(0.587) * g + static_cast<FTy_>(0.299) * r);
 	}
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> U(FTy_ r, FTy_ g, FTy_ b)
 	{
-		return static_cast<FTy_>(0.5) * b - static_cast<FTy_>(0.331264) * g - static_cast<FTy_>(0.168736) * r + static_cast<FTy_>(0.5);
+		return FloatClamp<FTy_>(static_cast<FTy_>(0.5) * b - static_cast<FTy_>(0.331264) * g - static_cast<FTy_>(0.168736) * r + static_cast<FTy_>(0.5));
 	}
 
 	template <typename FTy_>
 	static constexpr std::enable_if_t<std::is_floating_point_v<FTy_>, FTy_> V(FTy_ r, FTy_ g, FTy_ b)
 	{
-		return static_cast<FTy_>(0.5) * r - static_cast<FTy_>(0.418688) * g - static_cast<FTy_>(0.081312) * b + static_cast<FTy_>(0.5);
+		return FloatClamp<FTy_>(static_cast<FTy_>(0.5) * r - static_cast<FTy_>(0.418688) * g - static_cast<FTy_>(0.081312) * b + static_cast<FTy_>(0.5));
 	}
 
 };

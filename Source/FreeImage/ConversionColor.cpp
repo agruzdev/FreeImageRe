@@ -15,7 +15,12 @@ FIBITMAP* FreeImage_ConvertToColor(FIBITMAP* dib, FREE_IMAGE_COLOR_TYPE dst_colo
 	if (!FreeImage_HasPixels(dib)) {
 		return nullptr;
 	}
+
 	const auto srcColorType = FreeImage_GetColorType2(dib);
+	if (srcColorType == dst_color) {
+		return FreeImage_Clone(dib);
+	}
+
 	if (srcColorType == FIC_RGB || srcColorType == FIC_RGBALPHA) {
 		switch (dst_color) {
 		case FIC_YUV:
