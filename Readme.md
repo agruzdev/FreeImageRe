@@ -99,3 +99,4 @@ Version 0.4:
  - Building with libjpeg-turbo by default
  - Introduced a new Plugin2 API for plugins with state
  - Added a limited support for HEIC and AVIF formats
+ - Extended FIF_* enums range and added function for mapping FIF index to FIF value
