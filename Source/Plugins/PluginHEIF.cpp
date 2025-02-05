@@ -17,6 +17,7 @@
 #include "FreeImage.hpp"
 #include "Utilities.h"
 #include "Metadata/FreeImageTag.h"
+#include "FreeImage/SimpleTools.h"
 
 #include <array>
 #include <cstring>
@@ -142,10 +143,17 @@ public:
     decltype(&::heif_image_get_plane) heif_image_get_plane_f{ nullptr };
     decltype(&::heif_encoder_release) heif_encoder_release_f{ nullptr };
     decltype(&::heif_encoder_set_lossy_quality) heif_encoder_set_lossy_quality_f{ nullptr };
+    decltype(&::heif_image_handle_get_number_of_thumbnails) heif_image_handle_get_number_of_thumbnails_f{ nullptr };
+    decltype(&::heif_image_handle_get_list_of_thumbnail_IDs) heif_image_handle_get_list_of_thumbnail_IDs_f{ nullptr };
+    decltype(&::heif_image_handle_get_thumbnail) heif_image_handle_get_thumbnail_f{ nullptr };
 
 private:
     LibHeif()
-        : LibraryLoader("libheif.dll")
+#ifdef _WIN32
+        : LibraryLoader(std::vector<std::string>{ "heif.dll", "libheif.dll" })
+#else
+        : LibraryLoader("libheif.so")
+#endif
     {
         heif_init_f = LoadSymbol<decltype(&::heif_init)>("heif_init", /*required=*/false);
         heif_deinit_f = LoadSymbol<decltype(&::heif_deinit)>("heif_deinit", /*required=*/false);
@@ -180,6 +188,9 @@ private:
         heif_encoder_release_f = LoadSymbol<decltype(&::heif_encoder_release)>("heif_encoder_release");
         heif_encoder_set_lossy_quality_f = LoadSymbol<decltype(&::heif_encoder_set_lossy_quality)>("heif_encoder_set_lossy_quality");
         heif_context_encode_image_f = LoadSymbol<decltype(&::heif_context_encode_image)>("heif_context_encode_image");
+        heif_image_handle_get_number_of_thumbnails_f = LoadSymbol<decltype(&::heif_image_handle_get_number_of_thumbnails)>("heif_image_handle_get_number_of_thumbnails", /*required=*/false);
+        heif_image_handle_get_list_of_thumbnail_IDs_f = LoadSymbol<decltype(&::heif_image_handle_get_list_of_thumbnail_IDs)>("heif_image_handle_get_list_of_thumbnail_IDs", /*required=*/false);
+        heif_image_handle_get_thumbnail_f = LoadSymbol<decltype(&::heif_image_handle_get_thumbnail)>("heif_image_handle_get_thumbnail", /*required=*/false);
 
         if (heif_init_f) {
             heif_init_f(nullptr);
@@ -199,9 +210,7 @@ public:
 
     PluginHeif(Mode mode)
         : mMode(mode)
-    {
-        //mLibHeif = std::make_unique<LibHeif>();
-    }
+    { }
 
     PluginHeif(const PluginHeif&) = delete;
     PluginHeif(PluginHeif&&) = delete;
@@ -312,60 +321,16 @@ public:
         }
         yato_finally(([&, this]() { libHeif.heif_image_handle_release_f(heifImageHandle); }));
 
-        const int heifWidth  = libHeif.heif_image_handle_get_width_f(heifImageHandle);
-        const int heifHeight = libHeif.heif_image_handle_get_height_f(heifImageHandle);
-        if (heifWidth <= 0 || heifHeight <= 0) {
-            throw std::runtime_error("PluginHeif[Load]: Invalid image size.");
-        }
-
-        // ToDo: no way to differ 420 from greyscale?
-        //heif_colorspace heifPreferredColorspace{ heif_colorspace_undefined };
-        //heif_chroma heifPreferredChroma{ heif_chroma_undefined };
-        //if (mLibHeif->heif_image_handle_get_preferred_decoding_colorspace_f) {
-        //    mLibHeif->heif_image_handle_get_preferred_decoding_colorspace_f(heifImageHandle, &heifPreferredColorspace, &heifPreferredChroma);
-        //}
-
-        const heif_chroma targetHefChroma = libHeif.heif_image_handle_has_alpha_channel_f(heifImageHandle) ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB;
-
-        heif_image* heifImage{};
-        heifError = libHeif.heif_decode_image_f(heifImageHandle, &heifImage, heif_colorspace_RGB, targetHefChroma, nullptr);
-        if (heifError.code != heif_error_Ok) {
-            throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_decode_image(). ") + heifError.message);
-        }
-        yato_finally(([&, this]() { libHeif.heif_image_release_f(heifImage); }));
-
-        const int heifBpp = libHeif.heif_image_get_bits_per_pixel_f(heifImage, heif_channel_interleaved);
-        if (heifBpp != 8 && heifBpp != 24 && heifBpp != 32) {
-            // ToDo: Add support for other bpp
-            throw std::runtime_error("PluginHeif[Load]: Unsupported BPPs.");
-        }
-
-        std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(FreeImage_Allocate(heifWidth, heifHeight, heifBpp), &::FreeImage_Unload);
-
-        // Copy pixels
-        {
-            int heifStride{};
-            const uint8_t* heifData = libHeif.heif_image_get_plane_readonly_f(heifImage, heif_channel_interleaved, &heifStride);
-            if (!heifData) {
-                throw std::runtime_error("PluginHeif[Load]: Error in heif_image_get_plane_readonly()");
-            }
-
-            uint8_t* bmpData = yato::pointer_cast<uint8_t*>(FreeImage_GetBits(bmp.get()));
-            const auto bmpStride = FreeImage_GetPitch(bmp.get());
-            bmpData += (heifHeight - 1) * bmpStride;
-            for (int y = 0; y < heifHeight; ++y) {
-                std::memcpy(bmpData, heifData, heifWidth * heifBpp / 8);
-                bmpData -= bmpStride;
-                heifData += heifStride;
-            }
+        UniqueBitmap bmp = DecodeImage(libHeif, heifImageHandle);
+        if (!bmp) {
+            return nullptr;
         }
 
         // EXIF
         const int heifMetaCount = libHeif.heif_image_handle_get_number_of_metadata_blocks_f(heifImageHandle, nullptr);
         if (heifMetaCount > 0) {
-            std::vector<heif_item_id> heifMetaIds;
+            std::vector<heif_item_id> heifMetaIds(yato::narrow_cast<size_t>(heifMetaCount));
             std::vector<uint8_t> heifMetaData;
-            heifMetaIds.resize(yato::narrow_cast<size_t>(heifMetaCount));
             if (heifMetaCount == libHeif.heif_image_handle_get_list_of_metadata_block_IDs_f(heifImageHandle, nullptr, heifMetaIds.data(), heifMetaCount)) {
                 for (const auto& itemId : heifMetaIds) {
                     const char*  heifMetaType = libHeif.heif_image_handle_get_metadata_type_f(heifImageHandle, itemId);
@@ -395,6 +360,28 @@ public:
                 }
             }
         }
+
+        // Thumbnail
+        if (libHeif.heif_image_handle_get_number_of_thumbnails_f && libHeif.heif_image_handle_get_list_of_thumbnail_IDs_f && libHeif.heif_image_handle_get_thumbnail_f) {
+            const int thumbnailsCount = libHeif.heif_image_handle_get_number_of_thumbnails_f(heifImageHandle);
+            if (thumbnailsCount > 0) {
+                std::vector<heif_item_id> heifThumbnailIds(yato::narrow_cast<size_t>(thumbnailsCount));
+                if (thumbnailsCount == libHeif.heif_image_handle_get_list_of_thumbnail_IDs_f(heifImageHandle, heifThumbnailIds.data(), thumbnailsCount)) {
+                    heif_image_handle* heifThumbnailHandle{};
+                    heifError = libHeif.heif_image_handle_get_thumbnail_f(heifImageHandle, heifThumbnailIds.at(0), &heifThumbnailHandle);
+                    if (heifError.code != heif_error_Ok) {
+                        throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_image_handle_get_thumbnail(). ") + heifError.message);
+                    }
+                    yato_finally(([&, this]() { libHeif.heif_image_handle_release_f(heifThumbnailHandle); }));
+
+                    UniqueBitmap thumbnail = DecodeImage(libHeif, heifThumbnailHandle);
+                    if (thumbnail) {
+                        FreeImage_SetThumbnail(bmp.get(), thumbnail.get());
+                    }
+                }
+            }
+        }
+
         return bmp.release();
     };
 
@@ -516,6 +503,9 @@ public:
         // EXIF
         // ToDo: to be supported...
 
+        // Thumbnail
+        // ToDo: to be supported...
+
         return true;
     }
 
@@ -552,6 +542,63 @@ public:
     //virtual bool SupportsNoPixelsProc() { return false; };
 
 private:
+    UniqueBitmap DecodeImage(LibHeif& libHeif, const heif_image_handle* heifImageHandle)
+    {
+        if (!heifImageHandle) {
+            return UniqueBitmap{ nullptr, &::FreeImage_Unload };
+        }
+
+        const int heifWidth  = libHeif.heif_image_handle_get_width_f(heifImageHandle);
+        const int heifHeight = libHeif.heif_image_handle_get_height_f(heifImageHandle);
+        if (heifWidth <= 0 || heifHeight <= 0) {
+            throw std::runtime_error("PluginHeif[Load]: Invalid image size.");
+        }
+
+        // ToDo: no way to differ 420 from greyscale?
+        //heif_colorspace heifPreferredColorspace{ heif_colorspace_undefined };
+        //heif_chroma heifPreferredChroma{ heif_chroma_undefined };
+        //if (mLibHeif->heif_image_handle_get_preferred_decoding_colorspace_f) {
+        //    mLibHeif->heif_image_handle_get_preferred_decoding_colorspace_f(heifImageHandle, &heifPreferredColorspace, &heifPreferredChroma);
+        //}
+
+        const heif_chroma targetHefChroma = libHeif.heif_image_handle_has_alpha_channel_f(heifImageHandle) ? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RGB;
+
+        heif_image* heifImage{};
+        heif_error heifError = libHeif.heif_decode_image_f(heifImageHandle, &heifImage, heif_colorspace_RGB, targetHefChroma, nullptr);
+        if (heifError.code != heif_error_Ok) {
+            throw std::runtime_error(std::string("PluginHeif[Load]: Error in heif_decode_image(). ") + heifError.message);
+        }
+        yato_finally(([&, this]() { libHeif.heif_image_release_f(heifImage); }));
+
+        const int heifBpp = libHeif.heif_image_get_bits_per_pixel_f(heifImage, heif_channel_interleaved);
+        if (heifBpp != 8 && heifBpp != 24 && heifBpp != 32) {
+            // ToDo: Add support for other bpp
+            throw std::runtime_error("PluginHeif[Load]: Unsupported BPPs.");
+        }
+
+        UniqueBitmap bmp(FreeImage_Allocate(heifWidth, heifHeight, heifBpp), &::FreeImage_Unload);
+
+        // Copy pixels
+        {
+            int heifStride{};
+            const uint8_t* heifData = libHeif.heif_image_get_plane_readonly_f(heifImage, heif_channel_interleaved, &heifStride);
+            if (!heifData) {
+                throw std::runtime_error("PluginHeif[Load]: Error in heif_image_get_plane_readonly()");
+            }
+
+            uint8_t* bmpData = yato::pointer_cast<uint8_t*>(FreeImage_GetBits(bmp.get()));
+            const auto bmpStride = FreeImage_GetPitch(bmp.get());
+            bmpData += (heifHeight - 1) * bmpStride;
+            for (int y = 0; y < heifHeight; ++y) {
+                std::memcpy(bmpData, heifData, heifWidth * heifBpp / 8);
+                bmpData -= bmpStride;
+                heifData += heifStride;
+            }
+        }
+
+        return bmp;
+    }
+
     Mode mMode{ Mode::eHeif };
 };
 

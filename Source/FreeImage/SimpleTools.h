@@ -10,6 +10,10 @@
 #include "ConversionYUV.h"
 #include <cmath>
 #include <tuple>
+#include <memory>
+
+
+using UniqueBitmap = std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)>;
 
 
 template <typename DstPixel_, typename SrcPixel_ = DstPixel_, typename PixelVisitor_>
