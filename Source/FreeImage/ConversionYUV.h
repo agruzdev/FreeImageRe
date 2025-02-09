@@ -10,6 +10,7 @@
 #include "FreeImage.h"
 #include <type_traits>
 #include <algorithm>
+#include <limits>
 
 // ----------------------------------------------------------
 //  internal conversions from RGB to YUV
