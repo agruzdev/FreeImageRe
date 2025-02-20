@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <memory>
 
-
+#if __cplusplus >= 201703L
 template <typename YuvStandard_>
 FIBOOL TmoLinearImpl(FIBITMAP* dst, FIBITMAP* src, double maxValue, double minBrightness, double maxBrightness)
 {
@@ -174,3 +174,9 @@ FIBITMAP* FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_CO
     return dst.release();
 
 }
+#else
+FIBITMAP* FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_COLOR_PARAM yuv_standard)
+{
+	return nullptr;
+}
+#endif
