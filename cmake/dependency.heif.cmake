@@ -65,6 +65,7 @@ ExternalProject_Get_Property(HEIF SOURCE_DIR)
 ExternalProject_Get_Property(HEIF BINARY_DIR)
 
 add_library(LibHEIF INTERFACE)
+add_dependencies(LibHEIF HEIF)
 
 target_include_directories(LibHEIF INTERFACE ${SOURCE_DIR}/libheif/api ${BINARY_DIR})
 set_property(TARGET HEIF PROPERTY FOLDER "Dependencies")
