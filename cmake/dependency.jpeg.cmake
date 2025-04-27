@@ -31,8 +31,8 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
     # https://github.com/libjpeg-turbo/libjpeg-turbo
     ExternalProject_Add(TURBOJPEG
         PREFIX ${CMAKE_BINARY_DIR}/turbojpeg
-        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.0.4.zip"
-        URL_MD5 "be79389d0187834ff705c8cd1951b5cd"
+        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.1.0.zip"
+        URL_MD5 "fe2fd8997cea1682800a5e9fbf61879b"
         DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/jpeg-turbo"
         SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpeg-turbo/source"
         BINARY_DIR "${CMAKE_BINARY_DIR}/turbojpeg/build"
@@ -56,7 +56,7 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
         link_config_aware_library_path(LibJPEG ${BINARY_DIR} libturbojpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
     endif()
     target_compile_options(LibJPEG INTERFACE "-DJPEG_HAS_READ_ICC_PROFILE=1")
-    target_include_directories(LibJPEG INTERFACE ${SOURCE_DIR} ${BINARY_DIR})
+    target_include_directories(LibJPEG INTERFACE ${SOURCE_DIR}/src ${BINARY_DIR})
     set_property(TARGET TURBOJPEG PROPERTY FOLDER "Dependencies")
 
     unset(SOURCE_DIR)

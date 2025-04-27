@@ -150,7 +150,11 @@ public:
 private:
     LibHeif()
 #ifdef _WIN32
+# ifdef NDEBUG
         : LibraryLoader(std::vector<std::string>{ "heif.dll", "libheif.dll" })
+# else
+        : LibraryLoader(std::vector<std::string>{ "heifd.dll", "libheifd.dll" })
+# endif
 #else
         : LibraryLoader("libheif.so")
 #endif

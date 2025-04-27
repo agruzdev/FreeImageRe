@@ -6,11 +6,13 @@
 
 include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
+# svtav1 can't compile CPUINFO for MSVC, so disable it for now
+# prebuild it manually if necessary
 
 ExternalProject_Add(SVTAV1
     PREFIX ${CMAKE_BINARY_DIR}/svtav1
-    URL "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v2.3.0/SVT-AV1-v2.3.0.zip"
-    URL_MD5 "8c66e2473ab706e737eba3833592c501"
+    URL "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v3.0.2/SVT-AV1-v3.0.2.zip"
+    URL_MD5 "285bbe8aeb10c8ae836a8205996adb76"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/svtav1"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/svtav1/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/svtav1/build"
@@ -19,7 +21,7 @@ ExternalProject_Add(SVTAV1
     PATCH_COMMAND ""
     BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET}
     INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
-    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_APPS=OFF" "-DBUILD_TESTING=OFF" "-DSVT_AV1_LTO=ON" #"-DMINIMAL_BUILD=ON"
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_APPS=OFF" "-DBUILD_TESTING=OFF" "-DSVT_AV1_LTO=ON" "-DUSE_CPUINFO=OFF" #"-DMINIMAL_BUILD=ON"
         "-DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS} ${ZERO_WARNINGS_FLAG}" "-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS} ${ZERO_WARNINGS_FLAG}"
         "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/svtav1/install" ${CMAKE_DEBUG_POSTFIX_MULTICONF}
     EXCLUDE_FROM_ALL

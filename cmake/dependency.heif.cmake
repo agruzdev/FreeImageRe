@@ -11,15 +11,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.kvazaar.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.dav1d.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.svtav1.cmake)
 
-# for patching
-find_package(Git REQUIRED)
-cmake_path(GET GIT_EXECUTABLE PARENT_PATH GIT_DIRECTORY)
-find_program(PATCH_EXECUTABLE patch HINTS ${GIT_DIRECTORY} ${GIT_DIRECTORY}/../usr/bin REQUIRED)
 
 ExternalProject_Add(HEIF
     PREFIX ${CMAKE_BINARY_DIR}/heif
-    URL "https://github.com/strukturag/libheif/releases/download/v1.19.5/libheif-1.19.5.tar.gz"
-    URL_MD5 "68a0b8924696b183e640fa03b73eca0c"
+    URL "https://github.com/strukturag/libheif/releases/download/v1.19.7/libheif-1.19.7.tar.gz"
+    URL_MD5 "cbb49df3d35360d228bac47f4287f2b8"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/heif"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/heif/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/heif/build"
@@ -48,15 +44,6 @@ ExternalProject_Add(HEIF
         "${CMAKE_DEBUG_POSTFIX_MULTICONF}"
     EXCLUDE_FROM_ALL
     DEPENDS DE265 KVAZAAR DAVID SVTAV1
-)
-
-ExternalProject_Add_Step(HEIF git_patch
-    DEPENDEES download
-    DEPENDERS configure
-    COMMAND echo "Applying git patch"
-    COMMAND ${PATCH_EXECUTABLE} -N -p1 -i ${CMAKE_SOURCE_DIR}/cmake/libheif/0001-Added-extra-CMAKE-flags-for-linking-plugins-statical.patch
-    COMMAND echo " -- Done"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependencies/heif/source
 )
 
 message(STATUS CMAKE_VS_MSBUILD_COMMAND=${CMAKE_VS_MSBUILD_COMMAND})

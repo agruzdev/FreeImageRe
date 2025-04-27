@@ -100,3 +100,15 @@ Version 0.4:
  - Introduced a new Plugin2 API for plugins with state
  - Added a limited support for HEIC and AVIF formats
  - Extended FIF_* enums range and added function for mapping FIF index to FIF value
+ - Updated jpeg-turbo till v3.1.0
+ - Updated OpenEXR till v3.3.3
+ - Updated OpenJPEG till v2.5.3
+ - Updated LibPNG till v1.6.47
+ - Updated LibRaw till v0.21.4
+ - Updated LibWebP till v1.5.0
+ - Updated LibSvtav1 till v3.0.2
+ - Updated LibDav1d till v1.5.1
+ - Updated LibKvazaar till v2.3.1
+ - Updated LibDE265 till v1.0.15
+ - Updated LibHEIF till v1.19.7
+
