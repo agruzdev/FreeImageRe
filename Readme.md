@@ -103,7 +103,7 @@ Version 0.4:
  - Updated jpeg-turbo till v3.1.0
  - Updated OpenEXR till v3.3.3
  - Updated OpenJPEG till v2.5.3
- - Updated LibPNG till v1.6.47
+ - Updated LibPNG till v1.6.48
  - Updated LibRaw till v0.21.4
  - Updated LibWebP till v1.5.0
  - Updated LibSvtav1 till v3.0.2
