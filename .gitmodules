@@ -1,4 +1,0 @@
-[submodule "3rdParty/Yato"]
-    path = 3rdParty/Yato
-    url = git@github.com:agruzdev/Yato.git
-    branch = master

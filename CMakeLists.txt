@@ -26,6 +26,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # External dependencies
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.yato.cmake)
 
 option(FREEIMAGE_WITH_LIBJPEG "Compile with the LibJPEG backend" ON)
 if (FREEIMAGE_WITH_LIBJPEG)
