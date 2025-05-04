@@ -1,2 +1,5 @@
 /dependencies
 /build
+/build-*
+/install
+/install-*
