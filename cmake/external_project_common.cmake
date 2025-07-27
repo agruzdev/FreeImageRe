@@ -66,4 +66,22 @@ if(NOT _EXTERNAL_PROJECT_INCLUDE_GUARD_)
         link_config_aware_library_path2(${TARGET_} ${PREFIX_} ${LIBRARY_} ${LIBRARY_})
     endmacro()
 
+    function(meson_build_type_from_cmake RETVAR_)
+        string(TOLOWER "${CMAKE_BUILD_TYPE}" _CMAKE_BUILD_TYPE_LOWER)
+        if(_CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
+            set("${RETVAR_}" "debug" PARENT_SCOPE)
+        elseif(_CMAKE_BUILD_TYPE_LOWER STREQUAL "release")
+            set("${RETVAR_}" "release" PARENT_SCOPE)
+        elseif(_CMAKE_BUILD_TYPE_LOWER STREQUAL "relwithdebinfo")
+            set("${RETVAR_}" "debugoptimized" PARENT_SCOPE)
+        elseif(_CMAKE_BUILD_TYPE_LOWER STREQUAL "minsizerel")
+            set ("${RETVAR_}" "minsize" PARENT_SCOPE)
+        else()
+            message(WARNING
+                "Custom CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} does not correspond to a Meson buildtype.
+                You may wish to specify a custom ${RETVAR_}."
+            )
+            set ("${RETVAR_}" "custom" PARENT_SCOPE)
+        endif()
+    endfunction()
 endif()

@@ -66,13 +66,15 @@ if (MSVC)
     set(DAVID_DEBUG_LIBRARY libdav1d_deb)
 
 elseif(UNIX)
-     string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOR_STUPID_MESON)
+    if (NOT DAVID_MESON_BUILDTYPE)
+        meson_build_type_from_cmake(DAVID_MESON_BUILDTYPE)
+    endif()
 
      ExternalProject_Add_Step(DAVID build_unix
         DEPENDEES configure
         DEPENDERS build
         COMMAND echo "Build Unix"
-        COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_unix --backend ninja --buildtype ${CMAKE_BUILD_TYPE_FOR_STUPID_MESON}
+        COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_unix --backend ninja --buildtype ${DAVID_MESON_BUILDTYPE}
             --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install --libdir=lib
         COMMAND ${MESON_EXECUTABLE} compile -C ${CMAKE_BINARY_DIR}/dav1d/build_unix
         COMMAND ${MESON_EXECUTABLE} install -C ${CMAKE_BINARY_DIR}/dav1d/build_unix
