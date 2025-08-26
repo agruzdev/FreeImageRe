@@ -35,41 +35,43 @@ ExternalProject_Get_Property(DAVID SOURCE_DIR)
 set(DAVID_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/dav1d/install/include)
 set(DAVID_LINK_DIRS ${CMAKE_BINARY_DIR}/dav1d/install/lib)
 
+if (NOT DAVID_MESON_BUILDTYPE)
+    meson_build_type_from_cmake(DAVID_MESON_BUILDTYPE)
+endif()
+
 if (MSVC)
     ExternalProject_Add_Step(DAVID build_debug
         DEPENDEES configure
         DEPENDERS build
-        COMMAND echo "Build Debug"
+        COMMAND echo "Build MSVC debug"
         COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_debug --backend vs2022 --buildtype debug
             --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/dav1d.sln
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/RUN_INSTALL.vcxproj
-        COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_deb.lib
+        COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_debug.lib
         COMMAND echo " -- Done"
         WORKING_DIRECTORY ${SOURCE_DIR}
     )
 
-    ExternalProject_Add_Step(DAVID build_release
-        DEPENDEES build_debug
-        DEPENDERS build
-        COMMAND echo "Build Release"
-        COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_release --backend vs2022 --buildtype release
-            --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_release/dav1d.sln
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_release/RUN_INSTALL.vcxproj
-        COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_rel.lib
-        COMMAND echo " -- Done"
-        WORKING_DIRECTORY ${SOURCE_DIR}
-    )
-
-    set(DAVID_LIBRARY libdav1d_rel)
-    set(DAVID_DEBUG_LIBRARY libdav1d_deb)
-
-elseif(UNIX)
-    if (NOT DAVID_MESON_BUILDTYPE)
-        meson_build_type_from_cmake(DAVID_MESON_BUILDTYPE)
+    if (NOT DAVID_MESON_BUILDTYPE STREQUAL "debug")
+        ExternalProject_Add_Step(DAVID build_${DAVID_MESON_BUILDTYPE}
+            DEPENDEES build_debug
+            DEPENDERS build
+            COMMAND echo "Build MSVC ${DAVID_MESON_BUILDTYPE}"
+            COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_${DAVID_MESON_BUILDTYPE} --backend vs2022 --buildtype ${DAVID_MESON_BUILDTYPE}
+                --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install
+            COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_${DAVID_MESON_BUILDTYPE}/dav1d.sln
+            COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_${DAVID_MESON_BUILDTYPE}/RUN_INSTALL.vcxproj
+            COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_${DAVID_MESON_BUILDTYPE}.lib
+            COMMAND echo " -- Done"
+            WORKING_DIRECTORY ${SOURCE_DIR}
+        )
     endif()
 
+    set(DAVID_LIBRARY libdav1d_${DAVID_MESON_BUILDTYPE})
+    set(DAVID_DEBUG_LIBRARY libdav1d_debug)
+
+elseif(UNIX)
      ExternalProject_Add_Step(DAVID build_unix
         DEPENDEES configure
         DEPENDERS build
