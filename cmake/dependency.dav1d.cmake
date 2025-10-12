@@ -17,7 +17,7 @@ find_program(MESON_EXECUTABLE meson
 ExternalProject_Add(DAVID
     PREFIX ${CMAKE_BINARY_DIR}/dav1d
     URL "https://code.videolan.org/videolan/dav1d/-/archive/1.5.1/dav1d-1.5.1.zip"
-    URL_MD5 "1437156f02211c4e9aebfb0ca6a748d7"
+    URL_MD5 "7dc0e01767971322ca04e7127661461d"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/dav1d"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/dav1d/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/dav1d/build"
