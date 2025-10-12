@@ -11,8 +11,8 @@ find_package(Git REQUIRED) # needed by OpenEXR
 
 ExternalProject_Add(EXR
     PREFIX ${CMAKE_BINARY_DIR}/openexr
-    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.3.3.zip"
-    URL_MD5 "9a041c7c5885c4b025336254ca219f8d"
+    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.3.5.zip"
+    URL_MD5 "9048f43e2088a873b09151043297480e"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openexr"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openexr/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/openexr/build"

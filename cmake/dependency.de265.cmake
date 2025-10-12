@@ -8,8 +8,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(DE265
     PREFIX ${CMAKE_BINARY_DIR}/libde265
-    URL "https://github.com/strukturag/libde265/releases/download/v1.0.15/libde265-1.0.15.tar.gz"
-    URL_MD5 "d61e9fb8052b8d90d76ab67fd84e018d"
+    URL "https://github.com/strukturag/libde265/releases/download/v1.0.16/libde265-1.0.16.tar.gz"
+    URL_MD5 "f3173ff6fa273e139de19e6e77bec9b6"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/libde265"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/libde265/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/libde265/build"

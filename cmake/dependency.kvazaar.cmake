@@ -8,8 +8,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(KVAZAAR
     PREFIX ${CMAKE_BINARY_DIR}/kvazaar
-    URL "https://github.com/ultravideo/kvazaar/archive/refs/tags/v2.3.1.zip"
-    URL_MD5 "18197b9467e2346f29de7c0bc437ba9e"
+    URL "https://github.com/ultravideo/kvazaar/archive/refs/tags/v2.3.2.zip"
+    URL_MD5 "ad540c7871d66d9ab8831aa96ee6c288"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/kvazaar"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/kvazaar/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/kvazaar/build"

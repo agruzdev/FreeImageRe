@@ -14,8 +14,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.svtav1.cmake)
 
 ExternalProject_Add(HEIF
     PREFIX ${CMAKE_BINARY_DIR}/heif
-    URL "https://github.com/strukturag/libheif/releases/download/v1.19.7/libheif-1.19.7.tar.gz"
-    URL_MD5 "cbb49df3d35360d228bac47f4287f2b8"
+    URL "https://github.com/strukturag/libheif/releases/download/v1.20.2/libheif-1.20.2.tar.gz"
+    URL_MD5 "5d0442f7197a34b7aaf95bdffabb51e9"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/heif"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/heif/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/heif/build"

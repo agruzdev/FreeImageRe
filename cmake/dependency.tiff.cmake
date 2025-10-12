@@ -8,8 +8,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(TIFF
     PREFIX ${CMAKE_BINARY_DIR}/tiff
-    URL "http://download.osgeo.org/libtiff/tiff-4.7.0.zip"
-    URL_MD5 "1c3564561fadb41aadbe88e772b7615f"
+    URL "http://download.osgeo.org/libtiff/tiff-4.7.1.zip"
+    URL_MD5 "a45fdf2169dae98635c7c16729a85471"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/tiff"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/tiff/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/tiff/build"

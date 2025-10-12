@@ -7,8 +7,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(OPENJPEG
     PREFIX ${CMAKE_BINARY_DIR}/openjpeg
-    URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.3.zip"
-    URL_MD5 "e562cd99159eb3871c05af56d18ab086"
+    URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.4.zip"
+    URL_MD5 "c8dbac9e49662217d782c1b9078dbfa7"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openjpeg"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openjpeg/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/openjpeg/build"

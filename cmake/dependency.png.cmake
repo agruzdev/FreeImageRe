@@ -12,8 +12,8 @@ unset(INSTALL_DIR)
 
 ExternalProject_Add(PNG
     PREFIX ${CMAKE_BINARY_DIR}/png
-    URL "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.48.zip"
-    URL_MD5 "7105e6523158d44095c010707e9a7d2e"
+    URL "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.50.zip"
+    URL_MD5 "271b9d1761859623f279f2f4922e1add"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/png"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/png/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/png/build"

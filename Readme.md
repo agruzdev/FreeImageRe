@@ -112,3 +112,16 @@ Version 0.4:
  - Updated LibDE265 till v1.0.15
  - Updated LibHEIF till v1.19.7
 
+Version 0.5:
+ - Updated LibDE265 till v1.0.16
+ - Updated jpeg-turbo till v3.1.2
+ - Updated LibKvazaar till v2.3.2
+ - Updated OpenEXR till v3.3.5
+ - Updated OpenJPEG till v2.5.4
+ - Updated LibPNG till v1.6.50
+ - Updated LibSvtav1 till v3.1.2
+ - Updated LibTIFF till v4.7.1
+ - Updated LibWebP till v1.6.0
+ - Updated LibHEIF till v1.20.2
+
+

@@ -11,8 +11,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 ExternalProject_Add(SVTAV1
     PREFIX ${CMAKE_BINARY_DIR}/svtav1
-    URL "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v3.0.2/SVT-AV1-v3.0.2.zip"
-    URL_MD5 "285bbe8aeb10c8ae836a8205996adb76"
+    URL "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v3.1.2/SVT-AV1-v3.1.2.zip"
+    URL_MD5 "6bf4dabc7d1f84ecf784c5d80e381113"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/svtav1"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/svtav1/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/svtav1/build"
