@@ -66,7 +66,10 @@ if (MSVC)
     set(DAVID_DEBUG_LIBRARY libdav1d_deb)
 
 elseif(UNIX)
-     string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOR_STUPID_MESON)
+     set(CMAKE_BUILD_TYPE_FOR_STUPID_MESON "debug")
+     if (CMAKE_BUILD_TYPE)
+         string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOR_STUPID_MESON)
+     endif()
 
      ExternalProject_Add_Step(DAVID build_unix
         DEPENDEES configure
