@@ -18,7 +18,7 @@ ExternalProject_Add(TIFF
     PATCH_COMMAND ""
     BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t tiff
     INSTALL_COMMAND ""
-    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" "-Dzlib=ON" "-Dlibdeflate=OFF" "-Djpeg=OFF" "-Dold-jpeg=OFF" "-Djpeg12=OFF" "-Djbig=OFF" "-Dwebp=OFF"
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" "-Dzlib=ON" "-Dlibdeflate=OFF" "-Djpeg=OFF" "-Dold-jpeg=OFF" "-Djpeg12=OFF" "-Djbig=OFF" "-Dwebp=OFF" "-Dzstd=OFF" "-Dlzma=OFF"
         "-Dtiff-tools=OFF" "-Dtiff-tests=OFF" "-Dtiff-docs=OFF" "-Dtiff-install=OFF" "-Dwin32-io=OFF" "-Dcxx=OFF"
         "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
     EXCLUDE_FROM_ALL
