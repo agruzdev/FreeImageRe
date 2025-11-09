@@ -44,5 +44,8 @@ if (MSVC)
     target_compile_options(LibJXR PRIVATE "/w")
 else() # UNIX like
     target_compile_options(LibJXR PRIVATE "-D__ANSI__=1")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
+        target_compile_options(LibJXR PRIVATE "-Wno-error=implicit-function-declaration")
+    endif()
 endif()
 
