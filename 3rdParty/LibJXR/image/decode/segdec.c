@@ -52,6 +52,8 @@ static Int DecodeSignificantAbsLevel (struct CAdaptiveHuffman *pAHexpt, BitIOInf
 //================================================================
 // Memory access functions
 //================================================================
+U32 _byteswap_ulong(U32);
+
 static U32 _FORCEINLINE _load4(void* pv)
 {
 #ifdef _BIG__ENDIAN_
