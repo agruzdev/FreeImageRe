@@ -777,6 +777,10 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 		FreeImage_Unload(_dib);
 	}
 
+	if (_WidthBytes != _Width * _BitPerPixel / 8) {
+	  throw "Invalid PSD image";
+	}
+
 	if (_Format == 1) {
 		// kJpegRGB thumbnail image
 		_dib = FreeImage_LoadFromHandle(FIF_JPEG, io, handle);

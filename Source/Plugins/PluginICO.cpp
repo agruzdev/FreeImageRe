@@ -65,7 +65,7 @@ typedef struct tagICONDIRECTORYENTRY {
 
 /**  How wide, in bytes, would this many bits be, uint32_t aligned ?
 */
-static int 
+static int
 WidthBytes(int bits) {
 	return ((((bits) + 31)>>5)<<2);
 }
@@ -73,7 +73,7 @@ WidthBytes(int bits) {
 /** Calculates the size of a single icon image
 @return Returns the size for that image
 */
-static uint32_t 
+static uint32_t
 CalculateImageSize(FIBITMAP* icon_dib) {
 	uint32_t dwNumBytes = 0;
 
@@ -93,10 +93,10 @@ CalculateImageSize(FIBITMAP* icon_dib) {
 /** Calculates the file offset for an icon image
 @return Returns the file offset for that image
 */
-static uint32_t 
+static uint32_t
 CalculateImageOffset(const std::vector<std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)>> &vPages, int nIndex ) {
     // calculate the ICO header size
-    uint32_t dwSize = sizeof(ICONHEADER); 
+    uint32_t dwSize = sizeof(ICONHEADER);
     // add the ICONDIRENTRY's
     dwSize += (uint32_t)( vPages.size() * sizeof(ICONDIRENTRY) );
     // add the sizes of the previous images
@@ -220,7 +220,7 @@ SupportsExportDepth(int depth) {
 		);
 }
 
-static FIBOOL DLL_CALLCONV 
+static FIBOOL DLL_CALLCONV
 SupportsExportType(FREE_IMAGE_TYPE type) {
 	return (type == FIT_BITMAP) ? TRUE : FALSE;
 }
@@ -297,6 +297,9 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 	const int width  = bmih.biWidth;
 	const int height = bmih.biHeight / 2; // height == xor + and mask
 	const unsigned bit_count = bmih.biBitCount;
+	if (bit_count != 1 && bit_count != 2 && bit_count != 4 && bit_count != 8 && bit_count != 16 && bit_count != 24 && bit_count != 32) {
+	  return NULL;
+	}
 	const unsigned line   = CalculateLine(width, bit_count);
 	const unsigned pitch  = CalculatePitch(line);
 
@@ -318,7 +321,7 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 		}
 #endif
 	}
-	
+
 	if (header_only) {
 		// header only mode
 		return dib.release();
@@ -445,7 +448,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 // ----------------------------------------------------------
 
-static FIBOOL 
+static FIBOOL
 SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 	// write the BITMAPINFOHEADER
 	auto *bmih = FreeImage_GetInfoHeader(dib);
@@ -558,13 +561,13 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 				for (int x = 0; x < width; x++) {
 					if (bits[x].alpha != 0xFF) {
 						// set any transparent color to full transparency
-						and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
+						and_bits[x >> 3] |= (0x80 >> (x & 0x7));
 					}
 				}
 
 				and_bits += width_and;
 			}
-		} 
+		}
 		else if (bit_count <= 8) {
 			// create the AND mask from the transparency table
 
@@ -586,7 +589,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 							uint8_t index = (bits[x >> 3] & (0x80 >> (x & 0x07))) != 0;
 							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
-								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
+								and_bits[x >> 3] |= (0x80 >> (x & 0x7));
 							}
 						}
 						and_bits += width_and;
@@ -604,7 +607,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 							uint8_t index = (bits[x >> 1] & (0x0F << shift)) >> shift;
 							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
-								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
+								and_bits[x >> 3] |= (0x80 >> (x & 0x7));
 							}
 						}
 						and_bits += width_and;
@@ -621,7 +624,7 @@ SaveStandardIcon(FreeImageIO *io, FIBITMAP *dib, fi_handle handle) {
 							uint8_t index = bits[x];
 							if (trns[index] != 0xFF) {
 								// set any transparent color to full transparency
-								and_bits[x >> 3] |= (0x80 >> (x & 0x7)); 
+								and_bits[x >> 3] |= (0x80 >> (x & 0x7));
 							}
 						}
 						and_bits += width_and;
@@ -663,7 +666,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	if (page == -1) {
 		page = 0;
 	}
-	
+
 	// get the icon header
 	icon_header = (ICONHEADER*)data;
 
@@ -696,7 +699,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 		// write all icons
 		// ...
-		
+
 		// save the icon descriptions
 
 		std::unique_ptr<void, decltype(&free)> safeList(calloc(icon_header->idCount, sizeof(ICONDIRENTRY)), &free);
@@ -731,12 +734,12 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 		io->write_proc(icon_list, sizeof(ICONDIRENTRY) * icon_header->idCount, 1, handle);
 
 		// write the image bits for each image
-		
+
 		uint32_t dwImageOffset = (uint32_t)io->tell_proc(handle);
 
 		for (k = 0; k < icon_header->idCount; k++) {
 			icon_dib = vPages[k].get();
-			
+
 			if ((icon_list[k].bWidth == 0) && (icon_list[k].bHeight == 0)) {
 				// Vista icon support
 				FreeImage_SaveToHandle(FIF_PNG, icon_dib, io, handle, PNG_DEFAULT);
@@ -747,7 +750,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				SaveStandardIcon(io, icon_dib, handle);
 			}
 
-			// update ICONDIRENTRY members			
+			// update ICONDIRENTRY members
 			uint32_t dwBytesInRes = (uint32_t)io->tell_proc(handle) - dwImageOffset;
 			icon_list[k].dwImageOffset = dwImageOffset;
 			icon_list[k].dwBytesInRes  = dwBytesInRes;
