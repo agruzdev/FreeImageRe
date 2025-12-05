@@ -1850,7 +1850,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				auto buf(std::make_unique<uint8_t[]>(TIFFStripSize(tif)));
 
-				FIBOOL bThrowMessage = FALSE;
+				bool bThrowMessage{};
 
 				if (planar_config == PLANARCONFIG_CONTIG) {
 
@@ -1859,7 +1859,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, 0), buf.get(), rows * src_line) == -1) {
 							// ignore errors as they can be frequent and not really valid errors, especially with fax images
-							bThrowMessage = TRUE;
+							bThrowMessage = true;
 							/*
 							throw FI_MSG_ERROR_PARSING;
 							*/
@@ -1893,12 +1893,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								bits -= rows * dst_pitch;
 							}
 						}
-					}
+					} // height
 				}
 				else if (planar_config == PLANARCONFIG_SEPARATE) {
 
 					const unsigned Bpc = bitspersample / 8;
-					uint8_t* dib_strip = bits;
+					uint8_t *dib_strip = bits;
 					// - loop for strip blocks -
 
 					for (uint32_t y = 0; y < height; y += rowsperstrip) {
@@ -1910,7 +1910,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 							if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, sample), buf.get(), strips * src_line) == -1) {
 								// ignore errors as they can be frequent and not really valid errors, especially with fax images
-								bThrowMessage = TRUE;
+								bThrowMessage = true;
 							}
 
 							if (sample >= chCount) {
@@ -1919,27 +1919,27 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 
 							if (src_line == dst_line && 1 == samplesperpixel) {
-								uint8_t* dst_line_begin = dib_strip;
+								uint8_t *dst_line_begin = dib_strip;
 								for (uint32_t l = 0; l < strips; l++) {
 									memcpy(dst_line_begin, buf.get() + l * src_line, src_line);
 									dst_line_begin -= dst_pitch;
 								}
 							}
 							else {
-								if (0 == (bitspersample & 7)) {
+								if (!(bitspersample & 7)) {
 									const unsigned channelOffset = sample * Bpc;
 
 									// - loop for strips in block -
 
-									uint8_t* src_line_begin = buf.get();
-									uint8_t* dst_line_begin = dib_strip;
+									uint8_t *src_line_begin = buf.get();
+									uint8_t *dst_line_begin = dib_strip;
 									for (uint32_t l = 0; l < strips; l++, src_line_begin += src_line, dst_line_begin -= dst_pitch) {
 
 										// - loop for pixels in strip -
 
-										const uint8_t* const src_line_end = src_line_begin + src_line;
+										const uint8_t *const src_line_end = src_line_begin + src_line;
 
-										for (uint8_t* src_bits = src_line_begin, *dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
+										for (uint8_t *src_bits = src_line_begin, *dst_bits = dst_line_begin; src_bits < src_line_end; src_bits += Bpc, dst_bits += Bpp) {
 											// actually assigns channel
 											AssignPixel(dst_bits + channelOffset, src_bits, Bpc);
 										} // line
@@ -1981,7 +1981,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			uint32_t tileWidth, tileHeight;
 
 			// create a new DIB
-			dib.reset(CreateImageType( header_only, image_type, width, height, bitspersample, samplesperpixel));
+			dib.reset(CreateImageType(header_only, image_type, width, height, bitspersample, samplesperpixel));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
@@ -1994,15 +1994,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			ReadPalette(tif, photometric, bitspersample, dib.get());
 
-			// get the tile geometry
-			if (!TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth) || !TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileHeight)) {
-				throw "Invalid tiled TIFF image";
-			}
+			if (!header_only) {
+				// get the tile geometry
+				if (!TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth) || !TIFFGetField(tif, TIFFTAG_TILELENGTH, &tileHeight)) {
+					throw "Invalid tiled TIFF image";
+				}
 
-			// read the tiff lines and save them in the DIB
-
-			if (planar_config == PLANARCONFIG_CONTIG && !header_only) {
-				
 				// get the maximum number of bytes required to contain a tile
 				const tmsize_t tileSize = TIFFTileSize(tif);
 
@@ -2012,60 +2009,100 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// calculate src line and dst pitch
 				const int dst_pitch = FreeImage_GetPitch(dib.get());
 				const uint32_t tileRowSize = (uint32_t)TIFFTileRowSize(tif);
-				const uint32_t imageRowSize = (uint32_t)TIFFScanlineSize(tif);
 				const unsigned Bpp = FreeImage_GetBPP(dib.get()) / 8;
-
 
 				// In the tiff file the lines are saved from up to down 
 				// In a DIB the lines must be saved from down to up
-
 				uint8_t *bits = FreeImage_GetScanLine(dib.get(), height - 1);
-				
-				for (uint32_t y = 0; y < height; y += tileHeight) {
-					const uint32_t nrows = std::min(height - y, tileHeight);
 
-					for (uint32_t x = 0; x < width; x += tileWidth) {
-						memset(tileBuffer.get(), 0, tileSize);
+				bool bThrowMessage{};
 
-						// read one tile
-						if (TIFFReadTile(tif, tileBuffer.get(), x, y, 0, 0) < 0) {
-							throw "Corrupted tiled TIFF file";
-						}
-						// convert to strip
-						const uint32_t dst_line = std::min(width - x, tileWidth);
-						const uint8_t *src_bits = tileBuffer.get();
-						uint8_t *dst_bits = bits + x * Bpp;
-						if (8 == bitspersample || 16 == bitspersample) {
-							for (uint32_t k = 0; k < nrows; k++) {
-								memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
-								src_bits += tileRowSize;
-								dst_bits -= dst_pitch;
+				if (planar_config == PLANARCONFIG_CONTIG) {
+					for (uint32_t y = 0; y < height; y += tileHeight) {
+						const uint32_t nrows = std::min(height - y, tileHeight);
+
+						for (uint32_t x = 0; x < width; x += tileWidth) {
+							memset(tileBuffer.get(), 0xCD, tileSize);
+
+							// read one tile
+							if (TIFFReadTile(tif, tileBuffer.get(), x, y, 0, 0) < 0) {
+								bThrowMessage = true;
 							}
-						}
-						else {
-							if (bitspersample <= 8) {
-								DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
-							}
-							else if (bitspersample <= 16) {
-								DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+							// convert to strip
+							const uint32_t dst_line = std::min(width - x, tileWidth);
+							const uint8_t *src_bits = tileBuffer.get();
+							uint8_t *dst_bits = bits + x * Bpp;
+							if (8 == bitspersample || 16 == bitspersample) {
+								for (uint32_t k = 0; k < nrows; ++k) {
+									memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
+									src_bits += tileRowSize;
+									dst_bits -= dst_pitch;
+								}
 							}
 							else {
-								throw "Unsupported number of bits per sample";
+								if (bitspersample <= 8) {
+									DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+								}
+								else if (bitspersample <= 16) {
+									DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+								}
+								else {
+									throw "Unsupported number of bits per sample";
+								}
 							}
 						}
-					}
+						bits -= nrows * dst_pitch;
+					} // height
+				}
+				else if (planar_config == PLANARCONFIG_SEPARATE) {
+					for (uint32_t y = 0; y < height; y += tileHeight) {
+						const uint32_t nrows = std::min(height - y, tileHeight);
+						for (uint32_t x = 0; x < width; x += tileWidth) {
+							const uint32_t dst_line = std::min(width - x, tileWidth);
+							uint8_t* dst_bits = bits + x * Bpp;
+							// - loop for channels (planes) -
+							for (uint16_t sample = 0; sample < samplesperpixel; ++sample) {
+								memset(tileBuffer.get(), 0xCD, tileSize);
 
-					bits -= nrows * dst_pitch;
+								// read one tile
+								if (TIFFReadTile(tif, tileBuffer.get(), x, y, 0, sample) < 0) {
+									bThrowMessage = true;
+								}
+								// convert to strip
+								const uint8_t *src_bits = tileBuffer.get();
+
+								if ((8 == bitspersample || 16 == bitspersample) && 1 == samplesperpixel) {
+									for (uint32_t k = 0; k < nrows; ++k) {
+										memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
+										src_bits += tileRowSize;
+										dst_bits -= dst_pitch;
+									}
+								}
+								else {
+									if (bitspersample <= 8) {
+										DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
+									}
+									else if (bitspersample <= 16) {
+										DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
+									}
+									else {
+										throw "Unsupported number of bits per sample";
+									}
+								}
+							} // channels
+						}
+						bits -= nrows * dst_pitch;
+					} // height
+				}
+
+				if (bThrowMessage) {
+					FreeImage_OutputMessageProc(s_format_id, "Warning: parsing error. Image may be incomplete or contain invalid data !");
 				}
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 				SwapRedBlue32(dib.get());
 #endif
-			}
-			else if (planar_config == PLANARCONFIG_SEPARATE) {
-				throw "Separated tiled TIFF images are not supported";
-			}
-
+			} // !header only
 
 		} else if (loadMethod == LoadAsLogLuv) {
 			// ---------------------------------------------------------------------------------
