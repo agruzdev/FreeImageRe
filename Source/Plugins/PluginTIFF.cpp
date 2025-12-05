@@ -721,12 +721,13 @@ tiff_read_iptc_profile(TIFF *tiff, FIBITMAP *dib) {
 	uint8_t *profile{};
 	uint32_t profile_size = 0;
 
-    if (TIFFGetField(tiff,TIFFTAG_RICHTIFFIPTC, &profile_size, &profile) == 1) {
-		if (TIFFIsByteSwapped(tiff) != 0) {
-			TIFFSwabArrayOfLong((uint32_t *) profile, (unsigned long)profile_size);
+    if (TIFFGetField(tiff, TIFFTAG_RICHTIFFIPTC, &profile_size, &profile) == 1) {
+		assert(!(profile_size & 3));
+		if (false && TIFFIsByteSwapped(tiff) != 0) {
+			TIFFSwabArrayOfLong((uint32_t *) profile, (unsigned long)profile_size / 4);
 		}
 
-		return read_iptc_profile(dib, profile, 4 * profile_size);
+		return read_iptc_profile(dib, profile, profile_size);
 	}
 
 	return FALSE;
@@ -826,19 +827,18 @@ tiff_write_iptc_profile(TIFF *tiff, FIBITMAP *dib) {
 		uint32_t profile_size = 0;
 		// create a binary profile
 		if (write_iptc_profile(dib, &profile, &profile_size)) {
-			uint32_t iptc_size = profile_size;
-			iptc_size += (4-(iptc_size & 0x03)); // Round up for long word alignment
+			const uint32_t iptc_size = CalculatePitch(profile_size); // Round up for long word alignment
 			auto *iptc_profile = static_cast<uint8_t*>(calloc(iptc_size, sizeof(uint8_t)));
 			if (!iptc_profile) {
 				free(profile);
 				return FALSE;
 			}
 			memcpy(iptc_profile, profile, profile_size);
-			if (TIFFIsByteSwapped(tiff)) {
-				TIFFSwabArrayOfLong((uint32_t *) iptc_profile, (unsigned long)iptc_size/4);
+			if (false && TIFFIsByteSwapped(tiff)) {
+				TIFFSwabArrayOfLong((uint32_t *) iptc_profile, (unsigned long)iptc_size / 4);
 			}
 			// Tag is type TIFF_LONG so byte length is divided by four
-			TIFFSetField(tiff, TIFFTAG_RICHTIFFIPTC, iptc_size/4, iptc_profile);
+			TIFFSetField(tiff, TIFFTAG_RICHTIFFIPTC, iptc_size, iptc_profile);
 			// release the profile data
 			free(iptc_profile);
 			free(profile);
