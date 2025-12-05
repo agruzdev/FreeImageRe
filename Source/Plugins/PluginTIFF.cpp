@@ -2032,9 +2032,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							throw "Corrupted tiled TIFF file";
 						}
 						// convert to strip
-						const uint32_t dst_line = std::min(tileWidth, width - x);
-						const uint8_t* src_bits = tileBuffer.get();
-						uint8_t* dst_bits = bits + x * Bpp;
+						const uint32_t dst_line = std::min(width - x, tileWidth);
+						const uint8_t *src_bits = tileBuffer.get();
+						uint8_t *dst_bits = bits + x * Bpp;
 						if (8 == bitspersample || 16 == bitspersample) {
 							for (uint32_t k = 0; k < nrows; k++) {
 								memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
