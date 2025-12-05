@@ -723,7 +723,7 @@ tiff_read_iptc_profile(TIFF *tiff, FIBITMAP *dib) {
 
     if (TIFFGetField(tiff, TIFFTAG_RICHTIFFIPTC, &profile_size, &profile) == 1) {
 		assert(!(profile_size & 3));
-		if (false && TIFFIsByteSwapped(tiff) != 0) {
+		if (false && TIFFIsByteSwapped(tiff)) {
 			TIFFSwabArrayOfLong((uint32_t *) profile, (unsigned long)profile_size / 4);
 		}
 
@@ -1286,25 +1286,27 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 
 // --------------------------------------------------------------------------
 
-template <typename DT> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_line, uint8_t *dst_line_begin, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
+template <typename DT> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_stride, uint8_t *dst_line_begin, const uint32_t dst_line, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
 	const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
-	const uint8_t *src_pixel = buf;
 
 	for (uint32_t l{}; l < strips; ++l) {
+		const uint8_t* src_pixel = buf;
 		auto *dst_pixel = reinterpret_cast<DT*>(dst_line_begin) + sample;
-		uint32_t t{};
+		uint32_t t{}, i{};
 		uint16_t stored_bits{};
-		for (tmsize_t i{}; i < src_line; ++i) {
+		while (i < dst_line) {
 			t <<= 8;
 			t |= *src_pixel++;
 			stored_bits += 8;
-			while (stored_bits >= bitspersample) {
+			while (stored_bits >= bitspersample && i < dst_line) {
 				stored_bits -= bitspersample;
 				*dst_pixel = static_cast<DT>((t >> stored_bits) & bits_mask);
 				dst_pixel += chCount;
+				++i;
 			}
 		}
 		dst_line_begin -= dst_pitch;
+		buf += src_stride;
 	}
 }
 
@@ -1880,10 +1882,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 							else { // not whole number of bytes
 								if (bitspersample <= 8) {
-									DecodeStrip<uint8_t>(buf.get(), src_line, bits, dst_pitch, rows, 0, 1, bitspersample);
+									DecodeStrip<uint8_t>(buf.get(), src_line, bits, width * samplesperpixel, dst_pitch, rows, 0, 1, bitspersample);
 								}
 								else if (bitspersample <= 16) {
-									DecodeStrip<uint16_t>(buf.get(), src_line, bits, dst_pitch, rows, 0, 1, bitspersample);
+									DecodeStrip<uint16_t>(buf.get(), src_line, bits, width * samplesperpixel, dst_pitch, rows, 0, 1, bitspersample);
 								}
 								else {
 									throw "Unsupported number of bits per sample";
@@ -1945,10 +1947,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								}
 								else { // not whole number of bytes
 									if (bitspersample <= 8) {
-										DecodeStrip<uint8_t>(buf.get(), src_line,  dib_strip, dst_pitch, strips, sample, chCount, bitspersample);
+										DecodeStrip<uint8_t>(buf.get(), src_line, dib_strip, width, dst_pitch, strips, sample, chCount, bitspersample);
 									}
 									else if (bitspersample <= 16) {
-										DecodeStrip<uint16_t>(buf.get(), src_line, dib_strip, dst_pitch, strips, sample, chCount, bitspersample);
+										DecodeStrip<uint16_t>(buf.get(), src_line, dib_strip, width, dst_pitch, strips, sample, chCount, bitspersample);
 									}
 									else {
 										throw "Unsupported number of bits per sample";
@@ -1977,7 +1979,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// ---------------------------------------------------------------------------------
 
 			uint32_t tileWidth, tileHeight;
-			uint32_t src_line = 0;
 
 			// create a new DIB
 			dib.reset(CreateImageType( header_only, image_type, width, height, bitspersample, samplesperpixel));
@@ -2012,6 +2013,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				const int dst_pitch = FreeImage_GetPitch(dib.get());
 				const uint32_t tileRowSize = (uint32_t)TIFFTileRowSize(tif);
 				const uint32_t imageRowSize = (uint32_t)TIFFScanlineSize(tif);
+				const unsigned Bpp = FreeImage_GetBPP(dib.get()) / 8;
 
 
 				// In the tiff file the lines are saved from up to down 
@@ -2022,7 +2024,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				for (uint32_t y = 0; y < height; y += tileHeight) {
 					const uint32_t nrows = std::min(height - y, tileHeight);
 
-					for (uint32_t x = 0, rowSize = 0; x < width; x += tileWidth, rowSize += tileRowSize) {
+					for (uint32_t x = 0; x < width; x += tileWidth) {
 						memset(tileBuffer.get(), 0, tileSize);
 
 						// read one tile
@@ -2030,17 +2032,26 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							throw "Corrupted tiled TIFF file";
 						}
 						// convert to strip
-						if (x + tileWidth > width) {
-							src_line = imageRowSize - rowSize;
-						} else {
-							src_line = tileRowSize;
+						const uint32_t dst_line = std::min(tileWidth, width - x);
+						const uint8_t* src_bits = tileBuffer.get();
+						uint8_t* dst_bits = bits + x * Bpp;
+						if (8 == bitspersample || 16 == bitspersample) {
+							for (uint32_t k = 0; k < nrows; k++) {
+								memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
+								src_bits += tileRowSize;
+								dst_bits -= dst_pitch;
+							}
 						}
-						const uint8_t *src_bits = tileBuffer.get();
-						uint8_t *dst_bits = bits + rowSize;
-						for (uint32_t k = 0; k < nrows; k++) {
-							memcpy(dst_bits, src_bits, src_line);
-							src_bits += tileRowSize;
-							dst_bits -= dst_pitch;
+						else {
+							if (bitspersample <= 8) {
+								DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+							}
+							else if (bitspersample <= 16) {
+								DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+							}
+							else {
+								throw "Unsupported number of bits per sample";
+							}
 						}
 					}
 
@@ -2608,11 +2619,11 @@ InitTIFF(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeTiffDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "LibTIFF";
-	info->fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
-	info->majorVersion = TIFFLIB_MAJOR_VERSION;
-	info->minorVersion = TIFFLIB_MINOR_VERSION;
+FIDEPENDENCY MakeTiffDependencyInfo() {
+	FIDEPENDENCY info{};
+	info.name = "LibTIFF";
+	info.fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
+	info.majorVersion = TIFFLIB_MAJOR_VERSION;
+	info.minorVersion = TIFFLIB_MINOR_VERSION;
 	return info;
 }
