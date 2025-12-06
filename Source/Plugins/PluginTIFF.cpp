@@ -463,6 +463,13 @@ ReadImageType(TIFF *tiff, uint16_t bitspersample, uint16_t samplesperpixel) {
 							fit = FIT_UINT32;
 						}
 						break;
+                    case 27:
+                    case 30:
+                    case 33:
+                    case 36:
+                    case 39:
+                    case 42:
+                    case 45:
 					case 48:
 						if (samplesperpixel == 3) {
 							fit = FIT_RGB16;
@@ -1309,14 +1316,6 @@ template <typename DT> static void DecodeMonoStrip(const uint8_t *buf, const tms
                     poffset -= 8;
                 }
                 ++i;
-                /*stored_bits -= bitspersample;
-                *dst_pixel |= (static_cast<DT>((t >> stored_bits) & bits_mask)) << poffset;
-                poffset += bitspersample;
-                if (poffset > 7) {
-                    ++dst_pixel;
-                    poffset -= 8;
-                }
-                ++i;*/
             }
         }
         dst_line_begin -= dst_pitch;
@@ -1324,18 +1323,18 @@ template <typename DT> static void DecodeMonoStrip(const uint8_t *buf, const tms
     }
 }
 
-template <typename DT> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_stride, uint8_t *dst_line_begin, const uint32_t dst_line, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
+template <typename DT, typename DS = uint8_t> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_stride, uint8_t *dst_line_begin, const uint32_t dst_line, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
 	const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
 
 	for (uint32_t l{}; l < strips; ++l) {
-		const uint8_t* src_pixel = buf;
+		const auto* src_pixel = reinterpret_cast<const DS*>(buf);
 		auto *dst_pixel = reinterpret_cast<DT*>(dst_line_begin) + sample;
 		uint32_t t{}, i{};
 		uint16_t stored_bits{};
 		while (i < dst_line) {
-			t <<= 8;
+			t <<= sizeof(DS) * 8;
 			t |= *src_pixel++;
-			stored_bits += 8;
+			stored_bits += sizeof(DS) * 8;
 			while (stored_bits >= bitspersample && i < dst_line) {
 				stored_bits -= bitspersample;
 				*dst_pixel = static_cast<DT>((t >> stored_bits) & bits_mask);
@@ -2074,7 +2073,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
                             const uint8_t dst_offset = (x * Bipp) & 0x7;
 							if (8 == bitspersample || 16 == bitspersample) {
 								for (uint32_t k = 0; k < nrows; ++k) {
-									memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
+									memcpy(dst_bits, src_bits, dst_line * Bpp);
 									src_bits += tileRowSize;
 									dst_bits -= dst_pitch;
 								}
@@ -2127,9 +2126,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									if (bitspersample <= 8) {
 										DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
 									}
-									else if (bitspersample <= 16) {
+									else if (bitspersample < 16) {
 										DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
 									}
+                                    else if (bitspersample == 16) {
+                                        DecodeStrip<uint16_t, uint16_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
+                                    }
 									else {
 										throw "Unsupported number of bits per sample";
 									}
