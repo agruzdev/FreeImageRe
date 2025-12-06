@@ -1286,6 +1286,44 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 
 // --------------------------------------------------------------------------
 
+template <typename DT> static void DecodeMonoStrip(const uint8_t *buf, const tmsize_t src_stride, uint8_t *dst_line_begin, const uint32_t dst_line, const unsigned dst_pitch, const uint32_t strips, const uint16_t bitspersample, const uint8_t offset) {
+    const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
+
+    for (uint32_t l{}; l < strips; ++l) {
+        uint8_t poffset{ offset };
+        const uint8_t *src_pixel = buf;
+        auto *dst_pixel = reinterpret_cast<DT *>(dst_line_begin);
+        uint32_t t{}, i{};
+        uint16_t stored_bits{};
+        while (i < dst_line) {
+            t <<= 8;
+            t |= *src_pixel++;
+            stored_bits += 8;
+            while (stored_bits >= bitspersample && i < dst_line) {
+                stored_bits -= bitspersample;
+                *dst_pixel |= (static_cast<DT>(t & bits_mask)) << poffset;
+                t >>= bitspersample;
+                poffset += bitspersample;
+                if (poffset > 7) {
+                    ++dst_pixel;
+                    poffset -= 8;
+                }
+                ++i;
+                /*stored_bits -= bitspersample;
+                *dst_pixel |= (static_cast<DT>((t >> stored_bits) & bits_mask)) << poffset;
+                poffset += bitspersample;
+                if (poffset > 7) {
+                    ++dst_pixel;
+                    poffset -= 8;
+                }
+                ++i;*/
+            }
+        }
+        dst_line_begin -= dst_pitch;
+        buf += src_stride;
+    }
+}
+
 template <typename DT> static void DecodeStrip(const uint8_t *buf, const tmsize_t src_stride, uint8_t *dst_line_begin, const uint32_t dst_line, const unsigned dst_pitch, const uint32_t strips, const uint16_t sample, const uint16_t chCount, const uint16_t bitspersample) {
 	const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
 
@@ -2009,7 +2047,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// calculate src line and dst pitch
 				const int dst_pitch = FreeImage_GetPitch(dib.get());
 				const uint32_t tileRowSize = (uint32_t)TIFFTileRowSize(tif);
-				const unsigned Bpp = FreeImage_GetBPP(dib.get()) / 8;
+                const unsigned Bipp = FreeImage_GetBPP(dib.get());
+				const unsigned Bpp = Bipp / 8;
 
 				// In the tiff file the lines are saved from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -2031,7 +2070,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							// convert to strip
 							const uint32_t dst_line = std::min(width - x, tileWidth);
 							const uint8_t *src_bits = tileBuffer.get();
-							uint8_t *dst_bits = bits + x * Bpp;
+							uint8_t *dst_bits = bits + (x * Bipp) / 8;
+                            const uint8_t dst_offset = (x * Bipp) & 0x7;
 							if (8 == bitspersample || 16 == bitspersample) {
 								for (uint32_t k = 0; k < nrows; ++k) {
 									memcpy(dst_bits, src_bits, dst_line * samplesperpixel);
@@ -2041,7 +2081,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 							else {
 								if (bitspersample <= 8) {
-									DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+                                    if (1 == samplesperpixel) {
+                                        DecodeMonoStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line *samplesperpixel, dst_pitch, nrows, bitspersample, dst_offset);
+                                    }
+                                    else {
+                                        DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
+                                    }
 								}
 								else if (bitspersample <= 16) {
 									DecodeStrip<uint16_t>(src_bits, tileRowSize, dst_bits, dst_line * samplesperpixel, dst_pitch, nrows, 0, 1, bitspersample);
