@@ -466,15 +466,29 @@ ReadImageType(TIFF *tiff, uint16_t bitspersample, uint16_t samplesperpixel) {
                     case 27:
                     case 30:
                     case 33:
-                    case 36:
                     case 39:
                     case 42:
                     case 45:
-					case 48:
 						if (samplesperpixel == 3) {
 							fit = FIT_RGB16;
 						}
 						break;
+                    case 36:
+                        if (samplesperpixel == 3) {
+                            fit = FIT_RGB16;
+                        }
+                        else if (samplesperpixel == 4) {
+                            fit = FIT_RGBA16;
+                        }
+                        break;
+                    case 48:
+                        if (samplesperpixel == 3) {
+                            fit = FIT_RGB16;
+                        }
+                        else if (samplesperpixel == 4) {
+                            fit = FIT_RGBA16;
+                        }
+                        break;
 					case 64:
 						if (samplesperpixel == 4) {
 							fit = FIT_RGBA16;
@@ -2282,7 +2296,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		ReadMetadata(io, handle, tif, dib.get());
 
 		// copy ICC profile data (must be done after FreeImage_Allocate)
-		
+
 		FreeImage_CreateICCProfile(dib.get(), iccBuf, iccSize);
 		if (photometric == PHOTOMETRIC_SEPARATED) {
 			if (asCMYK) {
