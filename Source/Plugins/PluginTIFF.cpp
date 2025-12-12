@@ -1270,7 +1270,7 @@ ReadThumbnail(FreeImageIO *io, fi_handle handle, void *data, TIFF *tiff, FIBITMA
 				if (TIFFSetSubDirectory(tiff, subIFD_offsets[0])) {
 					// load the thumbnail
 					int page = -1; 
-					int flags = TIFF_DEFAULT;
+					int flags = TIFF_DEFAULT | FIF_LOAD_NOTHUMBNAIL;
 					thumbnail.reset(Load(io, handle, page, flags, data));
 					// store the thumbnail (remember to release it before return)
 					FreeImage_SetThumbnail(dib, thumbnail.get());
@@ -2311,7 +2311,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// copy TIFF thumbnail (must be done after FreeImage_Allocate)
 		
-		ReadThumbnail(io, handle, data, tif, dib.get());
+        if (!(flags & FIF_LOAD_NOTHUMBNAIL)) {
+            ReadThumbnail(io, handle, data, tif, dib.get());
+        }
 
 		return dib.release();
 
