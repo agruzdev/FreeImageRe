@@ -44,6 +44,12 @@ if (MSVC)
             --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/dav1d.sln
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/RUN_INSTALL.vcxproj
+        COMMAND echo "== START LOCKE =="
+        COMMAND echo "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}"
+        COMMAND tree /f /a ${CMAKE_BINARY_DIR}
+        COMMAND echo "DAVID_LINK_DIRS: ${DAVID_LINK_DIRS}"
+        COMMAND tree /f /a ${DAVID_LINK_DIRS}
+        COMMAND echo "== END LOCKE =="
         COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_deb.lib
         COMMAND echo " -- Done"
         WORKING_DIRECTORY ${SOURCE_DIR}

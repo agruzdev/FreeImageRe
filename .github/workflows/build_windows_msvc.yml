@@ -30,4 +30,4 @@ jobs:
       - name: cmake
         run: mkdir build && cd build && cmake -G "NMake Makefiles" ..
       - name: nmake
-        run: cd build && nmake
+        run: cd build && nmake DAVID
