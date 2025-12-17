@@ -1,0 +1,33 @@
+name: Build Windows MSVC
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: amd64
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: install build dependences (1/2)
+        run: pip install meson
+      - name: install build dependencies (2/2)
+        run: choco install nasm
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+      - name: cmake
+        run: mkdir build && cd build && cmake -G "NMake Makefiles" ..
+      - name: nmake
+        run: cd build && nmake
