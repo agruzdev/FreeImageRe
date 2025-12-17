@@ -23,7 +23,7 @@ jobs:
       - name: install build dependences (1/2)
         run: pip install meson
       - name: install build dependencies (2/2)
-        run: choco install nasm
+        run: choco install nasm pkgconfiglite
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
