@@ -20,6 +20,14 @@ jobs:
             packages: 'gcc-14 g++-14'
             env_cc: gcc-14
             env_cxx: g++-14
+          - os: ubuntu-latest
+            packages: 'clang-14'
+            env_cc: clang-14
+            env_cxx: clang++-14
+          - os: ubuntu-latest
+            packages: 'clang-19'
+            env_cc: clang-19
+            env_cxx: clang++-19
 
     env:
       CC: ${{ matrix.env_cc }}
