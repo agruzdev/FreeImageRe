@@ -20,6 +20,14 @@ jobs:
             packages: 'gcc-14 g++-14'
             env_cc: gcc-14
             env_cxx: g++-14
+          - os: ubuntu-latest
+            packages: 'mingw-w64'
+            env_cc: x86_64-w64-mingw32-gcc-posix
+            env_cxx: x86_64-w64-mingw32-g++-posix
+          - os: ubuntu-latest
+            packages: 'mingw-w64'
+            env_cc: x86_64-w64-mingw32-gcc-win32
+            env_cxx: x86_64-w64-mingw32-g++-win32
 
     env:
       CC: ${{ matrix.env_cc }}
