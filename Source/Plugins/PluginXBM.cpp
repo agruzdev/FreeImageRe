@@ -56,7 +56,7 @@ readLine(char *str, int n, FreeImageIO *io, fi_handle handle) {
 	do {
 		count = io->read_proc(&c, 1, 1, handle);
 		str[i++] = c;
-	} while ((c != '\n') && (i < n));
+	} while ((c != '\n') && (i < n - 1));
 	if (count <= 0)
 		return nullptr;
 	str[i] = '\0';
@@ -88,34 +88,31 @@ Read an XBM file into a buffer
 static const char* 
 readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, std::unique_ptr<void, decltype(&free)> &dataP) {
 	char line[MAX_LINE], name_and_type[MAX_LINE];
-	char* ptr;
-	char* t;
+    char *ptr{};
+    char *t{};
 	int version = 0;
 	size_t bytes, bytes_per_line, raster_length;
 	int v, padding;
 	int c1, c2, value1, value2;
 	int hex_table[256];
-	FIBOOL found_declaration;
+    bool found_declaration{}; // haven't found it yet; haven't even looked
 	/* in scanning through the bitmap file, we have found the first
 	 line of the C declaration of the array (the "static char ..."
 	 or whatever line)
 	 */
-	FIBOOL eof;	// we've encountered end of file while searching file
+    bool eof{};	// we've encountered end of file while searching file
 
 	*widthP = *heightP = -1;
 
-	found_declaration = FALSE;    // haven't found it yet; haven't even looked
-	eof = FALSE;                  // haven't encountered end of file yet 
-	
 	while (!found_declaration && !eof) {
 
 		if (!readLine(line, MAX_LINE, io, handle)) {
-			eof = TRUE;
+			eof = true;
 		}
 		else {
 			if (strlen(line) == MAX_LINE - 1)
 				return( ERR_XBM_LINE );
-			if (sscanf(line, "#define %s %d", name_and_type, &v) == 2) {
+			if (sscanf_s(line, "#define %s %d", name_and_type, MAX_LINE, &v) == 2) {
 				if ((t = strrchr(name_and_type, '_')) == nullptr)
 					t = name_and_type;
 				else
@@ -127,17 +124,17 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, std::u
 				continue;
 			}
 
-			if (sscanf(line, "static short %s = {", name_and_type) == 1) {
+			if (sscanf_s(line, "static short %s = {", name_and_type, MAX_LINE) == 1) {
 				version = 10;
-				found_declaration = TRUE;
+				found_declaration = true;
 			}
-			else if (sscanf( line, "static char %s = {", name_and_type ) == 1) {
+			else if (sscanf_s(line, "static char %s = {", name_and_type, MAX_LINE) == 1) {
 				version = 11;
-				found_declaration = TRUE;
+				found_declaration = true;
 			}
-			else if (sscanf(line, "static unsigned char %s = {", name_and_type ) == 1) {
+			else if (sscanf_s(line, "static unsigned char %s = {", name_and_type, MAX_LINE) == 1) {
 				version = 11;
-				found_declaration = TRUE;
+				found_declaration = true;
 			}
 		}
 	}
@@ -292,7 +289,7 @@ MimeType() {
 static FIBOOL DLL_CALLCONV
 Validate(FreeImageIO *io, fi_handle handle) {
 	char magic[8];
-	if (readLine(magic, 7, io, handle)) {
+	if (readLine(magic, 8, io, handle)) {
 		if (strcmp(magic, "#define") == 0)
 			return TRUE;
 	}
