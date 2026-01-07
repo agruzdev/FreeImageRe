@@ -807,7 +807,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				return FALSE;
 			}
 
-            std::unique_ptr<void, std::function<void(void*)>> safePalette(nullptr, [&png_ptr](void *p){ png_free(png_ptr.get(), p); });
+            std::unique_ptr<png_color, std::function<void(png_colorp)>> safePalette(nullptr, [&png_ptr](png_colorp p){ png_free(png_ptr.get(), p); });
 
 			// init the IO
 
@@ -898,8 +898,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// set the palette
 
 					palette_entries = 1 << bit_depth;
-					safePalette.reset(png_malloc(png_ptr.get(), palette_entries * sizeof (png_color)));
-					auto palette = static_cast<png_colorp>(safePalette.get());
+					safePalette.reset(static_cast<png_colorp>(png_malloc(png_ptr.get(), palette_entries * sizeof (png_color))));
+					auto palette = safePalette.get();
 					pal = FreeImage_GetPalette(dib);
 
 					for (int i = 0; i < palette_entries; i++) {
