@@ -769,7 +769,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 static FIBOOL DLL_CALLCONV
 Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void *data) {
-	png_colorp palette{};
 	png_uint_32 width, height;
 	FIBOOL has_alpha_channel = FALSE;
 
@@ -807,6 +806,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 				// if we get here, we had a problem reading the file
 				return FALSE;
 			}
+
+            std::unique_ptr<void, std::function<void(void*)>> safePalette(nullptr, [&png_ptr](void *p){ png_free(png_ptr.get(), p); });
 
 			// init the IO
 
@@ -897,7 +898,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// set the palette
 
 					palette_entries = 1 << bit_depth;
-					palette = (png_colorp)png_malloc(png_ptr.get(), palette_entries * sizeof (png_color));
+					safePalette.reset(png_malloc(png_ptr.get(), palette_entries * sizeof (png_color)));
+					auto palette = static_cast<png_colorp>(safePalette.get());
 					pal = FreeImage_GetPalette(dib);
 
 					for (int i = 0; i < palette_entries; i++) {
@@ -1028,11 +1030,6 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			// Bug with png_flush
 
 			png_write_end(png_ptr.get(), info_ptr.get());
-
-			// clean up after the write, and free any memory allocated
-			if (palette) {
-				png_free(png_ptr.get(), palette);
-			}
 
 			return TRUE;
 
