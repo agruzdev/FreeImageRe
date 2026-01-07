@@ -199,8 +199,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	FIBOOL isRGB;			// TRUE if file type is RT_FORMAT_RGB
 	uint8_t fillchar;
 
-	FIBITMAP *dib{};
-	uint8_t *bits;			// Pointer to dib data
+	uint8_t *bits{};			// Pointer to dib data
 	uint16_t x, y;
 
 	if (!handle) {
@@ -231,6 +230,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		if (header.magic != RAS_MAGIC) {
 			throw FI_MSG_ERROR_MAGIC_NUMBER;
+		}
+		if (header.width > 65500 || header.height > 65500) {
+			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
 
 		// Allocate a new DIB
@@ -353,7 +355,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// Each row is multiple of 16 bits (2 bytes).
 
 		if (header.depth == 1) {
-			linelength = (uint16_t)((header.width / 8) + (header.width % 8 ? 1 : 0));
+			linelength = (uint16_t)((header.width + 7) / 8);
 		} else {
 			linelength = (uint16_t)header.width;
 		}
