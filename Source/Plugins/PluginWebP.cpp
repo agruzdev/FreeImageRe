@@ -175,7 +175,7 @@ Open(FreeImageIO *io, fi_handle handle, FIBOOL read) {
 		// create the MUX object
 		mux = WebPMuxCreate(&bitstream, copy_data);
 		// no longer needed since copy_data == 1
-		free((void*)bitstream.bytes);
+		delete[] bitstream.bytes;
 		if (!mux) {
 			FreeImage_OutputMessageProc(s_format_id, "Failed to create mux object from file");
 		}
