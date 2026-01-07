@@ -1317,13 +1317,15 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 			// (len + 1) bytes of data are copied
 			++len;
 
+            len = std::min<int>(len, line_end - line);
+            len = std::min<int>(len, srcSize);
 			// assert we don't write beyound eol
-			memcpy(line, rle_line, line + len > line_end ? line_end - line : len);
+			memcpy(line, rle_line, len);
 			line += len;
 			rle_line += len;
 			srcSize -= len;
 		}
-		else if ( len > 128 ) { //< MSB is set
+		else if ( len > 128 && srcSize > 0) { //< MSB is set
 			// RLE compressed packet
 
 			// One byte of data is repeated (-len + 1) times
@@ -1331,8 +1333,9 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 			len ^= 0xFF; // same as (-len + 1) & 0xFF
 			len += 2;    //
 
+            len = std::min<int>(len, line_end - line);
 			// assert we don't write beyound eol
-			memset(line, *rle_line++, line + len > line_end ? line_end - line : len);
+			memset(line, *rle_line++, len);
 			line += len;
 			srcSize--;
 		}
