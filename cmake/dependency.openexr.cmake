@@ -11,8 +11,8 @@ find_package(Git REQUIRED) # needed by OpenEXR
 
 ExternalProject_Add(EXR
     PREFIX ${CMAKE_BINARY_DIR}/openexr
-    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.3.5.zip"
-    URL_MD5 "9048f43e2088a873b09151043297480e"
+    URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.4.4.zip"
+    URL_MD5 "23a4152db8b04ad484e9e1dd6638a662"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openexr"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openexr/source"
     BINARY_DIR "${CMAKE_BINARY_DIR}/openexr/build"
@@ -30,6 +30,8 @@ ExternalProject_Add(EXR
 
 ExternalProject_Get_Property(EXR INSTALL_DIR)
 
+set(OPENJPH_VERSION_SUFFIX ".0.24")
+
 add_library(LibOpenEXR INTERFACE)
 add_dependencies(LibOpenEXR EXR)
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR_d${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -37,6 +39,7 @@ link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}O
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Imath${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Imath_d${CMAKE_STATIC_LIBRARY_SUFFIX})
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}Iex${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}Iex_d${CMAKE_STATIC_LIBRARY_SUFFIX})
 link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread_d${CMAKE_STATIC_LIBRARY_SUFFIX})
+link_library_path2(LibOpenEXR ${INSTALL_DIR}/lib ${CMAKE_STATIC_LIBRARY_PREFIX}openjph${OPENJPH_VERSION_SUFFIX}${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}openjph${OPENJPH_VERSION_SUFFIX}_d${CMAKE_STATIC_LIBRARY_SUFFIX})
 target_include_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath ${INSTALL_DIR}/include/OpenEXR)
 set_property(TARGET EXR PROPERTY FOLDER "Dependencies")
 
