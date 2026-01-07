@@ -124,4 +124,12 @@ Version 0.5:
  - Updated LibWebP till v1.6.0
  - Updated LibHEIF till v1.20.2
 
+Version 0.6:
+ - Added support of extra TIFF image formats
+ - Fixed infinite loop in TIFF thumbnail loading
+ - Updated jpeg-turbo till v3.1.3
+ - Updated OpenEXR till v3.4.4
+ - Updated LibPNG till v1.6.53
+ - Updated LibRaw till v0.21.5
+ - Updated LibDav1d till v1.5.3
 
