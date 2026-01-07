@@ -246,18 +246,23 @@ Cleanup:
 }
 
 
-ERR StreamCalcIFDSize(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd)
+ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd, U32 rcnt)
 {
     ERR err = WMP_errSuccess;
     size_t offCurPos = 0;
     Bool GetPosOK = FALSE;
-    U16 cDir;
+    U16 cDir = 0;
     U32 i;
     U32 ofsdir;
     U32 cbifd = 0;
     U32 cbEXIFIFD = 0;
     U32 cbGPSInfoIFD = 0;
     U32 cbInteroperabilityIFD = 0;
+
+    // sanity check: avoid infinite recursion
+    if (rcnt > 10) {
+        Call(WMP_errFail);
+    }
 
     *pcbifd = 0;
     Call(pWS->GetPos(pWS, &offCurPos));
@@ -268,11 +273,11 @@ ERR StreamCalcIFDSize(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd)
     ofsdir = uIFDOfs + sizeof(U16);
     for ( i = 0; i < cDir; i++ )
     {
-        U16 tag;
-        U16 type;
-        U32 count;
-        U32 value;
-        U32 datasize;
+        U16 tag = 0;
+        U16 type = 0;
+        U32 count = 0;
+        U32 value = 0;
+        U32 datasize = 0;
 
         Call(GetUShort(pWS, ofsdir, &tag));
         Call(GetUShort(pWS, ofsdir + sizeof(U16), &type));
@@ -281,15 +286,15 @@ ERR StreamCalcIFDSize(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd)
         FailIf(type == 0 || type >= sizeof(IFDEntryTypeSizes) / sizeof(IFDEntryTypeSizes[0]), WMP_errUnsupportedFormat);
         if ( tag == WMP_tagEXIFMetadata )
         {
-            Call(StreamCalcIFDSize(pWS, value, &cbEXIFIFD));
+            Call(StreamCalcIFDSizePrivate(pWS, value, &cbEXIFIFD, rcnt + 1));
         }
         else if ( tag == WMP_tagGPSInfoMetadata )
         {
-            Call(StreamCalcIFDSize(pWS, value, &cbGPSInfoIFD));
+            Call(StreamCalcIFDSizePrivate(pWS, value, &cbGPSInfoIFD, rcnt + 1));
         }
         else if ( tag == WMP_tagInteroperabilityIFD )
         {
-            Call(StreamCalcIFDSize(pWS, value, &cbInteroperabilityIFD));
+            Call(StreamCalcIFDSizePrivate(pWS, value, &cbInteroperabilityIFD, rcnt + 1));
         }
         else
         {
@@ -308,12 +313,17 @@ ERR StreamCalcIFDSize(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd)
     *pcbifd = cbifd;
 
 Cleanup:
-    if ( GetPosOK )
-        Call(pWS->SetPos(pWS, offCurPos));
+    if (GetPosOK && WMP_errSuccess == err) {
+        err = pWS->SetPos(pWS, offCurPos);
+    }
     return ( err );
 }
 
 
+ERR StreamCalcIFDSize(struct WMPStream *pWS, U32 uIFDOfs, U32 *pcbifd)
+{
+    return StreamCalcIFDSizePrivate(pWS, uIFDOfs, pcbifd, 0);
+}
 
 // src IFD copied to dst IFD with any nested IFD's
 // src IFD is arbitrary endian, arbitrary data arrangement
