@@ -252,9 +252,6 @@ static ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcb
     size_t offCurPos = 0;
     Bool GetPosOK = FALSE;
     U16 cDir = 0;
-    U32 i;
-    U32 ofsdir;
-    U32 cbifd = 0;
     U32 cbEXIFIFD = 0;
     U32 cbGPSInfoIFD = 0;
     U32 cbInteroperabilityIFD = 0;
@@ -269,9 +266,9 @@ static ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcb
     GetPosOK = TRUE;
 
     Call(GetUShort(pWS, uIFDOfs, &cDir));
-    cbifd = sizeof(U16) + cDir * SizeofIFDEntry + sizeof(U32);
-    ofsdir = uIFDOfs + sizeof(U16);
-    for ( i = 0; i < cDir; i++ )
+    U32 cbifd = sizeof(U16) + cDir * SizeofIFDEntry + sizeof(U32);
+    U32 ofsdir = uIFDOfs + sizeof(U16);
+    for (U16 i = 0; i < cDir; i++ )
     {
         U16 tag = 0;
         U16 type = 0;
@@ -299,17 +296,21 @@ static ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcb
         else
         {
             datasize = IFDEntryTypeSizes[type] * count;
-            if ( datasize > 4 )
+            if (datasize > 4) {
                 cbifd += datasize;
+            }
         }
         ofsdir += SizeofIFDEntry;
     }
-    if ( cbEXIFIFD != 0 )
-        cbifd += ( cbifd & 1 ) + cbEXIFIFD;
-    if ( cbGPSInfoIFD != 0 )
-        cbifd += ( cbifd & 1 ) + cbGPSInfoIFD;
-    if ( cbInteroperabilityIFD != 0 )
-        cbifd += ( cbifd & 1 ) + cbInteroperabilityIFD;
+    if (cbEXIFIFD != 0) {
+        cbifd += (cbifd & 1) + cbEXIFIFD;
+    }
+    if (cbGPSInfoIFD != 0) {
+        cbifd += (cbifd & 1) + cbGPSInfoIFD;
+    }
+    if (cbInteroperabilityIFD != 0) {
+        cbifd += (cbifd & 1) + cbInteroperabilityIFD;
+    }
     *pcbifd = cbifd;
 
 Cleanup:
@@ -332,28 +333,23 @@ ERR StreamCalcIFDSize(struct WMPStream *pWS, U32 uIFDOfs, U32 *pcbifd)
 ERR BufferCopyIFD(const U8* pbsrc, U32 cbsrc, U32 ofssrc, U8 endian, U8* pbdst, U32 cbdst, U32* pofsdst)
 {
     ERR err = WMP_errSuccess;
-    U16 cDir;
-    U16 i;
+    U16 cDir = 0;
     U16 ofsEXIFIFDEntry = 0;
     U16 ofsGPSInfoIFDEntry = 0;
     U16 ofsInteroperabilityIFDEntry = 0;
     U32 ofsEXIFIFD = 0;
     U32 ofsGPSInfoIFD = 0;
     U32 ofsInteroperabilityIFD = 0;
-    U32 ofsdstnextdata;
     U32 ofsdst = *pofsdst;
-    U32 ofssrcdir;
-    U32 ofsdstdir;
-    U32 ofsnextifd;
 
     Call(getbfwe(pbsrc, cbsrc, ofssrc, &cDir, endian));
     Call(setbfw(pbdst, cbdst, ofsdst, cDir));
-    ofsnextifd = ofsdst + sizeof(U16) + SizeofIFDEntry * cDir;
-    ofsdstnextdata = ofsnextifd + sizeof(U32);
+    U32 ofsnextifd = ofsdst + sizeof(U16) + SizeofIFDEntry * cDir;
+    U32 ofsdstnextdata = ofsnextifd + sizeof(U32);
 
-    ofssrcdir = ofssrc + sizeof(U16);
-    ofsdstdir = ofsdst + sizeof(U16);
-    for ( i = 0; i < cDir; i++ )
+    U32 ofssrcdir = ofssrc + sizeof(U16);
+    U32 ofsdstdir = ofsdst + sizeof(U16);
+    for (U16 i = 0; i < cDir; i++ )
     {
         U16 tag;
         U16 type;
@@ -486,19 +482,14 @@ ERR StreamCopyIFD(struct WMPStream* pWS, U32 ofssrc, U8* pbdst, U32 cbdst, U32* 
     ERR err = WMP_errSuccess;
     size_t offCurPos = 0;
     Bool GetPosOK = FALSE;
-    U16 cDir;
-    U16 i;
+    U16 cDir = 0;
     U16 ofsEXIFIFDEntry = 0;
     U16 ofsGPSInfoIFDEntry = 0;
     U16 ofsInteroperabilityIFDEntry = 0;
     U32 ofsEXIFIFD = 0;
     U32 ofsGPSInfoIFD = 0;
     U32 ofsInteroperabilityIFD = 0;
-    U32 ofsdstnextdata;
     U32 ofsdst = *pofsdst;
-    U32 ofssrcdir;
-    U32 ofsdstdir;
-    U32 ofsnextifd;
 
     Call(pWS->GetPos(pWS, &offCurPos));
     GetPosOK = TRUE;
@@ -506,12 +497,12 @@ ERR StreamCopyIFD(struct WMPStream* pWS, U32 ofssrc, U8* pbdst, U32 cbdst, U32* 
     Call(GetUShort(pWS, ofssrc, &cDir));
     Call(setbfw(pbdst, cbdst, ofsdst, cDir));
 
-    ofsnextifd = ofsdst + sizeof(U16) + SizeofIFDEntry * cDir;
-    ofsdstnextdata = ofsnextifd + sizeof(U32);
+    U32 ofsnextifd = ofsdst + sizeof(U16) + SizeofIFDEntry * cDir;
+    U32 ofsdstnextdata = ofsnextifd + sizeof(U32);
 
-    ofssrcdir = ofssrc + sizeof(U16);
-    ofsdstdir = ofsdst + sizeof(U16);
-    for ( i = 0; i < cDir; i++ )
+    U32 ofssrcdir = ofssrc + sizeof(U16);
+    U32 ofsdstdir = ofsdst + sizeof(U16);
+    for (U16 i = 0; i < cDir; i++ )
     {
         U16 tag;
         U16 type;
@@ -589,8 +580,9 @@ ERR StreamCopyIFD(struct WMPStream* pWS, U32 ofssrc, U8* pbdst, U32 cbdst, U32* 
     *pofsdst = ofsdstnextdata;
 
 Cleanup:
-    if ( GetPosOK )
+    if (GetPosOK) {
         Call(pWS->SetPos(pWS, offCurPos));
+    }
     return err;
 }
 
