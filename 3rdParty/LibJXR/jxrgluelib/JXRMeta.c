@@ -246,7 +246,7 @@ Cleanup:
 }
 
 
-ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd, U32 rcnt)
+static ERR StreamCalcIFDSizePrivate(struct WMPStream* pWS, U32 uIFDOfs, U32 *pcbifd, U32 rcnt)
 {
     ERR err = WMP_errSuccess;
     size_t offCurPos = 0;
