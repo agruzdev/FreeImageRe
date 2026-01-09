@@ -1548,16 +1548,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 #endif
 			}
 
-			uint32_t largestRLELine = 0;
-			for (unsigned ch = 0; ch < nChannels; ++ch) {
-				for (unsigned h = 0; h < nHeight; ++h) {
-					const unsigned index = ch * nHeight + h;
-
-					if (largestRLELine < rleLineSizeList[index]) {
-						largestRLELine = rleLineSizeList[index];
-					}
-				}
-			}
+            const auto largestRLELine = *std::max_element(rleLineSizeList.get(), rleLineSizeList.get() + nChannels * nHeight);
 
 			auto rle_line_start = std::make_unique<uint8_t[]>(largestRLELine);
 
