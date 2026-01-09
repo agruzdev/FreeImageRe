@@ -1323,11 +1323,11 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 	while (srcSize > 1 && dstSize > 0) {
 
 		unsigned len = *rle_line++;
-		srcSize--;
+		--srcSize;
 
 		// NOTE len is signed byte in PackBits RLE
 
-		if ( len_byte < 128 ) { //<- MSB is not set
+		if (len < 128) { //<- MSB is not set
 			// uncompressed packet
 
             // assert we don't write beyound eol
@@ -1338,7 +1338,7 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 			srcSize -= len;
             dstSize -= len;
 		}
-		else if ( len_byte > 128 ) { //< MSB is set
+		else if (len > 128 ) { //< MSB is set
 			// RLE compressed packet
 
 			// One byte of data is repeated (-len + 1) times
@@ -1347,7 +1347,7 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
             len = std::min((len ^ 0xFF) + 2, dstSize);
 			memset(line, *rle_line++, len);
 			line += len;
-			srcSize--;
+			--srcSize;
             dstSize -= len;
 		}
 		else {
