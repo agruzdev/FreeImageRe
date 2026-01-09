@@ -1303,10 +1303,10 @@ void psdParser::ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSiz
 	}
 }
 
-void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t* line_end, unsigned srcSize) {
-	while (srcSize > 0) {
+static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, unsigned srcSize) {
+	while (srcSize > 1 && dstSize > 0) {
 
-		int len = *rle_line++;
+		unsigned len = *rle_line++;
 		srcSize--;
 
 		// NOTE len is signed byte in PackBits RLE
@@ -1317,13 +1317,13 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 			// (len + 1) bytes of data are copied
 			++len;
 
-            len = std::min<int>(len, line_end - line);
-            len = std::min<int>(len, srcSize);
+            len = std::min({ len, dstSize, srcSize});
 			// assert we don't write beyound eol
 			memcpy(line, rle_line, len);
 			line += len;
 			rle_line += len;
 			srcSize -= len;
+            dstSize -= len;
 		}
 		else if ( len > 128 && srcSize > 0) { //< MSB is set
 			// RLE compressed packet
@@ -1333,11 +1333,12 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 			len ^= 0xFF; // same as (-len + 1) & 0xFF
 			len += 2;    //
 
-            len = std::min<int>(len, line_end - line);
+            len = std::min(len, dstSize);
 			// assert we don't write beyound eol
 			memset(line, *rle_line++, len);
 			line += len;
 			srcSize--;
+            dstSize -= len;
 		}
 		else if ( 128 == len ) {
 			// Do nothing
@@ -1548,7 +1549,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 
 					// - write line to destination -
 
-					UnpackRLE(line_start.get(), rle_line_start.get(), line_end, rleLineSize);
+					UnpackRLE(line_start.get(), rle_line_start.get(), lineSize, rleLineSize);
 					ReadImageLine(dst_line_start, line_start.get(), lineSize, dstBpp, bytes);
 				}//< h
 			}//< ch
