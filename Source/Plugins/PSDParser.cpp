@@ -1314,21 +1314,21 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 		if ( len < 128 ) { //<- MSB is not set
 			// uncompressed packet
 
+            // assert we don't write beyound eol
             len = std::min({ len + 1, dstSize, srcSize});
-			// assert we don't write beyound eol
 			memcpy(line, rle_line, len);
 			line += len;
 			rle_line += len;
 			srcSize -= len;
             dstSize -= len;
 		}
-		else if ( len > 128 && srcSize > 0) { //< MSB is set
+		else if ( len > 128 ) { //< MSB is set
 			// RLE compressed packet
 
 			// One byte of data is repeated (-len + 1) times
 
+            // assert we don't write beyound eol
             len = std::min((len ^ 0xFF) + 2, dstSize);
-			// assert we don't write beyound eol
 			memset(line, *rle_line++, len);
 			line += len;
 			srcSize--;
