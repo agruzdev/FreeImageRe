@@ -636,6 +636,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (!dib) {
 			throw FI_MSG_ERROR_MEMORY;
 		}
+        width = FreeImage_GetWidth(dib.get());
+        height = FreeImage_GetHeight(dib.get());
 
 		// set the metadata as comments
 		rgbe_ReadMetadata(dib.get(), &header_info);
