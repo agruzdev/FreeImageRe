@@ -1314,10 +1314,7 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 		if ( len < 128 ) { //<- MSB is not set
 			// uncompressed packet
 
-			// (len + 1) bytes of data are copied
-			++len;
-
-            len = std::min({ len, dstSize, srcSize});
+            len = std::min({ len + 1, dstSize, srcSize});
 			// assert we don't write beyound eol
 			memcpy(line, rle_line, len);
 			line += len;
@@ -1330,10 +1327,7 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 
 			// One byte of data is repeated (-len + 1) times
 
-			len ^= 0xFF; // same as (-len + 1) & 0xFF
-			len += 2;    //
-
-            len = std::min(len, dstSize);
+            len = std::min((len ^ 0xFF) + 2, dstSize);
 			// assert we don't write beyound eol
 			memset(line, *rle_line++, len);
 			line += len;
