@@ -1331,7 +1331,7 @@ static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, 
 			// uncompressed packet
 
             // assert we don't write beyound eol
-            len = std::min({ len + 1, dstSize, srcSize});
+            len = std::min({ len + 1, dstSize, srcSize });
 			memcpy(line, rle_line, len);
 			line += len;
 			rle_line += len;
@@ -1567,7 +1567,6 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 					// @todo write to extra channels
 					break;
 				}
-				const uint8_t* const line_end = line_start.get() + lineSize;
 
 				const unsigned channelOffset = GetChannelOffset(bitmap, ch) * bytes;
 
