@@ -324,7 +324,13 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 		return dib.release();
 	}
 
+
 	// read the icon
+	if (bit_count != FreeImage_GetBPP(dib.get()) || pitch != FreeImage_GetPitch(dib.get())) {
+		// same pitch is assumed in read_proc
+		return nullptr;
+	}
+	// ToDo: Need to support line by line reading if pitch is different?
 	io->read_proc(FreeImage_GetBits(dib.get()), height * pitch, 1, handle);
 
 #ifdef FREEIMAGE_BIGENDIAN
