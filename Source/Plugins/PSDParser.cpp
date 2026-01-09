@@ -713,7 +713,9 @@ _Format(-1), _Width(-1), _Height(-1), _WidthBytes(-1), _Size(-1), _CompressedSiz
 }
 
 psdThumbnail::~psdThumbnail() {
-	if (_owned) FreeImage_Unload(_dib);
+	if (_owned) {
+		FreeImage_Unload(_dib);
+	}
 }
 
 void
@@ -771,15 +773,23 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 	nBytes += n * sizeof(ShortValue);
 	_Planes = (short)psdGetValue(ShortValue, sizeof(_Planes) );
 
+	if (_WidthBytes * 8 < _Width * _BitPerPixel) {
+		throw "Invalid PSD image";
+	}
+
 	const long JFIF_startpos = io->tell_proc(handle);
 
 	if (_dib) {
 		FreeImage_Unload(_dib);
+		_dib = nullptr;
 	}
 
 	if (_Format == 1) {
 		// kJpegRGB thumbnail image
 		_dib = FreeImage_LoadFromHandle(FIF_JPEG, io, handle);
+		if (!_dib) {
+			throw "Invalid PSD thumbnail";
+		}
 		if (isBGR) {
 			SwapRedBlue32(_dib);
 		}
@@ -789,6 +799,12 @@ int psdThumbnail::Read(FreeImageIO *io, fi_handle handle, int iResourceSize, boo
 	else {
 		// kRawRGB thumbnail image
 		_dib = FreeImage_Allocate(_Width, _Height, _BitPerPixel);
+		if (!_dib) {
+			throw "Invalid PSD thumbnail";
+		}
+		if (_BitPerPixel != FreeImage_GetBPP(_dib)) {
+			throw "Invalid BPP in PSD thumbnail";
+		}
 		uint8_t* dst_line_start = FreeImage_GetScanLine(_dib, _Height - 1);//<*** flipped
 		auto line_start = std::make_unique<uint8_t[]>(_WidthBytes);
 		const unsigned dstLineSize = FreeImage_GetPitch(_dib);
@@ -1304,18 +1320,21 @@ void psdParser::ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSiz
 }
 
 void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t* line_end, unsigned srcSize) {
-	while (srcSize > 0) {
+	while (srcSize > 1) {
+		if (line >= line_end) {
+			return;
+		}
 
-		int len = *rle_line++;
+		const uint8_t len_byte = *rle_line++;
 		srcSize--;
 
 		// NOTE len is signed byte in PackBits RLE
 
-		if ( len < 128 ) { //<- MSB is not set
+		if ( len_byte < 128 ) { //<- MSB is not set
 			// uncompressed packet
 
 			// (len + 1) bytes of data are copied
-			++len;
+			const uint32_t len = std::min(static_cast<uint32_t>(len_byte + 1), srcSize);
 
 			// assert we don't write beyound eol
 			memcpy(line, rle_line, line + len > line_end ? line_end - line : len);
@@ -1323,26 +1342,27 @@ void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t*
 			rle_line += len;
 			srcSize -= len;
 		}
-		else if ( len > 128 ) { //< MSB is set
+		else if ( len_byte > 128 ) { //< MSB is set
 			// RLE compressed packet
 
 			// One byte of data is repeated (-len + 1) times
 
-			len ^= 0xFF; // same as (-len + 1) & 0xFF
-			len += 2;    //
+			// same as (-len + 1) & 0xFF
+			const uint32_t len = (len_byte ^ 0xFF) + 2;
 
 			// assert we don't write beyound eol
 			memset(line, *rle_line++, line + len > line_end ? line_end - line : len);
 			line += len;
 			srcSize--;
 		}
-		else if ( 128 == len ) {
+		else {
+			// 128 == len
 			// Do nothing
 		}
 	}//< rle_line
 }
 
-FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
+FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 	if (!handle) {
 		return nullptr;
 	}
@@ -1361,7 +1381,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	// PSDP_COMPRESSION_ZIP and PSDP_COMPRESSION_ZIP_PREDICTION
 	// are only valid for layer data, not the composited data.
 	if (nCompression != PSDP_COMPRESSION_NONE &&
-	   nCompression != PSDP_COMPRESSION_RLE) {
+		nCompression != PSDP_COMPRESSION_RLE) {
 		FreeImage_OutputMessageProc(_fi_format_id, "Unsupported compression %d", nCompression);
 		return nullptr;
 	}
@@ -1371,6 +1391,25 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	const unsigned nChannels = _headerInfo._Channels;
 	const unsigned depth = _headerInfo._BitsPerChannel;
 	const unsigned bytes = (depth == 1) ? 1 : depth / 8;
+
+	// https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
+	if (nChannels < 1 || nChannels > 56) {
+		throw "Invalid channels value in PSD header";
+	}
+
+	if (nWidth < 1 || nWidth > 30000 || nHeight < 1 || nHeight > 30000) {
+		throw "Invalid width or height value in PSD header";
+	}
+
+	switch (depth) {
+		case 1:
+		case 8:
+		case 16:
+		case 32:
+			break;
+		default:
+			throw "Invalid depth value in PSD header";
+	}
 
 	// channel(plane) line (uint8_t aligned)
 	const unsigned lineSize = (_headerInfo._BitsPerChannel == 1) ? (nWidth + 7) / 8 : nWidth * bytes;
@@ -1459,6 +1498,10 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO *io, fi_handle handle) {
 	const unsigned dstBpp =  (depth == 1) ? 1 : FreeImage_GetBPP(bitmap)/8;
 	const unsigned dstLineSize = FreeImage_GetPitch(bitmap);
 	uint8_t* const dst_first_line = FreeImage_GetScanLine(bitmap, nHeight - 1);//<*** flipped
+
+	if (lineSize > dstLineSize) {
+		throw "Invalid source size";
+	}
 
 	auto line_start = std::make_unique<uint8_t[]>(lineSize); //< fileline cache
 
