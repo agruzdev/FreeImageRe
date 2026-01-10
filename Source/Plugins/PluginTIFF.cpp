@@ -386,7 +386,7 @@ static FIBITMAP*
 CreateImageType(FIBOOL header_only, FREE_IMAGE_TYPE fit, int width, int height, uint16_t bitspersample, uint16_t samplesperpixel) {
 	FIBITMAP *dib{};
 
-	if ((width < 0) || (height < 0)) {
+	if ((width < 0) || (height < 0) || (4 < samplesperpixel)) {
 		// check for malicious images
 		return nullptr;
 	}

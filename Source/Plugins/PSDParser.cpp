@@ -1319,41 +1319,36 @@ void psdParser::ReadImageLine(uint8_t* dst, const uint8_t* src, unsigned lineSiz
 	}
 }
 
-void psdParser::UnpackRLE(uint8_t* line, const uint8_t* rle_line, const uint8_t* line_end, unsigned srcSize) {
-	while (srcSize > 1) {
-		if (line >= line_end) {
-			return;
-		}
+static void UnpackRLE(uint8_t* line, const uint8_t* rle_line, unsigned dstSize, unsigned srcSize) {
+	while (srcSize > 1 && dstSize > 0) {
 
-		const uint8_t len_byte = *rle_line++;
-		srcSize--;
+		unsigned len = *rle_line++;
+		--srcSize;
 
 		// NOTE len is signed byte in PackBits RLE
 
-		if ( len_byte < 128 ) { //<- MSB is not set
+		if (len < 128) { //<- MSB is not set
 			// uncompressed packet
 
-			// (len + 1) bytes of data are copied
-			const uint32_t len = std::min(static_cast<uint32_t>(len_byte + 1), srcSize);
-
-			// assert we don't write beyound eol
-			memcpy(line, rle_line, line + len > line_end ? line_end - line : len);
+            // assert we don't write beyound eol
+            len = std::min({ len + 1, dstSize, srcSize });
+			memcpy(line, rle_line, len);
 			line += len;
 			rle_line += len;
 			srcSize -= len;
+            dstSize -= len;
 		}
-		else if ( len_byte > 128 ) { //< MSB is set
+		else if (len > 128 ) { //< MSB is set
 			// RLE compressed packet
 
 			// One byte of data is repeated (-len + 1) times
 
-			// same as (-len + 1) & 0xFF
-			const uint32_t len = (len_byte ^ 0xFF) + 2;
-
-			// assert we don't write beyound eol
-			memset(line, *rle_line++, line + len > line_end ? line_end - line : len);
+            // assert we don't write beyound eol
+            len = std::min((len ^ 0xFF) + 2, dstSize);
+			memset(line, *rle_line++, len);
 			line += len;
-			srcSize--;
+			--srcSize;
+            dstSize -= len;
 		}
 		else {
 			// 128 == len
@@ -1553,16 +1548,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 #endif
 			}
 
-			uint32_t largestRLELine = 0;
-			for (unsigned ch = 0; ch < nChannels; ++ch) {
-				for (unsigned h = 0; h < nHeight; ++h) {
-					const unsigned index = ch * nHeight + h;
-
-					if (largestRLELine < rleLineSizeList[index]) {
-						largestRLELine = rleLineSizeList[index];
-					}
-				}
-			}
+            const auto largestRLELine = *std::max_element(rleLineSizeList.get(), rleLineSizeList.get() + nChannels * nHeight);
 
 			auto rle_line_start = std::make_unique<uint8_t[]>(largestRLELine);
 
@@ -1572,7 +1558,6 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 					// @todo write to extra channels
 					break;
 				}
-				const uint8_t* const line_end = line_start.get() + lineSize;
 
 				const unsigned channelOffset = GetChannelOffset(bitmap, ch) * bytes;
 
@@ -1588,7 +1573,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 
 					// - write line to destination -
 
-					UnpackRLE(line_start.get(), rle_line_start.get(), line_end, rleLineSize);
+					UnpackRLE(line_start.get(), rle_line_start.get(), lineSize, rleLineSize);
 					ReadImageLine(dst_line_start, line_start.get(), lineSize, dstBpp, bytes);
 				}//< h
 			}//< ch

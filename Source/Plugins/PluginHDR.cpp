@@ -630,6 +630,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (!rgbe_ReadHeader(io, handle, &width, &height, &header_info)) {
 			return nullptr;
 		}
+        if (width > 65500 || height > 65500) {
+            throw FI_MSG_ERROR_DIB_MEMORY;
+        }
 
 		// allocate a RGBF image
 		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_AllocateHeaderT(header_only, FIT_RGBF, width, height), &FreeImage_Unload);
