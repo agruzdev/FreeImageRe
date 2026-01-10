@@ -98,13 +98,9 @@ public:
     bool getByte(uint8_t &res) {
         if (sz_ <= pos_) {
             sz_ = io_->read_proc(cache_, 1, std::size(cache_), handle_);
-#if 1
             if (sz_ < 1) {
                 return false;
             }
-#else
-            sz_ = std::size(cache_);
-#endif
             pos_ = 0;
         }
         res = cache_[pos_++];
@@ -251,7 +247,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	uint8_t fillchar;
 
 	uint8_t *bits{};			// Pointer to dib data
-	uint32_t x, y;
+	uint16_t x, y;
 
 	if (!handle) {
 		return nullptr;
@@ -282,9 +278,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (header.magic != RAS_MAGIC) {
 			throw FI_MSG_ERROR_MAGIC_NUMBER;
 		}
-        /*if (header.width > 65500 || header.height > 65500) {
+        if (header.width > 65500 || header.height > 65500) {
             throw FI_MSG_ERROR_DIB_MEMORY;
-        }*/
+        }
 
 		// Allocate a new DIB
 		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
@@ -303,9 +299,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (!dib) {
 			throw FI_MSG_ERROR_DIB_MEMORY;
 		}
-
-        header.width = FreeImage_GetWidth(dib.get());
-        header.height = FreeImage_GetHeight(dib.get());
 
 		// Check the file format
 
@@ -357,7 +350,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// Read SUN raster colormap
 
 				int numcolors = 1 << header.depth;
-				if ((uint32_t)(3 * numcolors) > header.maplength) {
+				if ((uint32_t)(3 * numcolors) >= header.maplength) {
 					// some RAS may have less colors than the full palette
 					numcolors = header.maplength / 3;
 				} else {
@@ -408,7 +401,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			linelength = (uint16_t)header.width;
 		}
 
-		fill = (linelength & 1) ? 1 : 0;
+		fill = linelength & 1;
 
 		// Read the image data
 		
