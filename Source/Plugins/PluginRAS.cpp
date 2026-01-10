@@ -309,7 +309,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// Read SUN raster colormap
 
 				int numcolors = 1 << header.depth;
-				if ((uint32_t)(3 * numcolors) > header.maplength) {
+				if ((uint32_t)(3 * numcolors) >= header.maplength) {
 					// some RAS may have less colors than the full palette
 					numcolors = header.maplength / 3;
 				} else {
