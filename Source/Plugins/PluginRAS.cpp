@@ -90,41 +90,88 @@ typedef struct tagSUNHEADER {
 // Internal functions
 // ==========================================================
 
-static void
-ReadData(FreeImageIO *io, fi_handle handle, uint8_t *buf, uint32_t length, FIBOOL rle) {
+class CachedIO {
+public:
+    CachedIO(FreeImageIO *io, fi_handle handle) : io_{ io }, handle_{ handle } {
+    }
+
+    bool getByte(uint8_t &res) {
+        if (sz_ <= pos_) {
+            sz_ = io_->read_proc(cache_, 1, std::size(cache_), handle_);
+            if (sz_ < 1) {
+                return false;
+            }
+            pos_ = 0;
+        }
+        res = cache_[pos_++];
+        return true;
+    }
+
+    bool read_proc(void *buffer, unsigned size, unsigned count) {
+        return 0 < io_->read_proc(buffer, size, count, handle_);
+    }
+
+private:
+    uint8_t cache_[1024];
+    FreeImageIO *io_{};
+    fi_handle handle_{};
+    uint32_t pos_{}, sz_{};
+};
+
+static bool
+ReadData(CachedIO &cio, uint8_t *buf, uint32_t length, FIBOOL rle) {
 	// Read either Run-Length Encoded or normal image data
 
-	static uint8_t repchar, remaining= 0;
+    static uint8_t repchar{};
+    static uint32_t remaining{};
 
 	if (rle) {
 		// Run-length encoded read
 
-		while (length--) {
+        while (length) {
 			if (remaining) {
-				remaining--;
-				*(buf++)= repchar;
+                const auto len{ std::min(remaining, length) };
+                std::memset(buf, repchar, len);
+                buf += len;
+                length -= len;
+                remaining -= len;
 			} else {
-				io->read_proc(&repchar, 1, 1, handle);
+                if (!cio.getByte(repchar)) {
+                    break;
+                }
 
 				if (repchar == RESC) {
-					io->read_proc(&remaining, 1, 1, handle);
+                    uint8_t tmp{};
+                    if (!cio.getByte(tmp)) {
+                        break;
+                    }
 
-					if (remaining == 0) {
+					if (0 == tmp) {
 						*(buf++)= RESC;
+                        --length;
 					} else {
-						io->read_proc(&repchar, 1, 1, handle);
+                        if (!cio.getByte(repchar)) {
+                            break;
+                        }
 
-						*(buf++)= repchar;
+                        remaining = tmp + 1;
+                        const auto len{ std::min(remaining, length) };
+                        std::memset(buf, repchar, len);
+                        buf += len;
+                        length -= len;
+                        remaining -= len;
 					}
 				} else {
 					*(buf++)= repchar;
+                    --length;
 				}
 			}
 		}
+        return 0 == length;
 	} else {
 		// Normal read
 	
-		io->read_proc(buf, length, 1, handle);
+		return cio.read_proc(buf, length, 1);
 	}
 }
 
@@ -195,8 +242,8 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	SUNHEADER header;	// Sun file header
 	uint16_t linelength;	// Length of raster line in bytes
 	uint16_t fill;			// Number of fill bytes per raster line
-	FIBOOL rle;			// TRUE if RLE file
-	FIBOOL isRGB;			// TRUE if file type is RT_FORMAT_RGB
+    bool rle{};			// true if RLE file
+    bool isRGB{};			// true if file type is RT_FORMAT_RGB
 	uint8_t fillchar;
 
 	uint8_t *bits{};			// Pointer to dib data
@@ -206,7 +253,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		return nullptr;
 	}
 
-	FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
+    const bool header_only{ (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS };
 
 	try {
 		// Read SUN raster header
@@ -231,9 +278,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		if (header.magic != RAS_MAGIC) {
 			throw FI_MSG_ERROR_MAGIC_NUMBER;
 		}
-		if (header.width > 65500 || header.height > 65500) {
-			throw FI_MSG_ERROR_DIB_MEMORY;
-		}
+        if (header.width > 65500 || header.height > 65500) {
+            throw FI_MSG_ERROR_DIB_MEMORY;
+        }
 
 		// Allocate a new DIB
 		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
@@ -244,10 +291,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				break;
 
 			case 24:
-				dib.reset(FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
-				break;
-
-			case 32:
+            case 32:
 				dib.reset(FreeImage_AllocateHeader(header_only, header.width, header.height, header.depth, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK));
 				break;
 		}
@@ -257,9 +301,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Check the file format
-
-		rle = FALSE;
-		isRGB = FALSE;
 
 		switch (header.type) {
 			case RT_OLD:
@@ -271,11 +312,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				break;
 
 			case RT_BYTE_ENCODED:
-				rle = TRUE;
+				rle = true;
 				break;
 
 			case RT_FORMAT_RGB:
-				isRGB = TRUE;
+				isRGB = true;
 				break;
 
 			default:
@@ -360,7 +401,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			linelength = (uint16_t)header.width;
 		}
 
-		fill = (linelength % 2) ? 1 : 0;
+		fill = linelength & 1;
 
 		// Read the image data
 		
@@ -368,13 +409,18 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			case 1:
 			case 8:
 			{
+                CachedIO cio(io, handle);
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-					ReadData(io, handle, bits, linelength, rle);
+                    if (!ReadData(cio, bits, linelength, rle)) {
+                        break;
+                    }
 
 					if (fill) {
-						ReadData(io, handle, &fillchar, fill, rle);
+                        if (!ReadData(cio, &fillchar, fill, rle)) {
+                            break;
+                        }
 					}
 				}
 
@@ -385,10 +431,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			{
 				auto buf = std::make_unique<uint8_t[]>(header.width * 3);
 
+                CachedIO cio(io, handle);
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-					ReadData(io, handle, buf.get(), header.width * 3, rle);
+                    if (!ReadData(cio, buf.get(), header.width * 3, rle)) {
+                        break;
+                    }
 
 					const auto *bp = buf.get();
 
@@ -411,7 +460,9 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 
 					if (fill) {
-						ReadData(io, handle, &fillchar, fill, rle);
+                        if (!ReadData(cio, &fillchar, fill, rle)) {
+                            return nullptr;
+                        }
 					}
 				}
 
@@ -422,10 +473,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			{
 				auto buf = std::make_unique<uint8_t[]>(header.width * 4);
 
+                CachedIO cio(io, handle);
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-					ReadData(io, handle, buf.get(), header.width * 4, rle);
+                    if (!ReadData(cio, buf.get(), header.width * 4, rle)) {
+                        break;
+                    }
 
 					const auto *bp = buf.get();
 
@@ -449,10 +503,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							bits += 4;
 							bp += 4;
 						}
-					}
-
-					if (fill) {
-						ReadData(io, handle, &fillchar, fill, rle);
 					}
 				}
 
