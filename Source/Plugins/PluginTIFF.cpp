@@ -743,8 +743,8 @@ tiff_read_iptc_profile(TIFF *tiff, FIBITMAP *dib) {
 	uint32_t profile_size = 0;
 
     if (TIFFGetField(tiff, TIFFTAG_RICHTIFFIPTC, &profile_size, &profile) == 1) {
-		assert(!(profile_size & 3));
 		if (false && TIFFIsByteSwapped(tiff)) {
+			assert(!(profile_size & 3));
 			TIFFSwabArrayOfLong((uint32_t *) profile, (unsigned long)profile_size / 4);
 		}
 
