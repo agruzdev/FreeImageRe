@@ -117,8 +117,8 @@ private:
     uint8_t cache_[1024];
     FreeImageIO *io_{};
     fi_handle handle_{};
-    uint32_t pos_{}, sz_{}, remaining{};
-    uint8_t repchar{};
+    uint32_t pos_{}, sz_{}, remaining_{};
+    uint8_t repchar_{};
 };
 
 bool CachedIO::ReadData(uint8_t *buf, uint32_t length, FIBOOL rle) {
@@ -128,18 +128,18 @@ bool CachedIO::ReadData(uint8_t *buf, uint32_t length, FIBOOL rle) {
 		// Run-length encoded read
 
         while (length) {
-			if (remaining) {
-                const auto len{ std::min(remaining, length) };
-                std::memset(buf, repchar, len);
+			if (remaining_) {
+                const auto len{ std::min(remaining_, length) };
+                std::memset(buf, repchar_, len);
                 buf += len;
                 length -= len;
-                remaining -= len;
+                remaining_ -= len;
 			} else {
-                if (!this->getByte(repchar)) {
+                if (!this->getByte(repchar_)) {
                     break;
                 }
 
-				if (RESC == repchar) {
+				if (RESC == repchar_) {
                     uint8_t tmp{};
                     if (!this->getByte(tmp)) {
                         break;
@@ -149,19 +149,19 @@ bool CachedIO::ReadData(uint8_t *buf, uint32_t length, FIBOOL rle) {
 						*(buf++)= RESC;
                         --length;
 					} else {
-                        if (!this->getByte(repchar)) {
+                        if (!this->getByte(repchar_)) {
                             break;
                         }
 
-                        remaining = tmp + 1;
-                        const auto len{ std::min(remaining, length) };
-                        std::memset(buf, repchar, len);
+                        remaining_ = tmp + 1;
+                        const auto len{ std::min(remaining_, length) };
+                        std::memset(buf, repchar_, len);
                         buf += len;
                         length -= len;
-                        remaining -= len;
+                        remaining_ -= len;
 					}
 				} else {
-					*(buf++)= repchar;
+					*(buf++)= repchar_;
                     --length;
 				}
 			}
