@@ -95,6 +95,9 @@ public:
     CachedIO(FreeImageIO *io, fi_handle handle) : io_{ io }, handle_{ handle } {
     }
 
+    bool ReadData(uint8_t *buf, uint32_t length, FIBOOL rle);
+
+private:
     bool getByte(uint8_t &res) {
         if (sz_ <= pos_) {
             sz_ = io_->read_proc(cache_, 1, std::size(cache_), handle_);
@@ -111,38 +114,34 @@ public:
         return 0 < io_->read_proc(buffer, size, count, handle_);
     }
 
-private:
     uint8_t cache_[1024];
     FreeImageIO *io_{};
     fi_handle handle_{};
-    uint32_t pos_{}, sz_{};
+    uint32_t pos_{}, sz_{}, remaining_{};
+    uint8_t repchar_{};
 };
 
-static bool
-ReadData(CachedIO &cio, uint8_t *buf, uint32_t length, FIBOOL rle) {
+bool CachedIO::ReadData(uint8_t *buf, uint32_t length, FIBOOL rle) {
 	// Read either Run-Length Encoded or normal image data
-
-    static uint8_t repchar{};
-    static uint32_t remaining{};
 
 	if (rle) {
 		// Run-length encoded read
 
         while (length) {
-			if (remaining) {
-                const auto len{ std::min(remaining, length) };
-                std::memset(buf, repchar, len);
+			if (remaining_) {
+                const auto len{ std::min(remaining_, length) };
+                std::memset(buf, repchar_, len);
                 buf += len;
                 length -= len;
-                remaining -= len;
+                remaining_ -= len;
 			} else {
-                if (!cio.getByte(repchar)) {
+                if (!this->getByte(repchar_)) {
                     break;
                 }
 
-				if (repchar == RESC) {
+				if (RESC == repchar_) {
                     uint8_t tmp{};
-                    if (!cio.getByte(tmp)) {
+                    if (!this->getByte(tmp)) {
                         break;
                     }
 
@@ -150,19 +149,19 @@ ReadData(CachedIO &cio, uint8_t *buf, uint32_t length, FIBOOL rle) {
 						*(buf++)= RESC;
                         --length;
 					} else {
-                        if (!cio.getByte(repchar)) {
+                        if (!this->getByte(repchar_)) {
                             break;
                         }
 
-                        remaining = tmp + 1;
-                        const auto len{ std::min(remaining, length) };
-                        std::memset(buf, repchar, len);
+                        remaining_ = tmp + 1;
+                        const auto len{ std::min(remaining_, length) };
+                        std::memset(buf, repchar_, len);
                         buf += len;
                         length -= len;
-                        remaining -= len;
+                        remaining_ -= len;
 					}
 				} else {
-					*(buf++)= repchar;
+					*(buf++)= repchar_;
                     --length;
 				}
 			}
@@ -171,7 +170,7 @@ ReadData(CachedIO &cio, uint8_t *buf, uint32_t length, FIBOOL rle) {
 	} else {
 		// Normal read
 	
-		return cio.read_proc(buf, length, 1);
+		return this->read_proc(buf, length, 1);
 	}
 }
 
@@ -413,12 +412,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-                    if (!ReadData(cio, bits, linelength, rle)) {
+                    if (!cio.ReadData(bits, linelength, rle)) {
                         break;
                     }
 
 					if (fill) {
-                        if (!ReadData(cio, &fillchar, fill, rle)) {
+                        if (!cio.ReadData(&fillchar, fill, rle)) {
                             break;
                         }
 					}
@@ -435,7 +434,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-                    if (!ReadData(cio, buf.get(), header.width * 3, rle)) {
+                    if (!cio.ReadData(buf.get(), header.width * 3, rle)) {
                         break;
                     }
 
@@ -460,7 +459,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 					}
 
 					if (fill) {
-                        if (!ReadData(cio, &fillchar, fill, rle)) {
+                        if (!cio.ReadData(&fillchar, fill, rle)) {
                             return nullptr;
                         }
 					}
@@ -477,7 +476,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				for (y = 0; y < header.height; y++) {
 					bits = FreeImage_GetScanLine(dib.get(), header.height - 1 - y);
 
-                    if (!ReadData(cio, buf.get(), header.width * 4, rle)) {
+                    if (!cio.ReadData(buf.get(), header.width * 4, rle)) {
                         break;
                     }
 
