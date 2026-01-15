@@ -127,6 +127,7 @@ Version 0.5:
 Version 0.6:
  - Added support of extra TIFF image formats
  - Fixed infinite loop in TIFF thumbnail loading
+ - Fixed multiple CVEs in TIFF, RAS, ICO, HDR, PSD, XBM, EXR, JXR plugins.
  - Updated jpeg-turbo till v3.1.3
  - Updated OpenEXR till v3.4.4
  - Updated LibPNG till v1.6.54
