@@ -129,7 +129,7 @@ Version 0.6:
  - Fixed infinite loop in TIFF thumbnail loading
  - Updated jpeg-turbo till v3.1.3
  - Updated OpenEXR till v3.4.4
- - Updated LibPNG till v1.6.53
+ - Updated LibPNG till v1.6.54
  - Updated LibRaw till v0.21.5
  - Updated LibDav1d till v1.5.3
 
