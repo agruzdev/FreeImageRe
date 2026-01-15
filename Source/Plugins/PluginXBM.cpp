@@ -25,11 +25,13 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
+#include <regex>
+
 // ==========================================================
 // Internal functions
 // ==========================================================
 
-#define MAX_LINE	512
+constexpr int MAX_LINE = 512;
 
 static const char *ERR_XBM_SYNTAX	= "Syntax error";
 static const char *ERR_XBM_LINE		= "Line too long";
@@ -87,76 +89,76 @@ Read an XBM file into a buffer
 */
 static const char* 
 readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, std::unique_ptr<void, decltype(&free)> &dataP) {
-	char line[MAX_LINE], name_and_type[MAX_LINE];
-    char *ptr{};
-    char *t{};
+	std::string line(MAX_LINE, '\0');
+	char *ptr{};
+	char *t{};
 	int version = 0;
 	size_t bytes, bytes_per_line, raster_length;
-	int v, padding;
 	int c1, c2, value1, value2;
 	int hex_table[256];
-    bool found_declaration{}; // haven't found it yet; haven't even looked
+	bool found_declaration{}; // haven't found it yet; haven't even looked
 	/* in scanning through the bitmap file, we have found the first
-	 line of the C declaration of the array (the "static char ..."
-	 or whatever line)
+	 line of the C declaration of the array (the "static char ..." or whatever line)
 	 */
-    bool eof{};	// we've encountered end of file while searching file
+
+	const std::regex width_regex(R"(\s*#define\s+(\w+)_width\s+(\d+)\s*)");
+	const std::regex height_regex(R"(\s*#define\s+(\w+)_height\s+(\d+)\s*)");
+	const std::regex decl_v10_regex(R"(\s*static\s+short\s+(\w+)\s*\[\s*\]\s*=\s*\{\s*)");
+	const std::regex decl_v11_regex(R"(\s*static\s+(unsigned\s+)?char\s+(\w+)\s*\[\s*\]\s*=\s*\{\s*)");
+	std::cmatch match;
 
 	*widthP = *heightP = -1;
 
-	while (!found_declaration && !eof) {
-
-		if (!readLine(line, MAX_LINE, io, handle)) {
-			eof = true;
+	for(;;) {
+		if (!readLine(line.data(), MAX_LINE, io, handle)) {
+			break;
 		}
-		else {
-			if (strlen(line) == MAX_LINE - 1)
-				return( ERR_XBM_LINE );
-			if (sscanf_s(line, "#define %s %d", name_and_type, MAX_LINE, &v) == 2) {
-				if ((t = strrchr(name_and_type, '_')) == nullptr)
-					t = name_and_type;
-				else
-					t++;
-				if (!strcmp("width", t))
-					*widthP = v;
-				else if (!strcmp("height", t))
-					*heightP = v;
-				continue;
-			}
+		
+		if (strlen(line.c_str()) >= MAX_LINE - 1) {
+			return ERR_XBM_LINE;
+		}
 
-			if (sscanf_s(line, "static short %s = {", name_and_type, MAX_LINE) == 1) {
-				version = 10;
-				found_declaration = true;
-			}
-			else if (sscanf_s(line, "static char %s = {", name_and_type, MAX_LINE) == 1) {
-				version = 11;
-				found_declaration = true;
-			}
-			else if (sscanf_s(line, "static unsigned char %s = {", name_and_type, MAX_LINE) == 1) {
-				version = 11;
-				found_declaration = true;
-			}
+		if (std::regex_match(line.c_str(), match, width_regex)) {
+			*widthP = std::stoi(match.str(2));
+		}
+		else if (std::regex_match(line.c_str(), match, height_regex)) {
+			*heightP = std::stoi(match.str(2));
+		}
+		else if (std::regex_match(line.c_str(), match, decl_v10_regex)) {
+			version = 10;
+			found_declaration = true;
+			break;
+		}
+		else if (std::regex_match(line.c_str(), match, decl_v11_regex)) {
+			version = 11;
+			found_declaration = true;
+			break;
 		}
 	}
 
-	if (!found_declaration)
-		return( ERR_XBM_DECL );
+	if (!found_declaration) {
+		return ERR_XBM_DECL;
+	}
 
-	if (*widthP == -1)
-		return( ERR_XBM_WIDTH );
-	if (*heightP == -1)
-		return( ERR_XBM_HEIGHT );
+	if (*widthP <= 0) {
+		return ERR_XBM_WIDTH;
+	}
+	if (*heightP <= 0) {
+		return ERR_XBM_HEIGHT;
+	}
 
-	padding = 0;
-	if ( ((*widthP % 16) >= 1) && ((*widthP % 16) <= 8) && (version == 10) )
+	int padding = 0;
+	if (((*widthP % 16) >= 1) && ((*widthP % 16) <= 8) && (version == 10)) {
 		padding = 1;
+	}
 
 	bytes_per_line = (*widthP + 7) / 8 + padding;
 
 	raster_length =  bytes_per_line * *heightP;
 	dataP.reset(malloc(raster_length));
-	if (!dataP)
-		return( ERR_XBM_MEMORY );
+	if (!dataP) {
+		return ERR_XBM_MEMORY;
+	}
 
 	// initialize hex_table
 	for ( c1 = 0; c1 < 256; c1++ ) {
