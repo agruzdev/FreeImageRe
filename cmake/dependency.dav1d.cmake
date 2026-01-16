@@ -40,7 +40,7 @@ if (MSVC)
         DEPENDEES configure
         DEPENDERS build
         COMMAND echo "Build Debug"
-        COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_debug --backend vs2022 --buildtype debug
+        COMMAND ${MESON_EXECUTABLE} setup ${CMAKE_BINARY_DIR}/dav1d/build_debug --backend ${MSVC_NAME} --buildtype debug
             --default-library static -Denable_tools=false -Denable_tests=false --prefix ${CMAKE_BINARY_DIR}/dav1d/install
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/dav1d.sln
         COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${CMAKE_BINARY_DIR}/dav1d/build_debug/RUN_INSTALL.vcxproj

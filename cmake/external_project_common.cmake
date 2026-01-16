@@ -8,6 +8,24 @@ cmake_minimum_required(VERSION 3.28)    # for FetchContent's EXCLUDE_FROM_ALL
 if(NOT _EXTERNAL_PROJECT_INCLUDE_GUARD_)
     set(_EXTERNAL_PROJECT_INCLUDE_GUARD_ ON)
 
+
+    if(MSVC)
+        if(MSVC_VERSION GREATER_EQUAL 1950)
+            set(MSVC_NAME "vs2026")
+        elseif(MSVC_VERSION GREATER_EQUAL 1930)
+            set(MSVC_NAME "vs2022")
+        elseif(MSVC_VERSION GREATER_EQUAL 1920)
+            set(MSVC_NAME "vs2019")
+        elseif(MSVC_VERSION GREATER_EQUAL 1910)
+            set(MSVC_NAME "vs2017")
+        elseif(MSVC_VERSION GREATER_EQUAL 1900)
+            set(MSVC_NAME "vs2015")
+        else()
+            message("Unsupported MSVC version: ${MSVC_VERSION}")
+        endif()
+    endif()
+
+
     include(FetchContent)
     include(ExternalProject)
 
