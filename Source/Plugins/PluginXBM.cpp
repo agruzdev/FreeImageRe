@@ -25,6 +25,8 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
+#include <cstring>
+
 // ==========================================================
 // Internal functions
 // ==========================================================

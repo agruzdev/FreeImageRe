@@ -11,10 +11,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/dependency.kvazaar.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.dav1d.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/dependency.svtav1.cmake)
 
+set(HEIF_VERSION "1.20.2")
 
 ExternalProject_Add(HEIF
     PREFIX ${CMAKE_BINARY_DIR}/heif
-    URL "https://github.com/strukturag/libheif/releases/download/v1.20.2/libheif-1.20.2.tar.gz"
+    URL "https://github.com/strukturag/libheif/releases/download/v${HEIF_VERSION}/libheif-${HEIF_VERSION}.tar.gz"
     URL_MD5 "5d0442f7197a34b7aaf95bdffabb51e9"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/heif"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/heif/source"
@@ -62,7 +63,7 @@ if (WIN32)
     set(LibHEIF_INSTALL_TYPE BIN)
     set(LibHEIF_INSTALL_NAME "heif.dll")
 else()
-    set(LibHEIF_INSTALL_LIBRARY ${CMAKE_BINARY_DIR}/heif/install/lib/libheif.so.1.19.7)
+    set(LibHEIF_INSTALL_LIBRARY ${CMAKE_BINARY_DIR}/heif/install/lib/libheif.so.${HEIF_VERSION})
     set(LibHEIF_INSTALL_TYPE LIB)
     set(LibHEIF_INSTALL_NAME "libheif.so")
 endif()
