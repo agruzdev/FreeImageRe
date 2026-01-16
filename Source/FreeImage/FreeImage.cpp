@@ -223,6 +223,15 @@ FreeImage_IsLittleEndian() {
 
 //----------------------------------------------------------------------
 
+struct MessageProcessContext
+{
+	void* ctx{ nullptr };
+	FreeImage_ProcessMessageFunction func{ nullptr };
+};
+
+thread_local MessageProcessContext g_process_message{ };
+
+
 static FreeImage_OutputMessageFunction freeimage_outputmessage_proc{};
 static FreeImage_OutputMessageFunctionStdCall freeimage_outputmessagestdcall_proc{};
 
@@ -238,108 +247,98 @@ FreeImage_SetOutputMessageStdCall(FreeImage_OutputMessageFunctionStdCall omf) {
 
 void DLL_CALLCONV
 FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
-	const int MSG_SIZE = 512; // 512 bytes should be more than enough for a short message
+	constexpr size_t MSG_SIZE = 512;
 
-	if (fmt && (freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
-		char message[MSG_SIZE];
-		memset(message, 0, MSG_SIZE);
-
-		// initialize the optional parameter list
+	if (fmt && (g_process_message.func || freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
+		FIMESSAGE message{ static_cast<FREE_IMAGE_FORMAT>(fif), FISEV_WARNING };
+		message.text.resize(MSG_SIZE);
 
 		va_list arg;
 		va_start(arg, fmt);
 
-		// check the length of the format string
-
-		int str_length = (int)( (strlen(fmt) > MSG_SIZE) ? MSG_SIZE : strlen(fmt) );
-
-		// parse the format string and put the result in 'message'
-
-		for (int i = 0, j = 0; i < str_length; ++i) {
-			if (fmt[i] == '%') {
-				if (i + 1 < str_length) {
-					switch (tolower(fmt[i + 1])) {
-						case '%' :
-							message[j++] = '%';
-							break;
-
-						case 'o' : // octal numbers
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 8);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 'i' : // decimal numbers
-						case 'd' :
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 10);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 'x' : // hexadecimal numbers
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 16);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 's' : // strings
-						{
-							char *tmp = va_arg(arg, char*);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-					};
-				} else {
-					message[j++] = fmt[i];
-				}
-			} else {
-				message[j++] = fmt[i];
-			};
-		}
-
-		// deinitialize the optional parameter list
+		std::vsnprintf(message.text.data(), message.text.size(), fmt, arg);
 
 		va_end(arg);
 
 		// output the message to the user program
 
-		if (freeimage_outputmessage_proc)
-			freeimage_outputmessage_proc((FREE_IMAGE_FORMAT)fif, message);
+		if (g_process_message.func) {
+			g_process_message.func(g_process_message.ctx, &message);
+		}
+		else {
+			// legacy behaviour
 
-		if (freeimage_outputmessagestdcall_proc)
-			freeimage_outputmessagestdcall_proc((FREE_IMAGE_FORMAT)fif, message); 
+			if (freeimage_outputmessage_proc)
+				freeimage_outputmessage_proc(message.scope, message.text.c_str());
+
+			if (freeimage_outputmessagestdcall_proc)
+				freeimage_outputmessagestdcall_proc(message.scope, message.text.c_str());
+		}
 	}
+}
+
+
+void FreeImage_SetProcessMessageFunction(void* new_ctx, FreeImage_ProcessMessageFunction new_func, void** old_ctx, FreeImage_ProcessMessageFunction* old_func)
+{
+	std::swap(g_process_message.ctx,  new_ctx);
+	std::swap(g_process_message.func, new_func);
+	if (old_ctx) {
+		*old_ctx = new_ctx;
+	}
+	if (old_func) {
+		*old_func = new_func;
+	}
+}
+
+
+void FreeImage_ProcessMessage(const FIMESSAGE* msg)
+{
+	if (!msg) {
+		return;
+	}
+
+	if (g_process_message.func) {
+		g_process_message.func(g_process_message.ctx, msg);
+	}
+}
+
+
+FIMESSAGE* FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what)
+{
+	return new FIMESSAGE(scope, severity, what ? what : "Unknown");
+}
+
+
+void FreeImage_DeleteMessage(const FIMESSAGE* msg)
+{
+	if (msg) {
+		delete msg;
+	}
+}
+
+
+FREE_IMAGE_FORMAT FreeImage_GetMessageScope(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->scope;
+	}
+	return FIF_UNKNOWN;
+}
+
+
+FREE_IMAGE_SEVERITY FreeImage_GetMessageSeverity(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->severity;
+	}
+	return FISEV_NONE;
+}
+
+
+const char* FreeImage_GetMessageString(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->text.c_str();
+	}
+	return "Unknown";
 }
