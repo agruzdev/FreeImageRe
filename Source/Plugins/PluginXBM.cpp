@@ -25,13 +25,15 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
-#include <regex>
-
 // ==========================================================
 // Internal functions
 // ==========================================================
 
-constexpr int MAX_LINE = 512;
+#define MAX_LINE 512
+#define LINE_FORMAT_WIDTH_OR_HEIGHT  "#define %" FI_QUOTE(MAX_LINE) "s %d"
+#define LINE_FORMAT_BITS_V10 "static short %" FI_QUOTE(MAX_LINE) "s = {"
+#define LINE_FORMAT_BITS_V11_OPT1 "static char %" FI_QUOTE(MAX_LINE) "s = {"
+#define LINE_FORMAT_BITS_V11_OPT2 "static unsigned char %" FI_QUOTE(MAX_LINE) "s = {"
 
 static const char *ERR_XBM_SYNTAX	= "Syntax error";
 static const char *ERR_XBM_LINE		= "Line too long";
@@ -89,9 +91,8 @@ Read an XBM file into a buffer
 */
 static const char* 
 readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, std::unique_ptr<void, decltype(&free)> &dataP) {
-	std::string line(MAX_LINE, '\0');
+	std::string line(MAX_LINE, '\0'), name(MAX_LINE + 1, '\0');
 	char *ptr{};
-	char *t{};
 	int version = 0;
 	size_t bytes, bytes_per_line, raster_length;
 	int c1, c2, value1, value2;
@@ -101,35 +102,39 @@ readXBMFile(FreeImageIO *io, fi_handle handle, int *widthP, int *heightP, std::u
 	 line of the C declaration of the array (the "static char ..." or whatever line)
 	 */
 
-	const std::regex width_regex(R"(\s*#define\s+(\w+)_width\s+(\d+)\s*)");
-	const std::regex height_regex(R"(\s*#define\s+(\w+)_height\s+(\d+)\s*)");
-	const std::regex decl_v10_regex(R"(\s*static\s+short\s+(\w+)\s*\[\s*\]\s*=\s*\{\s*)");
-	const std::regex decl_v11_regex(R"(\s*static\s+(unsigned\s+)?char\s+(\w+)\s*\[\s*\]\s*=\s*\{\s*)");
-	std::cmatch match;
-
 	*widthP = *heightP = -1;
 
-	for(;;) {
+	for (;;) {
 		if (!readLine(line.data(), MAX_LINE, io, handle)) {
 			break;
 		}
-		
+
 		if (strlen(line.c_str()) >= MAX_LINE - 1) {
 			return ERR_XBM_LINE;
 		}
 
-		if (std::regex_match(line.c_str(), match, width_regex)) {
-			*widthP = std::stoi(match.str(2));
+		int val{};
+		if (2 == std::sscanf(line.c_str(), LINE_FORMAT_WIDTH_OR_HEIGHT, name.data(), &val)) {
+			if (const auto suffix = std::strrchr(name.c_str(), '_')) {
+				if (0 == std::strcmp("_width", suffix)) {
+					*widthP = val;
+					continue;
+				}
+				if (0 == std::strcmp("_height", suffix)) {
+					*heightP = val;
+					continue;
+				}
+			}
 		}
-		else if (std::regex_match(line.c_str(), match, height_regex)) {
-			*heightP = std::stoi(match.str(2));
-		}
-		else if (std::regex_match(line.c_str(), match, decl_v10_regex)) {
+		
+		if (1 == std::sscanf(line.c_str(), LINE_FORMAT_BITS_V10, name.data())) {
 			version = 10;
 			found_declaration = true;
 			break;
 		}
-		else if (std::regex_match(line.c_str(), match, decl_v11_regex)) {
+
+		if (1 == std::sscanf(line.c_str(), LINE_FORMAT_BITS_V11_OPT1, name.data()) || 
+				 1 == std::sscanf(line.c_str(), LINE_FORMAT_BITS_V11_OPT2, name.data())) {
 			version = 11;
 			found_declaration = true;
 			break;
