@@ -354,7 +354,7 @@ FIMESSAGE* FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY 
 }
 
 
-void FreeImage_DeleteMessage(const FIMESSAGE* msg)
+void FreeImage_DeleteMessage(FIMESSAGE* msg)
 {
 	if (msg) {
 		delete msg;

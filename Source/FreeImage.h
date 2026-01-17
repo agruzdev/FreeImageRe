@@ -937,7 +937,7 @@ DLL_API void DLL_CALLCONV FreeImage_ProcessMessage(const FIMESSAGE* msg);
 
 
 DLL_API FIMESSAGE* DLL_CALLCONV FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what);
-DLL_API void DLL_CALLCONV FreeImage_DeleteMessage(const FIMESSAGE* msg);
+DLL_API void DLL_CALLCONV FreeImage_DeleteMessage(FIMESSAGE* msg);
 DLL_API FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_GetMessageScope(const FIMESSAGE* msg);
 DLL_API FREE_IMAGE_SEVERITY DLL_CALLCONV FreeImage_GetMessageSeverity(const FIMESSAGE* msg);
 DLL_API const char* DLL_CALLCONV FreeImage_GetMessageString(const FIMESSAGE* msg);

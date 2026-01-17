@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <filesystem>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -250,6 +251,15 @@ namespace fi
         eSrcAlpha = FIAO_SrcAlpha
     };
 
+    enum class Severity
+    {
+        eVerbose = FISEV_VERBOSE,
+        eInfo    = FISEV_INFO,
+        eWarning = FISEV_WARNING,
+        eError   = FISEV_ERROR,
+        eNone    = FISEV_NONE
+    };
+
 
     class ImageError
         : public std::runtime_error
@@ -325,6 +335,148 @@ namespace fi
     }
 
 
+    /**
+     * Const access to a message allocated inside FreeImage
+     */
+    class MessageView
+    {
+    public:
+        explicit
+        MessageView(const FIMESSAGE* handle)
+            : mHandle(handle)
+        { }
+
+        MessageView(const MessageView&) = default;
+        MessageView(MessageView&&) noexcept = default;
+
+        // no need to release
+        ~MessageView() = default;
+
+        MessageView& operator=(const MessageView&) = default;
+        MessageView& operator=(MessageView&&) noexcept = default;
+
+        operator bool() const {
+            return (mHandle != nullptr);
+        }
+
+        const char* GetCString() const {
+            return FreeImage_GetMessageString(mHandle);
+        }
+
+        std::string GetString() const {
+            const char* str = FreeImage_GetMessageString(mHandle);
+            return str ? std::string(str) : std::string();
+        }
+
+        Severity GetSeverity() const {
+            return static_cast<Severity>(FreeImage_GetMessageSeverity(mHandle));
+        }
+
+        ImageFormat GetScope() const {
+            return static_cast<ImageFormat>(FreeImage_GetMessageScope(mHandle));
+        }
+
+    protected:
+        const FIMESSAGE* mHandle;
+    };
+
+
+    /**
+     * Mutable user allocated message instance
+     */
+    class Message
+        : public MessageView
+    {
+    public:
+        Message(ImageFormat scope, Severity severity, const char* what)
+            : MessageView(FREEIMAGERE_CHECKED_CALL(FreeImage_CreateMessage, static_cast<FREE_IMAGE_FORMAT>(scope), static_cast<FREE_IMAGE_SEVERITY>(severity), what))
+        { }
+
+        Message(ImageFormat scope, Severity severity, const std::string& what)
+            : Message(scope, severity, what.c_str())
+        { }
+
+        Message(const Message&) = delete;
+
+        Message(Message&& other) noexcept
+            : MessageView(other.mHandle)
+        {
+            other.mHandle = nullptr;
+        }
+
+        // not virtual, just reusing methods MessageView
+        ~Message() {
+            FreeImage_DeleteMessage(GetMutable());
+        }
+
+        Message& operator=(const Message&) = delete;
+
+        Message& operator=(Message&& other) noexcept
+        {
+            if (this != &other) {
+                FreeImage_DeleteMessage(GetMutable());
+                mHandle = other.mHandle;
+                other.mHandle = nullptr;
+            }
+            return *this;
+        }
+
+    private:
+        FIMESSAGE* GetMutable() {
+            // Message created by FreeImage_CreateMessage() is actually a dynamic object, so can safely remove const
+            return const_cast<FIMESSAGE*>(mHandle);
+        }
+    };
+
+
+    using MessageProcessFunction = std::function<void(const MessageView&)>;
+
+
+    /**
+     * Registers a message processor for life time of this guard instance
+     */
+    class MessageProcessFunctionGuard
+    {
+    public:
+        MessageProcessFunctionGuard(MessageProcessFunction func)
+            : mFunc(std::move(func))
+        {
+            mProcId = FREEIMAGERE_CHECKED_CALL(FreeImage_AddProcessMessageFunction, this, &MessageProcessFunctionGuard::Wrapper);
+        }
+
+        MessageProcessFunctionGuard(const MessageProcessFunctionGuard&) = delete;
+        MessageProcessFunctionGuard(MessageProcessFunctionGuard&& other) noexcept = delete;
+
+        ~MessageProcessFunctionGuard()
+        {
+            if (mProcId) {
+                FreeImage_RemoveProcessMessageFunction(mProcId);
+            }
+        }
+
+        MessageProcessFunctionGuard& operator=(const MessageProcessFunctionGuard&) = delete;
+        MessageProcessFunctionGuard& operator=(MessageProcessFunctionGuard&& other) noexcept = delete;
+
+        /**
+         * Do not call FreeImage_RemoveProcessMessageFunction() in destcrutor
+         */
+        uint32_t Release() {
+            const uint32_t tmp = mProcId;
+            mProcId = 0;
+            return tmp;
+        }
+
+    private:
+        static
+        void DLL_CALLCONV Wrapper(void* thiz, const FIMESSAGE* msg) {
+            static_cast<MessageProcessFunctionGuard*>(thiz)->mFunc(MessageView(msg));
+        }
+
+        MessageProcessFunction mFunc;
+        uint32_t mProcId{ 0 };
+    };
+
+
 
     class Tag
     {
@@ -359,13 +511,15 @@ namespace fi
 
         Tag& operator=(Tag&& other) noexcept
         {
-            if (mCallDelete && mHandle) {
-                FreeImage_DeleteTag(mHandle);
+            if (this != &other) {
+                if (mCallDelete) {
+                    FreeImage_DeleteTag(mHandle);
+                }
+                mHandle = other.mHandle;
+                mCallDelete = other.mCallDelete;
+                other.mHandle = nullptr;
+                other.mCallDelete = false;
             }
-            mHandle = other.mHandle;
-            mCallDelete = other.mCallDelete;
-            other.mHandle = nullptr;
-            other.mCallDelete = false;
             return *this;
         }
 
