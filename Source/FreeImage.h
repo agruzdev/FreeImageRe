@@ -918,11 +918,17 @@ DLL_API void DLL_CALLCONV FreeImage_OutputMessageProc(int fif, const char *fmt, 
 typedef void (DLL_CALLCONV *FreeImage_ProcessMessageFunction)(void* ctx, const FIMESSAGE* msg);
 
 /**
- * Set message processing function for this thread only.
- * Pass NULL to reset to default processor. The default processor invokes currently set FreeImage_OutputMessageFunction.
- * Returns currently used function.
+ * Adds a message processing function for this thread only.
+ * The `func` must not be nullptr.
+ * On success retuns non-zero ID of the registered processor, that can later be used in FreeImage_RemoveProcessMessageFunction()
  */
-DLL_API void DLL_CALLCONV FreeImage_SetProcessMessageFunction(void* new_ctx, FreeImage_ProcessMessageFunction new_func, void** old_ctx FI_DEFAULT(NULL), FreeImage_ProcessMessageFunction* old_func FI_DEFAULT(NULL));
+DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func);
+
+/**
+ * Removes a previously added message processor.
+ * Returns true on success, false if processor ID is not valid.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_RemoveProcessMessageFunction(uint32_t id);
 
 /**
  * Invokes message processor for this message instance

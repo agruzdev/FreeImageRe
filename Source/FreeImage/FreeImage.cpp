@@ -23,8 +23,10 @@
 
 
 #ifdef _WIN32
-#include <windows.h>
+# define NOMINMAX
+# include <windows.h>
 #endif
+#include <array>
 
 #include "zlib.h"
 
@@ -223,13 +225,17 @@ FreeImage_IsLittleEndian() {
 
 //----------------------------------------------------------------------
 
-struct MessageProcessContext
+constexpr size_t kMaxMessageProcessorsNumber = 32;
+
+struct MessageProcessorRecord
 {
+	uint32_t id{ };
 	void* ctx{ nullptr };
 	FreeImage_ProcessMessageFunction func{ nullptr };
 };
 
-thread_local MessageProcessContext g_process_message{ };
+// ToDo: implement an object pool?
+thread_local std::array<MessageProcessorRecord, kMaxMessageProcessorsNumber> g_message_processors{ };
 
 
 static FreeImage_OutputMessageFunction freeimage_outputmessage_proc{};
@@ -249,7 +255,7 @@ void DLL_CALLCONV
 FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 	constexpr size_t MSG_SIZE = 512;
 
-	if (fmt && (g_process_message.func || freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
+	if (fmt && (!g_message_processors.empty()  || freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
 		FIMESSAGE message{ static_cast<FREE_IMAGE_FORMAT>(fif), FISEV_WARNING };
 		message.text.resize(MSG_SIZE);
 
@@ -262,8 +268,8 @@ FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 
 		// output the message to the user program
 
-		if (g_process_message.func) {
-			g_process_message.func(g_process_message.ctx, &message);
+		if (!g_message_processors.empty()) {
+			FreeImage_ProcessMessage(& message);
 		}
 		else {
 			// legacy behaviour
@@ -278,16 +284,53 @@ FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 }
 
 
-void FreeImage_SetProcessMessageFunction(void* new_ctx, FreeImage_ProcessMessageFunction new_func, void** old_ctx, FreeImage_ProcessMessageFunction* old_func)
+DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func)
 {
-	std::swap(g_process_message.ctx,  new_ctx);
-	std::swap(g_process_message.func, new_func);
-	if (old_ctx) {
-		*old_ctx = new_ctx;
+	static_assert(kMaxMessageProcessorsNumber < std::numeric_limits<uint32_t>::max() - 1);
+	if (func == nullptr) {
+		return 0;
 	}
-	if (old_func) {
-		*old_func = new_func;
+
+	size_t free_idx = 0;
+	for (; free_idx < g_message_processors.size(); ++free_idx) {
+		if (!g_message_processors[free_idx].id) {
+			break;
+		}
 	}
+	if (free_idx >= g_message_processors.size()) {
+		return 0;
+	}
+
+	auto& rec = g_message_processors[free_idx];
+	rec.id   = static_cast<uint32_t>(free_idx) + 1;
+	rec.ctx  = ctx;
+	rec.func = func;
+
+	return rec.id;
+}
+
+
+FIBOOL FreeImage_RemoveProcessMessageFunction(uint32_t id)
+{
+	if (id == 0) {
+		return FALSE;
+	}
+
+	const uint32_t idx = id - 1;
+	if (idx >= g_message_processors.size()) {
+		return FALSE;
+	}
+
+	auto& rec = g_message_processors[idx];
+	if (rec.id != id) {
+		return FALSE;
+	}
+
+	rec.id   = 0;
+	rec.func = nullptr;
+	rec.ctx  = nullptr;
+
+	return TRUE;
 }
 
 
@@ -297,8 +340,10 @@ void FreeImage_ProcessMessage(const FIMESSAGE* msg)
 		return;
 	}
 
-	if (g_process_message.func) {
-		g_process_message.func(g_process_message.ctx, msg);
+	for (const auto& rec : g_message_processors) {
+		if (rec.id && rec.func) {
+			rec.func(rec.ctx, msg);
+		}
 	}
 }
 
@@ -340,5 +385,5 @@ const char* FreeImage_GetMessageString(const FIMESSAGE* msg)
 	if (msg) {
 		return msg->text.c_str();
 	}
-	return "Unknown";
+	return nullptr;
 }
