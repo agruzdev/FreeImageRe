@@ -161,7 +161,7 @@ loadBuffer(const char *lpszPathName, uint8_t **buffer, uint32_t *length) {
 	return FALSE;
 }
 
-FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, char *output, int input_flag, int output_flag) {
+FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, const char *output, int input_flag, int output_flag) {
 	FIBOOL bSuccess = FALSE;
 
 	uint8_t *buffer = NULL;
