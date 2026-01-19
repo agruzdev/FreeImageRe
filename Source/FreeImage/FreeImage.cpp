@@ -23,8 +23,10 @@
 
 
 #ifdef _WIN32
-#include <windows.h>
+# define NOMINMAX
+# include <windows.h>
 #endif
+#include <array>
 
 #include "zlib.h"
 
@@ -223,6 +225,19 @@ FreeImage_IsLittleEndian() {
 
 //----------------------------------------------------------------------
 
+constexpr size_t kMaxMessageProcessorsNumber = 32;
+
+struct MessageProcessorRecord
+{
+	uint32_t id{ };
+	void* ctx{ nullptr };
+	FreeImage_ProcessMessageFunction func{ nullptr };
+};
+
+// ToDo: implement an object pool?
+thread_local std::array<MessageProcessorRecord, kMaxMessageProcessorsNumber> g_message_processors{ };
+
+
 static FreeImage_OutputMessageFunction freeimage_outputmessage_proc{};
 static FreeImage_OutputMessageFunctionStdCall freeimage_outputmessagestdcall_proc{};
 
@@ -238,108 +253,137 @@ FreeImage_SetOutputMessageStdCall(FreeImage_OutputMessageFunctionStdCall omf) {
 
 void DLL_CALLCONV
 FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
-	const int MSG_SIZE = 512; // 512 bytes should be more than enough for a short message
+	constexpr size_t MSG_SIZE = 512;
 
-	if (fmt && (freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
-		char message[MSG_SIZE];
-		memset(message, 0, MSG_SIZE);
-
-		// initialize the optional parameter list
+	if (fmt && (!g_message_processors.empty()  || freeimage_outputmessage_proc || freeimage_outputmessagestdcall_proc)) {
+		FIMESSAGE message{ static_cast<FREE_IMAGE_FORMAT>(fif), FISEV_WARNING };
+		message.text.resize(MSG_SIZE);
 
 		va_list arg;
 		va_start(arg, fmt);
 
-		// check the length of the format string
-
-		int str_length = (int)( (strlen(fmt) > MSG_SIZE) ? MSG_SIZE : strlen(fmt) );
-
-		// parse the format string and put the result in 'message'
-
-		for (int i = 0, j = 0; i < str_length; ++i) {
-			if (fmt[i] == '%') {
-				if (i + 1 < str_length) {
-					switch (tolower(fmt[i + 1])) {
-						case '%' :
-							message[j++] = '%';
-							break;
-
-						case 'o' : // octal numbers
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 8);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 'i' : // decimal numbers
-						case 'd' :
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 10);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 'x' : // hexadecimal numbers
-						{
-							char tmp[16];
-
-							_itoa(va_arg(arg, int), tmp, 16);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-
-						case 's' : // strings
-						{
-							char *tmp = va_arg(arg, char*);
-
-							strcat(message, tmp);
-
-							j += (int)strlen(tmp);
-
-							++i;
-
-							break;
-						}
-					};
-				} else {
-					message[j++] = fmt[i];
-				}
-			} else {
-				message[j++] = fmt[i];
-			};
-		}
-
-		// deinitialize the optional parameter list
+		std::vsnprintf(message.text.data(), message.text.size(), fmt, arg);
 
 		va_end(arg);
 
 		// output the message to the user program
 
-		if (freeimage_outputmessage_proc)
-			freeimage_outputmessage_proc((FREE_IMAGE_FORMAT)fif, message);
+		if (!g_message_processors.empty()) {
+			FreeImage_ProcessMessage(& message);
+		}
+		else {
+			// legacy behaviour
 
-		if (freeimage_outputmessagestdcall_proc)
-			freeimage_outputmessagestdcall_proc((FREE_IMAGE_FORMAT)fif, message); 
+			if (freeimage_outputmessage_proc)
+				freeimage_outputmessage_proc(message.scope, message.text.c_str());
+
+			if (freeimage_outputmessagestdcall_proc)
+				freeimage_outputmessagestdcall_proc(message.scope, message.text.c_str());
+		}
 	}
+}
+
+
+DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func)
+{
+	static_assert(kMaxMessageProcessorsNumber < std::numeric_limits<uint32_t>::max() - 1);
+	if (func == nullptr) {
+		return 0;
+	}
+
+	size_t free_idx = 0;
+	for (; free_idx < g_message_processors.size(); ++free_idx) {
+		if (!g_message_processors[free_idx].id) {
+			break;
+		}
+	}
+	if (free_idx >= g_message_processors.size()) {
+		return 0;
+	}
+
+	auto& rec = g_message_processors[free_idx];
+	rec.id   = static_cast<uint32_t>(free_idx) + 1;
+	rec.ctx  = ctx;
+	rec.func = func;
+
+	return rec.id;
+}
+
+
+FIBOOL FreeImage_RemoveProcessMessageFunction(uint32_t id)
+{
+	if (id == 0) {
+		return FALSE;
+	}
+
+	const uint32_t idx = id - 1;
+	if (idx >= g_message_processors.size()) {
+		return FALSE;
+	}
+
+	auto& rec = g_message_processors[idx];
+	if (rec.id != id) {
+		return FALSE;
+	}
+
+	rec.id   = 0;
+	rec.func = nullptr;
+	rec.ctx  = nullptr;
+
+	return TRUE;
+}
+
+
+void FreeImage_ProcessMessage(const FIMESSAGE* msg)
+{
+	if (!msg) {
+		return;
+	}
+
+	for (const auto& rec : g_message_processors) {
+		if (rec.id && rec.func) {
+			rec.func(rec.ctx, msg);
+		}
+	}
+}
+
+
+FIMESSAGE* FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what)
+{
+	return new FIMESSAGE(scope, severity, what ? what : "Unknown");
+}
+
+
+void FreeImage_DeleteMessage(FIMESSAGE* msg)
+{
+	if (msg) {
+		delete msg;
+	}
+}
+
+
+FREE_IMAGE_FORMAT FreeImage_GetMessageScope(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->scope;
+	}
+	return FIF_UNKNOWN;
+}
+
+
+FREE_IMAGE_SEVERITY FreeImage_GetMessageSeverity(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->severity;
+	}
+	return FISEV_NONE;
+}
+
+
+const char* FreeImage_GetMessageString(const FIMESSAGE* msg)
+{
+	if (msg) {
+		return msg->text.c_str();
+	}
+	return nullptr;
 }

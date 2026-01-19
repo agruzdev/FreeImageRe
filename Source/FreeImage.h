@@ -859,6 +859,21 @@ FI_ENUM(FREE_IMAGE_ALPHA_OPERATION) {
 };
 
 
+// Message struct ---------------------------------------------------------
+
+
+FI_STRUCT(FIMESSAGE);
+
+FI_ENUM(FREE_IMAGE_SEVERITY) {
+	FISEV_VERBOSE = 0,
+	FISEV_INFO = 200,
+	FISEV_WARNING = 300,
+	FISEV_ERROR = 400,
+	FISEV_NONE = 0x1000
+};
+
+
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -894,6 +909,40 @@ typedef void (DLL_CALLCONV *FreeImage_OutputMessageFunctionStdCall)(FREE_IMAGE_F
 DLL_API void DLL_CALLCONV FreeImage_SetOutputMessageStdCall(FreeImage_OutputMessageFunctionStdCall omf); 
 DLL_API void DLL_CALLCONV FreeImage_SetOutputMessage(FreeImage_OutputMessageFunction omf);
 DLL_API void DLL_CALLCONV FreeImage_OutputMessageProc(int fif, const char *fmt, ...);
+
+
+/**
+ * ctx - Opaque handle for message processing context
+ * func - Address of message processing function
+ */
+typedef void (DLL_CALLCONV *FreeImage_ProcessMessageFunction)(void* ctx, const FIMESSAGE* msg);
+
+/**
+ * Adds a message processing function for this thread only.
+ * The `func` must not be nullptr.
+ * On success retuns non-zero ID of the registered processor, that can later be used in FreeImage_RemoveProcessMessageFunction()
+ */
+DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func);
+
+/**
+ * Removes a previously added message processor.
+ * Returns true on success, false if processor ID is not valid.
+ */
+DLL_API FIBOOL DLL_CALLCONV FreeImage_RemoveProcessMessageFunction(uint32_t id);
+
+/**
+ * Invokes message processor for this message instance
+ */
+DLL_API void DLL_CALLCONV FreeImage_ProcessMessage(const FIMESSAGE* msg);
+
+
+DLL_API FIMESSAGE* DLL_CALLCONV FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what);
+DLL_API void DLL_CALLCONV FreeImage_DeleteMessage(FIMESSAGE* msg);
+DLL_API FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_GetMessageScope(const FIMESSAGE* msg);
+DLL_API FREE_IMAGE_SEVERITY DLL_CALLCONV FreeImage_GetMessageSeverity(const FIMESSAGE* msg);
+DLL_API const char* DLL_CALLCONV FreeImage_GetMessageString(const FIMESSAGE* msg);
+
+
 
 // Allocate / Clone / Unload routines ---------------------------------------
 

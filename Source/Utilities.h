@@ -443,4 +443,17 @@ static const char *FI_MSG_ERROR_UNSUPPORTED_FORMAT = "Unsupported format";
 static const char *FI_MSG_ERROR_UNSUPPORTED_COMPRESSION = "Unsupported compression type";
 static const char *FI_MSG_WARNING_INVALID_THUMBNAIL = "Warning: attached thumbnail cannot be written to output file (invalid format) - Thumbnail saving aborted";
 
+struct FIMESSAGE
+{
+	FREE_IMAGE_FORMAT scope;
+	FREE_IMAGE_SEVERITY severity;
+	std::string text;
+
+
+	FIMESSAGE(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, std::string text = {})
+		: scope(scope), severity(severity), text(std::move(text))
+	{ }
+};
+
+
 #endif // FREEIMAGE_UTILITIES_H
