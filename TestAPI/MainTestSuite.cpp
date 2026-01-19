@@ -66,6 +66,15 @@ int main(int argc, char *argv[]) {
 	// test plugins capabilities
 	showPlugins();
 
+	uint32_t depsCount = FreeImage_GetDependenciesCount();
+	for (uint32_t i = 0; i < depsCount; ++i) {
+		auto dep = FreeImage_GetDependencyInfo(i);
+		assert(dep != nullptr);
+		if (dep->fullVersion) {
+			printf("%u %s\n", i, dep->fullVersion);
+		}
+	}
+
 	// test internal image types
 	testImageType(width, height);
 

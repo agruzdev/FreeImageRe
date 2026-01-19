@@ -2719,11 +2719,12 @@ InitTIFF(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeTiffDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "LibTIFF";
-	info->fullVersion = TIFFLIB_VERSION_STR_MAJ_MIN_MIC;
-	info->majorVersion = TIFFLIB_MAJOR_VERSION;
-	info->minorVersion = TIFFLIB_MINOR_VERSION;
-	return info;
+const FIDEPENDENCY* GetTiffDependencyInfo() {
+	static const FIDEPENDENCY info = {
+		.name = "LibTIFF",
+		.fullVersion  = "LibTIFF v" TIFFLIB_VERSION_STR_MAJ_MIN_MIC,
+		.majorVersion = TIFFLIB_MAJOR_VERSION,
+		.minorVersion = TIFFLIB_MINOR_VERSION
+	};
+	return &info;
 }

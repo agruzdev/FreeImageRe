@@ -1731,23 +1731,24 @@ InitJPEG(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeJpegDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
+const FIDEPENDENCY* GetJpegDependencyInfo() {
+	static const FIDEPENDENCY info = {
 #ifdef LIBJPEG_TURBO_VERSION
 # if WITH_SIMD
-# define SIMD_TAG " (simd)"
+#  define SIMD_TAG " (simd)"
+# else
+#  define SIMD_TAG
+# endif
+		.name = "libjpeg-turbo",
+		.fullVersion  = "libjpeg-turbo v" FI_QUOTE(LIBJPEG_TURBO_VERSION) SIMD_TAG,
+		.majorVersion = LIBJPEG_TURBO_VERSION_NUMBER,
+		.minorVersion = 0
 #else
-# define SIMD_TAG
+		.name = "libjpeg (IJG)";
+		.fullVersion  = "libjpeg (IJG) " JVERSION,
+		.majorVersion = JPEG_LIB_VERSION_MAJOR,
+		.minorVersion = JPEG_LIB_VERSION_MINOR
 #endif
-	info->name = "libjpeg-turbo";
-	info->majorVersion = LIBJPEG_TURBO_VERSION_NUMBER;
-	info->minorVersion = 0;
-	info->fullVersion  = FI_QUOTE(LIBJPEG_TURBO_VERSION) SIMD_TAG;
-#else
-	info->name = "libjpeg (IJG)";
-	info->majorVersion = JPEG_LIB_VERSION_MAJOR;
-	info->minorVersion = JPEG_LIB_VERSION_MINOR;
-	info->fullVersion  = JVERSION;
-#endif
-	return info;
+	};
+	return &info;
 }

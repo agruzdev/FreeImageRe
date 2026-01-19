@@ -39,6 +39,9 @@
 #include "OpenEXR/ImfPreviewImage.h"
 //#include "OpenEXR/Half/half.h"
 
+#include "ImathConfig.h"
+#include "openjph/ojph_version.h"
+
 
 // ==========================================================
 // Plugin Interface
@@ -766,11 +769,30 @@ InitEXR(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeExrDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "OpenEXR";
-	info->fullVersion = OPENEXR_VERSION_STRING;
-	info->majorVersion = OPENEXR_VERSION_MAJOR;
-	info->minorVersion = OPENEXR_VERSION_MINOR;
-	return info;
+const FIDEPENDENCY* GetExrDependencyInfo() {
+
+	static const FIDEPENDENCY jphInfo = {
+		.name = "OpenJPH",
+		.fullVersion  = "OpenJPH v" FI_QUOTE(OPENJPH_VERSION_MAJOR) "." FI_QUOTE(OPENJPH_VERSION_MINOR) "." FI_QUOTE(OPENJPH_VERSION_PATCH),
+		.majorVersion = OPENJPH_VERSION_MAJOR,
+		.minorVersion = OPENJPH_VERSION_MINOR
+	};
+
+	static const FIDEPENDENCY imathInfo = {
+		.name = "Imath",
+		.fullVersion  = "Imath v" IMATH_LIB_VERSION_STRING,
+		.majorVersion = IMATH_VERSION_MAJOR,
+		.minorVersion = IMATH_VERSION_MINOR,
+		.next = &jphInfo
+	};
+
+	static const FIDEPENDENCY info = {
+		.name = "OpenEXR",
+		.fullVersion  = "OpenEXR v" OPENEXR_VERSION_STRING,
+		.majorVersion = OPENEXR_VERSION_MAJOR,
+		.minorVersion = OPENEXR_VERSION_MINOR,
+		.next = &imathInfo
+	};
+
+	return &info;
 }

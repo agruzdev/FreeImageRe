@@ -1462,12 +1462,13 @@ InitJXR(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeJxrDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "LibJXR";
-	info->fullVersion = "1.0 (2013)";
-	info->majorVersion = 1;
-	info->minorVersion = 0;
-	return info;
+const FIDEPENDENCY* GetJxrDependencyInfo() {
+	static const FIDEPENDENCY info = {
+		.name = "LibJXR",
+		.fullVersion  = "LibJXR (2013)",
+		.majorVersion = 0,
+		.minorVersion = 0
+	};
+	return &info;
 }
 

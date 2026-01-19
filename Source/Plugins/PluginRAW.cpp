@@ -785,11 +785,12 @@ InitRAW(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeRawDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "LibRaw";
-	info->fullVersion = LIBRAW_VERSION_STR;
-	info->majorVersion = LIBRAW_MAJOR_VERSION;
-	info->minorVersion = LIBRAW_MINOR_VERSION;
-	return info;
+const FIDEPENDENCY* GetRawDependencyInfo() {
+	static const FIDEPENDENCY info = {
+		.name = "LibRaw",
+		.fullVersion  = "LibRaw v" LIBRAW_VERSION_STR,
+		.majorVersion = LIBRAW_MAJOR_VERSION,
+		.minorVersion = LIBRAW_MINOR_VERSION
+	};
+	return &info;
 }

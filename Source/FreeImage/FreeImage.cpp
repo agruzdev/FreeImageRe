@@ -112,26 +112,26 @@ FreeImageRe_GetVersionNumbers(int* major, int* minor) {
 }
 
 // Forward declaration for version functions
-std::unique_ptr<FIDEPENDENCY> MakePngDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeJpegDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeJpeg2kDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeExrDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeTiffDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeRawDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeWebpDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeJxrDependencyInfo();
-std::unique_ptr<FIDEPENDENCY> MakeHeifDependencyInfo();
+const FIDEPENDENCY* GetPngDependencyInfo();
+const FIDEPENDENCY* GetJpegDependencyInfo();
+const FIDEPENDENCY* GetJpeg2kDependencyInfo();
+const FIDEPENDENCY* GetExrDependencyInfo();
+const FIDEPENDENCY* GetTiffDependencyInfo();
+const FIDEPENDENCY* GetRawDependencyInfo();
+const FIDEPENDENCY* GetWebpDependencyInfo();
+const FIDEPENDENCY* GetJxrDependencyInfo();
+const FIDEPENDENCY* GetHeifDependencyInfo();
 
 namespace {
 	
-	std::unique_ptr<FIDEPENDENCY> MakeZLibDependencyInfo() {
-		auto info = std::make_unique<FIDEPENDENCY>();
-		info->type = FIDEP_STATIC;
-		info->name = "zlib";
-		info->fullVersion  = ZLIB_VERSION;
-		info->majorVersion = ZLIB_VER_MAJOR;
-		info->minorVersion = ZLIB_VER_MINOR;
-		return info;
+	const FIDEPENDENCY* GetZLibDependencyInfo() {
+		static const FIDEPENDENCY info = {
+			.name = "zlib",
+			.fullVersion  = "zlib v" ZLIB_VERSION,
+			.majorVersion = ZLIB_VER_MAJOR,
+			.minorVersion = ZLIB_VER_MINOR
+		};
+		return &info;
 	}
 
 	class DependenciesTable {
@@ -147,48 +147,48 @@ namespace {
 		}
 
 		const FIDEPENDENCY* GetByIndex(uint32_t index) const {
-			return mEntries.at(index).get();
+			return mEntries.at(index);
 		}
 
 	private:
 		DependenciesTable() {
-			Append(MakeZLibDependencyInfo());
+			Append(GetZLibDependencyInfo());
 #if FREEIMAGE_WITH_LIBPNG
-			Append(MakePngDependencyInfo());
+			Append(GetPngDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBJPEG
-			Append(MakeJpegDependencyInfo());
+			Append(GetJpegDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBOPENJPEG
-			Append(MakeJpeg2kDependencyInfo());
+			Append(GetJpeg2kDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBOPENEXR
-			Append(MakeExrDependencyInfo());
+			Append(GetExrDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBTIFF
-			Append(MakeTiffDependencyInfo());
+			Append(GetTiffDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBRAW
-			Append(MakeRawDependencyInfo());
+			Append(GetRawDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBWEBP
-			Append(MakeWebpDependencyInfo());
+			Append(GetWebpDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBJXR
-			Append(MakeJxrDependencyInfo());
+			Append(GetJxrDependencyInfo());
 #endif
 #if FREEIMAGE_WITH_LIBHEIF
-			Append(MakeHeifDependencyInfo());
+			Append(GetHeifDependencyInfo());
 #endif
 		}
 
-		void Append(std::unique_ptr<FIDEPENDENCY> dep) {
+		void Append(const FIDEPENDENCY* dep) {
 			if (dep) {
 				mEntries.emplace_back(std::move(dep));
 			}
 		}
 
-		std::vector<std::unique_ptr<FIDEPENDENCY>> mEntries;	// not null
+		std::vector<const FIDEPENDENCY*> mEntries;	// not null
 	};
 
 } // namespace
@@ -203,7 +203,7 @@ catch (...) {
 }
 
 const FIDEPENDENCY* DLL_CALLCONV
-FreeImage_GetDependencyInfo(uint32_t index) 
+FreeImage_GetDependencyInfo(uint32_t index)
 try {
 	return DependenciesTable::GetInstance().GetByIndex(index);
 }

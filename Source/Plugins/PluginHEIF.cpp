@@ -19,6 +19,7 @@
 #include "Metadata/FreeImageTag.h"
 #include "FreeImage/SimpleTools.h"
 
+#include <iostream>
 #include <array>
 #include <cstring>
 #include "yato/types.h"
@@ -116,6 +117,8 @@ public:
     decltype(&::heif_get_version_number_major) heif_get_version_number_major_f{ nullptr };
     decltype(&::heif_get_version_number_minor) heif_get_version_number_minor_f{ nullptr };
     decltype(&::heif_get_version_number_maintenance) heif_get_version_number_maintenance_f{ nullptr };
+    decltype(&::heif_get_decoder_descriptors) heif_get_decoder_descriptors_f{ nullptr };
+    decltype(&::heif_get_encoder_descriptors) heif_get_encoder_descriptors_f{ nullptr };
     decltype(&::heif_read_main_brand) heif_read_main_brand_f{ nullptr };
     decltype(&::heif_context_alloc) heif_context_alloc_f{ nullptr };
     decltype(&::heif_context_free) heif_context_free_f{ nullptr };
@@ -135,6 +138,8 @@ public:
     decltype(&::heif_image_handle_get_metadata_size) heif_image_handle_get_metadata_size_f{ nullptr };
     decltype(&::heif_image_handle_get_metadata) heif_image_handle_get_metadata_f{ nullptr };
     decltype(&::heif_decode_image) heif_decode_image_f{ nullptr };
+    decltype(&::heif_decoder_descriptor_get_id_name) heif_decoder_descriptor_get_id_name_f{ nullptr };
+    decltype(&::heif_decoder_descriptor_get_name) heif_decoder_descriptor_get_name_f{ nullptr };
     decltype(&::heif_image_create) heif_image_create_f{ nullptr };
     decltype(&::heif_image_release) heif_image_release_f{ nullptr };
     decltype(&::heif_image_add_plane) heif_image_add_plane_f{ nullptr };
@@ -143,6 +148,8 @@ public:
     decltype(&::heif_image_get_plane) heif_image_get_plane_f{ nullptr };
     decltype(&::heif_encoder_release) heif_encoder_release_f{ nullptr };
     decltype(&::heif_encoder_set_lossy_quality) heif_encoder_set_lossy_quality_f{ nullptr };
+    decltype(&::heif_encoder_descriptor_get_id_name) heif_encoder_descriptor_get_id_name_f{ nullptr };
+    decltype(&::heif_encoder_descriptor_get_name) heif_encoder_descriptor_get_name_f{ nullptr };
     decltype(&::heif_image_handle_get_number_of_thumbnails) heif_image_handle_get_number_of_thumbnails_f{ nullptr };
     decltype(&::heif_image_handle_get_list_of_thumbnail_IDs) heif_image_handle_get_list_of_thumbnail_IDs_f{ nullptr };
     decltype(&::heif_image_handle_get_thumbnail) heif_image_handle_get_thumbnail_f{ nullptr };
@@ -165,6 +172,8 @@ private:
         heif_get_version_number_major_f = LoadSymbol<decltype(&::heif_get_version_number_major)>("heif_get_version_number_major");
         heif_get_version_number_minor_f = LoadSymbol<decltype(&::heif_get_version_number_minor)>("heif_get_version_number_minor");
         heif_get_version_number_maintenance_f = LoadSymbol<decltype(&::heif_get_version_number_maintenance)>("heif_get_version_number_maintenance");
+        heif_get_decoder_descriptors_f = LoadSymbol<decltype(&::heif_get_decoder_descriptors)>("heif_get_decoder_descriptors", /*required=*/false);
+        heif_get_encoder_descriptors_f = LoadSymbol<decltype(&::heif_get_encoder_descriptors)>("heif_get_encoder_descriptors", /*required=*/false);
         heif_read_main_brand_f = LoadSymbol<decltype(&::heif_read_main_brand)>("heif_read_main_brand", /*required=*/false);
         heif_context_alloc_f = LoadSymbol<decltype(&::heif_context_alloc)>("heif_context_alloc");
         heif_context_free_f = LoadSymbol<decltype(&::heif_context_free)>("heif_context_free");
@@ -182,6 +191,8 @@ private:
         heif_image_handle_get_metadata_f = LoadSymbol<decltype(&::heif_image_handle_get_metadata)>("heif_image_handle_get_metadata");
         heif_image_handle_get_preferred_decoding_colorspace_f = LoadSymbol<decltype(&::heif_image_handle_get_preferred_decoding_colorspace)>("heif_image_handle_get_preferred_decoding_colorspace", /*required=*/false);
         heif_decode_image_f = LoadSymbol<decltype(&::heif_decode_image)>("heif_decode_image");
+        heif_decoder_descriptor_get_id_name_f = LoadSymbol<decltype(&::heif_decoder_descriptor_get_id_name)>("heif_decoder_descriptor_get_id_name", /*required=*/false);
+        heif_decoder_descriptor_get_name_f = LoadSymbol<decltype(&::heif_decoder_descriptor_get_name)>("heif_decoder_descriptor_get_name", /*required=*/false);
         heif_image_create_f = LoadSymbol<decltype(&::heif_image_create)>("heif_image_create");
         heif_image_release_f = LoadSymbol<decltype(&::heif_image_release)>("heif_image_release");
         heif_image_add_plane_f = LoadSymbol<decltype(&::heif_image_add_plane)>("heif_image_add_plane");
@@ -191,6 +202,8 @@ private:
         heif_image_get_plane_f = LoadSymbol<decltype(&::heif_image_get_plane)>("heif_image_get_plane");
         heif_encoder_release_f = LoadSymbol<decltype(&::heif_encoder_release)>("heif_encoder_release");
         heif_encoder_set_lossy_quality_f = LoadSymbol<decltype(&::heif_encoder_set_lossy_quality)>("heif_encoder_set_lossy_quality");
+        heif_encoder_descriptor_get_id_name_f = LoadSymbol<decltype(&::heif_encoder_descriptor_get_id_name)>("heif_encoder_descriptor_get_id_name", /*required=*/false);
+        heif_encoder_descriptor_get_name_f = LoadSymbol<decltype(&::heif_encoder_descriptor_get_name)>("heif_encoder_descriptor_get_name", /*required=*/false);
         heif_context_encode_image_f = LoadSymbol<decltype(&::heif_context_encode_image)>("heif_context_encode_image");
         heif_image_handle_get_number_of_thumbnails_f = LoadSymbol<decltype(&::heif_image_handle_get_number_of_thumbnails)>("heif_image_handle_get_number_of_thumbnails", /*required=*/false);
         heif_image_handle_get_list_of_thumbnail_IDs_f = LoadSymbol<decltype(&::heif_image_handle_get_list_of_thumbnail_IDs)>("heif_image_handle_get_list_of_thumbnail_IDs", /*required=*/false);
@@ -633,17 +646,86 @@ catch (...) {
 }
 
 
+namespace
+{
+    constexpr size_t kMaxCodecs = 32;
 
-std::unique_ptr<FIDEPENDENCY> MakeHeifDependencyInfo() 
+    void GetDecoderDependencies(LibHeif& libHeif, heif_compression_format fmt, std::vector<FIDEPENDENCY>& depInfos)
+    {
+        if (!libHeif.heif_get_decoder_descriptors_f || !libHeif.heif_decoder_descriptor_get_id_name_f || !libHeif.heif_decoder_descriptor_get_name_f) {
+            return;
+        }
+
+        std::array<const heif_decoder_descriptor*, kMaxCodecs> decoders = { nullptr };
+        const int count = libHeif.heif_get_decoder_descriptors_f(fmt, decoders.data(), yato::narrow_cast<int>(decoders.size()));
+
+        for (int i = 0; i < count; ++i) {
+            auto& dep = depInfos.emplace_back();
+            dep.name        = libHeif.heif_decoder_descriptor_get_id_name_f(decoders[i]);
+            dep.fullVersion = libHeif.heif_decoder_descriptor_get_name_f(decoders[i]);
+            dep.type        = FIDEP_DYNAMIC;
+        }
+    }
+
+    void GetEncoderDependencies(LibHeif& libHeif, heif_compression_format fmt, std::vector<FIDEPENDENCY>& depInfos)
+    {
+        if (!libHeif.heif_get_encoder_descriptors_f || !libHeif.heif_encoder_descriptor_get_id_name_f || !libHeif.heif_encoder_descriptor_get_name_f) {
+            return;
+        }
+
+        std::array<const heif_encoder_descriptor*, kMaxCodecs> encoders = { nullptr };
+        const int count = libHeif.heif_get_encoder_descriptors_f(fmt, nullptr, encoders.data(), yato::narrow_cast<int>(encoders.size()));
+
+        for (int i = 0; i < count; ++i) {
+            auto& dep = depInfos.emplace_back();
+            dep.name        = libHeif.heif_encoder_descriptor_get_id_name_f(encoders[i]);
+            dep.fullVersion = libHeif.heif_encoder_descriptor_get_name_f(encoders[i]);
+            dep.type        = FIDEP_DYNAMIC;
+        }
+    }
+
+    std::vector<FIDEPENDENCY> GetHeifDependencies(LibHeif& libHeif) {
+        std::vector<FIDEPENDENCY> depInfos{};
+        GetDecoderDependencies(libHeif, heif_compression_HEVC, depInfos);
+        GetDecoderDependencies(libHeif, heif_compression_AV1,  depInfos);
+        GetEncoderDependencies(libHeif, heif_compression_HEVC, depInfos);
+        GetEncoderDependencies(libHeif, heif_compression_AV1,  depInfos);
+
+        depInfos.shrink_to_fit();
+        for (size_t i = 0; i < depInfos.size() - 1; ++i) {
+            depInfos[i].next = &depInfos[i + 1];
+        }
+
+        return depInfos;
+    }
+
+    const char* GetHeifFullVersion(LibHeif& libHeif)
+    {
+        static char buffer[256] = { 0 };
+        std::snprintf(buffer, std::size(buffer), "LibHeif v%s", libHeif.heif_get_version_f());
+        return buffer;
+    }
+
+} // namespace
+
+
+
+const FIDEPENDENCY* GetHeifDependencyInfo() 
 try {
     auto& libHeif = LibHeif::GetInstance();
-    auto info = std::make_unique<FIDEPENDENCY>();
-    info->type = FIDEP_DYNAMIC;
-    info->name = "LibHeif";
-    info->fullVersion  = libHeif.heif_get_version_f();
-    info->majorVersion = libHeif.heif_get_version_number_major_f();
-    info->minorVersion = libHeif.heif_get_version_number_minor_f();
-    return info;
+
+    static const std::vector<FIDEPENDENCY> codecDeps = GetHeifDependencies(libHeif);
+
+    static const FIDEPENDENCY info = {
+        .name = "LibHeif",
+        .fullVersion  = GetHeifFullVersion(libHeif),
+        .majorVersion = yato::narrow_cast<uint32_t>(libHeif.heif_get_version_number_major_f()),
+        .minorVersion = yato::narrow_cast<uint32_t>(libHeif.heif_get_version_number_minor_f()),
+        .type = FIDEP_DYNAMIC,
+        .next = !codecDeps.empty() ? &codecDeps[0] : nullptr
+    };
+
+    return &info;
 }
 catch (...) {
     return nullptr;

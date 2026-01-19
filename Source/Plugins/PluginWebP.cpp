@@ -680,11 +680,12 @@ InitWEBP(Plugin *plugin, int format_id) {
 }
 
 
-std::unique_ptr<FIDEPENDENCY> MakeWebpDependencyInfo() {
-	auto info = std::make_unique<FIDEPENDENCY>();
-	info->name = "LibWebP";
-	info->fullVersion = FI_QUOTE(DEC_MAJ_VERSION) "." FI_QUOTE(DEC_MIN_VERSION) "." FI_QUOTE(DEC_REV_VERSION);
-	info->majorVersion = DEC_MAJ_VERSION;
-	info->minorVersion = DEC_MIN_VERSION;
-	return info;
+const FIDEPENDENCY* GetWebpDependencyInfo() {
+	static const FIDEPENDENCY info = {
+		.name = "LibWebP",
+		.fullVersion  = "LibWebP v" FI_QUOTE(DEC_MAJ_VERSION) "." FI_QUOTE(DEC_MIN_VERSION) "." FI_QUOTE(DEC_REV_VERSION),
+		.majorVersion = DEC_MAJ_VERSION,
+		.minorVersion = DEC_MIN_VERSION
+	};
+	return &info;
 }

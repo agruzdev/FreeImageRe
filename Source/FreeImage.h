@@ -727,6 +727,7 @@ FI_STRUCT (FIDEPENDENCY) {
 	uint32_t majorVersion	FI_DEFAULT(0);
 	uint32_t minorVersion	FI_DEFAULT(0);
 	FREE_IMAGE_DEPENDENCY_TYPE type	FI_DEFAULT(FIDEP_STATIC);
+	const FIDEPENDENCY* next FI_DEFAULT(NULL);	// optional list of sub-dependencies
 };
 
 
