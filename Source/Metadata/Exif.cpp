@@ -973,7 +973,7 @@ Rotate a dib according to Exif info
 @param dib Input / Output dib to rotate
 @see PluginJPEG.cpp
 */
-void 
+void DLL_CALLCONV
 RotateExif(FIBITMAP **dib) {
 	// check for Exif rotation
 	if (FreeImage_GetMetadataCount(FIMD_EXIF_MAIN, *dib)) {

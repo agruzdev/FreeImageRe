@@ -698,12 +698,12 @@ FreeImage_SetThumbnail(FIBITMAP *dib, FIBITMAP *thumbnail) {
 
 // ----------------------------------------------------------
 
-FREE_IMAGE_COLOR_TYPE
+FREE_IMAGE_COLOR_TYPE DLL_CALLCONV
 FreeImage_GetColorType(FIBITMAP* dib) {
 	return FreeImage_GetColorType2(dib, TRUE);
 }
 
-FREE_IMAGE_COLOR_TYPE
+FREE_IMAGE_COLOR_TYPE DLL_CALLCONV
 FreeImage_GetColorType2(FIBITMAP* dib, FIBOOL scan_alpha) {
 	FIRGBA8 *rgb;
 

@@ -785,7 +785,8 @@ namespace
 } // namespace
 
 
-FIBOOL FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
+FIBOOL DLL_CALLCONV
+FreeImage_MakeHistogram(FIBITMAP* dib, uint32_t binsNumber, void* outMinVal, void* outMaxVal, uint32_t* histR, uint32_t strideR, uint32_t* histG, uint32_t strideG, uint32_t* histB, uint32_t strideB, uint32_t* histL, uint32_t strideL)
 {
 	if (!FreeImage_HasPixels(dib) || binsNumber < 1) {
 		return FALSE;
@@ -1506,7 +1507,8 @@ namespace
 
 } // namespace
 
-FIBOOL CastPixelValue(FREE_IMAGE_TYPE src_type, const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
+FIBOOL DLL_CALLCONV
+CastPixelValue(FREE_IMAGE_TYPE src_type, const void* src_pixel, FREE_IMAGE_TYPE dst_type, void* dst_pixel)
 {
 	if (!src_pixel || !dst_pixel) {
 		return FALSE;

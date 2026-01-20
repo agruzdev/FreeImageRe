@@ -860,7 +860,7 @@ FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif) {
 // =====================================================================
 
 
-int DLL_CALLCONV 
+int DLL_CALLCONV
 FreeImage_GetFIFCount2() {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 		return static_cast<int>(plugins->GetFifCount2());
@@ -868,7 +868,8 @@ FreeImage_GetFIFCount2() {
 	return 0;
 }
 
-FREE_IMAGE_FORMAT DLL_CALLCONV FreeImage_GetFIFFromIndex(int idx) {
+FREE_IMAGE_FORMAT DLL_CALLCONV
+FreeImage_GetFIFFromIndex(int idx) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 		return plugins->GetFifFromIndex(idx);
 	}

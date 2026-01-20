@@ -230,7 +230,8 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 
 
 
-FIBOOL FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION alpha, int32_t left, int32_t top)
+FIBOOL DLL_CALLCONV
+FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION alpha, int32_t left, int32_t top)
 {
 	if (!FreeImage_HasPixels(dst) || !FreeImage_HasPixels(src)) {
 		return FALSE;

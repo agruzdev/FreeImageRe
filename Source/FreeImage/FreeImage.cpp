@@ -193,7 +193,7 @@ namespace {
 
 } // namespace
 
-uint32_t DLL_CALLCONV 
+uint32_t DLL_CALLCONV
 FreeImage_GetDependenciesCount(void)
 try {
 	return DependenciesTable::GetInstance().GetSize();
@@ -284,7 +284,8 @@ FreeImage_OutputMessageProc(int fif, const char *fmt, ...) {
 }
 
 
-DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func)
+uint32_t DLL_CALLCONV
+FreeImage_AddProcessMessageFunction(void* ctx, FreeImage_ProcessMessageFunction func)
 {
 	static_assert(kMaxMessageProcessorsNumber < std::numeric_limits<uint32_t>::max() - 1);
 	if (func == nullptr) {
@@ -310,7 +311,8 @@ DLL_API uint32_t DLL_CALLCONV FreeImage_AddProcessMessageFunction(void* ctx, Fre
 }
 
 
-FIBOOL FreeImage_RemoveProcessMessageFunction(uint32_t id)
+FIBOOL DLL_CALLCONV
+FreeImage_RemoveProcessMessageFunction(uint32_t id)
 {
 	if (id == 0) {
 		return FALSE;
@@ -334,7 +336,8 @@ FIBOOL FreeImage_RemoveProcessMessageFunction(uint32_t id)
 }
 
 
-void FreeImage_ProcessMessage(const FIMESSAGE* msg)
+void DLL_CALLCONV
+FreeImage_ProcessMessage(const FIMESSAGE* msg)
 {
 	if (!msg) {
 		return;
@@ -348,13 +351,15 @@ void FreeImage_ProcessMessage(const FIMESSAGE* msg)
 }
 
 
-FIMESSAGE* FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what)
+FIMESSAGE* DLL_CALLCONV
+FreeImage_CreateMessage(FREE_IMAGE_FORMAT scope, FREE_IMAGE_SEVERITY severity, const char* what)
 {
 	return new FIMESSAGE(scope, severity, what ? what : "Unknown");
 }
 
 
-void FreeImage_DeleteMessage(FIMESSAGE* msg)
+void DLL_CALLCONV
+FreeImage_DeleteMessage(FIMESSAGE* msg)
 {
 	if (msg) {
 		delete msg;
@@ -362,7 +367,8 @@ void FreeImage_DeleteMessage(FIMESSAGE* msg)
 }
 
 
-FREE_IMAGE_FORMAT FreeImage_GetMessageScope(const FIMESSAGE* msg)
+FREE_IMAGE_FORMAT DLL_CALLCONV
+FreeImage_GetMessageScope(const FIMESSAGE* msg)
 {
 	if (msg) {
 		return msg->scope;
@@ -371,7 +377,8 @@ FREE_IMAGE_FORMAT FreeImage_GetMessageScope(const FIMESSAGE* msg)
 }
 
 
-FREE_IMAGE_SEVERITY FreeImage_GetMessageSeverity(const FIMESSAGE* msg)
+FREE_IMAGE_SEVERITY DLL_CALLCONV
+FreeImage_GetMessageSeverity(const FIMESSAGE* msg)
 {
 	if (msg) {
 		return msg->severity;
@@ -380,7 +387,8 @@ FREE_IMAGE_SEVERITY FreeImage_GetMessageSeverity(const FIMESSAGE* msg)
 }
 
 
-const char* FreeImage_GetMessageString(const FIMESSAGE* msg)
+const char* DLL_CALLCONV
+FreeImage_GetMessageString(const FIMESSAGE* msg)
 {
 	if (msg) {
 		return msg->text.c_str();

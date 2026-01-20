@@ -100,7 +100,8 @@ FIBOOL TmoLinearImpl(FIBITMAP* dst, FIBITMAP* src, double maxValue, double minBr
 }
 
 
-FIBITMAP* FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_COLOR_PARAM yuv_standard)
+FIBITMAP* DLL_CALLCONV
+FreeImage_TmoLinear(FIBITMAP* src, double max_value, FREE_IMAGE_CVT_COLOR_PARAM yuv_standard)
 {
     if (!FreeImage_HasPixels(src)) {
         return nullptr;

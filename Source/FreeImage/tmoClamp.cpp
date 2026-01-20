@@ -10,7 +10,8 @@
 #include <memory>
 #include <limits>
 
-FIBITMAP* FreeImage_TmoClamp(FIBITMAP* src, double max_value)
+FIBITMAP* DLL_CALLCONV
+FreeImage_TmoClamp(FIBITMAP* src, double max_value)
 {
     if (!FreeImage_HasPixels(src)) {
         return nullptr;

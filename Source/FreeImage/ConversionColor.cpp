@@ -9,7 +9,8 @@
 #include "ConversionYUV.h"
 
 
-FIBITMAP* FreeImage_ConvertToColor(FIBITMAP* dib, FREE_IMAGE_COLOR_TYPE dst_color, int64_t fisrt_param, int64_t second_param)
+FIBITMAP* DLL_CALLCONV
+FreeImage_ConvertToColor(FIBITMAP* dib, FREE_IMAGE_COLOR_TYPE dst_color, int64_t fisrt_param, int64_t second_param)
 {
 	(void)second_param;
 	if (!FreeImage_HasPixels(dib)) {

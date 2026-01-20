@@ -1567,22 +1567,22 @@ namespace fi
         {
         public:
             // catch any exception to not cross DLL boundry
-            static const char* FormatProc(void* ctx) try { return unwrap(ctx).FormatProc(); } catch (...) { return nullptr; };
-            static const char* DescriptionProc(void* ctx) try { return unwrap(ctx).DescriptionProc(); } catch (...) { return nullptr; };
-            static const char* ExtensionListProc(void* ctx) try { return unwrap(ctx).ExtensionListProc(); } catch (...) { return nullptr; };
-            static const char* RegExprProc(void* ctx) try { return unwrap(ctx).RegExprProc(); } catch (...) { return nullptr; };
-            static void* OpenProc(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read) try { return unwrap(ctx).OpenProc(io, handle, read); } catch (...) { return nullptr; };
-            static void CloseProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { unwrap(ctx).CloseProc(io, handle, data); } catch (...) { };
-            static uint32_t PageCountProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCountProc(io, handle, data); } catch (...) { return 1U; };
-            static uint32_t PageCapabilityProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCapabilityProc(io, handle, data); } catch (...) { return 1U; };
-            static FIBITMAP* LoadProc(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).LoadProc(io, handle, page, flags, data); } catch (...) { return nullptr; };
-            static FIBOOL SaveProc(void* ctx, FreeImageIO* io, FIBITMAP* dib, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).SaveProc(io, dib, handle, page, flags, data); } catch (...) { return FALSE; };
-            static FIBOOL ValidateProc(void* ctx, FreeImageIO* io, fi_handle handle) try { return unwrap(ctx).ValidateProc(io, handle); } catch (...) { return FALSE; };
-            static const char* MimeProc(void* ctx) try { return unwrap(ctx).MimeProc(); } catch (...) { return nullptr; };
-            static FIBOOL SupportsExportBPPProc(void* ctx, uint32_t bpp) try { return unwrap(ctx).SupportsExportBPPProc(bpp); } catch (...) { return FALSE; };
-            static FIBOOL SupportsExportTypeProc(void* ctx, FREE_IMAGE_TYPE type) try { return unwrap(ctx).SupportsExportTypeProc(type); } catch (...) { return FALSE; };
-            static FIBOOL SupportsICCProfilesProc(void* ctx) try { return unwrap(ctx).SupportsICCProfilesProc(); } catch (...) { return FALSE; };
-            static FIBOOL SupportsNoPixelsProc(void* ctx) try { return unwrap(ctx).SupportsNoPixelsProc(); } catch (...) { return FALSE; };
+            static const char* DLL_CALLCONV FormatProc(void* ctx) try { return unwrap(ctx).FormatProc(); } catch (...) { return nullptr; };
+            static const char* DLL_CALLCONV DescriptionProc(void* ctx) try { return unwrap(ctx).DescriptionProc(); } catch (...) { return nullptr; };
+            static const char* DLL_CALLCONV ExtensionListProc(void* ctx) try { return unwrap(ctx).ExtensionListProc(); } catch (...) { return nullptr; };
+            static const char* DLL_CALLCONV RegExprProc(void* ctx) try { return unwrap(ctx).RegExprProc(); } catch (...) { return nullptr; };
+            static void* DLL_CALLCONV OpenProc(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read) try { return unwrap(ctx).OpenProc(io, handle, read); } catch (...) { return nullptr; };
+            static void DLL_CALLCONV CloseProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { unwrap(ctx).CloseProc(io, handle, data); } catch (...) { };
+            static uint32_t DLL_CALLCONV PageCountProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCountProc(io, handle, data); } catch (...) { return 1U; };
+            static uint32_t DLL_CALLCONV PageCapabilityProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCapabilityProc(io, handle, data); } catch (...) { return 1U; };
+            static FIBITMAP* DLL_CALLCONV LoadProc(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).LoadProc(io, handle, page, flags, data); } catch (...) { return nullptr; };
+            static FIBOOL DLL_CALLCONV SaveProc(void* ctx, FreeImageIO* io, FIBITMAP* dib, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).SaveProc(io, dib, handle, page, flags, data); } catch (...) { return FALSE; };
+            static FIBOOL DLL_CALLCONV ValidateProc(void* ctx, FreeImageIO* io, fi_handle handle) try { return unwrap(ctx).ValidateProc(io, handle); } catch (...) { return FALSE; };
+            static const char* DLL_CALLCONV MimeProc(void* ctx) try { return unwrap(ctx).MimeProc(); } catch (...) { return nullptr; };
+            static FIBOOL DLL_CALLCONV SupportsExportBPPProc(void* ctx, uint32_t bpp) try { return unwrap(ctx).SupportsExportBPPProc(bpp); } catch (...) { return FALSE; };
+            static FIBOOL DLL_CALLCONV SupportsExportTypeProc(void* ctx, FREE_IMAGE_TYPE type) try { return unwrap(ctx).SupportsExportTypeProc(type); } catch (...) { return FALSE; };
+            static FIBOOL DLL_CALLCONV SupportsICCProfilesProc(void* ctx) try { return unwrap(ctx).SupportsICCProfilesProc(); } catch (...) { return FALSE; };
+            static FIBOOL DLL_CALLCONV SupportsNoPixelsProc(void* ctx) try { return unwrap(ctx).SupportsNoPixelsProc(); } catch (...) { return FALSE; };
 
             static void DLL_CALLCONV ReleaseProc(void* ctx) {
                 delete static_cast<Plugin2Wrapper*>(ctx);

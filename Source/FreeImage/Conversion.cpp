@@ -62,7 +62,8 @@
 // ==========================================================
 // Utility functions declared in Utilities.h
 
-FIBOOL SwapRedBlue32(FIBITMAP* dib) {
+FIBOOL DLL_CALLCONV
+SwapRedBlue32(FIBITMAP* dib) {
 	if (FreeImage_GetImageType(dib) != FIT_BITMAP) {
 		return FALSE;
 	}
@@ -153,7 +154,7 @@ _convertCMYKtoRGBA(unsigned width, unsigned height, uint8_t* line_start, unsigne
 	}
 }
 
-FIBOOL 
+FIBOOL DLL_CALLCONV
 ConvertCMYKtoRGBA(FIBITMAP* dib) {
 	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
@@ -302,7 +303,7 @@ _convertLABtoRGB(unsigned width, unsigned height, uint8_t* line_start, unsigned 
 	}
 }
 
-FIBOOL
+FIBOOL DLL_CALLCONV
 ConvertLABtoRGB(FIBITMAP* dib) {
 	if (!FreeImage_HasPixels(dib)) {
 		return FALSE;
@@ -337,7 +338,7 @@ ConvertLABtoRGB(FIBITMAP* dib) {
 
 // ----------------------------------------------------------
 
-FIBITMAP* 
+FIBITMAP* DLL_CALLCONV
 RemoveAlphaChannel(FIBITMAP* src) { 
 
 	if (!FreeImage_HasPixels(src)) {
