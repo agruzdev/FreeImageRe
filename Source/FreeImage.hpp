@@ -116,7 +116,9 @@ namespace fi
         ePict    = FIF_PICT,
         eRaw     = FIF_RAW,
         eWebp    = FIF_WEBP,
-        eJxr     = FIF_JXR
+        eJxr     = FIF_JXR,
+        eHeif    = FIF_HEIF,
+        eAvif    = FIF_AVIF
     };
 
     enum class ImageType
@@ -1376,8 +1378,12 @@ namespace fi
             : MultiBitmap(FREEIMAGERE_CHECKED_CALL(FreeImage_OpenMultiBitmap, static_cast<FREE_IMAGE_FORMAT>(fif), filename, createNew, readOnly, keepCacheInMemory, flags))
         { }
 
+        MultiBitmap(ImageFormat fif, const wchar_t* filename, bool createNew, bool readOnly, bool keepCacheInMemory = false, int flags = 0)
+            : MultiBitmap(FREEIMAGERE_CHECKED_CALL(FreeImage_OpenMultiBitmapU, static_cast<FREE_IMAGE_FORMAT>(fif), filename, createNew, readOnly, keepCacheInMemory, flags))
+        { }
+
         MultiBitmap(ImageFormat fif, const std::filesystem::path& filename, bool createNew, bool readOnly, bool keepCacheInMemory = false, int flags = 0)
-            : MultiBitmap(fif, filename.string().c_str(), createNew, readOnly, keepCacheInMemory, flags)
+            : MultiBitmap(fif, filename.c_str(), createNew, readOnly, keepCacheInMemory, flags)
         { }
 
         MultiBitmap(ImageFormat fif, FreeImageIO* io, fi_handle handle, int flags = 0)
