@@ -41,6 +41,7 @@
 #include <float.h>
 #include <limits.h>
 
+#include <filesystem>
 #include <string>
 #include <list>
 #include <map>
@@ -72,8 +73,20 @@ void FreeImage_Aligned_Free(void* mem);
 
 
 // ==========================================================
-//   File I/O structs
+//   File I/O
 // ==========================================================
+
+
+inline
+FILE* FreeImage_FOpen(const std::filesystem::path& filename, const std::filesystem::path& mode)
+{
+#ifdef _WIN32
+	return ::_wfopen(filename.c_str(), mode.c_str());
+#else
+	return ::fopen(filename.c_str(), mode.c_str());
+#endif
+}
+
 
 // these structs are for file I/O and should not be confused with similar
 // structs in FreeImage.h which are for in-memory bitmap handling

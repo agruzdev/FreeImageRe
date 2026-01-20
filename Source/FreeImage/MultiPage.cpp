@@ -31,11 +31,14 @@
 #pragma warning (disable : 4786) // identifier was truncated to 'number' characters
 #endif
 
+#include "FreeImage.h"
+#include <filesystem>
+
 #include "CacheFile.h"
 #include "FreeImageIO.h"
 #include "Plugin.h"
 #include "Utilities.h"
-#include "FreeImage.h"
+
 
 namespace {
 
@@ -119,7 +122,7 @@ struct MULTIBITMAPHEADER {
 	FIBOOL changed;
 	int page_count;
 	BlockList m_blocks;
-	std::string m_filename;
+	std::filesystem::path m_filename;
 	FIBOOL read_only;
 	FREE_IMAGE_FORMAT cache_fif;
 	int load_flags;
@@ -129,18 +132,11 @@ struct MULTIBITMAPHEADER {
 // Helper functions
 // =====================================================================
 
-inline void
-ReplaceExtension(std::string& dst_filename, const std::string& src_filename, const std::string& dst_extension) {
-	size_t lastDot = src_filename.find_last_of('.');
-	if (lastDot == std::string::npos) {
-		dst_filename = src_filename;
-		dst_filename += ".";
-		dst_filename += dst_extension;
-	}
-	else {
-		dst_filename = src_filename.substr(0, lastDot + 1);
-		dst_filename += dst_extension;
-	}
+inline
+std::filesystem::path ReplaceExtension(const std::filesystem::path& src_filename, const std::filesystem::path& dst_extension) {
+	auto tmp = src_filename;
+	tmp.replace_extension(dst_extension);
+	return tmp;
 }
 
 } //< ns
@@ -235,8 +231,7 @@ FreeImage_InternalGetPageCount(FIMULTIBITMAP *bitmap) {
 // Multipage functions
 // =====================================================================
 
-FIMULTIBITMAP * DLL_CALLCONV
-FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, FIBOOL create_new, FIBOOL read_only, FIBOOL keep_cache_in_memory, int flags) {
+FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path filename, FIBOOL create_new, FIBOOL read_only, FIBOOL keep_cache_in_memory, int flags) {
 
 	FILE *handle{};
 	try {
@@ -252,7 +247,7 @@ FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, FIBOOL cr
 
 			if (auto node = plugins->FindFromFIF(fif)) {
 				if (!create_new) {
-					handle = fopen(filename, "rb");
+					handle = FreeImage_FOpen(filename, "rb");
 					if (!handle) {
 						return nullptr;
 					}
@@ -286,12 +281,13 @@ FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, FIBOOL cr
 				// set up the cache
 
 				if (!read_only) {
-					std::string cache_name;
-					ReplaceExtension(cache_name, filename, "ficache");
+					const auto cache_name = ReplaceExtension(filename, ".ficache");
 
 					if (!header->m_cachefile.open(cache_name, keep_cache_in_memory)) {
 						// an error occured ...
-						fclose(handle);
+						if (handle) {
+							fclose(handle);
+						}
 						return nullptr;
 					}
 				}
@@ -301,14 +297,34 @@ FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char *filename, FIBOOL cr
 				return bitmap.release(); // now owned by caller
 			}
 		}
-	} catch (std::bad_alloc &) {
-		/** @todo report error */
+	} catch (std::exception& err) {
+		FreeImage_OutputMessageProc(fif, "Exception: %s", err.what());
 	}
 	if (handle) {
 		fclose(handle);
 	}
 	return nullptr;
 }
+
+
+FIMULTIBITMAP* DLL_CALLCONV
+FreeImage_OpenMultiBitmap(FREE_IMAGE_FORMAT fif, const char* filename, FIBOOL create_new, FIBOOL read_only, FIBOOL keep_cache_in_memory, int flags) {
+	if (!filename) {
+		return nullptr;
+	}
+	return OpenMultiBitmapImpl(fif, filename, create_new, read_only, keep_cache_in_memory, flags);
+}
+
+
+FIMULTIBITMAP* DLL_CALLCONV
+FreeImage_OpenMultiBitmapU(FREE_IMAGE_FORMAT fif, const wchar_t* filename, FIBOOL create_new, FIBOOL read_only, FIBOOL keep_cache_in_memory, int flags) {
+	if (!filename) {
+		return nullptr;
+	}
+	return OpenMultiBitmapImpl(fif, filename, create_new, read_only, keep_cache_in_memory, flags);
+}
+
+
 
 FIMULTIBITMAP * DLL_CALLCONV
 FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
@@ -467,13 +483,11 @@ FreeImage_CloseMultiBitmap(FIMULTIBITMAP *bitmap, int flags) {
 				try {
 					// open a temp file
 
-					std::string spool_name;
-
-					ReplaceExtension(spool_name, header->m_filename, "fispool");
+					const auto spool_name = ReplaceExtension(header->m_filename, ".fispool");
 
 					// open the spool file and the source file
 
-					FILE *f = fopen(spool_name.c_str(), "w+b");
+					FILE *f = FreeImage_FOpen(spool_name, "w+b");
 
 					// saves changes
 					if (!f) {
@@ -496,15 +510,13 @@ FreeImage_CloseMultiBitmap(FIMULTIBITMAP *bitmap, int flags) {
 					// applies changes to the destination file
 
 					if (success) {
-						remove(header->m_filename.c_str());
-						success = (rename(spool_name.c_str(), header->m_filename.c_str()) == 0) ? TRUE:FALSE;
-						if (!success) {
-							FreeImage_OutputMessageProc(header->fif, "Failed to rename %s to %s", spool_name.c_str(), header->m_filename.c_str());
-						}
+						std::filesystem::remove(header->m_filename);
+						std::filesystem::rename(spool_name, header->m_filename);
 					} else {
-						remove(spool_name.c_str());
+						std::filesystem::remove(spool_name);
 					}
-				} catch (std::bad_alloc &) {
+				} catch (std::exception& err) {
+					FreeImage_OutputMessageProc(header->fif, "Exception: %s", err.what());
 					success = FALSE;
 				}
 

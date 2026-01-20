@@ -64,7 +64,7 @@ public :
 	CacheFile();
 	~CacheFile();
 	
-	FIBOOL open(const std::string& filename = "", FIBOOL keep_in_memory = TRUE);
+	FIBOOL open(const std::filesystem::path& filename, FIBOOL keep_in_memory = TRUE);
 	void close();
 
 	FIBOOL readFile(uint8_t *data, int nr, int size);
@@ -80,7 +80,7 @@ private :
 
 private :
 	FILE *m_file;
-	std::string m_filename;
+	std::filesystem::path m_filename;
 	std::list<int> m_free_pages;
 	PageCache m_page_cache_mem;
 	PageCache m_page_cache_disk;

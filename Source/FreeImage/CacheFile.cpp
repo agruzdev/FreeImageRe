@@ -30,30 +30,30 @@
 // ----------------------------------------------------------
 
 CacheFile::CacheFile() :
-m_file{},
-m_free_pages(),
-m_page_cache_mem(),
-m_page_cache_disk(),
-m_page_map(),
-m_page_count(0),
-m_current_block{},
-m_keep_in_memory(TRUE) {
-}
+	m_file{},
+	m_free_pages(),
+	m_page_cache_mem(),
+	m_page_cache_disk(),
+	m_page_map(),
+	m_page_count(0),
+	m_current_block{},
+	m_keep_in_memory(TRUE) 
+{ }
 
 CacheFile::~CacheFile() {
   close();
 }
 
 FIBOOL
-CacheFile::open(const std::string& filename, FIBOOL keep_in_memory) {
+CacheFile::open(const std::filesystem::path& filename, FIBOOL keep_in_memory)
+{
+	assert(!m_file);
 
-  assert(!m_file);
-
-  m_filename = filename;
-  m_keep_in_memory = keep_in_memory;
+	m_filename = filename;
+	m_keep_in_memory = keep_in_memory;
 
 	if ((!m_filename.empty()) && (!m_keep_in_memory)) {
-		m_file = fopen(m_filename.c_str(), "w+b"); 
+		m_file = FreeImage_FOpen(m_filename, "w+b");
 		return (m_file != nullptr);
 	}
 
@@ -83,7 +83,7 @@ CacheFile::close() {
 		m_file = nullptr;
 		
 		// delete the file
-		remove(m_filename.c_str());
+		std::filesystem::remove(m_filename);
 	}
 }
 
