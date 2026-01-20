@@ -3,6 +3,7 @@
 
 file(GLOB LibRaw_sources 
     ${RAW_FOUND_ROOT}/src/decoders/*
+	${RAW_FOUND_ROOT}/src/decompressors/*
     ${RAW_FOUND_ROOT}/src/demosaic/*
     ${RAW_FOUND_ROOT}/src/integration/*
     ${RAW_FOUND_ROOT}/src/metadata/*
