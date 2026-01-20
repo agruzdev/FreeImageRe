@@ -890,7 +890,7 @@ DLL_API void DLL_CALLCONV FreeImage_DeInitialise(void);
 DLL_API const char *DLL_CALLCONV FreeImage_GetVersion(void);
 DLL_API const char *DLL_CALLCONV FreeImage_GetCopyrightMessage(void);
 DLL_API const char *DLL_CALLCONV FreeImageRe_GetVersion(void);
-DLL_API void DLL_CALLCONV FreeImageRe_GetVersionNumbers(int* major, int* minor);
+DLL_API void DLL_CALLCONV FreeImageRe_GetVersionNumbers(int* major, int* minor, int* patch FI_DEFAULT(NULL));
 
 /**
  * Returns number of linked dependencies

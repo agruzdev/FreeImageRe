@@ -124,10 +124,15 @@ Version 0.5:
  - Updated LibWebP till v1.6.0
  - Updated LibHEIF till v1.20.2
 
-Version 0.6:
+Version 4.0.0:
+ - New versioning: FreeImageRe 4.0 as next step after FreeImage 3.18
  - Added support of extra TIFF image formats
+ - Added support for opening FIMULTIBITMAP from Unicode path
+ - Added support for 2-level dependencies info reporting
+ - Added new version of API for processing diagnostic messages
  - Fixed infinite loop in TIFF thumbnail loading
  - Fixed multiple CVEs in TIFF, RAS, ICO, HDR, PSD, XBM, EXR, JXR plugins.
+ - Fixed compilation for x32
  - Updated jpeg-turbo till v3.1.3
  - Updated OpenEXR till v3.4.4
  - Updated LibPNG till v1.6.54

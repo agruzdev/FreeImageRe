@@ -97,17 +97,20 @@ FreeImage_GetCopyrightMessage() {
 
 const char* DLL_CALLCONV
 FreeImageRe_GetVersion() {
-	static const char* version = FI_QUOTE(FREEIMAGERE_MAJOR_VERSION) "." FI_QUOTE(FREEIMAGERE_MINOR_VERSION);
+	static const char* version = FI_QUOTE(FREEIMAGERE_MAJOR_VERSION) "." FI_QUOTE(FREEIMAGERE_MINOR_VERSION) "." FI_QUOTE(FREEIMAGERE_PATCH_VERSION);
 	return version;
 }
 
 void DLL_CALLCONV
-FreeImageRe_GetVersionNumbers(int* major, int* minor) {
+FreeImageRe_GetVersionNumbers(int* major, int* minor, int* patch) {
 	if (major) {
 		*major = FREEIMAGERE_MAJOR_VERSION;
 	}
 	if (minor) {
 		*minor = FREEIMAGERE_MINOR_VERSION;
+	}
+	if (patch) {
+		*patch = FREEIMAGERE_PATCH_VERSION;
 	}
 }
 

@@ -27,7 +27,8 @@
 void showPlugins() {
 	// print version & copyright infos
 
-	printf("FreeImage version: %s\n\n%s\n\n", FreeImage_GetVersion(), FreeImage_GetCopyrightMessage());
+	printf("FreeImage version: %s\n", FreeImage_GetVersion());
+	printf("FreeImageRe version: %s\n%s\n\n", FreeImageRe_GetVersion(), FreeImage_GetCopyrightMessage());
 
 	// print plugins info
 	for (int j = FreeImage_GetFIFCount2() - 1; j >= 0; --j) {
