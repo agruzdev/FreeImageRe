@@ -270,7 +270,7 @@ public:
 	}
 
 	size_t GetNextFif() const {
-		return mPlugins.size();
+		return mNextId;
 	}
 
 	size_t GetFifCount2() const {
