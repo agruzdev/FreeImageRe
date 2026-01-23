@@ -927,7 +927,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 					// flip BGR pixels to RGB
 					if (image_type == FIT_BITMAP) {
-						png_set_bgr(png_ptr);
+						png_set_bgr(png_ptr.get());
 					}
 #endif
 					break;

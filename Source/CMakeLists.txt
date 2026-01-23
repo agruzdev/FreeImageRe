@@ -52,7 +52,18 @@ endif()
 
 add_library(FreeImage SHARED)
 
-target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_COLORORDER=1")
+
+set(FREEIMAGE_COLORORDER "RGB" CACHE STRING "Color order used for FIR_BITMAP by default (RGB, BGR). Use BGR only for backward compatibility.")
+set_property(CACHE FREEIMAGE_COLORORDER PROPERTY STRINGS RGB BGR)
+if (${FREEIMAGE_COLORORDER} STREQUAL "BGR")
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_COLORORDER=0")
+elseif(${FREEIMAGE_COLORORDER} STREQUAL "RGB")
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_COLORORDER=1")
+else()
+    message(FATAL_ERROR "Invalid value of the FREEIMAGE_COLORORDER option. Must be RGB or BGR")
+endif()
+
+
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")

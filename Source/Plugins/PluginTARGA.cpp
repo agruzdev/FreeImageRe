@@ -532,7 +532,7 @@ _assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 
 	} else {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-		*(reinterpret_cast<unsigned*>(bits)) = *(reinterpret_cast<unsigned*> (val));
+		*(reinterpret_cast<uint32_t*>(bits)) = *(reinterpret_cast<const uint32_t*> (val));
 #else // NOTE This is faster then doing reinterpret_cast to int + INPLACESWAP !
 		bits[FI_RGBA_BLUE]	= val[0];
 		bits[FI_RGBA_GREEN] = val[1];
@@ -1094,7 +1094,7 @@ writeToPacket(uint8_t*& packet, const uint8_t* pixel, unsigned pixel_size) {
 
 		case 4: {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-			*(reinterpret_cast<unsigned*>(packet)) = *(reinterpret_cast<unsigned*> (pixel));
+			*(reinterpret_cast<uint32_t*>(packet)) = *(reinterpret_cast<const uint32_t*> (pixel));
 #else 
 			packet[0] = pixel[FI_RGBA_BLUE];
 			packet[1] = pixel[FI_RGBA_GREEN];
