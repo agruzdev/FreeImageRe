@@ -587,7 +587,7 @@ PluginsRegistrySingleton& PluginsRegistrySingleton::Instance()
 bool PluginsRegistrySingleton::AddRef()
 {
 	bool firstRef = false;
-	if (mRefCounter++ == 0) {
+	if ((mRefCounter < std::numeric_limits<uint32_t>::max()) && (mRefCounter++ == 0)) {
 		mInstance.reset(new PluginsRegistry());
 		firstRef = true;
 	}
@@ -597,7 +597,7 @@ bool PluginsRegistrySingleton::AddRef()
 bool PluginsRegistrySingleton::DecRef()
 {
 	bool lastRef = false;
-	if (--mRefCounter == 0) {
+	if ((mRefCounter > 0) && (--mRefCounter == 0)) {
 		mInstance.reset();
 		lastRef = true;
 	}

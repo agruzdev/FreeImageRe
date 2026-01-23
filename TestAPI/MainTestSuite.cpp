@@ -135,11 +135,6 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
-
-#if defined(FREEIMAGE_LIB) || !defined(WIN32)
-	FreeImage_DeInitialise();
-#endif
-
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();
@@ -147,6 +142,10 @@ int main(int argc, char *argv[]) {
 	testTmoClamp();
 	testTmoLinear();
 	testHistogram();
+
+#if defined(FREEIMAGE_LIB) || !defined(WIN32)
+	FreeImage_DeInitialise();
+#endif
 
 	return 0;
 }

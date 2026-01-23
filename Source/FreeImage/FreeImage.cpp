@@ -50,7 +50,9 @@ DllMain(HANDLE hModule, uint32_t ul_reason_for_call, LPVOID lpReserved) {
 			break;
 
 		case DLL_PROCESS_DETACH :
-			FreeImage_DeInitialise();
+			if (lpReserved == nullptr) {
+				FreeImage_DeInitialise();
+			}
 			break;
 
 		case DLL_THREAD_ATTACH :
