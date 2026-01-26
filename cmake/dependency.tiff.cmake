@@ -6,6 +6,8 @@
 
 include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
+include(${CMAKE_SOURCE_DIR}/cmake/dependency.imath.cmake)
+
 ExternalProject_Add(TIFF
     PREFIX ${CMAKE_BINARY_DIR}/tiff
     URL "http://download.osgeo.org/libtiff/tiff-4.7.1.zip"
@@ -22,7 +24,7 @@ ExternalProject_Add(TIFF
         "-Dtiff-tools=OFF" "-Dtiff-tests=OFF" "-Dtiff-docs=OFF" "-Dtiff-install=OFF" "-Dwin32-io=OFF" "-Dcxx=OFF"
         "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
     EXCLUDE_FROM_ALL
-    DEPENDS ZLIB
+    DEPENDS ZLIB IMATH
 )
 
 ExternalProject_Get_Property(TIFF SOURCE_DIR)
@@ -33,6 +35,7 @@ add_dependencies(LibTIFF TIFF)
 link_config_aware_library_path2(LibTIFF ${BINARY_DIR}/libtiff ${CMAKE_STATIC_LIBRARY_PREFIX}tiff${CMAKE_STATIC_LIBRARY_SUFFIX} ${CMAKE_STATIC_LIBRARY_PREFIX}tiffd${CMAKE_STATIC_LIBRARY_SUFFIX})
 target_include_directories(LibTIFF INTERFACE ${SOURCE_DIR}/libtiff ${BINARY_DIR}/libtiff)
 set_property(TARGET TIFF PROPERTY FOLDER "Dependencies")
+target_link_libraries(LibTIFF INTERFACE LibImath)
 
 unset(SOURCE_DIR)
 unset(BINARY_DIR)

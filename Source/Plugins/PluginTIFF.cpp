@@ -42,10 +42,11 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
-#include "tiffiop.h"
-#include "../Metadata/FreeImageTag.h"
-#include "half.h"
 
+#include "tiffiop.h"
+#include "Imath/half.h"
+
+#include "../Metadata/FreeImageTag.h"
 #include "FreeImageIO.h"
 #include "PSDParser.h"
 
