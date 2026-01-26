@@ -43,12 +43,10 @@ add_definitions(
     "-DOPJ_STATIC"
 )
 
-if(WIN32)
-    add_definitions("-DWINVER=0x0500")
-    if(MSVC)
-        add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
-    endif()
+if(MSVC)
+    add_definitions("-D_CRT_SECURE_NO_WARNINGS=1")
 endif()
+
 
 add_library(FreeImage SHARED)
 
