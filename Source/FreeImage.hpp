@@ -797,7 +797,7 @@ namespace fi
 
         template <typename Deleter_ = BitmapDeleter>
         explicit
-        Bitmap(FIBITMAP* handle, Deleter_&& deleter = BitmapDeleter{})
+        Bitmap(FIBITMAP* handle, Deleter_&& deleter = Deleter_{})
             : mHandlePtr(handle, std::move(deleter))
         {
             if (!mHandlePtr) {
@@ -1392,7 +1392,7 @@ namespace fi
 
         template <typename Deleter_ = MultiBitmapDeleter>
         explicit
-        MultiBitmap(FIMULTIBITMAP* handle, Deleter_&& deleter = MultiBitmapDeleter{})
+        MultiBitmap(FIMULTIBITMAP* handle, Deleter_&& deleter = Deleter_{})
             : mHandlePtr(handle, std::move(deleter))
         {
             if (!mHandlePtr) {
