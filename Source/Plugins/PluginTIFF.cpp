@@ -1380,9 +1380,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 	uint16_t compression = (uint16_t)-1;
 	uint16_t planar_config;
 
-	uint32_t iccSize = 0;		// ICC profile length
-	void *iccBuf{};	// ICC profile data		
-
 	const FIBOOL header_only = (flags & FIF_LOAD_NOPIXELS) == FIF_LOAD_NOPIXELS;
 
 	try {
@@ -1422,7 +1419,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &samplesperpixel);
 		TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bitspersample);
 		TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rowsperstrip);
-		TIFFGetField(tif, TIFFTAG_ICCPROFILE, &iccSize, &iccBuf);
 		TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar_config);
 
 		// check for unsupported formats
@@ -1841,10 +1837,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (!asCMYK) {
 					ConvertCMYKtoRGBA(dib.get());
-
-					// The ICC Profile is invalid, clear it
-					iccSize = 0;
-					iccBuf = nullptr;
 
 					if (isCMYKA) {
 						// HACK until we have Extra channels. (ConvertCMYKtoRGBA will then do the work)
@@ -2298,7 +2290,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// copy ICC profile data (must be done after FreeImage_Allocate)
 
-		FreeImage_CreateICCProfile(dib.get(), iccBuf, iccSize);
+		if (!asCMYK) {
+			uint32_t iccSize = 0;	// ICC profile length
+			void* iccBuf{};			// ICC profile data		
+			TIFFGetField(tif, TIFFTAG_ICCPROFILE, &iccSize, &iccBuf);
+
+			if (iccBuf && iccSize > 0) {
+				FreeImage_CreateICCProfile(dib.get(), iccBuf, iccSize);
+			}
+		}
+
 		if (photometric == PHOTOMETRIC_SEPARATED) {
 			if (asCMYK) {
 				// set the ICC profile as CMYK
