@@ -55,6 +55,7 @@ void BitmapTransform(FIBITMAP* dst, FIBITMAP* src, UnaryOperation_ unary_op)
 	}
 }
 
+
 template <typename Ty_>
 using IsIntPixelType = std::integral_constant<bool,
     std::is_same_v<Ty_, FIRGB8> ||
@@ -179,7 +180,7 @@ using ToNoAlphaType = typename details::ToNoAlphaTypeImpl<PixelType_>::type;
 
 
 template <uint32_t ChannelIndex_, typename PixelType_>
-inline
+inline constexpr
 void SetChannel(PixelType_& p, ToValueType<PixelType_> v)
 {
     if constexpr (ChannelIndex_ < PixelChannelsNumber<PixelType_>::value) {
@@ -188,19 +189,19 @@ void SetChannel(PixelType_& p, ToValueType<PixelType_> v)
 }
 
 template <uint32_t ChannelIndex_, typename PixelType_>
-inline
-ToValueType<PixelType_> GetChannel(const PixelType_& p)
+inline constexpr
+ToValueType<PixelType_> GetChannel(const PixelType_& p, ToValueType<PixelType_> v = static_cast<ToValueType<PixelType_>>(0))
 {
     if constexpr (ChannelIndex_ < PixelChannelsNumber<PixelType_>::value) {
         return static_cast<const ToValueType<PixelType_>*>(static_cast<const void*>(&p))[ChannelIndex_];
     }
     else {
-        return ToValueType<PixelType_>{};
+        return v;
     }
 }
 
 template <typename PixelType_>
-inline
+inline constexpr
 void PixelFill(PixelType_& p, const ToValueType<PixelType_>& v)
 {
     SetChannel<0>(p, v);
@@ -210,7 +211,7 @@ void PixelFill(PixelType_& p, const ToValueType<PixelType_>& v)
 }
 
 template <typename PixelType_, typename BinaryOperation_>
-inline
+inline constexpr
 auto PixelReduce(const PixelType_& p, ToValueType<PixelType_> init, BinaryOperation_&& op)
 {
     constexpr uint32_t channelsNumber = PixelChannelsNumber<PixelType_>::value;
@@ -230,21 +231,21 @@ auto PixelReduce(const PixelType_& p, ToValueType<PixelType_> init, BinaryOperat
 }
 
 template <typename PixelType_>
-inline
+inline constexpr
 auto PixelMin(const PixelType_& p, ToValueType<PixelType_> init = std::numeric_limits<ToValueType<PixelType_>>::max())
 {
     return PixelReduce(p, init, [](const auto& lhs, const auto& rhs) { return std::min(lhs, rhs); });
 }
 
 template <typename PixelType_>
-inline
+inline constexpr
 auto PixelMax(const PixelType_& p, ToValueType<PixelType_> init = std::numeric_limits<ToValueType<PixelType_>>::lowest())
 {
     return PixelReduce(p, init, [](const auto& lhs, const auto& rhs) { return std::max(lhs, rhs); });
 }
 
 template <typename PixelType_>
-inline
+inline constexpr
 auto StripAlpha(PixelType_&& p)
 {
     return ToNoAlphaType<PixelType_>(std::forward<PixelType_>(p));

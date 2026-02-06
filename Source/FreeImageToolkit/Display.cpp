@@ -21,6 +21,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include "FreeImage/SimpleTools.h"
 
 
 /**
@@ -229,6 +230,88 @@ FreeImage_PreMultiplyWithAlpha(FIBITMAP *dib) {
 }
 
 
+namespace
+{
+
+	template <typename DstPixel_, typename SrcPixel_ = DstPixel_, typename BinaryOperation_>
+	void DrawRoi(FIBITMAP* dst, FIBITMAP* src, int32_t left, int32_t top, BinaryOperation_ binary_op)
+	{
+		const int32_t dstW = static_cast<int32_t>(FreeImage_GetWidth(dst));
+		const int32_t dstH = static_cast<int32_t>(FreeImage_GetHeight(dst));
+		const int32_t srcW = static_cast<int32_t>(FreeImage_GetWidth(src));
+		const int32_t srcH = static_cast<int32_t>(FreeImage_GetHeight(src));
+
+		if (left + srcW <= 0 || top + srcH <= 0) {
+			return;
+		}
+
+		const int32_t roiLeft   = std::max(0, left);
+		const int32_t roiTop    = std::max(0, top);
+		const int32_t roiRight  = std::min(left + srcW, dstW);
+		const int32_t roiBottom = std::min(top + srcH, dstH);
+
+		const int32_t offsetX = roiLeft - left;
+		const int32_t offsetY = roiTop - top;
+
+		for (int32_t y = roiBottom - roiTop; y > 0; --y) {
+			const auto srcLine = static_cast<const SrcPixel_*>(static_cast<const void*>(FreeImage_GetScanLine(src, srcH - y - offsetY))) + offsetX;
+			const auto dstLine = static_cast<DstPixel_*>(static_cast<void*>(FreeImage_GetScanLine(dst, dstH - roiTop - y))) + roiLeft;
+			for (int32_t x = 0; x < roiRight - roiLeft; ++x) {
+				binary_op(dstLine[x], srcLine[x]);
+			}
+		}
+	}
+
+
+	inline
+	bool SupportedColorType(FREE_IMAGE_COLOR_TYPE color)
+	{
+		switch (color) {
+		case FIC_RGB:
+		case FIC_RGBALPHA:
+		case FIC_MINISBLACK:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+
+	struct BlendSrcAlpha
+	{
+		template <typename DstPixel_, typename SrcPixel_>
+		void operator()(DstPixel_& dst, const SrcPixel_& src) const
+		{
+			constexpr uint32_t DstChanNum_ = PixelChannelsNumber<DstPixel_>::value;
+			constexpr uint32_t SrcChanNum_ = PixelChannelsNumber<SrcPixel_>::value;
+
+			const uint8_t alpha = GetChannel<3>(src, 255);
+			if (alpha == 255) {
+				SetChannel<0>(dst, GetChannel<0>(src));
+				if (DstChanNum_ > 1) {
+					SetChannel<1>(dst, GetChannel<1>(src));
+				}
+				if (DstChanNum_ > 2) {
+					SetChannel<2>(dst, GetChannel<2>(src));
+				}
+			}
+			else if (alpha > 0) {
+				const uint8_t notAlpha = ~alpha;
+				SetChannel<0>(dst, static_cast<uint8_t>((alpha * GetChannel<0>(src) + notAlpha * GetChannel<0>(dst)) / 255));
+				if (DstChanNum_ > 1) {
+					SetChannel<1>(dst, static_cast<uint8_t>((alpha * GetChannel<1>(src) + notAlpha * GetChannel<1>(dst)) / 255));
+				}
+				if (DstChanNum_ > 2) {
+					SetChannel<2>(dst, static_cast<uint8_t>((alpha * GetChannel<2>(src) + notAlpha * GetChannel<2>(dst)) / 255));
+				}
+			}
+		}
+	};
+
+
+} // namespace
+
+
 
 FIBOOL DLL_CALLCONV
 FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION alpha, int32_t left, int32_t top)
@@ -237,51 +320,44 @@ FreeImage_DrawBitmap(FIBITMAP* dst, FIBITMAP* src, FREE_IMAGE_ALPHA_OPERATION al
 		return FALSE;
 	}
 
-	if (FreeImage_GetImageType(dst) != FIT_BITMAP || FreeImage_GetColorType2(dst) != FIC_RGBALPHA || FreeImage_GetBPP(dst) != 32 ||
-			FreeImage_GetImageType(src) != FIT_BITMAP || FreeImage_GetColorType2(src) != FIC_RGBALPHA || FreeImage_GetBPP(src) != 32) {
+	if (FreeImage_GetImageType(dst) != FIT_BITMAP || FreeImage_GetImageType(src) != FIT_BITMAP) {
 		return FALSE;
 	}
 
-	const int32_t dstW = static_cast<int32_t>(FreeImage_GetWidth(dst));
-	const int32_t dstH = static_cast<int32_t>(FreeImage_GetHeight(dst));
-	const int32_t srcW = static_cast<int32_t>(FreeImage_GetWidth(src));
-	const int32_t srcH = static_cast<int32_t>(FreeImage_GetHeight(src));
-
-	if (left + srcW <= 0 || top + srcH <= 0) {
-		return TRUE;
+	const auto srcColor = FreeImage_GetColorType2(src);
+	const auto dstColor = FreeImage_GetColorType2(dst);
+	if (!SupportedColorType(srcColor) || !SupportedColorType(dstColor)) {
+		return FALSE;
 	}
 
-	const int32_t roiLeft   = std::max(0, left);
-	const int32_t roiTop    = std::max(0, top);
-	const int32_t roiRight  = std::min(left + srcW, dstW);
-	const int32_t roiBottom = std::min(top + srcH, dstH);
+	const auto srcBpp = FreeImage_GetBPP(src);
+	const auto dstBpp = FreeImage_GetBPP(dst);
 
-	const int32_t offsetX = roiLeft - left;
-	const int32_t offsetY = roiTop - top;
-
+	if (srcColor != dstColor || srcBpp != dstBpp) {
+		// Implement if necessary
+		return FALSE;
+	}
+	
 	if (alpha != FIAO_SrcAlpha) {
-		// not supported
+		// Implement if necessary
 		return FALSE;
 	}
 
-	// Y axis is flipped in FI
-	for (int32_t y = roiBottom - roiTop; y > 0; --y) {
-		const auto srcLine = static_cast<const FIRGBA8*>(static_cast<const void*>(FreeImage_GetScanLine(src, srcH - y - offsetY))) + offsetX;
-		const auto dstLine = static_cast<FIRGBA8*>(static_cast<void*>(FreeImage_GetScanLine(dst, dstH - roiTop - y))) + roiLeft;
-		for (int32_t x = 0; x < roiRight - roiLeft; ++x) {
-			const uint8_t alpha = srcLine[x].alpha;
-			if (alpha == 255) {
-				dstLine[x].red   = srcLine[x].red;
-				dstLine[x].green = srcLine[x].green;
-				dstLine[x].blue  = srcLine[x].blue;
-			}
-			else if (alpha > 0) {
-				const uint8_t notAlpha = ~alpha;
-				dstLine[x].red   = static_cast<uint8_t>((alpha * srcLine[x].red   + notAlpha * dstLine[x].red)   / 255);
-				dstLine[x].green = static_cast<uint8_t>((alpha * srcLine[x].green + notAlpha * dstLine[x].green) / 255);
-				dstLine[x].blue  = static_cast<uint8_t>((alpha * srcLine[x].blue  + notAlpha * dstLine[x].blue)  / 255);
-			}
+	if (srcBpp == 32) {
+		DrawRoi<FIRGBA8>(dst, src, left, top, BlendSrcAlpha{});
+	}
+	else if (srcBpp == 24) {
+		DrawRoi<FIRGB8>(dst, src, left, top, BlendSrcAlpha{});
+	}
+	else if (srcBpp == 8) {
+		if (FreeImage_IsTransparent(src)) {
+			// Implement if necessary
+			return FALSE;
 		}
+		DrawRoi<uint8_t>(dst, src, left, top, BlendSrcAlpha{});
+	}
+	else {
+		return FALSE;
 	}
 
 	return TRUE;
