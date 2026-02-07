@@ -126,6 +126,7 @@ const FIDEPENDENCY* GetRawDependencyInfo();
 const FIDEPENDENCY* GetWebpDependencyInfo();
 const FIDEPENDENCY* GetJxrDependencyInfo();
 const FIDEPENDENCY* GetHeifDependencyInfo();
+const FIDEPENDENCY* GetJpegXlDependencyInfo();
 
 namespace {
 	
@@ -184,6 +185,9 @@ namespace {
 #endif
 #if FREEIMAGE_WITH_LIBHEIF
 			Append(GetHeifDependencyInfo());
+#endif
+#if FREEIMAGE_WITH_LIBJPEGXL
+			Append(GetJpegXlDependencyInfo());
 #endif
 		}
 

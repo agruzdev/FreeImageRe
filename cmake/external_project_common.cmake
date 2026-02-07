@@ -52,9 +52,11 @@ if(NOT _EXTERNAL_PROJECT_INCLUDE_GUARD_)
 
     if (MSVC)
         set(ZERO_WARNINGS_FLAG "/w")
+        set(EHSC_FLAG "/EHsc")
         set(DEF_FLAG "/D")
     else()
         set(ZERO_WARNINGS_FLAG "-w")
+        set(EHSC_FLAG "")
         set(DEF_FLAG "-D")
     endif()
 

@@ -395,6 +395,7 @@ void DLL_CALLCONV InitJNG(Plugin *plugin, int format_id);
 void DLL_CALLCONV InitWEBP(Plugin *plugin, int format_id);
 void DLL_CALLCONV InitJXR(Plugin *plugin, int format_id);
 std::unique_ptr<fi::Plugin2> CreatePluginHEIF();
-std::unique_ptr<fi::Plugin2> CreatepluginAVIF();
+std::unique_ptr<fi::Plugin2> CreatePluginAVIF();
+std::unique_ptr<fi::Plugin2> CreatePluginJPEGXL();
 
 #endif //!PLUGIN_H

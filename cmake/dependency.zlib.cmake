@@ -3,6 +3,10 @@
 #
 # Output target: LibZLIB
 
+if(NOT _ZLIB_DEP_INCLUDE_GUARD_)
+set(_ZLIB_DEP_INCLUDE_GUARD_ ON)
+
+
 include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
 
 
@@ -39,3 +43,4 @@ endif()
 set_property(TARGET ZLIB PROPERTY FOLDER "Dependencies")
 
 
+endif() # _ZLIB_DEP_INCLUDE_GUARD_

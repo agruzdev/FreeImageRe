@@ -118,7 +118,8 @@ namespace fi
         eWebp    = FIF_WEBP,
         eJxr     = FIF_JXR,
         eHeif    = FIF_HEIF,
-        eAvif    = FIF_AVIF
+        eAvif    = FIF_AVIF,
+        eJpegXL  = FIF_JPEGXL
     };
 
     enum class ImageType

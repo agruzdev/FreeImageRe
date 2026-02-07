@@ -636,7 +636,7 @@ catch (...) {
 }
 
 
-std::unique_ptr<fi::Plugin2> CreatepluginAVIF() 
+std::unique_ptr<fi::Plugin2> CreatePluginAVIF() 
 try
 {
     return std::make_unique<PluginHeif>(PluginHeif::Mode::eAvif);

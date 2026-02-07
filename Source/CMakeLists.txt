@@ -128,6 +128,12 @@ if (FREEIMAGE_WITH_LIBJXR)
     list(APPEND freeimage_plugins Plugins/PluginJXR.cpp)
 endif()
 
+if (FREEIMAGE_WITH_LIBJPEGXL)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJPEGXL=1")
+    target_link_libraries(FreeImage PRIVATE LibJpegXL)
+    list(APPEND freeimage_plugins Plugins/PluginJPEGXL.cpp)
+endif()
+
 
 list(APPEND freeimage_all_sources ${freeimage_sources} ${freeimage_toolkit_sources} ${metadata_sources} ${freeimage_headers} ${freeimage_plugins})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${freeimage_all_sources})

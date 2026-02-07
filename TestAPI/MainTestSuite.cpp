@@ -73,6 +73,12 @@ int main(int argc, char *argv[]) {
 		if (dep->fullVersion) {
 			printf("%u %s\n", i, dep->fullVersion);
 		}
+		while (dep->next) {
+			if (dep->fullVersion) {
+				printf("  - %s\n", dep->next->fullVersion);
+			}
+			dep = dep->next;
+		}
 	}
 
 	// test internal image types
@@ -128,6 +134,10 @@ int main(int argc, char *argv[]) {
 #if FREEIMAGE_WITH_LIBHEIF
 	testHeif(FIF_HEIF, "exif.heic", "heif_out.heic");
 	testHeif(FIF_AVIF, "exif.avif", "avif_out.avif");
+#endif
+
+#if FREEIMAGE_WITH_LIBJPEGXL
+	testJpegXl(FIF_JPEGXL, "exif.jxl", "exif_out.jxl");
 #endif
 
 #if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG

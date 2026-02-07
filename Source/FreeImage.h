@@ -421,6 +421,7 @@ FI_ENUM(FREE_IMAGE_FORMAT) {
 	FIF_JXR		= 36,
 	FIF_HEIF	= FIF_MAX_USER_ID + 1,
 	FIF_AVIF,
+	FIF_JPEGXL
 };
 
 /** Image type used in FreeImage.

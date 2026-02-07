@@ -413,7 +413,10 @@ PluginsRegistry::PluginsRegistry()
 #endif
 #if FREEIMAGE_WITH_LIBHEIF
 	Put(FIF_HEIF, CreatePluginHEIF());
-	Put(FIF_AVIF, CreatepluginAVIF());
+	Put(FIF_AVIF, CreatePluginAVIF());
+#endif
+#if FREEIMAGE_WITH_LIBJPEGXL
+	Put(FIF_JPEGXL, CreatePluginJPEGXL());
 #endif
 
 	mNextId = FIF_JXR + 1;
