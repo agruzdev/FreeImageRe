@@ -138,6 +138,7 @@ int main(int argc, char *argv[]) {
 
 #if FREEIMAGE_WITH_LIBJPEGXL
 	testJpegXl(FIF_JPEGXL, "exif.jxl", "exif_out.jxl");
+	testJpegXl(FIF_JPEGXL, "exif_599.jxl", "exif_599_out.jxl");
 #endif
 
 #if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG

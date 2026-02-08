@@ -131,6 +131,39 @@ public:
         return FIT_UNKNOWN;
     }
 
+    size_t GetDataTypeBytes(JxlDataType dtype) {
+        switch (dtype) {
+            case JXL_TYPE_UINT8:
+                return 1;
+            case JXL_TYPE_UINT16:
+            case JXL_TYPE_FLOAT16:
+                return 2;
+            case JXL_TYPE_FLOAT:
+                return 4;
+            default:
+                throw std::logic_error("PluginJpegXL: invalid JxlDataType");
+        }
+    }
+
+    struct WriteOutBlockContext
+    {
+        FIBITMAP* bmp{ nullptr };
+        size_t width{ 0 };
+        size_t height{ 0 };
+        size_t pixelSize{ 0 };
+    };
+
+    static
+    void WriteOutBlockCallback(void* opaque, size_t x, size_t y, size_t num_pixels, const void* pixels) {
+        auto ctx = static_cast<WriteOutBlockContext*>(opaque);
+        if (!ctx || !pixels || num_pixels == 0 || x >= ctx->width || y >= ctx->height) {
+            return;
+        }
+        auto scanline = static_cast<uint8_t*>(static_cast<void*>(FreeImage_GetScanLine(ctx->bmp, static_cast<int>(ctx->height - 1 - y))));
+        const size_t num = std::min(num_pixels, ctx->width - 1 - x);
+        std::memcpy(scanline + x * ctx->pixelSize, pixels, num * ctx->pixelSize);
+    };
+
     FIBITMAP* LoadProc(FreeImageIO* io, fi_handle handle, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) override
     {
         if (!io || !handle) {
@@ -160,6 +193,7 @@ public:
         JxlBasicInfo info{};
         std::vector<uint8_t> iccProfile{};
 
+        WriteOutBlockContext writeCtx{};
         std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(nullptr, &::FreeImage_Unload);
 
         for (;;) {
@@ -198,13 +232,27 @@ public:
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderImageOutBufferSize failed");
                 }
 
-                bmp.reset(FreeImage_AllocateT(fit, info.xsize, info.ysize, info.bits_per_sample * info.num_color_channels));
-                if (outBufferSize != FreeImage_GetPitch(bmp.get()) * FreeImage_GetHeight(bmp.get())) {
+                if (info.xsize > static_cast<uint32_t>(std::numeric_limits<int>::max()) || info.ysize > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
+                    // Not compatible with 'int' interface functions...
+                    throw std::runtime_error("PluginJpegXL[Load]: Image size is too large");
+                }
+
+                const size_t pixelSize = GetDataTypeBytes(format.data_type) * format.num_channels;
+                bmp.reset(FreeImage_AllocateT(fit, info.xsize, info.ysize, 8 * pixelSize));
+
+                const size_t imageSize = FreeImage_GetPitch(bmp.get()) * FreeImage_GetHeight(bmp.get());
+                if (imageSize < outBufferSize) {
                     throw std::runtime_error("PluginJpegXL[Load]: Image buffer mismatch");
                 }
 
-                if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec.get(), &format, FreeImage_GetBits(bmp.get()), outBufferSize)) {
-                    throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetImageOutBuffer failed");
+                writeCtx.bmp       = bmp.get();
+                writeCtx.width     = info.xsize;
+                writeCtx.height    = info.ysize;
+                writeCtx.pixelSize = pixelSize;
+
+                // write by scanlines
+                if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutCallback(dec.get(), &format, &PluginJpegXL::WriteOutBlockCallback, &writeCtx)) {
+                    throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetImageOutCallback failed");
                 }
             }
             else if (status == JXL_DEC_FULL_IMAGE) {
@@ -217,9 +265,6 @@ public:
                 throw std::runtime_error("PluginJpegXL[Load]: Unknown decoder status");
             }
         }
-
-        // Can avoid when giving output buffer line-by-line?
-        FreeImage_FlipVertical(bmp.get());
 
         return bmp.release();
     };
