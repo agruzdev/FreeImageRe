@@ -160,7 +160,7 @@ public:
             return;
         }
         auto scanline = static_cast<uint8_t*>(static_cast<void*>(FreeImage_GetScanLine(ctx->bmp, static_cast<int>(ctx->height - 1 - y))));
-        const size_t num = std::min(num_pixels, ctx->width - 1 - x);
+        const size_t num = std::min(num_pixels, ctx->width - x);
         std::memcpy(scanline + x * ctx->pixelSize, pixels, num * ctx->pixelSize);
     };
 
@@ -221,9 +221,8 @@ public:
                 const size_t inpRemainSize = JxlDecoderReleaseInput(dec.get());
 
                 if (status == JXL_DEC_NEED_MORE_INPUT) {
-                    if (JXL_DEC_SUCCESS != JxlDecoderFlushImage(dec.get())) {
-                        throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderFlushImage failed");
-                    }
+                    // it's okay if flush fails when output is not ready yet
+                    JxlDecoderFlushImage(dec.get());
 
                     if (inpRemainSize >= inpAvailSize) {
                         // ToDo: maybe need to increase input chuck here and try decoding again?
