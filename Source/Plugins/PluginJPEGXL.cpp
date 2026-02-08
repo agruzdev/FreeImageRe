@@ -173,6 +173,9 @@ public:
         JxlDecoderPtr dec = JxlDecoderMake(nullptr);
 
         auto decoderEvents = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
+        if ((flags & FIF_LOAD_NOTHUMBNAIL) == 0) {
+            decoderEvents = decoderEvents | JXL_DEC_PREVIEW_IMAGE;
+        }
         if ((flags & FIF_LOAD_NOEXIF) == 0) {
             decoderEvents = decoderEvents | JXL_DEC_BOX | JXL_DEC_BOX_COMPLETE;
         }
@@ -214,6 +217,8 @@ public:
 
         WriteOutBlockContext writeCtx{};
         std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(nullptr, &::FreeImage_Unload);
+        std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> preview(nullptr, &::FreeImage_Unload);
+        bool previewIsDecoded{ false };
 
         for (;;) {
             const auto status = JxlDecoderProcessInput(dec.get());
@@ -280,7 +285,7 @@ public:
                     throw std::runtime_error("PluginJpegXL[Load]: Unsupported image format");
                 }
 
-                size_t outBufferSize;
+                size_t outBufferSize{};
                 if (JXL_DEC_SUCCESS != JxlDecoderImageOutBufferSize(dec.get(), &format, &outBufferSize)) {
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderImageOutBufferSize failed");
                 }
@@ -292,6 +297,9 @@ public:
 
                 const size_t pixelSize = GetDataTypeBytes(format.data_type) * format.num_channels;
                 bmp.reset(FreeImage_AllocateT(fit, info.xsize, info.ysize, 8 * pixelSize));
+                if (!bmp) {
+                    throw std::runtime_error("PluginJpegXL[Load]: Failed to allocate bitmap");
+                }
 
                 const size_t imageSize = FreeImage_GetPitch(bmp.get()) * FreeImage_GetHeight(bmp.get());
                 if (imageSize < outBufferSize) {
@@ -306,6 +314,54 @@ public:
                 // write by scanlines
                 if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutCallback(dec.get(), &format, &PluginJpegXL::WriteOutBlockCallback, &writeCtx)) {
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetImageOutCallback failed");
+                }
+            }
+            else if (status == JXL_DEC_NEED_PREVIEW_OUT_BUFFER) {
+                if (info.preview.xsize <= 0 || info.preview.ysize <= 0) {
+                    continue;
+                }
+
+                // always ask preview as RGBA8888
+                JxlPixelFormat format{};
+                format.data_type = JXL_TYPE_UINT8;
+                format.num_channels = 4;
+                format.align = 4;
+                format.endianness = JXL_NATIVE_ENDIAN;
+
+                size_t previewBufferSize{};
+                if (JXL_DEC_SUCCESS != JxlDecoderPreviewOutBufferSize(dec.get(), &format, &previewBufferSize)) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, JxlDecoderPreviewOutBufferSize() failed.");
+                    continue;
+                }
+
+                if (info.preview.xsize > static_cast<uint32_t>(std::numeric_limits<int>::max()) || info.preview.ysize > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, Preview size is too large.");
+                    continue;
+                }
+
+                const size_t pixelSize = GetDataTypeBytes(format.data_type) * format.num_channels;
+                preview.reset(FreeImage_Allocate(info.preview.xsize, info.preview.ysize, 8 * pixelSize));
+                if (!preview) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, Failed to allocate preview.");
+                    continue;
+                }
+
+                const size_t previewSize = FreeImage_GetPitch(preview.get()) * FreeImage_GetHeight(preview.get());
+                if (previewSize != previewBufferSize) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, Preview buffer size mismatch.");
+                    continue;
+                }
+
+                if (JXL_DEC_SUCCESS != JxlDecoderSetPreviewOutBuffer(dec.get(), &format, FreeImage_GetBits(preview.get()), previewSize)) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, JxlDecoderSetPreviewOutBuffer() failed.");
+                    continue;
+                }
+
+                previewIsDecoded = false;
+            }
+            else if (status == JXL_DEC_PREVIEW_IMAGE) {
+                if (preview) {
+                    previewIsDecoded = true;
                 }
             }
             else if (status == JXL_DEC_BOX) {
@@ -378,6 +434,10 @@ public:
                 if (name == kBoxXml) {
                     // ToDo: decode XML metadata
                 }
+            }
+
+            if (preview && previewIsDecoded) {
+                FreeImage_SetThumbnail(bmp.get(), preview.get());
             }
         }
 
@@ -644,6 +704,10 @@ public:
         if (JXL_ENC_SUCCESS != JxlEncoderFlushInput(enc.get())) {
             throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderFlushInput failed");
         }
+
+        // ToDo: write Exif
+
+        // ToDo: write preview
 
         return true;
     }
