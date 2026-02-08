@@ -175,20 +175,18 @@ public:
             throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSubscribeEvents failed");
         }
 
-        io->seek_proc(handle, 0, SEEK_END);
-        const size_t fileSize = io->tell_proc(handle);
-        io->seek_proc(handle, 0, SEEK_SET);
+        constexpr size_t kChunkSize = 4 * 1024;
+        size_t inpBufferSize = kChunkSize;
+        auto inpBuffer = std::make_unique<uint8_t[]>(inpBufferSize);
 
-        // ToDo: Is it possible to read by blocks?
-        auto inputBuffer = std::make_unique<uint8_t[]>(fileSize);
-        if (fileSize != io->read_proc(inputBuffer.get(), 1, fileSize, handle)) {
-            throw std::runtime_error("PluginJpegXL[Load]: Failed to read whole input stream");
+        size_t inpAvailSize = io->read_proc(inpBuffer.get(), 1, inpBufferSize, handle);
+        if (inpAvailSize == 0) {
+            throw std::runtime_error("PluginJpegXL[Load]: Input stream is empty");
         }
 
-        if (JXL_DEC_SUCCESS != JxlDecoderSetInput(dec.get(), inputBuffer.get(), fileSize)) {
+        if (JXL_DEC_SUCCESS != JxlDecoderSetInput(dec.get(), inpBuffer.get(), inpAvailSize)) {
             throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetInput failed");
         }
-        JxlDecoderCloseInput(dec.get());
 
         JxlBasicInfo info{};
         std::vector<uint8_t> iccProfile{};
@@ -218,6 +216,42 @@ public:
                 iccProfile.resize(iccSize);
                 if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile( dec.get(), JXL_COLOR_PROFILE_TARGET_DATA, iccProfile.data(), iccProfile.size())) {
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderGetColorAsICCProfile failed");
+                }
+            }
+            else if (status == JXL_DEC_NEED_MORE_INPUT || status == JXL_DEC_SUCCESS || status == JXL_DEC_FULL_IMAGE) {
+                const size_t inpRemainSize = JxlDecoderReleaseInput(dec.get());
+
+                if (status == JXL_DEC_NEED_MORE_INPUT) {
+                    if (JXL_DEC_SUCCESS != JxlDecoderFlushImage(dec.get())) {
+                        throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderFlushImage failed");
+                    }
+
+                    if (inpRemainSize >= inpAvailSize) {
+                        // ToDo: maybe need to increase input chuck here and try decoding again?
+                        throw std::runtime_error("PluginJpegXL[Load]: Input was not processed");
+                    }
+
+                    if (inpRemainSize > 0) {
+                        // keep part of old chunck
+                        const size_t inpProcSize = inpAvailSize - inpRemainSize;
+                        std::memmove(inpBuffer.get(), inpBuffer.get() + inpProcSize, inpRemainSize);
+                    }
+
+                    // read more
+                    const size_t readSize = io->read_proc(inpBuffer.get() + inpRemainSize, 1, inpBufferSize - inpRemainSize, handle);
+                    if (!readSize) {
+                        // EOF, keep as much as we could read
+                        break;
+                    }
+                    inpAvailSize = inpRemainSize + readSize;
+
+                    if (JXL_DEC_SUCCESS != JxlDecoderSetInput(dec.get(), inpBuffer.get(), inpAvailSize)) {
+                        throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetInput failed");
+                    }
+                }
+                else {
+                    // done!
+                    break;
                 }
             }
             else if (status == JXL_DEC_NEED_IMAGE_OUT_BUFFER) {
@@ -254,12 +288,6 @@ public:
                 if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutCallback(dec.get(), &format, &PluginJpegXL::WriteOutBlockCallback, &writeCtx)) {
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetImageOutCallback failed");
                 }
-            }
-            else if (status == JXL_DEC_FULL_IMAGE) {
-                continue;
-            }
-            else if (status == JXL_DEC_SUCCESS) {
-                break;
             }
             else {
                 throw std::runtime_error("PluginJpegXL[Load]: Unknown decoder status");
