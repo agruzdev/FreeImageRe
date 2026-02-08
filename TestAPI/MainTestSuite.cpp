@@ -53,6 +53,11 @@ int main(int argc, char *argv[]) {
 	// OpenEXR
 	// note that OpenEXR produce so called "false memory leaks"
 	// see http://lists.nongnu.org/archive/html/openexr-devel/2013-11/msg00000.html
+
+	// False positive leak in LibJXL
+	// CMS context in static thread_local variable is never deleted
+	// https://github.com/libjxl/libjxl/issues/4166
+
 	_CrtSetDbgFlag(_CRTDBG_LEAK_CHECK_DF|_CRTDBG_ALLOC_MEM_DF);
 #endif
 

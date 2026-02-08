@@ -210,12 +210,11 @@ public:
                 if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(dec.get(), JXL_COLOR_PROFILE_TARGET_DATA, &iccSize)) {
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderGetICCProfileSize failed");
                 }
-                if (!iccSize) {
-                    continue;
-                }
-                iccProfile.resize(iccSize);
-                if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile( dec.get(), JXL_COLOR_PROFILE_TARGET_DATA, iccProfile.data(), iccProfile.size())) {
-                    throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderGetColorAsICCProfile failed");
+                if (iccSize > 0) {
+                    iccProfile.resize(iccSize);
+                    if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(dec.get(), JXL_COLOR_PROFILE_TARGET_DATA, iccProfile.data(), iccProfile.size())) {
+                        throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderGetColorAsICCProfile failed");
+                    }
                 }
             }
             else if (status == JXL_DEC_NEED_MORE_INPUT || status == JXL_DEC_SUCCESS || status == JXL_DEC_FULL_IMAGE) {
@@ -292,6 +291,10 @@ public:
             else {
                 throw std::runtime_error("PluginJpegXL[Load]: Unknown decoder status");
             }
+        }
+
+        if (!iccProfile.empty()) {
+            FreeImage_CreateICCProfile(bmp.get(), iccProfile.data(), iccProfile.size());
         }
 
         return bmp.release();
@@ -397,14 +400,27 @@ public:
             throw std::runtime_error("PluginJpegXL[Save]: Unsupported image format");
         }
 
+        const FIICCPROFILE* icc = FreeImage_GetICCProfile(dib);
+        if (icc && icc->data && icc->size) {
+            info.uses_original_profile = 1;
+        }
+
         if (JXL_ENC_SUCCESS != JxlEncoderSetBasicInfo(enc.get(), &info)) {
             throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderSetBasicInfo failed");
         }
 
-        JxlColorEncoding colorEncoding{};
-        JxlColorEncodingSetToSRGB(&colorEncoding, /*is_gray=*/TO_JXL_BOOL(format.num_channels < 3));
-        if (JXL_ENC_SUCCESS != JxlEncoderSetColorEncoding(enc.get(), &colorEncoding)) {
-            throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderSetColorEncoding failed");
+        if (icc && icc->data && icc->size) {
+            if (JXL_ENC_SUCCESS != JxlEncoderSetICCProfile(enc.get(), static_cast<const uint8_t*>(icc->data), icc->size)) {
+                throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderSetColorEncoding failed");
+            }
+        }
+        else {
+            // sRGB by default
+            JxlColorEncoding colorEncoding{};
+            JxlColorEncodingSetToSRGB(&colorEncoding, /*is_gray=*/TO_JXL_BOOL(format.num_channels < 3));
+            if (JXL_ENC_SUCCESS != JxlEncoderSetColorEncoding(enc.get(), &colorEncoding)) {
+                throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderSetColorEncoding failed");
+            }
         }
 
         JxlEncoderFrameSettings* frameSettings = JxlEncoderFrameSettingsCreate(enc.get(), nullptr);
