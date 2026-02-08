@@ -565,21 +565,16 @@ public:
 
     bool ValidateProc(FreeImageIO* io, fi_handle handle) override
     {
-        const std::array<uint8_t, 2>  magic1 = { 0xFF, 0x0A };
-        const std::array<uint8_t, 12> magic2 = { 0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A };
         std::array<uint8_t, 12> header = {};
         const unsigned readCount = io->read_proc(header.data(), 1U, header.size(), handle);
-        if (readCount >= magic1.size()) {
-            if (std::equal(magic1.cbegin(), magic1.cend(), header.cbegin())) {
-                return true;
-            }
+
+        switch (JxlSignatureCheck(header.data(), readCount)) {
+        case JXL_SIG_CODESTREAM:
+        case JXL_SIG_CONTAINER:
+            return true;
+        default:
+            return false;
         }
-        if (readCount >= magic2.size()) {
-            if (std::equal(magic2.cbegin(), magic2.cend(), header.cbegin())) {
-                return true;
-            }
-        }
-        return false;
     }
 };
 
