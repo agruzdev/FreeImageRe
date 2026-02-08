@@ -384,6 +384,96 @@ public:
     }
 
 
+    struct ChunkedFrameReader
+    {
+        const uint8_t* bmpBits{ nullptr };
+        JxlPixelFormat format{};
+        size_t width{ 0 };
+        size_t height{ 0 };
+        size_t pitchSize{ 0 };
+        size_t pixelSize{ 0 };
+
+        static void get_color_channels_pixel_format(void* opaque, JxlPixelFormat* pixel_format)
+        {
+            if (opaque && pixel_format) {
+                *pixel_format = static_cast<ChunkedFrameReader*>(opaque)->format;
+            }
+        }
+
+        // same, interleaved alpha
+        static void get_extra_channel_pixel_format(void* opaque, size_t /*ec_index*/, JxlPixelFormat* pixel_format) {
+            get_color_channels_pixel_format(opaque, pixel_format);
+        }
+
+        static const void* get_color_channel_data_at(void* opaque, size_t xpos, size_t ypos, size_t xsize, size_t ysize, size_t* row_offset)
+        {
+            ChunkedFrameReader* thiz = static_cast<ChunkedFrameReader*>(opaque);
+            if (!thiz || xpos >= thiz->width || ypos >= thiz->height || !row_offset) {
+                return nullptr;
+            }
+            *row_offset = thiz->pitchSize;
+
+            if (xpos + xsize > thiz->width) {
+                xsize = thiz->width - xpos;
+            }
+            if (ypos + ysize > thiz->height) {
+                ysize = thiz->height - ypos;
+            }
+
+            return thiz->bmpBits + ypos * thiz->pitchSize + xpos * thiz->pixelSize;
+        }
+
+        // same, interleaved alpha
+        static const void* get_extra_channel_data_at(void* opaque, size_t /*ec_index*/, size_t xpos, size_t ypos, size_t xsize, size_t ysize, size_t* row_offset) {
+            return get_color_channel_data_at(opaque, xpos, ypos, xsize, ysize, row_offset);
+        }
+
+        static void release_buffer(void* /*opaque*/, const void* /*buf*/)
+        { }
+    };
+
+
+    struct FileWriter
+    {
+        std::unique_ptr<uint8_t[]> buffer{ nullptr };
+        size_t maxSize{ 0 };
+        FreeImageIO* io{ nullptr };
+        fi_handle handle{ nullptr };
+
+        FileWriter(size_t size)
+            : buffer(std::make_unique<uint8_t[]>(size))
+            , maxSize(size)
+        { }
+
+        static void* get_buffer(void* opaque, size_t* psize)
+        {
+            auto thiz = static_cast<FileWriter*>(opaque);
+            if (!thiz || !psize) {
+                return nullptr;
+            }
+
+            *psize = std::min(*psize, thiz->maxSize);
+            return thiz->buffer.get();
+        }
+
+        static void release_buffer(void* opaque, size_t written_bytes)
+        {
+            auto thiz = static_cast<FileWriter*>(opaque);
+            if (!thiz) {
+                return;
+            }
+
+            const auto len = std::min(written_bytes, thiz->maxSize);
+            if (len != thiz->io->write_proc(thiz->buffer.get(), 1, static_cast<uint32_t>(len), thiz->handle)) {
+                throw std::runtime_error("PluginJpegXL[Save]: Failed to write output stream");
+            }
+        }
+
+        static void set_finalized_position(void* /*opaque*/, uint64_t /*finalized_position*/)
+        { }
+    };
+
+
     bool SaveProc(FreeImageIO* io, FIBITMAP* dib, fi_handle handle, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) override
     {
         if (!dib || !FreeImage_HasPixels(dib) || !io || !handle) {
@@ -428,49 +518,48 @@ public:
             throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderFrameSettingsCreate failed");
         }
 
-        const size_t imageSize = static_cast<size_t>(FreeImage_GetPitch(dib) * FreeImage_GetHeight(dib));
-        if (JXL_ENC_SUCCESS != JxlEncoderAddImageFrame(frameSettings, &format, FreeImage_GetBits(dib), imageSize)) {
-            throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderAddImageFrame failed");
+
+        constexpr size_t kOutBufferSize = 4 * 1024;
+        FileWriter fileWriter{ kOutBufferSize };
+        fileWriter.io = io;
+        fileWriter.handle = handle;
+
+        JxlEncoderOutputProcessor fileWriterCallbacks{};
+        fileWriterCallbacks.opaque = &fileWriter;
+        fileWriterCallbacks.get_buffer = &FileWriter::get_buffer;
+        fileWriterCallbacks.release_buffer = &FileWriter::release_buffer;
+        fileWriterCallbacks.set_finalized_position = &FileWriter::set_finalized_position;
+
+        if (JXL_ENC_SUCCESS != JxlEncoderSetOutputProcessor(enc.get(), fileWriterCallbacks)) {
+            throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderSetOutputProcessor failed");
+        }
+
+
+        ChunkedFrameReader frameReader{};
+        frameReader.bmpBits = FreeImage_GetBits(dib);
+        frameReader.format = format;
+        frameReader.width  = FreeImage_GetWidth(dib);
+        frameReader.height = FreeImage_GetWidth(dib);
+        frameReader.pixelSize = GetDataTypeBytes(format.data_type) * format.num_channels;
+        frameReader.pitchSize = FreeImage_GetPitch(dib);
+
+        JxlChunkedFrameInputSource frameReaderCallbacks{};
+        frameReaderCallbacks.opaque = &frameReader;
+        frameReaderCallbacks.get_color_channels_pixel_format = &ChunkedFrameReader::get_color_channels_pixel_format;
+        frameReaderCallbacks.get_extra_channel_pixel_format = &ChunkedFrameReader::get_extra_channel_pixel_format;
+        frameReaderCallbacks.get_color_channel_data_at = &ChunkedFrameReader::get_color_channel_data_at;
+        frameReaderCallbacks.get_extra_channel_data_at = &ChunkedFrameReader::get_extra_channel_data_at;
+        frameReaderCallbacks.release_buffer = &ChunkedFrameReader::release_buffer;
+
+
+        if (JXL_ENC_SUCCESS != JxlEncoderAddChunkedFrame(frameSettings, /*is_last_frame=*/JXL_TRUE, frameReaderCallbacks)) {
+            throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderAddChunkedFrame failed");
         }
         JxlEncoderCloseInput(enc.get());
 
-        constexpr size_t kOutBufferSize = 4 * 1024;
-        auto safeWrite = [&](uint8_t* beg, uint8_t* end) -> bool {
-            if (end < beg) {
-                return false;
-            }
-            const size_t len = static_cast<size_t>(end - beg);
-            if (len > kOutBufferSize) {
-                return false;
-            }
-            if (len != io->write_proc(beg, 1, static_cast<uint32_t>(len), handle)) {
-                return false;
-            }
-            return true;
-        };
-
-        auto compressed = std::make_unique<uint8_t[]>(kOutBufferSize);
-        for (;;) {
-            uint8_t* nextOut = compressed.get();
-            size_t availOut = kOutBufferSize;
-            const auto result = JxlEncoderProcessOutput(enc.get(), &nextOut, &availOut);
-
-            if (result == JXL_ENC_NEED_MORE_OUTPUT || result == JXL_ENC_SUCCESS) {
-                if (!safeWrite(compressed.get(), nextOut)) {
-                    throw std::runtime_error("PluginJpegXL[Save]: Failed to write an output block");
-                }
-                if (result == JXL_ENC_SUCCESS) {
-                    break;
-                }
-            }
-            else if (result == JXL_ENC_ERROR) {
-                throw std::runtime_error("PluginJpegXL[Save]: JXL_ENC_ERROR");
-            }
-            else {
-                assert(false && "Unknown encoder status");
-            }
+        if (JXL_ENC_SUCCESS != JxlEncoderFlushInput(enc.get())) {
+            throw std::runtime_error("PluginJpegXL[Save]: JxlEncoderFlushInput failed");
         }
-        compressed.reset();
 
         return true;
     }
