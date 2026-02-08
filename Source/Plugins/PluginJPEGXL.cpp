@@ -164,18 +164,30 @@ public:
         std::memcpy(scanline + x * ctx->pixelSize, pixels, num * ctx->pixelSize);
     };
 
-    FIBITMAP* LoadProc(FreeImageIO* io, fi_handle handle, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) override
+    FIBITMAP* LoadProc(FreeImageIO* io, fi_handle handle, uint32_t /*page*/, uint32_t flags, void* /*data*/) override
     {
         if (!io || !handle) {
             return nullptr;
         }
 
         JxlDecoderPtr dec = JxlDecoderMake(nullptr);
-        if (JXL_DEC_SUCCESS != JxlDecoderSubscribeEvents(dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE)) {
+
+        auto decoderEvents = JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE;
+        if ((flags & FIF_LOAD_NOEXIF) == 0) {
+            decoderEvents = decoderEvents | JXL_DEC_BOX | JXL_DEC_BOX_COMPLETE;
+        }
+
+        if (JXL_DEC_SUCCESS != JxlDecoderSubscribeEvents(dec.get(), decoderEvents)) {
             throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSubscribeEvents failed");
         }
 
+        bool supportsBoxDecompression{ true };
+        if (JXL_DEC_SUCCESS != JxlDecoderSetDecompressBoxes(dec.get(), JXL_TRUE)) {
+            supportsBoxDecompression = false;
+        }
+
         constexpr size_t kChunkSize = 4 * 1024;
+        constexpr size_t kMetadataChunkSize = 1024;
         size_t inpBufferSize = kChunkSize;
         auto inpBuffer = std::make_unique<uint8_t[]>(inpBufferSize);
 
@@ -190,6 +202,15 @@ public:
 
         JxlBasicInfo info{};
         std::vector<uint8_t> iccProfile{};
+
+        const std::string kBoxExif = "Exif";
+        const std::string kBoxXml  = "xml "; // space is important
+        std::vector<std::string> boxNamesToDecode = { kBoxExif, kBoxXml };
+        std::vector<std::tuple<std::string, std::vector<uint8_t>>> boxes{};
+
+        std::string boxName{};
+        std::vector<uint8_t> boxData{};
+        size_t boxPos{ 0 };
 
         WriteOutBlockContext writeCtx{};
         std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(nullptr, &::FreeImage_Unload);
@@ -287,13 +308,77 @@ public:
                     throw std::runtime_error("PluginJpegXL[Load]: JxlDecoderSetImageOutCallback failed");
                 }
             }
+            else if (status == JXL_DEC_BOX) {
+                if (!supportsBoxDecompression) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Decompressing brob boxes is not supported. Not all data will be decoded.");
+                    continue;
+                }
+
+                JxlBoxType type;
+                if (JXL_DEC_SUCCESS != JxlDecoderGetBoxType(dec.get(), type, JXL_TRUE)) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, failed to get box type.");
+                    continue;
+                }
+
+                boxName.assign(type, std::size(type));
+                if (std::find(boxNamesToDecode.cbegin(), boxNamesToDecode.cend(), boxName) != boxNamesToDecode.cend()) {
+                    boxData.resize(kMetadataChunkSize);
+                    boxPos = 0;
+                    if (JXL_DEC_SUCCESS != JxlDecoderSetBoxBuffer(dec.get(), boxData.data(), boxData.size())) {
+                        FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, JxlDecoderSetBoxBuffer() failed.");
+                        boxData.clear();
+                    }
+                }
+            }
+            else if (status == JXL_DEC_BOX_NEED_MORE_OUTPUT) {
+                if (boxData.empty()) {
+                    // box decoding failed before -> skip
+                    continue;
+                }
+
+                const size_t remaining = JxlDecoderReleaseBoxBuffer(dec.get());
+                boxPos = std::min(boxPos + kMetadataChunkSize - remaining, boxData.size());
+                boxData.resize(boxData.size() + kMetadataChunkSize);
+
+                if (JXL_DEC_SUCCESS != JxlDecoderSetBoxBuffer(dec.get(), boxData.data() + boxPos, boxData.size() - boxPos)) {
+                    FreeImage_OutputMessageProc(FIF_JPEGXL, "Error, JxlDecoderSetBoxBuffer() failed.");
+                    boxData.clear();
+                    boxPos = 0;
+                }
+            }
+            else if (status == JXL_DEC_BOX_COMPLETE) {
+                if (boxData.empty()) {
+                    // box decoding failed before -> skip
+                    continue;
+                }
+
+                const size_t remaining = JxlDecoderReleaseBoxBuffer(dec.get());
+                boxData.resize(boxData.size() - remaining);
+
+                boxes.emplace_back(boxName, boxData);
+
+                boxName = {};
+                boxPos = 0;
+            }
             else {
                 throw std::runtime_error("PluginJpegXL[Load]: Unknown decoder status");
             }
         }
 
-        if (!iccProfile.empty()) {
-            FreeImage_CreateICCProfile(bmp.get(), iccProfile.data(), iccProfile.size());
+        if (bmp) {
+            if (!iccProfile.empty()) {
+                FreeImage_CreateICCProfile(bmp.get(), iccProfile.data(), iccProfile.size());
+            }
+
+            for (const auto& [name, data] : boxes) {
+                if (name == kBoxExif) {
+                    jpeg_read_exif_profile(bmp.get(), data.data(), data.size(), /*optional_signature=*/true);
+                    jpeg_read_exif_profile_raw(bmp.get(), data.data(), data.size(), /*optional_signature=*/true);
+                }
+                if (name == kBoxXml) {
+                    // ToDo: decode XML metadata
+                }
+            }
         }
 
         return bmp.release();

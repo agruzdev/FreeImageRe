@@ -734,8 +734,9 @@ FI_STRUCT (FIDEPENDENCY) {
 
 // Load / Save flag constants -----------------------------------------------
 
-#define FIF_LOAD_NOPIXELS 0x8000	//! loading: load the image header only (not supported by all plugins, default to full loading)
+#define FIF_LOAD_NOPIXELS    0x8000		//! loading: load the image header only (not supported by all plugins, default to full loading)
 #define FIF_LOAD_NOTHUMBNAIL 0x10000
+#define FIF_LOAD_NOEXIF      0x20000
 
 #define BMP_DEFAULT         0
 #define BMP_SAVE_RLE        1
