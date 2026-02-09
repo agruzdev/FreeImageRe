@@ -53,14 +53,14 @@ ExternalProject_Get_Property(BROTLI INSTALL_DIR)
 add_library(LibBrotli INTERFACE)
 add_dependencies(LibBrotli BROTLI)
 if (MSVC)
-    link_library_path2(LibBrotli ${INSTALL_DIR}/lib brotlicommon.lib brotlicommond.lib)
     link_library_path2(LibBrotli ${INSTALL_DIR}/lib brotlidec.lib brotlidecd.lib)
     link_library_path2(LibBrotli ${INSTALL_DIR}/lib brotlienc.lib brotliencd.lib)
+    link_library_path2(LibBrotli ${INSTALL_DIR}/lib brotlicommon.lib brotlicommond.lib)
 else()
     target_link_libraries(LibBrotli INTERFACE
+        ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlidec${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlienc${CMAKE_STATIC_LIBRARY_SUFFIX}
         ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlicommon${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlidec${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlidec${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 endif()
 target_include_directories(LibBrotli INTERFACE ${INSTALL_DIR}/include)

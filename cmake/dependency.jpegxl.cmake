@@ -52,7 +52,7 @@ ExternalProject_Add_Step(JPEGXL git_patch
     COMMAND echo "Applying git patch"
     COMMAND ${PATCH_EXECUTABLE} -N -p1 -i ${CMAKE_SOURCE_DIR}/cmake/libjpegxl/0001-Added-support-of-debug-libraries-for-hwy-brotli-and-.patch
     COMMAND echo " -- Done"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/dependencies/jpegxl/source
+    WORKING_DIRECTORY ${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpegxl/source
 )
 
 ExternalProject_Get_Property(JPEGXL SOURCE_DIR)

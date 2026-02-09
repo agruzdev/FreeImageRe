@@ -12,6 +12,7 @@
 #define JXL_STATIC_DEFINE 1
 
 #include <array>
+#include <cstring>
 
 #include "hwy/base.h"
 #include "brotli/decode.h"
