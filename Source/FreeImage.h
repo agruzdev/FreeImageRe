@@ -37,8 +37,8 @@
 
 // Version information ------------------------------------------------------
 
-#define FREEIMAGE_MAJOR_VERSION   3
-#define FREEIMAGE_MINOR_VERSION   18
+#define FREEIMAGE_MAJOR_VERSION   4
+#define FREEIMAGE_MINOR_VERSION   1
 #define FREEIMAGE_RELEASE_SERIAL  0
 
 #define FREEIMAGE_RESURRECTED     1

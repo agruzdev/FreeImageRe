@@ -149,5 +149,6 @@ Version 4.1.0:
  - Fixed read-after-free error in PluginTIFF
  - Fixed backward compatible behaviour of FreeImage_GetFIFCount()
  - More accurate refcounting and deinitialization
+ - Updated version macro in FreeImage.h
 
 
