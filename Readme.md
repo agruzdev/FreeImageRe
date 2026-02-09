@@ -139,3 +139,15 @@ Version 4.0.0:
  - Updated LibRaw till v0.22.0
  - Updated LibDav1d till v1.5.3
 
+Version 4.1.0:
+ - New plugin support .jxl format, OpenXL
+ - Added libjxl v0.11.1
+ - Added brotli v1.2.0
+ - Added highway v1.3.0
+ - Added Little-CMS v2.18, at hash 6ae7e97c
+ - Fixed MacOX compilation
+ - Fixed read-after-free error in PluginTIFF
+ - Fixed backward compatible behaviour of FreeImage_GetFIFCount()
+ - More accurate refcounting and deinitialization
+
+
