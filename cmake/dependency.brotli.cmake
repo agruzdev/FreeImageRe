@@ -16,10 +16,37 @@ ExternalProject_Add(BROTLI
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
     CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_TESTING=OFF" "-DBROTLI_BUILD_FOR_PACKAGE=OFF" "-DBROTLI_BUILD_TOOLS=OFF"
         "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC" "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/brotli/install"
     EXCLUDE_FROM_ALL
 )
+
+if (MSVC)
+    ExternalProject_Add_Step(BROTLI build_debug
+        DEPENDEES build
+        DEPENDERS install
+        COMMAND echo "Build Debug"
+        COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Debug
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+    )
+    ExternalProject_Add_Step(BROTLI build_release
+        DEPENDEES build_debug
+        DEPENDERS install
+        COMMAND echo "Build Release"
+        COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Release
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+    )
+else()
+    ExternalProject_Add_Step(BROTLI build_default
+        DEPENDEES build
+        DEPENDERS install
+        COMMAND echo "Build"
+        COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+    )
+endif()
 
 ExternalProject_Get_Property(BROTLI INSTALL_DIR)
 
