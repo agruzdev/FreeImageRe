@@ -3,15 +3,15 @@
 # Output target: LibOpenJPEG
 #
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(OPENJPEG
-    PREFIX ${CMAKE_BINARY_DIR}/openjpeg
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/openjpeg
     URL "https://github.com/uclouvain/openjpeg/archive/refs/tags/v2.5.4.zip"
     URL_MD5 "c8dbac9e49662217d782c1b9078dbfa7"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openjpeg"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openjpeg/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/openjpeg/build"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/openjpeg"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/openjpeg/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/openjpeg/build"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""

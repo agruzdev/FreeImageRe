@@ -2,7 +2,7 @@
 #
 # Output target: LibJPEG
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 
 set(JPEG_REPOSITORY "JPEG-turbo" CACHE STRING "Repository of LibJPEG to use")
@@ -12,30 +12,30 @@ if (JPEG_REPOSITORY STREQUAL "IJG")
     FetchContent_Declare(JPEG
         URL "https://www.ijg.org/files/jpegsr9f.zip"
         URL_MD5 "8bd2706c80ac696856a1334430a6ffd1"
-        DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/jpeg"
-        SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpeg/source"
+        DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/jpeg"
+        SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/jpeg/source"
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         EXCLUDE_FROM_ALL
     )
 
     FetchContent_MakeAvailable(JPEG)
 
-    set(JPEG_IJG_FOUND_ROOT "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpeg/source" CACHE INTERNAL "")
-    add_subdirectory(${CMAKE_SOURCE_DIR}/cmake/libjpeg ${CMAKE_BINARY_DIR}/dependencies/libjpeg)
+    set(JPEG_IJG_FOUND_ROOT "${EXTERNALPROJECT_SOURCE_PREFIX}/jpeg/source" CACHE INTERNAL "")
+    add_subdirectory(${EXTERNALPROJECT_INCLUDE_DIR}/libjpeg ${EXTERNALPROJECT_BINARY_ROOT}/libjpeg/build)
     set_property(TARGET LibJPEG PROPERTY FOLDER "Dependencies")
-    target_include_directories(LibJPEG INTERFACE ${JPEG_IJG_FOUND_ROOT} ${CMAKE_SOURCE_DIR}/cmake/libjpeg)
+    target_include_directories(LibJPEG INTERFACE ${JPEG_IJG_FOUND_ROOT} ${EXTERNALPROJECT_SOURCE_ROOT}/libjpeg)
 
     unset(JPEG_IJG_FOUND_ROOT)
 
 elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
     # https://github.com/libjpeg-turbo/libjpeg-turbo
     ExternalProject_Add(TURBOJPEG
-        PREFIX ${CMAKE_BINARY_DIR}/turbojpeg
+        PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg
         URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.1.3.zip"
         URL_MD5 "4c3ebabaabd2fa2e9f29cc97ac7e3946"
-        DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/jpeg-turbo"
-        SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpeg-turbo/source"
-        BINARY_DIR "${CMAKE_BINARY_DIR}/turbojpeg/build"
+        DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/jpeg-turbo"
+        SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/jpeg-turbo/source"
+        BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/build"
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         UPDATE_COMMAND ""
         PATCH_COMMAND ""

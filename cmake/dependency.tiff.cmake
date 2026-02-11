@@ -4,17 +4,16 @@
 # Output targets: LibTIFF
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
-
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.imath.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.imath.cmake)
 
 ExternalProject_Add(TIFF
-    PREFIX ${CMAKE_BINARY_DIR}/tiff
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/tiff
     URL "http://download.osgeo.org/libtiff/tiff-4.7.1.zip"
     URL_MD5 "a45fdf2169dae98635c7c16729a85471"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/tiff"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/tiff/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/tiff/build"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/tiff"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/tiff/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/tiff/build"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""

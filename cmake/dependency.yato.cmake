@@ -5,15 +5,15 @@
 # YATO_INCLUDE_DIR - includes
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 
 ExternalProject_Add(YATO
-    PREFIX ${CMAKE_BINARY_DIR}/pybind
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/yato
     URL "https://github.com/agruzdev/Yato/archive/4920cfc8cf8fa2c4879f3b7679b2a1aa6092bae4.zip"
     URL_MD5 "02c227cb8199282f1f581289ba1e97b5"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/yato"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/yato/source"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/yato"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/yato/source"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""

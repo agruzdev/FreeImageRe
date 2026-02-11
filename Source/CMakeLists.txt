@@ -69,7 +69,7 @@ if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     target_link_libraries(FreeImage PRIVATE LibPybind ${Python3_LIBRARIES})
 endif()
 
-target_include_directories(FreeImage PRIVATE ${CMAKE_SOURCE_DIR}/3rdParty/Yato/include)
+
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 

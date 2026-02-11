@@ -3,12 +3,11 @@
 # Output target: LibJpegXL
 #
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
-
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.zlib.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.highway.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.brotli.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.lcms2.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.zlib.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.highway.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.brotli.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.lcms2.cmake)
 
 ExternalProject_Get_Property(ZLIB INSTALL_DIR)
 set(ZLIB_INSTALL_DIR ${INSTALL_DIR})
@@ -22,13 +21,13 @@ find_program(PATCH_EXECUTABLE patch HINTS ${GIT_DIRECTORY} ${GIT_DIRECTORY}/../u
 
 
 ExternalProject_Add(JPEGXL
-    PREFIX ${CMAKE_BINARY_DIR}/jpegxl
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/jpegxl
     URL "https://github.com/libjxl/libjxl/archive/refs/tags/v0.11.1.zip"
     URL_MD5 "87b3968e0878edf57b09bb8bfaf4618e"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/jpegxl"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpegxl/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/jpegxl/build"
-    INSTALL_DIR "${CMAKE_BINARY_DIR}/jpegxl/install"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/jpegxl"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/jpegxl/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
@@ -41,7 +40,7 @@ ExternalProject_Add(JPEGXL
         "-DJPEGXL_FORCE_SYSTEM_LCMS2=ON" "-DLCMS2_ROOT=${LCMS2_ROOT}"
         "-DZLIB_INCLUDE_DIR=${ZLIB_INSTALL_DIR}/include" "-DZLIB_LIBRARY_DEBUG=${ZLIB_INSTALL_DIR}/lib/zlibstaticd.lib" "-DZLIB_LIBRARY_RELEASE=${ZLIB_INSTALL_DIR}/lib/zlibstatic.lib"
         "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC -DCMS_NO_REGISTER_KEYWORD=1" "-DCMAKE_CXX_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${EHSC_FLAG} -fPIC -DCMS_NO_REGISTER_KEYWORD=1 -DJXL_CMS_STATIC_DEFINE=1"
-        "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/jpegxl/install"
+        "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/install"
     EXCLUDE_FROM_ALL
     DEPENDS ZLIB HIGHWAY BROTLI LCMS2
 )
@@ -50,9 +49,9 @@ ExternalProject_Add_Step(JPEGXL git_patch
     DEPENDEES download
     DEPENDERS configure
     COMMAND echo "Applying git patch"
-    COMMAND ${PATCH_EXECUTABLE} -N -p1 -i ${CMAKE_SOURCE_DIR}/cmake/libjpegxl/0001-Added-support-of-debug-libraries-for-hwy-brotli-and-.patch
+    COMMAND ${PATCH_EXECUTABLE} -N -p1 -i ${EXTERNALPROJECT_INCLUDE_DIR}/libjpegxl/0001-Added-support-of-debug-libraries-for-hwy-brotli-and-.patch
     COMMAND echo " -- Done"
-    WORKING_DIRECTORY ${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/jpegxl/source
+    WORKING_DIRECTORY ${EXTERNALPROJECT_SOURCE_PREFIX}/jpegxl/source
 )
 
 ExternalProject_Get_Property(JPEGXL SOURCE_DIR)

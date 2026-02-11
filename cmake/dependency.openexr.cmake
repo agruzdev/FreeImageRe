@@ -5,21 +5,21 @@
 #
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openjph.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.imath.cmake)
 
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.openjph.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/dependency.imath.cmake)
 
 find_package(Git REQUIRED) # needed by OpenEXR
 
 ExternalProject_Add(EXR
-    PREFIX ${CMAKE_BINARY_DIR}/openexr
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/openexr
     URL "https://github.com/AcademySoftwareFoundation/openexr/archive/refs/tags/v3.4.4.zip"
     URL_MD5 "23a4152db8b04ad484e9e1dd6638a662"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/openexr"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/openexr/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/openexr/build"
-    INSTALL_DIR "${CMAKE_BINARY_DIR}/openexr/install"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/openexr"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/openexr/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/openexr/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/openexr/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
@@ -27,7 +27,7 @@ ExternalProject_Add(EXR
     CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DOPENEXR_IS_SUBPROJECT=ON" "-DOPENEXR_FORCE_INTERNAL_IMATH=OFF" "-DOPENEXR_FORCE_INTERNAL_DEFLATE=ON" "-DOPENEXR_INSTALL=ON"
         "-DOPENEXR_INSTALL_TOOLS=OFF" "-DOPENEXR_INSTALL_EXAMPLES=OFF" "-DOPENEXR_INSTALL_PKG_CONFIG=OFF" "-DOPENEXR_BUILD_TOOLS=OFF" "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_TESTING=OFF"
         "-DOPENEXR_LIB_SUFFIX=" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG}" "-DCMAKE_CXX_FLAGS:STRING=${ZERO_WARNINGS_FLAG}"
-        "-DImath_ROOT=${IMATH_ROOT}" "-Dopenjph_ROOT=${OPENJPH_ROOT}" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/openexr/install"
+        "-DImath_ROOT=${IMATH_ROOT}" "-Dopenjph_ROOT=${OPENJPH_ROOT}" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/openexr/install"
     EXCLUDE_FROM_ALL
     DEPENDS OPENJPH IMATH
 )

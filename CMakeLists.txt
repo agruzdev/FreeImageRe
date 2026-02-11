@@ -29,64 +29,66 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # External dependencies
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.zlib.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.yato.cmake)
+set(EXTERNALPROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.zlib.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.yato.cmake)
 
 option(FREEIMAGE_WITH_LIBJPEG "Compile with the LibJPEG backend" ON)
 if (FREEIMAGE_WITH_LIBJPEG)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.jpeg.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.jpeg.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBOPENJPEG "Compile with the LibOpenJPEG backend" ON)
 if (FREEIMAGE_WITH_LIBOPENJPEG)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.openjpeg.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openjpeg.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBOPENEXR "Compile with the LibOpenEXR backend" ON)
 if (FREEIMAGE_WITH_LIBOPENEXR)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.openexr.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openexr.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBPNG "Compile with the LibPNG backend" ON)
 if (FREEIMAGE_WITH_LIBPNG)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.png.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.png.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBTIFF "Compile with the LibTIFF backend" ON)
 if (FREEIMAGE_WITH_LIBTIFF)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.tiff.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.tiff.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBWEBP "Compile with the LibWEBP backend" ON)
 if (FREEIMAGE_WITH_LIBWEBP)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.webp.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.webp.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBRAW "Compile with the LibRAW backend" ON)
 if (FREEIMAGE_WITH_LIBRAW)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.raw.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.raw.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBHEIF "Compile with the LibHEIF backend" ON)
 if (FREEIMAGE_WITH_LIBHEIF)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.heif.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.heif.cmake)
 endif()
 
 option(FREEIMAGE_WITH_LIBJPEGXL "Compile with the LibJpegXL backend" ON)
 if (FREEIMAGE_WITH_LIBJPEGXL)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.jpegxl.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.jpegxl.cmake)
 endif()
 
 option(FREEIMAGE_WITH_PYTHON_BINDINGS "Build pythin bindings" OFF)
 if (FREEIMAGE_WITH_PYTHON_BINDINGS)
     find_package(Python3 COMPONENTS Development REQUIRED)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependency.pybind.cmake)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.pybind.cmake)
 endif()
 
 # Internal dependencies
 option(FREEIMAGE_WITH_LIBJXR "Compile with the LibJXR backend" ON)
 if (FREEIMAGE_WITH_LIBJXR)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_BINARY_DIR}/LibJXR)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_CURRENT_BINARY_DIR}/LibJXR)
 endif()
 
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)

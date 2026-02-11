@@ -3,23 +3,24 @@
 # Output target: LibBrotli
 #
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
+
 
 ExternalProject_Add(BROTLI
-    PREFIX ${CMAKE_BINARY_DIR}/brotli
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/brotli
     URL "https://github.com/google/brotli/archive/refs/tags/v1.2.0.zip"
     URL_MD5 "5b7c422f6c3d7c2362df4d54b6ab36f9"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/brotli"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/brotli/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/brotli/build"
-    INSTALL_DIR "${CMAKE_BINARY_DIR}/brotli/install"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/brotli"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/brotli/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/brotli/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/brotli/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
     CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_TESTING=OFF" "-DBROTLI_BUILD_FOR_PACKAGE=OFF" "-DBROTLI_BUILD_TOOLS=OFF"
-        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC" "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/brotli/install"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC" "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/brotli/install"
     EXCLUDE_FROM_ALL
 )
 
@@ -29,14 +30,14 @@ if (MSVC)
         DEPENDERS install
         COMMAND echo "Build Debug"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Debug
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/brotli/build
     )
     ExternalProject_Add_Step(BROTLI build_release
         DEPENDEES build_debug
         DEPENDERS install
         COMMAND echo "Build Release"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Release
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/brotli/build
     )
 else()
     ExternalProject_Add_Step(BROTLI build_default
@@ -44,7 +45,7 @@ else()
         DEPENDERS install
         COMMAND echo "Build"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/brotli/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/brotli/build
     )
 endif()
 

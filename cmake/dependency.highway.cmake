@@ -3,16 +3,16 @@
 # Output target: LibHighway
 #
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(HIGHWAY
-    PREFIX ${CMAKE_BINARY_DIR}/highway
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/highway
     URL "https://github.com/google/highway/archive/refs/tags/1.3.0.zip"
     URL_MD5 "e91017527ce45fad36e2e8803ecda565"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/highway"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/highway/source"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/highway/build"
-    INSTALL_DIR "${CMAKE_BINARY_DIR}/highway/install"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/highway"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/highway/source"
+    BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/highway/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/highway/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
@@ -21,7 +21,7 @@ ExternalProject_Add(HIGHWAY
     #BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t hwy
     CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_TESTING=OFF" "-DHWY_ENABLE_TESTS=OFF" "-DHWY_ENABLE_EXAMPLES=OFF"
         "-DHWY_FORCE_STATIC_LIBS=ON" "-DHWY_ENABLE_CONTRIB=OFF" "-DHWY_TEST_STANDALONE=OFF" "-DHWY_WARNINGS_ARE_ERRORS=OFF" "-DHWY_CMAKE_HEADER_ONLY=OFF"
-        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC" "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/highway/install"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC" "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/highway/install"
     EXCLUDE_FROM_ALL
 )
 
@@ -31,14 +31,14 @@ if (MSVC)
         DEPENDERS install
         COMMAND echo "Build Debug"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Debug
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/highway/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/highway/build
     )
     ExternalProject_Add_Step(HIGHWAY build_release
         DEPENDEES build_debug
         DEPENDERS install
         COMMAND echo "Build Release"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install --config Release
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/highway/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/highway/build
     )
 else()
     ExternalProject_Add_Step(HIGHWAY build_default
@@ -46,7 +46,7 @@ else()
         DEPENDERS install
         COMMAND echo "Build"
         COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/highway/build
+        WORKING_DIRECTORY ${EXTERNALPROJECT_BINARY_ROOT}/highway/build
     )
 endif()
 

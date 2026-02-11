@@ -5,15 +5,15 @@
 # PYBIND_INCLUDE_DIR - includes
 
 
-include(${CMAKE_SOURCE_DIR}/cmake/external_project_common.cmake)
+include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 
 ExternalProject_Add(PYBIND
-    PREFIX ${CMAKE_BINARY_DIR}/pybind
+    PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/pybind
     URL "https://github.com/pybind/pybind11/archive/refs/tags/v2.12.0.zip"
     URL_MD5 "a09cb1982fc9ca4d6a4de27352cf29f2"
-    DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/dependencies/pybind"
-    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dependencies/pybind/source"
+    DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/pybind"
+    SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/pybind/source"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
