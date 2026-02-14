@@ -260,9 +260,13 @@ PYBIND11_MODULE(FreeImage, m) {
     m.attr("FIF_RAW") = pybind11::int_(static_cast<int>(FIF_RAW));
     m.attr("FIF_WEBP") = pybind11::int_(static_cast<int>(FIF_WEBP));
     m.attr("FIF_JXR") = pybind11::int_(static_cast<int>(FIF_JXR));
+    m.attr("FIF_HEIF") = pybind11::int_(static_cast<int>(FIF_HEIF));
+    m.attr("FIF_AVIF") = pybind11::int_(static_cast<int>(FIF_AVIF));
+    m.attr("FIF_JPEGXL") = pybind11::int_(static_cast<int>(FIF_JPEGXL));
 
 
     // Save/Load constants
+    // FIF_LOAD_NOPIXELS is skipped, because has no sense for loading into numpy
     m.attr("BMP_DEFAULT") = pybind11::int_(BMP_DEFAULT);
     m.attr("BMP_SAVE_RLE") = pybind11::int_(BMP_SAVE_RLE);
     m.attr("CUT_DEFAULT") = pybind11::int_(CUT_DEFAULT);
