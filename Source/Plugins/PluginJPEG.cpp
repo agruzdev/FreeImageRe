@@ -1744,7 +1744,7 @@ const FIDEPENDENCY* GetJpegDependencyInfo() {
 		.majorVersion = LIBJPEG_TURBO_VERSION_NUMBER,
 		.minorVersion = 0
 #else
-		.name = "libjpeg (IJG)";
+		.name = "libjpeg (IJG)",
 		.fullVersion  = "libjpeg (IJG) " JVERSION,
 		.majorVersion = JPEG_LIB_VERSION_MAJOR,
 		.minorVersion = JPEG_LIB_VERSION_MINOR
