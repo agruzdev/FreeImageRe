@@ -43,7 +43,7 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
-#include "tiffiop.h"
+#include "tiffio.h"
 #include "Imath/half.h"
 
 #include "../Metadata/FreeImageTag.h"
@@ -2694,8 +2694,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 void DLL_CALLCONV
 InitTIFF(Plugin *plugin, int format_id) {
-	_TIFFwarningHandler = msdosWarningHandler;
-	_TIFFerrorHandler = msdosErrorHandler;
+	TIFFSetWarningHandler(msdosWarningHandler);
+	TIFFSetErrorHandler(msdosErrorHandler);
 	s_format_id = format_id;
 
     // Set up the callback for extended TIFF directory tag support (see XTIFF.cpp)

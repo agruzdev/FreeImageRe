@@ -20,11 +20,10 @@ ExternalProject_Add(ZLIB
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/zlib/build"
     INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/zlib/install"
     UPDATE_COMMAND ""
-    BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t zlibstatic
     INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
             COMMAND ${CMAKE_COMMAND} -E copy "${EXTERNALPROJECT_SOURCE_PREFIX}/zlib/source/zutil.h" -t "${EXTERNALPROJECT_BINARY_ROOT}/zlib/install/include"
-    CMAKE_ARGS ${CMAKE_BUILD_TYPE_RELEASE} "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/zlib/install" "-DZLIB_BUILD_EXAMPLES=OFF"
-        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC"
+    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/zlib/install" "-DZLIB_BUILD_EXAMPLES=OFF"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG}"
 )
 
 # For configuring other dependencies
@@ -35,10 +34,14 @@ unset(INSTALL_DIR)
 add_library(LibZLIB INTERFACE)
 add_dependencies(LibZLIB ZLIB)
 target_include_directories(LibZLIB INTERFACE ${ZLIB_ROOT}/include)
-if(MSVC)
-    link_library_path2(LibZLIB ${ZLIB_ROOT}/lib zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX} zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX})
+if(WIN32)
+    if (MSVC AND IS_DEBUG_CONFIG)
+        target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/zlibstaticd${CMAKE_STATIC_LIBRARY_SUFFIX})
+    else()
+        target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endif()
 else()
-    target_link_libraries(LibZLIB INTERFACE "${ZLIB_ROOT}/lib/libz${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    target_link_libraries(LibZLIB INTERFACE ${ZLIB_ROOT}/lib/libz${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 set_property(TARGET ZLIB PROPERTY FOLDER "Dependencies")
 

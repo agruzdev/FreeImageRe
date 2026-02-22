@@ -20,6 +20,7 @@
 // Use at your own risk!
 // ==========================================================
 
+// ToDo: Avoid using the private header?
 #include "tiffiop.h"
 
 #include "FreeImage.h"

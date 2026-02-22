@@ -160,7 +160,7 @@ private:
 # ifdef NDEBUG
         : LibraryLoader(std::vector<std::string>{ "heif.dll", "libheif.dll" })
 # else
-        : LibraryLoader(std::vector<std::string>{ "heifd.dll", "libheifd.dll" })
+        : LibraryLoader(std::vector<std::string>{ "heifd.dll", "libheifd.dll", "heif.dll", "libheif.dll" })
 # endif
 #else
         : LibraryLoader("libheif.so")

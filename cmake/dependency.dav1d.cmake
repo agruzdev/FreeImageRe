@@ -14,6 +14,15 @@ find_program(MESON_EXECUTABLE meson
     REQUIRED
 )
 
+
+if (MSVC)
+    set(MESON_BACKEND ${MSVC_NAME})
+else()
+    set(MESON_BACKEND ninja)
+endif()
+
+meson_build_type_from_cmake(MESON_BUILD_TYPE)
+
 ExternalProject_Add(DAVID
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/dav1d
     URL "https://code.videolan.org/videolan/dav1d/-/archive/1.5.3/dav1d-1.5.3.zip"
@@ -21,78 +30,36 @@ ExternalProject_Add(DAVID
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/dav1d"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/dav1d/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
+    CONFIGURE_COMMAND ${MESON_EXECUTABLE} setup --backend ${MESON_BACKEND} --buildtype ${MESON_BUILD_TYPE}
+            --default-library static -Denable_tools=false -Denable_tests=false --prefix ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install --libdir=lib
+            ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build ${EXTERNALPROJECT_SOURCE_PREFIX}/dav1d/source
+    BUILD_COMMAND ${MESON_EXECUTABLE} compile -C ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build
+    INSTALL_COMMAND ${MESON_EXECUTABLE} install -C ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build
     EXCLUDE_FROM_ALL
 )
 
-ExternalProject_Get_Property(DAVID SOURCE_DIR)
+ExternalProject_Get_Property(DAVID INSTALL_DIR)
 
-set(DAVID_INCLUDE_DIRS ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install/include)
-set(DAVID_LINK_DIRS ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install/lib)
-
-if (MSVC)
-    ExternalProject_Add_Step(DAVID build_debug
-        DEPENDEES configure
-        DEPENDERS build
-        COMMAND echo "Build Debug"
-        COMMAND ${MESON_EXECUTABLE} setup ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_debug --backend ${MSVC_NAME} --buildtype debug
-            --default-library static -Denable_tools=false -Denable_tests=false --prefix ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_debug/dav1d.sln
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_debug/RUN_INSTALL.vcxproj
-        COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_deb.lib
-        COMMAND echo " -- Done"
-        WORKING_DIRECTORY ${SOURCE_DIR}
+if (WIN32)
+    ExternalProject_Add_Step(DAVID rename_stupid_meson
+        DEPENDEES install
+        COMMAND ${CMAKE_COMMAND} -E rename ${INSTALL_DIR}/lib/libdav1d.a ${INSTALL_DIR}/lib/dav1d.lib
     )
-
-    ExternalProject_Add_Step(DAVID build_release
-        DEPENDEES build_debug
-        DEPENDERS build
-        COMMAND echo "Build Release"
-        COMMAND ${MESON_EXECUTABLE} setup ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_release --backend vs2022 --buildtype release
-            --default-library static -Denable_tools=false -Denable_tests=false --prefix ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_release/dav1d.sln
-        COMMAND ${CMAKE_VS_MSBUILD_COMMAND} ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_release/RUN_INSTALL.vcxproj
-        COMMAND ${CMAKE_COMMAND} -E rename ${DAVID_LINK_DIRS}/libdav1d.a ${DAVID_LINK_DIRS}/libdav1d_rel.lib
-        COMMAND echo " -- Done"
-        WORKING_DIRECTORY ${SOURCE_DIR}
-    )
-
-    set(DAVID_LIBRARY libdav1d_rel)
-    set(DAVID_DEBUG_LIBRARY libdav1d_deb)
-
-elseif(UNIX)
-     set(CMAKE_BUILD_TYPE_FOR_STUPID_MESON "debug")
-     if (CMAKE_BUILD_TYPE)
-         string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_FOR_STUPID_MESON)
-     endif()
-
-     ExternalProject_Add_Step(DAVID build_unix
-        DEPENDEES configure
-        DEPENDERS build
-        COMMAND echo "Build Unix"
-        COMMAND ${MESON_EXECUTABLE} setup ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_unix --backend ninja --buildtype ${CMAKE_BUILD_TYPE_FOR_STUPID_MESON}
-            --default-library static -Denable_tools=false -Denable_tests=false --prefix ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install --libdir=lib
-        COMMAND ${MESON_EXECUTABLE} compile -C ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_unix
-        COMMAND ${MESON_EXECUTABLE} install -C ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build_unix
-        COMMAND echo " -- Done"
-        WORKING_DIRECTORY ${SOURCE_DIR}
-    )
-
-    set(DAVID_LIBRARY dav1d)
-
-else()
-    message(FATAL_ERROR "Unknown platform")
-
 endif()
 
 
+
+set(DAVID_INCLUDE_DIRS ${INSTALL_DIR}/include)
+set(DAVID_LINK_DIRS ${INSTALL_DIR}/lib)
+set(DAVID_LIBRARY dav1d)
+
 set_property(TARGET DAVID PROPERTY FOLDER "Dependencies")
 
-unset(SOURCE_DIR)
-unset(BINARY_DIR)
+unset(INSTALL_DIR)
+unset(MESON_BACKEND)
+unset(MESON_BUILD_TYPE)
 

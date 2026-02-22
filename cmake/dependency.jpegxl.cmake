@@ -39,42 +39,26 @@ ExternalProject_Add(JPEGXL
         "-DJPEGXL_FORCE_SYSTEM_BROTLI=ON" "-DBrotli_ROOT=${Brotli_ROOT}"
         "-DJPEGXL_FORCE_SYSTEM_LCMS2=ON" "-DLCMS2_ROOT=${LCMS2_ROOT}"
         "-DZLIB_USE_STATIC_LIBS=ON" "-DZLIB_ROOT=${ZLIB_ROOT}"
-        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} -fPIC -DCMS_NO_REGISTER_KEYWORD=1" "-DCMAKE_CXX_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${EHSC_FLAG} -fPIC -DCMS_NO_REGISTER_KEYWORD=1 -DJXL_CMS_STATIC_DEFINE=1"
-        "-DCMAKE_DEBUG_POSTFIX=d" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/install"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG} -DCMS_NO_REGISTER_KEYWORD=1" 
+        "-DCMAKE_CXX_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${EHSC_FLAG} ${FPIC_FLAG} -DCMS_NO_REGISTER_KEYWORD=1 -DJXL_CMS_STATIC_DEFINE=1"
+        "-DCMAKE_DEBUG_POSTFIX=" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/install"
     EXCLUDE_FROM_ALL
     DEPENDS ZLIB HIGHWAY BROTLI LCMS2
 )
 
-ExternalProject_Add_Step(JPEGXL git_patch
-    DEPENDEES download
-    DEPENDERS configure
-    COMMAND echo "Applying git patch"
-    COMMAND ${PATCH_EXECUTABLE} -N -p1 -i ${EXTERNALPROJECT_INCLUDE_DIR}/libjpegxl/0001-Added-support-of-debug-libraries-for-hwy-brotli-and-.patch
-    COMMAND echo " -- Done"
-    WORKING_DIRECTORY ${EXTERNALPROJECT_SOURCE_PREFIX}/jpegxl/source
-)
-
-ExternalProject_Get_Property(JPEGXL SOURCE_DIR)
-ExternalProject_Get_Property(JPEGXL BINARY_DIR)
 ExternalProject_Get_Property(JPEGXL INSTALL_DIR)
 
 add_library(LibJpegXL INTERFACE)
 add_dependencies(LibJpegXL JPEGXL)
-if (MSVC)
-    link_library_path2(LibJpegXL ${INSTALL_DIR}/lib jxl.lib jxld.lib)
-    link_library_path2(LibJpegXL ${INSTALL_DIR}/lib jxl_cms.lib jxl_cmsd.lib)
-else()
-    target_link_libraries(LibJpegXL INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl${CMAKE_STATIC_LIBRARY_SUFFIX})
-    target_link_libraries(LibJpegXL INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl_cms${CMAKE_STATIC_LIBRARY_SUFFIX})
-endif()
+target_link_libraries(LibJpegXL INTERFACE
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl_cms${CMAKE_STATIC_LIBRARY_SUFFIX}
+)
 target_include_directories(LibJpegXL INTERFACE ${INSTALL_DIR}/include)
 target_link_libraries(LibJpegXL INTERFACE LibHighway LibBrotli LibLCMS2)
 set_property(TARGET JPEGXL PROPERTY FOLDER "Dependencies")
 
-
 set(JPEGXL_ROOT ${INSTALL_DIR})
 
-unset(SOURCE_DIR)
-unset(BINARY_DIR)
 unset(INSTALL_DIR)
 
