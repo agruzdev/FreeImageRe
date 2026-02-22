@@ -14,12 +14,6 @@ set(ZLIB_INSTALL_DIR ${INSTALL_DIR})
 unset(INSTALL_DIR)
 
 
-# for patching
-find_package(Git REQUIRED)
-cmake_path(GET GIT_EXECUTABLE PARENT_PATH GIT_DIRECTORY)
-find_program(PATCH_EXECUTABLE patch HINTS ${GIT_DIRECTORY} ${GIT_DIRECTORY}/../usr/bin REQUIRED)
-
-
 ExternalProject_Add(JPEGXL
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/jpegxl
     URL "https://github.com/libjxl/libjxl/archive/refs/tags/v0.11.1.zip"
