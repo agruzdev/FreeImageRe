@@ -49,6 +49,54 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
+    },
+    {
+      "name": "android-base",
+      "hidden": true,
+      "description": "Common Android settings",
+      "binaryDir": "${sourceDir}/build-android-release",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake",
+        "ANDROID_ABI": "arm64-v8a",
+        "CMAKE_BUILD_TYPE": "Release",
+        "FREEIMAGE_WITH_LIBHEIF": false,
+        "FREEIMAGE_WITH_LIBJPEG": true,
+        "FREEIMAGE_WITH_LIBJPEGXL": false,
+        "FREEIMAGE_WITH_LIBJXR": false,
+        "FREEIMAGE_WITH_LIBOPENEXR": false,
+        "FREEIMAGE_WITH_LIBOPENJPEG": true,
+        "FREEIMAGE_WITH_LIBPNG": true,
+        "FREEIMAGE_WITH_LIBRAW": false,
+        "FREEIMAGE_WITH_LIBTIFF": false,
+        "FREEIMAGE_WITH_LIBWEBP": true
+      },
+      "condition": {
+        "type": "notEquals",
+        "lhs": "$env{ANDROID_NDK_HOME}",
+        "rhs": ""
+      }
+    },
+    {
+      "name": "android-release-windows",
+      "displayName": "Android Release (Windows)",
+      "inherits": "android-base",
+      "generator": "MinGW Makefiles",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "android-release-unix",
+      "displayName": "Android Release (Unix)",
+      "inherits": "android-base",
+      "generator": "Unix Makefiles",
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
     }
   ]
 }

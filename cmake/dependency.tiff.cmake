@@ -25,7 +25,8 @@ ExternalProject_Add(TIFF
                                              "${EXTERNALPROJECT_SOURCE_PREFIX}/tiff/source/libtiff/tif_dir.h"
                                              "${EXTERNALPROJECT_BINARY_ROOT}/tiff/build/libtiff/tif_config.h"
                 -t "${EXTERNALPROJECT_BINARY_ROOT}/tiff/install/include"
-    CMAKE_ARGS ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" "-Dzlib=ON" "-Dlibdeflate=OFF" "-Djpeg=OFF" "-Dold-jpeg=OFF" "-Djpeg12=OFF" "-Djbig=OFF" "-Dwebp=OFF" "-Dzstd=OFF" "-Dlzma=OFF"
+    CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" 
+        "-Dzlib=ON" "-Dlibdeflate=OFF" "-Djpeg=OFF" "-Dold-jpeg=OFF" "-Djpeg12=OFF" "-Djbig=OFF" "-Dwebp=OFF" "-Dzstd=OFF" "-Dlzma=OFF"
         "-Dtiff-tools=OFF" "-Dtiff-tests=OFF" "-Dtiff-docs=OFF" "-Dtiff-install=ON" "-Dwin32-io=OFF"
         "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG}" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/tiff/install"
     EXCLUDE_FROM_ALL
