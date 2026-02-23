@@ -127,6 +127,7 @@ public:
     decltype(&::heif_context_get_primary_image_handle) heif_context_get_primary_image_handle_f{ nullptr };
     decltype(&::heif_context_get_encoder_for_format) heif_context_get_encoder_for_format_f{ nullptr };
     decltype(&::heif_context_encode_image) heif_context_encode_image_f{ nullptr };
+    decltype(&::heif_context_add_exif_metadata) heif_context_add_exif_metadata_f{ nullptr };
     decltype(&::heif_image_handle_release) heif_image_handle_release_f{ nullptr };
     decltype(&::heif_image_handle_get_width) heif_image_handle_get_width_f{ nullptr };
     decltype(&::heif_image_handle_get_height) heif_image_handle_get_height_f{ nullptr };
@@ -205,6 +206,7 @@ private:
         heif_encoder_descriptor_get_id_name_f = LoadSymbol<decltype(&::heif_encoder_descriptor_get_id_name)>("heif_encoder_descriptor_get_id_name", /*required=*/false);
         heif_encoder_descriptor_get_name_f = LoadSymbol<decltype(&::heif_encoder_descriptor_get_name)>("heif_encoder_descriptor_get_name", /*required=*/false);
         heif_context_encode_image_f = LoadSymbol<decltype(&::heif_context_encode_image)>("heif_context_encode_image");
+        heif_context_add_exif_metadata_f = LoadSymbol<decltype(&::heif_context_add_exif_metadata)>("heif_context_add_exif_metadata", /*required=*/false);
         heif_image_handle_get_number_of_thumbnails_f = LoadSymbol<decltype(&::heif_image_handle_get_number_of_thumbnails)>("heif_image_handle_get_number_of_thumbnails", /*required=*/false);
         heif_image_handle_get_list_of_thumbnail_IDs_f = LoadSymbol<decltype(&::heif_image_handle_get_list_of_thumbnail_IDs)>("heif_image_handle_get_list_of_thumbnail_IDs", /*required=*/false);
         heif_image_handle_get_thumbnail_f = LoadSymbol<decltype(&::heif_image_handle_get_thumbnail)>("heif_image_handle_get_thumbnail", /*required=*/false);
@@ -221,8 +223,8 @@ class PluginHeif
 {
 public:
     enum class Mode {
-        eHeif = 0,
-        eAvif = 1
+        eHeif = FIF_HEIF,
+        eAvif = FIF_AVIF
     };
 
     PluginHeif(Mode mode)
@@ -490,9 +492,28 @@ public:
             }
         }
 
-        heifError = libHeif.heif_context_encode_image_f(heifContext, heifImage, heifEncoder, nullptr, nullptr);
+        heif_image_handle* heifPrimaryImageHandle{};
+        heifError = libHeif.heif_context_encode_image_f(heifContext, heifImage, heifEncoder, nullptr, &heifPrimaryImageHandle);
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_encode_image(). ") + heifError.message);
+        }
+
+        // EXIF
+        if (libHeif.heif_context_add_exif_metadata_f && heifPrimaryImageHandle) {
+            FITAG* exifTag{};
+            FreeImage_GetMetadata(FIMD_EXIF_RAW, dib, g_TagLib_ExifRawFieldName, &exifTag);
+
+            if (exifTag) {
+                const auto exifDataRaw  = FreeImage_GetTagValue(exifTag);
+                const auto exifDataSize = FreeImage_GetTagLength(exifTag);
+
+                if (exifDataRaw && exifDataSize) {
+                    heifError = libHeif.heif_context_add_exif_metadata_f(heifContext, heifPrimaryImageHandle, exifDataRaw, exifDataSize);
+                    if (heifError.code != heif_error_Ok) {
+                        FreeImage_OutputMessageProc(static_cast<FREE_IMAGE_FORMAT>(mMode), "Error in heif_context_add_exif_metadata(), %s", heifError.message);
+                    }
+                }
+            }
         }
 
         // Write to file
@@ -516,9 +537,6 @@ public:
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_write(). ") + heifError.message);
         }
-
-        // EXIF
-        // ToDo: to be supported...
 
         // Thumbnail
         // ToDo: to be supported...
