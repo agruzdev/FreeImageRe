@@ -51,9 +51,9 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Setup CMake
-      - uses: lukka/get-cmake@latest
-        with:
-          cmakeVersion: "~4.2.0"  # use most recent 4.2.x version
+      uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~4.2.0"  # use most recent 4.2.x version
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
