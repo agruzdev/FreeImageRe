@@ -1442,6 +1442,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		TIFFLoadMethod loadMethod = FindLoadMethod(tif, image_type, flags);
 
 		// ---------------------------------------------------------------------------------
+		bool discardIcc{ false };
 
 		std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(nullptr, &FreeImage_Unload);
 		if (loadMethod == LoadAsRBGA) {
@@ -1837,6 +1838,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				if (!asCMYK) {
 					ConvertCMYKtoRGBA(dib.get());
+					discardIcc = true;
 
 					if (isCMYKA) {
 						// HACK until we have Extra channels. (ConvertCMYKtoRGBA will then do the work)
@@ -2290,7 +2292,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// copy ICC profile data (must be done after FreeImage_Allocate)
 
-		if (!asCMYK) {
+		if (!discardIcc) {
 			uint32_t iccSize = 0;	// ICC profile length
 			void* iccBuf{};			// ICC profile data		
 			TIFFGetField(tif, TIFFTAG_ICCPROFILE, &iccSize, &iccBuf);
