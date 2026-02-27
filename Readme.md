@@ -45,20 +45,83 @@ fi.save(fi.FIF_EXR, zero, "zero.exr")  # Accepts 2D or 3D numpy arrays
 
 Changes made to FreeImage v3.18:
 
-Version 0.1:
- - Compilation fix for FREEIMAGE_COLORORDER_RGB
- - Export Utility.h functions from DLL
- - Linking image formt dependencies as static libs
- - Updated zlib till v1.2.13
- - Updated OpenEXR till v3.1.4
- - Updated OpenJPEG till v2.5.0 (alternatively JPEG-turbo v2.1.4)
- - Updated LibPNG till v1.6.37
- - Updated LibTIFF till v4.4.0
- - Updated LibWebP till v1.2.4
- - Updated LibRaw till v0.20.0
- - PluginTIFF fixed to read images with packed bits
- - Minimalistic support of RGB(A) 32bits per channel for loading and conversion
- - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
+
+Version 4.1.1:
+ - Updated zlib till v1.3.2
+ - Updated LibPNG till v1.6.55
+ - PluginTIFF: fixed wrongly disabled ICC for CMYK without conversion
+ - PluginHEIF supports writing raw Exif
+ - CMake configuration supports Android build
+
+Version 4.1.0:
+ - New plugin support .jxl format, OpenXL
+ - Added libjxl v0.11.1
+ - Added brotli v1.2.0
+ - Added highway v1.3.0
+ - Added Little-CMS v2.18, at hash 6ae7e97c
+ - Fixed MacOX compilation
+ - Fixed read-after-free error in PluginTIFF
+ - Fixed backward compatible behaviour of FreeImage_GetFIFCount()
+ - More accurate refcounting and deinitialization
+ - Updated version macro in FreeImage.h
+
+Version 4.0.0:
+ - New versioning: FreeImageRe 4.0 as next step after FreeImage 3.18
+ - Added support of extra TIFF image formats
+ - Added support for opening FIMULTIBITMAP from Unicode path
+ - Added support for 2-level dependencies info reporting
+ - Added new version of API for processing diagnostic messages
+ - Fixed infinite loop in TIFF thumbnail loading
+ - Fixed multiple CVEs in TIFF, RAS, ICO, HDR, PSD, XBM, EXR, JXR plugins.
+ - Fixed compilation for x32
+ - Updated jpeg-turbo till v3.1.3
+ - Updated OpenEXR till v3.4.4
+ - Updated LibPNG till v1.6.54
+ - Updated LibRaw till v0.22.0
+ - Updated LibDav1d till v1.5.3
+
+Version 0.5:
+ - Updated LibDE265 till v1.0.16
+ - Updated jpeg-turbo till v3.1.2
+ - Updated LibKvazaar till v2.3.2
+ - Updated OpenEXR till v3.3.5
+ - Updated OpenJPEG till v2.5.4
+ - Updated LibPNG till v1.6.50
+ - Updated LibSvtav1 till v3.1.2
+ - Updated LibTIFF till v4.7.1
+ - Updated LibWebP till v1.6.0
+ - Updated LibHEIF till v1.20.2
+
+Version 0.4:
+ - Building with libjpeg-turbo by default
+ - Introduced a new Plugin2 API for plugins with state
+ - Added a limited support for HEIC and AVIF formats
+ - Extended FIF_* enums range and added function for mapping FIF index to FIF value
+ - Updated jpeg-turbo till v3.1.0
+ - Updated OpenEXR till v3.3.3
+ - Updated OpenJPEG till v2.5.3
+ - Updated LibPNG till v1.6.48
+ - Updated LibRaw till v0.21.4
+ - Updated LibWebP till v1.5.0
+ - Updated LibSvtav1 till v3.0.2
+ - Updated LibDav1d till v1.5.1
+ - Updated LibKvazaar till v2.3.1
+ - Updated LibDE265 till v1.0.15
+ - Updated LibHEIF till v1.19.7
+
+Version 0.3:
+ - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47995, CVE-2023-47996, CVE-2023-47997
+ - Added API for querying versions of compiled dependencies
+ - Added Python3 bindings
+ - Ability to enable/disable each image library dependency
+ - FreeImage_ConvertToRGBF supports FI_DOUBLE input
+ - Limited support of 2bit bitmaps
+ - Updated OpenEXR till v3.3.0
+ - Updated LibPNG till v1.6.44
+ - Updated jpeg-turbo till v3.0.4
+ - Updated LibTIFF till v4.7.0
+ - Updated LibWebP till v1.4.0
+ - Updated LibRaw till v0.21.3
 
 Version 0.2:
  - Removed Windows datatypes to avoid collisions
@@ -81,74 +144,19 @@ Version 0.2:
  - Updated LibWebP till v1.3.2
  - Updated LibRaw till v0.21.2
 
-Version 0.3:
- - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47995, CVE-2023-47996, CVE-2023-47997
- - Added API for querying versions of compiled dependencies
- - Added Python3 bindings
- - Ability to enable/disable each image library dependency
- - FreeImage_ConvertToRGBF supports FI_DOUBLE input
- - Limited support of 2bit bitmaps
- - Updated OpenEXR till v3.3.0
- - Updated LibPNG till v1.6.44
- - Updated jpeg-turbo till v3.0.4
- - Updated LibTIFF till v4.7.0
- - Updated LibWebP till v1.4.0
- - Updated LibRaw till v0.21.3
-
-Version 0.4:
- - Building with libjpeg-turbo by default
- - Introduced a new Plugin2 API for plugins with state
- - Added a limited support for HEIC and AVIF formats
- - Extended FIF_* enums range and added function for mapping FIF index to FIF value
- - Updated jpeg-turbo till v3.1.0
- - Updated OpenEXR till v3.3.3
- - Updated OpenJPEG till v2.5.3
- - Updated LibPNG till v1.6.48
- - Updated LibRaw till v0.21.4
- - Updated LibWebP till v1.5.0
- - Updated LibSvtav1 till v3.0.2
- - Updated LibDav1d till v1.5.1
- - Updated LibKvazaar till v2.3.1
- - Updated LibDE265 till v1.0.15
- - Updated LibHEIF till v1.19.7
-
-Version 0.5:
- - Updated LibDE265 till v1.0.16
- - Updated jpeg-turbo till v3.1.2
- - Updated LibKvazaar till v2.3.2
- - Updated OpenEXR till v3.3.5
- - Updated OpenJPEG till v2.5.4
- - Updated LibPNG till v1.6.50
- - Updated LibSvtav1 till v3.1.2
- - Updated LibTIFF till v4.7.1
- - Updated LibWebP till v1.6.0
- - Updated LibHEIF till v1.20.2
-
-Version 4.0.0:
- - New versioning: FreeImageRe 4.0 as next step after FreeImage 3.18
- - Added support of extra TIFF image formats
- - Added support for opening FIMULTIBITMAP from Unicode path
- - Added support for 2-level dependencies info reporting
- - Added new version of API for processing diagnostic messages
- - Fixed infinite loop in TIFF thumbnail loading
- - Fixed multiple CVEs in TIFF, RAS, ICO, HDR, PSD, XBM, EXR, JXR plugins.
- - Fixed compilation for x32
- - Updated jpeg-turbo till v3.1.3
- - Updated OpenEXR till v3.4.4
- - Updated LibPNG till v1.6.54
- - Updated LibRaw till v0.22.0
- - Updated LibDav1d till v1.5.3
-
-Version 4.1.0:
- - New plugin support .jxl format, OpenXL
- - Added libjxl v0.11.1
- - Added brotli v1.2.0
- - Added highway v1.3.0
- - Added Little-CMS v2.18, at hash 6ae7e97c
- - Fixed MacOX compilation
- - Fixed read-after-free error in PluginTIFF
- - Fixed backward compatible behaviour of FreeImage_GetFIFCount()
- - More accurate refcounting and deinitialization
- - Updated version macro in FreeImage.h
+Version 0.1:
+ - Compilation fix for FREEIMAGE_COLORORDER_RGB
+ - Export Utility.h functions from DLL
+ - Linking image formt dependencies as static libs
+ - Updated zlib till v1.2.13
+ - Updated OpenEXR till v3.1.4
+ - Updated OpenJPEG till v2.5.0 (alternatively JPEG-turbo v2.1.4)
+ - Updated LibPNG till v1.6.37
+ - Updated LibTIFF till v4.4.0
+ - Updated LibWebP till v1.2.4
+ - Updated LibRaw till v0.20.0
+ - PluginTIFF fixed to read images with packed bits
+ - Minimalistic support of RGB(A) 32bits per channel for loading and conversion
+ - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
 
 
