@@ -497,6 +497,7 @@ public:
         if (heifError.code != heif_error_Ok) {
             throw std::runtime_error(std::string("PluginHeif[Save]: Error in heif_context_encode_image(). ") + heifError.message);
         }
+        yato_finally(([&, this]() { libHeif.heif_image_handle_release_f(heifPrimaryImageHandle); }));
 
         // EXIF
         if (libHeif.heif_context_add_exif_metadata_f && heifPrimaryImageHandle) {
