@@ -73,6 +73,14 @@ public:
 		return DoClose(io, handle, data);
 	}
 
+	void* OpenPersistent(FreeImageIO* io, fi_handle handle, bool open_for_reading) {
+		return DoOpenPersistent(io, handle, open_for_reading);
+	}
+
+	void ClosePersistent(FreeImageIO* io, fi_handle handle, void* data) {
+		return DoClosePersistent(io, handle, data);
+	}
+
 	bool Validate(FreeImageIO* io, fi_handle handle) const {
 		const long tell = io->tell_proc(handle);
 		const bool status = DoValidate(io, handle);
@@ -81,9 +89,17 @@ public:
 	}
 
 	FIBITMAP* Load(FreeImageIO* io, fi_handle handle, int page, int flags) {
-		void* data = DoOpen(io, handle, true);
-		auto bitmap = DoLoad(io, handle, page, flags, data);
-		DoClose(io, handle, data);
+		FIBITMAP* bitmap{ nullptr };
+		if (DoSupportsOpenPersistent()) {
+			void* data = DoOpenPersistent(io, handle, true);
+			bitmap = DoLoad(io, handle, page, flags, data);
+			DoClosePersistent(io, handle, data);
+		}
+		else {
+			void* data = DoOpen(io, handle, true);
+			bitmap = DoLoad(io, handle, page, flags, data);
+			DoClose(io, handle, data);
+		}
 		return bitmap;
 	}
 
@@ -93,10 +109,18 @@ public:
 	}
 
 	bool Save(FIBITMAP* dib, FreeImageIO* io, fi_handle handle, int page, int flags) {
-		void* data = DoOpen(io, handle, false);
-		const bool result = DoSave(dib, io, handle, page, flags, data);
-		DoClose(io, handle, data);
-		return result;
+		bool success{ false };
+		if (DoSupportsOpenPersistent()) {
+			void* data = DoOpenPersistent(io, handle, false);
+			success = DoSave(dib, io, handle, page, flags, data);
+			DoClosePersistent(io, handle, data);
+		}
+		else {
+			void* data = DoOpen(io, handle, false);
+			success = DoSave(dib, io, handle, page, flags, data);
+			DoClose(io, handle, data);
+		}
+		return success;
 	}
 
 	// Save to already opened io
@@ -105,11 +129,23 @@ public:
 	}
 
 	int GetPageCount(FreeImageIO* io, fi_handle handle) {
-		io->seek_proc(handle, 0, SEEK_SET);
-		void* data = DoOpen(io, handle, true);
-		const int page_count = DoGetPageCount(io, handle, data);
-		DoClose(io, handle, data);
+		int page_count{ 0 };
+		if (DoSupportsOpenPersistent()) {
+			void* data = DoOpenPersistent(io, handle, true);
+			page_count = DoGetPageCount(io, handle, data);
+			DoClosePersistent(io, handle, data);
+		}
+		else {
+			void* data = DoOpen(io, handle, true);
+			page_count = DoGetPageCount(io, handle, data);
+			DoClose(io, handle, data);
+		}
 		return page_count;
+	}
+
+	// Get from already opened io
+	int GetPageCount(FreeImageIO* io, fi_handle handle, void* data) {
+		return DoGetPageCount(io, handle, data);
 	}
 
 	const char* GetFormat() const {
@@ -168,10 +204,21 @@ public:
 		return DoSupportsNoPixels();
 	}
 
+	bool SupportsOpenPersistent() const {
+		return DoSupportsOpenPersistent();
+	}
+
 private:
 	virtual void* DoOpen(FreeImageIO* io, fi_handle handle, bool open_for_reading) = 0;
 
 	virtual void DoClose(FreeImageIO* io, fi_handle handle, void* data) = 0;
+
+	virtual void* DoOpenPersistent(FreeImageIO* /*io*/, fi_handle /*handle*/, bool /*open_for_reading*/) {
+		return nullptr;
+	}
+
+	virtual void DoClosePersistent(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) {
+	}
 
 	virtual bool DoValidate(FreeImageIO* io, fi_handle handle) const = 0;
 
@@ -202,6 +249,10 @@ private:
 	virtual bool DoSupportsIccProfiles() const = 0;
 
 	virtual bool DoSupportsNoPixels() const = 0;
+
+	virtual bool DoSupportsOpenPersistent() const {
+		return false;
+	}
 
 private:
 	/** Handle to a user plugin DLL (NULL for standard plugins) */

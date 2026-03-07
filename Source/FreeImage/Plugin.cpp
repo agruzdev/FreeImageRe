@@ -282,6 +282,19 @@ private:
 		}
 	}
 
+	void* DoOpenPersistent(FreeImageIO* io, fi_handle handle, bool open_for_reading) override {
+		if (mPlugin->open_persistent_proc) {
+			return mPlugin->open_persistent_proc(mContext, io, handle, static_cast<FIBOOL>(open_for_reading));
+		}
+		return nullptr;
+	}
+
+	void DoClosePersistent(FreeImageIO* io, fi_handle handle, void* data) override {
+		if (mPlugin->close_persistent_proc) {
+			mPlugin->close_persistent_proc(mContext, io, handle, data);
+		}
+	}
+
 	bool DoValidate(FreeImageIO* io, fi_handle handle) const override {
 		if (mPlugin->validate_proc) {
 			return mPlugin->validate_proc(mContext, io, handle);
@@ -344,6 +357,10 @@ private:
 			return mPlugin->supports_no_pixels_proc(mContext);
 		}
 		return false;
+	}
+
+	bool DoSupportsOpenPersistent() const override {
+		return (mPlugin->open_persistent_proc && mPlugin->close_persistent_proc);
 	}
 
 private:

@@ -678,6 +678,8 @@ typedef const char* (DLL_CALLCONV* FI_ExtensionListProc2)(void* ctx);
 typedef const char* (DLL_CALLCONV* FI_RegExprProc2)(void* ctx);
 typedef void* (DLL_CALLCONV* FI_OpenProc2)(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read);
 typedef void (DLL_CALLCONV* FI_CloseProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
+typedef void* (DLL_CALLCONV* FI_OpenPersistentProc2)(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read);
+typedef void (DLL_CALLCONV* FI_ClosePersistentProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
 typedef uint32_t(DLL_CALLCONV* FI_PageCountProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
 typedef uint32_t(DLL_CALLCONV* FI_PageCapabilityProc2)(void* ctx, FreeImageIO* io, fi_handle handle, void* data);
 typedef FIBITMAP* (DLL_CALLCONV* FI_LoadProc2)(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data);
@@ -708,6 +710,8 @@ FI_STRUCT(Plugin2) {
 	FI_SupportsICCProfilesProc2 supports_icc_profiles_proc FI_DEFAULT(NULL);
 	FI_SupportsNoPixelsProc2 supports_no_pixels_proc FI_DEFAULT(NULL);
 	FI_ReleaseProc2 release_proc FI_DEFAULT(NULL);
+	FI_OpenPersistentProc2 open_persistent_proc FI_DEFAULT(NULL);
+	FI_ClosePersistentProc2 close_persistent_proc FI_DEFAULT(NULL);
 };
 
 // Plugin behaviour hould be invariant to FIF_SOMETHING enum value

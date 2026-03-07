@@ -46,6 +46,10 @@ fi.save(fi.FIF_EXR, zero, "zero.exr")  # Accepts 2D or 3D numpy arrays
 Changes made to FreeImage v3.18:
 
 
+Version 4.2.0:
+ - Extended Plugin2 API to support opening multibitmap memory only once for all pages
+
+
 Version 4.1.1:
  - Updated zlib till v1.3.2
  - Updated LibPNG till v1.6.55

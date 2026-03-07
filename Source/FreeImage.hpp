@@ -1543,10 +1543,46 @@ namespace fi
     class Plugin2
     {
     public:
+        enum class FeatureFlag : uint32_t
+        {
+            eNone = 0,
+            eSupportsLoad = 0x1,
+            eSupportsSave = 0x1 << 1,
+            eSupportsPersistentOpen = 0x1 << 2
+        };
+
+        friend constexpr
+        FeatureFlag operator&(FeatureFlag lhs, FeatureFlag rhs) {
+            return static_cast<FeatureFlag>(static_cast<std::underlying_type_t<FeatureFlag>>(lhs) & static_cast<std::underlying_type_t<FeatureFlag>>(rhs));
+        }
+
+        friend constexpr
+        FeatureFlag operator|(FeatureFlag lhs, FeatureFlag rhs) {
+            return static_cast<FeatureFlag>(static_cast<std::underlying_type_t<FeatureFlag>>(lhs) | static_cast<std::underlying_type_t<FeatureFlag>>(rhs));
+        }
+
+
         static ImageFormat RegisterLocal(std::shared_ptr<Plugin2> plugin);
         static bool ResetLocalPlugin(ImageFormat fif, std::shared_ptr<Plugin2> plugin, bool force = false);
 
+
+        Plugin2(FeatureFlag flags = FeatureFlag::eSupportsLoad | FeatureFlag::eSupportsSave)
+            : mFeatureFlags(flags)
+        { }
+
+        Plugin2(const Plugin2&) = default;
+        Plugin2(Plugin2&&) noexcept = default;
+
         virtual ~Plugin2() = default;
+
+        Plugin2& operator=(const Plugin2&) = default;
+        Plugin2& operator=(Plugin2&&) noexcept = default;
+
+
+        const FeatureFlag& GetFeatureFlags() const {
+            return mFeatureFlags;
+        }
+
 
         // Plugin2 API
         virtual const char* FormatProc() { return nullptr; };
@@ -1555,6 +1591,8 @@ namespace fi
         virtual const char* RegExprProc() { return nullptr; };
         virtual void* OpenProc(FreeImageIO* /*io*/, fi_handle /*handle*/, bool /*read*/) { return nullptr; };
         virtual void CloseProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) {};
+        virtual void* OpenPersistentProc(FreeImageIO* /*io*/, fi_handle /*handle*/, bool /*read*/) { return nullptr; };
+        virtual void ClosePersistentProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) {};
         virtual uint32_t PageCountProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) { return 1U; };
         virtual uint32_t PageCapabilityProc(FreeImageIO* /*io*/, fi_handle /*handle*/, void* /*data*/) { return 1U; };
         virtual FIBITMAP* LoadProc(FreeImageIO* /*io*/, fi_handle /*handle*/, uint32_t /*page*/, uint32_t /*flags*/, void* /*data*/) { return nullptr; };
@@ -1565,7 +1603,12 @@ namespace fi
         virtual bool SupportsExportTypeProc(FREE_IMAGE_TYPE /*type*/) { return false; };
         virtual bool SupportsICCProfilesProc() { return false; };
         virtual bool SupportsNoPixelsProc() { return false; };
+
+    private:
+        FeatureFlag mFeatureFlags;
     };
+
+
 
 
     namespace details {
@@ -1580,6 +1623,8 @@ namespace fi
             static const char* DLL_CALLCONV RegExprProc(void* ctx) try { return unwrap(ctx).RegExprProc(); } catch (...) { return nullptr; };
             static void* DLL_CALLCONV OpenProc(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read) try { return unwrap(ctx).OpenProc(io, handle, read); } catch (...) { return nullptr; };
             static void DLL_CALLCONV CloseProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { unwrap(ctx).CloseProc(io, handle, data); } catch (...) { };
+            static void* DLL_CALLCONV OpenPersistentProc(void* ctx, FreeImageIO* io, fi_handle handle, FIBOOL read) try { return unwrap(ctx).OpenPersistentProc(io, handle, read); } catch (...) { return nullptr; };
+            static void DLL_CALLCONV ClosePersistentProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { unwrap(ctx).ClosePersistentProc(io, handle, data); } catch (...) { };
             static uint32_t DLL_CALLCONV PageCountProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCountProc(io, handle, data); } catch (...) { return 1U; };
             static uint32_t DLL_CALLCONV PageCapabilityProc(void* ctx, FreeImageIO* io, fi_handle handle, void* data) try { return unwrap(ctx).PageCapabilityProc(io, handle, data); } catch (...) { return 1U; };
             static FIBITMAP* DLL_CALLCONV LoadProc(void* ctx, FreeImageIO* io, fi_handle handle, uint32_t page, uint32_t flags, void* data) try { return unwrap(ctx).LoadProc(io, handle, page, flags, data); } catch (...) { return nullptr; };
@@ -1596,9 +1641,12 @@ namespace fi
             }
 
             static FIBOOL DLL_CALLCONV InitProc(::Plugin2* plugin, void* ctx) {
+                using FeatureFlag = Plugin2::FeatureFlag;
                 if (!plugin) {
                     return FALSE;
                 }
+
+                const auto flags = unwrap(ctx).GetFeatureFlags();
 
                 using This = fi::details::Plugin2Wrapper;
                 plugin->format_proc = &This::FormatProc;
@@ -1609,8 +1657,8 @@ namespace fi
                 plugin->close_proc = &This::CloseProc;
                 plugin->pagecount_proc = &This::PageCountProc;
                 plugin->pagecapability_proc = &This::PageCapabilityProc;
-                plugin->load_proc = &This::LoadProc;
-                plugin->save_proc = &This::SaveProc;
+                plugin->load_proc = ((flags & FeatureFlag::eSupportsLoad) != FeatureFlag::eNone) ? &This::LoadProc : nullptr;
+                plugin->save_proc = ((flags & FeatureFlag::eSupportsSave) != FeatureFlag::eNone) ? &This::SaveProc : nullptr;
                 plugin->validate_proc = &This::ValidateProc;
                 plugin->mime_proc = &This::MimeProc;
                 plugin->supports_export_bpp_proc = &This::SupportsExportBPPProc;
@@ -1618,6 +1666,8 @@ namespace fi
                 plugin->supports_icc_profiles_proc = &This::SupportsICCProfilesProc;
                 plugin->supports_no_pixels_proc = &This::SupportsNoPixelsProc;
                 plugin->release_proc = &This::ReleaseProc;
+                plugin->open_persistent_proc  = ((flags & FeatureFlag::eSupportsPersistentOpen) != FeatureFlag::eNone) ? &This::OpenPersistentProc  : nullptr;
+                plugin->close_persistent_proc = ((flags & FeatureFlag::eSupportsPersistentOpen) != FeatureFlag::eNone) ? &This::ClosePersistentProc : nullptr;
 
                 return TRUE;
             }
