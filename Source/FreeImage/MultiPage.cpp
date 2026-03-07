@@ -884,8 +884,6 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 
 					// store the MULTIBITMAPHEADER in the surrounding FIMULTIBITMAP structure
 
-					bitmap->data = header.get();
-
 					// open persistent data is supported
 					if (node->SupportsOpenPersistent()) {
 						header->persistent_data = node->OpenPersistent(&header->io, header->handle, header->read_only);
@@ -902,7 +900,7 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 
 					// no need to open cache - it is in-memory by default
 
-					header.release();
+					bitmap->data = header.release();
 					return bitmap.release();
 				}
 			}
