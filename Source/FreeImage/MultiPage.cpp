@@ -248,8 +248,6 @@ FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path 
 
 				// store the MULTIBITMAPHEADER in the surrounding FIMULTIBITMAP structure
 
-				bitmap->data = header.get();
-
 				if (header->handle) {
 					// open persistent data is supported
 					if (node->SupportsOpenPersistent()) {
@@ -287,7 +285,7 @@ FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path 
 				}
 				// return the multibitmap
 				// std::bad_alloc won't be thrown from here on
-				header.release(); // now owned by bitmap
+				bitmap->data = header.release(); // now owned by bitmap
 				return bitmap.release(); // now owned by caller
 			}
 		}
@@ -344,8 +342,6 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 
 					// store the MULTIBITMAPHEADER in the surrounding FIMULTIBITMAP structure
 
-					bitmap->data = header.get();
-
 					// open persistent data is supported
 					if (node->SupportsOpenPersistent()) {
 						header->persistent_data = node->OpenPersistent(&header->io, header->handle, header->read_only);
@@ -362,7 +358,7 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 					
 					// no need to open cache - it is in-memory by default
 
-					header.release();
+					bitmap->data = header.release();
 					return bitmap.release();
 				}
 			}
