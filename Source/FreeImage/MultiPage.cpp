@@ -321,7 +321,7 @@ FreeImage_OpenMultiBitmapU(FREE_IMAGE_FORMAT fif, const wchar_t* filename, FIBOO
 FIMULTIBITMAP * DLL_CALLCONV
 FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
 	try {
-		bool read_only = false;	// modifications (if any) will be stored into the memory cache
+		const bool read_only = false;	// modifications (if any) will be stored into the memory cache
 
 		if (io && handle) {
 
@@ -432,27 +432,19 @@ bool SaveMultiBitmapToHandleImpl(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP* bitmap, F
 						{
 							// read the compressed data
 
-							auto *compressed_data = (uint8_t*)malloc(i->getSize() * sizeof(uint8_t));
+							auto compressed_data = std::make_unique<uint8_t[]>(i->getSize());
 							
-							header->m_cachefile.readFile((uint8_t *)compressed_data, i->getReference(), i->getSize());
+							header->m_cachefile.readFile(compressed_data.get(), i->getReference(), i->getSize());
 
 							// uncompress the data
 
-							FIMEMORY *hmem = FreeImage_OpenMemory(compressed_data, i->getSize());
-							FIBITMAP *dib = FreeImage_LoadFromMemory(header->cache_fif, hmem, 0);
-							FreeImage_CloseMemory(hmem);
-
-							// get rid of the buffer
-							free(compressed_data);
+							std::unique_ptr<FIMEMORY, decltype(&FreeImage_CloseMemory)> hmem(FreeImage_OpenMemory(compressed_data.get(), i->getSize()), &FreeImage_CloseMemory);
+							std::unique_ptr<FIBITMAP, decltype(&FreeImage_Unload)> dib(FreeImage_LoadFromMemory(header->cache_fif, hmem.get(), 0), &FreeImage_Unload);
 
 							// save the data
 
-							success = dst_node->Save(dib, dst_io, dst_handle, count, flags, dst_data);
+							success = dst_node->Save(dib.get(), dst_io, dst_handle, count, flags, dst_data);
 							count++;
-
-							// unload the dib
-
-							FreeImage_Unload(dib);
 
 							break;
 						}
@@ -605,25 +597,21 @@ FreeImage_SavePageToBlock(MULTIBITMAPHEADER *header, FIBITMAP *data) {
 	// compress the bitmap data
 
 	// open a memory handle
-	FIMEMORY *hmem = FreeImage_OpenMemory();
+	std::unique_ptr<FIMEMORY, decltype(&FreeImage_CloseMemory)> hmem(FreeImage_OpenMemory(), &FreeImage_CloseMemory);
 	if (!hmem) {
 		return res;
 	}
 	// save the file to memory
-	if (!FreeImage_SaveToMemory(header->cache_fif, data, hmem, 0)) {
-		FreeImage_CloseMemory(hmem);
+	if (!FreeImage_SaveToMemory(header->cache_fif, data, hmem.get(), 0)) {
 		return res;
 	}
 	// get the buffer from the memory stream
-	if (!FreeImage_AcquireMemory(hmem, &compressed_data, &compressed_size)) {
-		FreeImage_CloseMemory(hmem);
+	if (!FreeImage_AcquireMemory(hmem.get(), &compressed_data, &compressed_size)) {
 		return res;
 	}
 
 	// write the compressed data to the cache
 	int ref = header->m_cachefile.writeFile(compressed_data, compressed_size);
-	// get rid of the compressed data
-	FreeImage_CloseMemory(hmem);
 	
 	res = PageBlock(BLOCK_REFERENCE, ref, compressed_size);
 	
@@ -785,7 +773,7 @@ FreeImage_UnlockPage(FIMULTIBITMAP *bitmap, FIBITMAP *page, FIBOOL changed) {
 				int iPage = header->m_cachefile.writeFile(compressed_data, compressed_size);
 				
 				*i = PageBlock(BLOCK_REFERENCE, iPage, compressed_size);
-				
+
 				// get rid of the compressed data
 
 				FreeImage_CloseMemory(hmem);
@@ -860,7 +848,7 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 		return nullptr;
 	}
 
-	bool read_only = false;	// modifications (if any) will be stored into the memory cache
+	const bool read_only = false;	// modifications (if any) will be stored into the memory cache
 
 	// retrieve the plugin list to find the node belonging to this plugin
 
