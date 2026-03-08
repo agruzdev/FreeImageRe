@@ -178,12 +178,10 @@ CacheFile::unlockBlock(int nr) {
 FIBOOL
 CacheFile::deleteBlock(int nr) {
 	if (!m_current_block) {
-		PageMapIt it = m_page_map.find(nr);
-
 		// remove block from cache
 
-		if (it != m_page_map.end()) {
-			m_page_map.erase(nr);
+		if (PageMapIt it = m_page_map.find(nr); it != m_page_map.end()) {
+			m_page_map.erase(it);
 		}
 
 		// add block to free page list
