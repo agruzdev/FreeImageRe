@@ -798,8 +798,7 @@ FreeImage_MovePage(FIMULTIBITMAP *bitmap, int target, int source) {
 				BlockListIterator block_source = FreeImage_FindBlock(bitmap, target);
 				BlockListIterator block_target = FreeImage_FindBlock(bitmap, source);
 
-				header->m_blocks.insert(block_target, *block_source);
-				header->m_blocks.erase(block_source);
+				header->m_blocks.splice(block_target, header->m_blocks, block_source);
 
 				header->changed = true;
 
