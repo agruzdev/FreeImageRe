@@ -271,7 +271,7 @@ rgbe_ReadHeader(FreeImageIO *io, fi_handle handle, unsigned *width, unsigned *he
 */
 static FIBOOL 
 rgbe_WriteHeader(FreeImageIO *io, fi_handle handle, unsigned width, unsigned height, rgbeHeaderInfo *info) {
-	char buffer[HDR_MAXLINE];
+	char buffer[HDR_MAXLINE + 1];
 
 	const char *programtype = "RADIANCE";
 
@@ -279,32 +279,32 @@ rgbe_WriteHeader(FreeImageIO *io, fi_handle handle, unsigned width, unsigned hei
 		programtype = info->programtype;
 	}
 	// The #? is to identify file type, the programtype is optional
-	snprintf(buffer, std::size(buffer), "#?%s\n", programtype);
-	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+	unsigned int len = snprintf(buffer, std::size(buffer), "#?%s\n", programtype);
+	if (io->write_proc(buffer, 1, len, handle) < 1) {
 		return rgbe_Error(rgbe_write_error, nullptr);
 	}
-	snprintf(buffer, std::size(buffer), "%s\n", info->comment);
-	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+	len = snprintf(buffer, std::size(buffer), "%s\n", info->comment);
+	if (io->write_proc(buffer, 1, len, handle) < 1) {
 		return rgbe_Error(rgbe_write_error, nullptr);
 	}
-	snprintf(buffer, std::size(buffer), "FORMAT=32-bit_rle_rgbe\n");
-	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+	len = snprintf(buffer, std::size(buffer), "FORMAT=32-bit_rle_rgbe\n");
+	if (io->write_proc(buffer, 1, len, handle) < 1) {
 		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 	if (info && (info->valid & RGBE_VALID_GAMMA)) {
-		snprintf(buffer, std::size(buffer), "GAMMA=%g\n", info->gamma);
-		if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+		len = snprintf(buffer, std::size(buffer), "GAMMA=%g\n", info->gamma);
+		if (io->write_proc(buffer, 1, len, handle) < 1) {
 			return rgbe_Error(rgbe_write_error, nullptr);
 		}
 	}
 	if (info && (info->valid & RGBE_VALID_EXPOSURE)) {
-		snprintf(buffer,std::size(buffer), "EXPOSURE=%g\n", info->exposure);
-		if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+		len = snprintf(buffer,std::size(buffer), "EXPOSURE=%g\n", info->exposure);
+		if (io->write_proc(buffer, 1, len, handle) < 1) {
 			return rgbe_Error(rgbe_write_error, nullptr);
 		}
 	}
-	snprintf(buffer, std::size(buffer), "\n-Y %d +X %d\n", height, width);
-	if (io->write_proc(buffer, 1, (unsigned int)strlen(buffer), handle) < 1) {
+	len = snprintf(buffer, std::size(buffer), "\n-Y %d +X %d\n", height, width);
+	if (io->write_proc(buffer, 1, len, handle) < 1) {
 		return rgbe_Error(rgbe_write_error, nullptr);
 	}
 
