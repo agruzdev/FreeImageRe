@@ -174,7 +174,9 @@ testExifRawFile(const char *lpszPathName, int load_flags, int save_flags) {
 			uint8_t *value = (uint8_t*)FreeImage_GetTagValue(tag);
 
 			// save as jpeg : Exif data should be preserved
-			FreeImage_Save(fif, dib, lpszDstPathName, save_flags); 
+			if (!FreeImage_Save(fif, dib, lpszDstPathName, save_flags)) {
+				throw (1);
+			}
 
 			// load and check Exif raw data
 			fif = FreeImage_GetFileType(lpszDstPathName);
