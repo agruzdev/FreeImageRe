@@ -89,6 +89,12 @@ int main(int argc, char *argv[]) {
 	// test internal image types
 	testImageType(width, height);
 
+
+	auto bmp = FreeImage_AllocateT(FIT_COMPLEX, 128, 128, 128);
+	FreeImage_Save(FIF_JPEG, bmp, "failed_to_save.jpg");
+	FreeImage_Unload(bmp);
+
+
 #if FREEIMAGE_WITH_LIBJPEG
 	// test the clone function
 	testAllocateCloneUnload("exif.jpg");

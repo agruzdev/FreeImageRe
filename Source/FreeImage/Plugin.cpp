@@ -35,6 +35,8 @@
 #include <ctype.h>
 #endif // _WIN32
 
+#include <filesystem>
+
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "FreeImageIO.h"
@@ -769,40 +771,94 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 }
 
 
-FIBOOL DLL_CALLCONV
-FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int flags) {
-	FreeImageIO io;
-	SetDefaultIO(&io);
+namespace {
 
-	FIBOOL success{FALSE};
-	if (auto *handle = fopen(filename, "w+b")) {
-		success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
 
-		fclose(handle);
-	} else {
-		FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to open file %s", filename);
+	std::filesystem::path MakeRandomSuffix()
+	{
+		std::stringstream strs{};
+		strs << ".fitmp" << std::hex << static_cast<uint32_t>(std::rand());
+		return strs.str();
 	}
 
-	return success;
+
+	std::filesystem::path MakeTmpName(const std::filesystem::path& target)
+	{
+		std::filesystem::path res{};
+
+		int attempts = 16;
+		do {
+			res = target.stem();
+			res += MakeRandomSuffix();
+			res += target.extension();
+
+			if (std::filesystem::status(res).type() != std::filesystem::file_type::not_found) {
+				continue;
+			}
+
+		} while (--attempts);
+
+		return res;
+	}
+
+
+	bool MoveOrCopy(const std::filesystem::path& oldp, const std::filesystem::path& newp)
+	{
+		std::error_code err{};
+		std::filesystem::rename(oldp, newp, err);
+		if (!err) {
+			return true;
+		}
+		return std::filesystem::copy_file(oldp, newp);
+	}
+
+
+	FIBOOL SaveImpl(FREE_IMAGE_FORMAT fif, FIBITMAP* dib, const std::filesystem::path& filename, int flags) {
+		FreeImageIO io;
+		SetDefaultIO(&io);
+
+		FIBOOL success{ FALSE };
+
+		const auto tmpname = MakeTmpName(filename);
+		if (auto* handle = FreeImage_FOpen(tmpname, "w+b")) {
+			success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
+			fclose(handle);
+
+			if (success) {
+				if (!MoveOrCopy(tmpname, filename)) {
+					FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to rename output file %s", filename.u8string().c_str());
+				}
+			}
+
+			std::filesystem::remove(tmpname);
+		}
+		else {
+			FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to open file %s", filename.u8string().c_str());
+		}
+
+		return success;
+	}
+
+} // namespace
+
+
+FIBOOL DLL_CALLCONV
+FreeImage_Save(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const char *filename, int flags) {
+	if (!dib || !filename) {
+		return FALSE;
+	}
+	return SaveImpl(fif, dib, filename, flags);
 }
+
 
 FIBOOL DLL_CALLCONV
 FreeImage_SaveU(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, const wchar_t *filename, int flags) {
-	FreeImageIO io;
-	SetDefaultIO(&io);
-
-	FIBOOL success{FALSE};
-#ifdef _WIN32	
-	if (auto *handle = _wfopen(filename, L"w+b")) {
-		success = FreeImage_SaveToHandle(fif, dib, &io, (fi_handle)handle, flags);
-
-		fclose(handle);
-	} else {
-		FreeImage_OutputMessageProc((int)fif, "FreeImage_SaveU: failed to open output file");
+	if (!dib || !filename) {
+		return FALSE;
 	}
-#endif
-	return success;
+	return SaveImpl(fif, dib, filename, flags);
 }
+
 
 // =====================================================================
 // Plugin construction + enable/disable functions
