@@ -802,22 +802,24 @@ namespace {
 	}
 
 
-	bool MoveOrCopy(const std::filesystem::path& oldp, const std::filesystem::path& newp)
+	bool MoveOrCopy(const std::filesystem::path& oldp, const std::filesystem::path& newp) noexcept
 	{
 		std::error_code err{};
 		std::filesystem::rename(oldp, newp, err);
 		if (!err) {
 			return true;
 		}
-		const auto copied = std::filesystem::copy_file(oldp, newp, std::filesystem::copy_options::overwrite_existing);
+		const auto copied = std::filesystem::copy_file(oldp, newp, std::filesystem::copy_options::overwrite_existing, err);
 		if (copied) {
-			std::filesystem::remove(oldp);
+			std::filesystem::remove(oldp, err);
 		}
 		return copied;
 	}
 
 
-	FIBOOL SaveImpl(FREE_IMAGE_FORMAT fif, FIBITMAP* dib, const std::filesystem::path& filename, int flags) {
+	FIBOOL SaveImpl(FREE_IMAGE_FORMAT fif, FIBITMAP* dib, const std::filesystem::path& filename, int flags) 
+	try
+	{
 		FreeImageIO io;
 		SetDefaultIO(&io);
 
@@ -834,9 +836,9 @@ namespace {
 					FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to rename output file %s", filename.u8string().c_str());
 				}
 			}
-
-			if (!success) {
-				std::filesystem::remove(tmpname);
+			else {
+				std::error_code err{};
+				std::filesystem::remove(tmpname, err);
 			}
 		}
 		else {
@@ -844,6 +846,9 @@ namespace {
 		}
 
 		return success;
+	}
+	catch (...) {
+		return FALSE;
 	}
 
 } // namespace
