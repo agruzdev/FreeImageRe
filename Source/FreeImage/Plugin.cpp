@@ -809,7 +809,11 @@ namespace {
 		if (!err) {
 			return true;
 		}
-		return std::filesystem::copy_file(oldp, newp);
+		const auto copied = std::filesystem::copy_file(oldp, newp, std::filesystem::copy_options::overwrite_existing);
+		if (copied) {
+			std::filesystem::remove(oldp);
+		}
+		return copied;
 	}
 
 
@@ -825,12 +829,15 @@ namespace {
 			fclose(handle);
 
 			if (success) {
-				if (!MoveOrCopy(tmpname, filename)) {
+				success = MoveOrCopy(tmpname, filename);
+				if (!success) {
 					FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to rename output file %s", filename.u8string().c_str());
 				}
 			}
 
-			std::filesystem::remove(tmpname);
+			if (!success) {
+				std::filesystem::remove(tmpname);
+			}
 		}
 		else {
 			FreeImage_OutputMessageProc((int)fif, "FreeImage_Save: failed to open file %s", filename.u8string().c_str());
