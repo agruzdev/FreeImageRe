@@ -802,21 +802,6 @@ namespace {
 	}
 
 
-	bool MoveOrCopy(const std::filesystem::path& oldp, const std::filesystem::path& newp) noexcept
-	{
-		std::error_code err{};
-		std::filesystem::rename(oldp, newp, err);
-		if (!err) {
-			return true;
-		}
-		const auto copied = std::filesystem::copy_file(oldp, newp, std::filesystem::copy_options::overwrite_existing, err);
-		if (copied) {
-			std::filesystem::remove(oldp, err);
-		}
-		return copied;
-	}
-
-
 	FIBOOL SaveImpl(FREE_IMAGE_FORMAT fif, FIBITMAP* dib, const std::filesystem::path& filename, int flags) 
 	try
 	{

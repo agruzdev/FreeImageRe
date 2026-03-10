@@ -88,6 +88,22 @@ FILE* FreeImage_FOpen(const std::filesystem::path& filename, const std::filesyst
 }
 
 
+inline
+bool MoveOrCopy(const std::filesystem::path& oldp, const std::filesystem::path& newp) noexcept
+{
+	std::error_code err{};
+	std::filesystem::rename(oldp, newp, err);
+	if (!err) {
+		return true;
+	}
+	const auto copied = std::filesystem::copy_file(oldp, newp, std::filesystem::copy_options::overwrite_existing, err);
+	if (copied) {
+		std::filesystem::remove(oldp, err);
+	}
+	return copied;
+}
+
+
 // these structs are for file I/O and should not be confused with similar
 // structs in FreeImage.h which are for in-memory bitmap handling
 

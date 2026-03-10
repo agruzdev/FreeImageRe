@@ -83,7 +83,8 @@ CacheFile::close() {
 		m_file = nullptr;
 		
 		// delete the file
-		std::filesystem::remove(m_filename);
+		std::error_code err{};
+		std::filesystem::remove(m_filename, err);
 	}
 }
 

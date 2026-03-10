@@ -518,10 +518,10 @@ FreeImage_CloseMultiBitmap(FIMULTIBITMAP *bitmap, int flags) {
 					// applies changes to the destination file
 
 					if (success) {
-						std::filesystem::remove(header->m_filename);
-						std::filesystem::rename(spool_name, header->m_filename);
+						success = MoveOrCopy(spool_name, header->m_filename);
 					} else {
-						std::filesystem::remove(spool_name);
+						std::error_code err{};
+						std::filesystem::remove(spool_name, err);
 					}
 				} catch (std::exception& err) {
 					FreeImage_OutputMessageProc(header->fif, "Exception: %s", err.what());
