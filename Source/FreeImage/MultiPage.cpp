@@ -104,7 +104,7 @@ struct MULTIBITMAPHEADER {
 		SetDefaultIO(&io);
 	}
 
-	PluginNodeBase* node{ nullptr };
+	std::shared_ptr<PluginNodeBase> node{ nullptr };
 	FREE_IMAGE_FORMAT fif{ FIF_UNKNOWN };
 	FreeImageIO io;
 	fi_handle handle{ nullptr };
@@ -227,7 +227,8 @@ FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path 
 
 		if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 
-			if (auto node = plugins->FindFromFIF(fif)) {
+			if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+				assert(it->second != nullptr);
 				if (!create_new) {
 					handle = FreeImage_FOpen(filename, "rb");
 					if (!handle) {
@@ -239,7 +240,7 @@ FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path 
 				auto header = std::make_unique<MULTIBITMAPHEADER>();
 				header->m_filename = filename;
 				// io is default
-				header->node = node;
+				header->node = it->second;	// not null
 				header->fif = fif;
 				header->handle = handle;
 				header->read_only = static_cast<bool>(read_only);
@@ -250,13 +251,13 @@ FIMULTIBITMAP* OpenMultiBitmapImpl(FREE_IMAGE_FORMAT fif, std::filesystem::path 
 
 				if (header->handle) {
 					// open persistent data is supported
-					if (node->SupportsOpenPersistent()) {
-						header->persistent_data = node->OpenPersistent(&header->io, header->handle, header->read_only);
+					if (header->node->SupportsOpenPersistent()) {
+						header->persistent_data = header->node->OpenPersistent(&header->io, header->handle, header->read_only);
 						// cache the page count
-						header->page_count = node->GetPageCount(&header->io, header->handle, header->persistent_data);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle, header->persistent_data);
 					}
 					else {
-						header->page_count = node->GetPageCount(&header->io, header->handle);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle);
 					}
 				}
 				else {
@@ -329,11 +330,13 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 
 			if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 			
-				if (auto node = plugins->FindFromFIF(fif)) {
+				if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+					assert(it->second != nullptr);
+
 					auto bitmap = std::make_unique<FIMULTIBITMAP>();
 					auto header = std::make_unique<MULTIBITMAPHEADER>();
 					header->io = *io;
-					header->node = node;
+					header->node = it->second;	// not null
 					header->fif = fif;
 					header->handle = handle;
 					header->read_only = read_only;
@@ -343,13 +346,13 @@ FreeImage_OpenMultiBitmapFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_h
 					// store the MULTIBITMAPHEADER in the surrounding FIMULTIBITMAP structure
 
 					// open persistent data is supported
-					if (node->SupportsOpenPersistent()) {
-						header->persistent_data = node->OpenPersistent(&header->io, header->handle, header->read_only);
+					if (header->node->SupportsOpenPersistent()) {
+						header->persistent_data = header->node->OpenPersistent(&header->io, header->handle, header->read_only);
 						// cache the page count
-						header->page_count = node->GetPageCount(&header->io, header->handle, header->persistent_data);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle, header->persistent_data);
 					}
 					else {
-						header->page_count = node->GetPageCount(&header->io, header->handle);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle);
 					}
 
 					// allocate a continueus block to describe the bitmap
@@ -383,7 +386,10 @@ bool SaveMultiBitmapToHandleImpl(FREE_IMAGE_FORMAT fif, FIMULTIBITMAP* bitmap, F
 	
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 
-		if (auto dst_node = plugins->FindFromFIF(fif)) {
+		if (auto dst_it = plugins->FindFromFIF(fif); dst_it != plugins->NodesCEnd()) {
+			const auto& dst_node = (*dst_it).second;
+			assert(dst_node != nullptr);
+
 			auto *header = FreeImage_GetMultiBitmapHeader(bitmap);
 
 			// dst data
@@ -544,11 +550,8 @@ FreeImage_CloseMultiBitmap(FIMULTIBITMAP *bitmap, int flags) {
 
 			// close persistent data handle
 
-			if (header->persistent_data) {
-				if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-					auto node = plugins->FindFromFIF(header->fif);
-					node->ClosePersistent(&header->io, header->handle, header->persistent_data);
-				}
+			if (header->persistent_data && header->node) {
+				header->node->ClosePersistent(&header->io, header->handle, header->persistent_data);
 			}
 
 			// delete the FIMULTIBITMAPHEADER
@@ -853,7 +856,8 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
 
-		if (auto node = plugins->FindFromFIF(fif)) {
+		if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+			assert(it->second != nullptr);
 
 			std::unique_ptr<FIMULTIBITMAP> bitmap(new(std::nothrow) FIMULTIBITMAP);
 
@@ -861,7 +865,7 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 				std::unique_ptr<MULTIBITMAPHEADER> header(new(std::nothrow) MULTIBITMAPHEADER);
 
 				if (header) {
-					header->node = node;
+					header->node = it->second;
 					header->fif = fif;
 					SetMemoryIO(&header->io);
 					header->handle = (fi_handle)stream;
@@ -872,13 +876,13 @@ FreeImage_LoadMultiBitmapFromMemory(FREE_IMAGE_FORMAT fif, FIMEMORY *stream, int
 					// store the MULTIBITMAPHEADER in the surrounding FIMULTIBITMAP structure
 
 					// open persistent data is supported
-					if (node->SupportsOpenPersistent()) {
-						header->persistent_data = node->OpenPersistent(&header->io, header->handle, header->read_only);
+					if (header->node->SupportsOpenPersistent()) {
+						header->persistent_data = header->node->OpenPersistent(&header->io, header->handle, header->read_only);
 						// cache the page count
-						header->page_count = node->GetPageCount(&header->io, header->handle, header->persistent_data);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle, header->persistent_data);
 					}
 					else {
-						header->page_count = node->GetPageCount(&header->io, header->handle);
+						header->page_count = header->node->GetPageCount(&header->io, header->handle);
 					}
 
 					// allocate a continueus block to describe the bitmap

@@ -453,22 +453,27 @@ bool PluginsRegistry::ResetImpl(FREE_IMAGE_FORMAT fif, InitFunc_ init_proc, void
 	}
 
 	// instert or assign new
-	std::unique_ptr<PluginNodeBase>& dst_node = mPlugins[fif];
-	if (dst_node && !force) {
+	auto it = mPlugins.lower_bound(fif);
+	const bool exists = (it != mPlugins.cend() && it->first == fif);
+	if (exists && !force) {
 		// already in use
 		return false;
 	}
 
-	std::unique_ptr<PluginNodeBase> new_node{ nullptr };
+	std::shared_ptr<PluginNodeBase> new_node{ nullptr };
 	try {
-		new_node = std::make_unique<PluginType_>(init_proc, ctx, fif, instance, format, description, extension, regexpr);
+		new_node = std::make_shared<PluginType_>(init_proc, ctx, fif, instance, format, description, extension, regexpr);
+	}
+	catch (std::exception& err) {
+		FreeImage_OutputMessageProc(fif, err.what());
+		return false;
 	}
 	catch (...) {
-		// ToDo: report error here
+		FreeImage_OutputMessageProc(fif, "Unknown error while plugin init");
 		return false;
 	}
 
-	dst_node.swap(new_node);
+	mPlugins.insert_or_assign(it, fif, std::move(new_node));
 	return true;
 }
 
@@ -522,13 +527,15 @@ FREE_IMAGE_FORMAT PluginsRegistry::Append(FI_InitProc2 init_proc, void* ctx, voi
 }
 
 
-std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> PluginsRegistry::FindFromFormat(const char* format) const
+auto PluginsRegistry::FindFromFormat(const char* format) const
+	-> PluginNodeConstIterator
 {
 	if (!format) {
-		return std::make_tuple(FIF_UNKNOWN, nullptr);
+		return mPlugins.cend();
 	}
 
-	for (auto& [fif, node] : mPlugins) {
+	for (auto it = mPlugins.cbegin(); it != mPlugins.cend(); ++it) {
+		const auto& node = (*it).second;
 		if (!node || !node->IsEnabled()) {
 			continue;
 		}
@@ -539,20 +546,22 @@ std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> PluginsRegistry::FindFromFormat(c
 		}
 
 		if (FreeImage_stricmp(plugin_format, format) == 0) {
-			return std::make_tuple(fif, node.get());
+			return it;
 		}
 	}
 
-	return std::make_tuple(FIF_UNKNOWN, nullptr);
+	return mPlugins.cend();
 }
 
-std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> PluginsRegistry::FindFromMime(const char* mime) const
+auto PluginsRegistry::FindFromMime(const char* mime) const
+	-> PluginNodeConstIterator
 {
 	if (!mime) {
-		return std::make_tuple(FIF_UNKNOWN, nullptr);
+		return mPlugins.cend();
 	}
 
-	for (auto& [fif, node] : mPlugins) {
+	for (auto it = mPlugins.cbegin(); it != mPlugins.cend(); ++it) {
+		const auto& node = (*it).second;
 		if (!node || !node->IsEnabled()) {
 			continue;
 		}
@@ -563,31 +572,33 @@ std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> PluginsRegistry::FindFromMime(con
 		}
 
 		if (strcmp(plugin_mime, mime) == 0) {
-			return std::make_tuple(fif, node.get());
+			return it;
 		}
 	}
 
-	return std::make_tuple(FIF_UNKNOWN, nullptr);
+	return mPlugins.cend();
 }
 
-PluginNodeBase* PluginsRegistry::FindFromFIF(FREE_IMAGE_FORMAT fif) const
+auto PluginsRegistry::FindFromFIF(FREE_IMAGE_FORMAT fif, bool checkEnabled) const
+	-> PluginNodeConstIterator
 {
 	auto it = mPlugins.find(fif);
 	if (it != mPlugins.cend()) {
-		auto& node = (*it).second;
-		if (node && node->IsEnabled()) {
-			return node.get();
+		const auto& node = (*it).second;
+		if (node && (!checkEnabled || node->IsEnabled())) {
+			return it;
 		}
 	}
-	return nullptr;
+	return mPlugins.cend();
 }
 
 
 bool PluginsRegistry::ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO* io, fi_handle handle) const
 {
 	bool status = false;
-	if (PluginNodeBase* node = FindFromFIF(fif)) {
-		if (node->IsEnabled()) {
+	if (auto it = FindFromFIF(fif); it != mPlugins.cend()) {
+		const auto& node = (*it).second;
+		if (node && node->IsEnabled()) {
 			status = node->Validate(io, handle);
 		}
 	}
@@ -712,8 +723,8 @@ FIBITMAP * DLL_CALLCONV
 FreeImage_LoadFromHandle(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle, int flags) {
 	FIBITMAP *bitmap{};
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		if (auto* node = plugins->FindFromFIF(fif)) {
-			bitmap = node->Load(io, handle, -1, flags);
+		if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+			bitmap = it->second->Load(io, handle, -1, flags);
 		}
 	}	
 	return bitmap;
@@ -762,8 +773,8 @@ FreeImage_SaveToHandle(FREE_IMAGE_FORMAT fif, FIBITMAP *dib, FreeImageIO *io, fi
 	}
 
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		if (auto* node = plugins->FindFromFIF(fif)) {
-			result = node->Save(dib, io, handle, -1, flags);
+		if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+			result = it->second->Save(dib, io, handle, -1, flags);
 		}
 	}
 
@@ -912,8 +923,8 @@ FreeImage_RegisterExternalPlugin(const char *path, const char *format, const cha
 int DLL_CALLCONV
 FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		if (auto *node = plugins->FindFromFIF(fif)) {
-			return node->SetEnabled(enable);
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SetEnabled(enable);
 		}
 	}
 	return -1;
@@ -922,8 +933,9 @@ FreeImage_SetPluginEnabled(FREE_IMAGE_FORMAT fif, FIBOOL enable) {
 int DLL_CALLCONV
 FreeImage_IsPluginEnabled(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto *node = plugins->FindFromFIF(fif);
-		return node ? node->IsEnabled() : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->IsEnabled();
+		}
 	}	
 	return -1;
 }
@@ -961,7 +973,9 @@ FreeImage_GetFIFCount() {
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFIFFromFormat(const char *format) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		return std::get< FREE_IMAGE_FORMAT>(plugins->FindFromFormat(format));
+		if (auto it = plugins->FindFromFormat(format); it != plugins->NodesCEnd()) {
+			return it->first;
+		}
 	}
 	return FIF_UNKNOWN;
 }
@@ -969,7 +983,9 @@ FreeImage_GetFIFFromFormat(const char *format) {
 FREE_IMAGE_FORMAT DLL_CALLCONV
 FreeImage_GetFIFFromMime(const char *mime) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		return std::get< FREE_IMAGE_FORMAT>(plugins->FindFromMime(mime));
+		if (auto it = plugins->FindFromMime(mime); it != plugins->NodesCEnd()) {
+			return it->first;
+		}
 	}
 	return FIF_UNKNOWN;
 }
@@ -977,8 +993,9 @@ FreeImage_GetFIFFromMime(const char *mime) {
 const char * DLL_CALLCONV
 FreeImage_GetFormatFromFIF(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->GetFormat() : nullptr;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->GetFormat();
+		}
 	}
 	return nullptr;
 }
@@ -986,8 +1003,9 @@ FreeImage_GetFormatFromFIF(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV 
 FreeImage_GetFIFMimeType(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->GetMime() : nullptr;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->GetMime();
+		}
 	}
 	return nullptr;
 }
@@ -995,8 +1013,9 @@ FreeImage_GetFIFMimeType(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFExtensionList(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->GetExtension() : nullptr;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->GetExtension();
+		}
 	}
 	return nullptr;
 }
@@ -1004,8 +1023,9 @@ FreeImage_GetFIFExtensionList(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFDescription(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->GetDescription() : nullptr;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->GetDescription();
+		}
 	}
 	return nullptr;
 }
@@ -1013,8 +1033,9 @@ FreeImage_GetFIFDescription(FREE_IMAGE_FORMAT fif) {
 const char * DLL_CALLCONV
 FreeImage_GetFIFRegExpr(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->GetRegexpr() : nullptr;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->GetRegexpr();
+		}
 	}
 	return nullptr;
 }
@@ -1022,8 +1043,9 @@ FreeImage_GetFIFRegExpr(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsLoad() : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsLoad();
+		}
 	}
 	return FALSE;
 }
@@ -1031,8 +1053,9 @@ FreeImage_FIFSupportsReading(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsSave() : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsSave();
+		}
 	}
 	return FALSE;
 }
@@ -1040,8 +1063,9 @@ FreeImage_FIFSupportsWriting(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsExportBpp(depth) : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsExportBpp(depth);
+		}
 	}
 	return FALSE;
 }
@@ -1049,8 +1073,9 @@ FreeImage_FIFSupportsExportBPP(FREE_IMAGE_FORMAT fif, int depth) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsExportType(type) : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsExportType(type);
+		}
 	}
 	return FALSE;
 }
@@ -1058,8 +1083,9 @@ FreeImage_FIFSupportsExportType(FREE_IMAGE_FORMAT fif, FREE_IMAGE_TYPE type) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsIccProfiles() : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsIccProfiles();
+		}
 	}
 	return FALSE;
 }
@@ -1067,8 +1093,9 @@ FreeImage_FIFSupportsICCProfiles(FREE_IMAGE_FORMAT fif) {
 FIBOOL DLL_CALLCONV
 FreeImage_FIFSupportsNoPixels(FREE_IMAGE_FORMAT fif) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->SupportsNoPixels() : FALSE;
+		if (auto it = plugins->FindFromFIF(fif, /*checkEnabled=*/false); it != plugins->NodesCEnd()) {
+			return it->second->SupportsNoPixels();
+		}
 	}
 	return FALSE;
 }
@@ -1144,8 +1171,9 @@ FreeImage_GetFIFFromFilenameU(const wchar_t *filename) {
 bool DLL_CALLCONV
 FreeImage_ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO *io, fi_handle handle) {
 	if (auto& plugins = PluginsRegistrySingleton::Instance()) {
-		auto node = plugins->FindFromFIF(fif);
-		return node ? node->Validate(io, handle) : FALSE;
+		if (auto it = plugins->FindFromFIF(fif); it != plugins->NodesCEnd()) {
+			return it->second->Validate(io, handle);
+		}
 	}
 	return FALSE;
 }

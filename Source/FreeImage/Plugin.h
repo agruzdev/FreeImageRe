@@ -279,7 +279,7 @@ private:
 class PluginsRegistry
 {
 public:
-	using PluginsMap = std::map<FREE_IMAGE_FORMAT, std::unique_ptr<PluginNodeBase>>;
+	using PluginsMap = std::map<FREE_IMAGE_FORMAT, std::shared_ptr<PluginNodeBase>>;
 	using PluginNodeIterator = typename PluginsMap::iterator;
 	using PluginNodeConstIterator = typename PluginsMap::const_iterator;
 
@@ -302,11 +302,14 @@ public:
 	
 	bool ValidateFIF(FREE_IMAGE_FORMAT fif, FreeImageIO* io, fi_handle handle) const;
 
-	std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> FindFromFormat(const char* format) const;
+	// returned node is not nullptr
+	PluginNodeConstIterator FindFromFormat(const char* format) const;
 
-	std::tuple<FREE_IMAGE_FORMAT, PluginNodeBase*> FindFromMime(const char* mime) const;
+	// returned node is not nullptr
+	PluginNodeConstIterator FindFromMime(const char* mime) const;
 
-	PluginNodeBase* FindFromFIF(FREE_IMAGE_FORMAT fif) const;
+	// returned node is not nullptr
+	PluginNodeConstIterator FindFromFIF(FREE_IMAGE_FORMAT fif, bool checkEnabled = true) const;
 
 	PluginNodeConstIterator NodesCBegin() const {
 		return mPlugins.cbegin();
