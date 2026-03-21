@@ -48,7 +48,9 @@ Changes made to FreeImage v3.18:
 
 Version 4.2.0:
  - Extended Plugin2 API to support opening multibitmap memory only once for all pages
-
+ - Fixed crashes due to plugin object lifetime
+ - Fixed backward compatible behaviour of the FreeImage_FIFSupports... functions in case of disabled plugins
+ - Error-safe writing of output files in FreeImage_Save
 
 Version 4.1.1:
  - Updated zlib till v1.3.2
