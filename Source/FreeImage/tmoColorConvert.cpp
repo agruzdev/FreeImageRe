@@ -243,9 +243,9 @@ LuminanceFromYxy(FIBITMAP *Yxy, float *maxLum, float *minLum, float *worldLum) {
 	for (unsigned y = 0; y < height; y++) {
 		auto *pixel = (const FIRGBF*)bits;
 		for (unsigned x = 0; x < width; x++) {
-			const float Y = MAX(0.0F, pixel[x].red);// avoid negative values
-			max_lum = (max_lum < Y) ? Y : max_lum;	// max Luminance in the scene
-			min_lum = (min_lum < Y) ? min_lum : Y;	// min Luminance in the scene
+			const float Y = std::max(0.F, pixel[x].red);// avoid negative values
+			max_lum = std::max(max_lum, Y);	// max Luminance in the scene
+			min_lum = std::min(min_lum, Y);	// min Luminance in the scene
 			sum += log(2.3e-5F + Y);				// contrast constant in Tumblin paper
 		}
 		// next line
@@ -292,9 +292,9 @@ ClampConvertRGBFTo24(FIBITMAP *src) {
 			const float green = (src_pixel[x].green > 1) ? 1 : src_pixel[x].green;
 			const float blue  = (src_pixel[x].blue > 1)  ? 1 : src_pixel[x].blue;
 			
-			dst_pixel[FI_RGBA_RED]   = (uint8_t)(255.0F * red   + 0.5F);
-			dst_pixel[FI_RGBA_GREEN] = (uint8_t)(255.0F * green + 0.5F);
-			dst_pixel[FI_RGBA_BLUE]  = (uint8_t)(255.0F * blue  + 0.5F);
+			dst_pixel[FI_RGBA_RED]   = (uint8_t)(255.F * red   + 0.5F);
+			dst_pixel[FI_RGBA_GREEN] = (uint8_t)(255.F * green + 0.5F);
+			dst_pixel[FI_RGBA_BLUE]  = (uint8_t)(255.F * blue  + 0.5F);
 			dst_pixel += 3;
 		}
 		src_bits += src_pitch;

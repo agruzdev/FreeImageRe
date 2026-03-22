@@ -49,6 +49,7 @@
 #include "../Metadata/FreeImageTag.h"
 #include "FreeImageIO.h"
 #include "PSDParser.h"
+#include "yato/types.h"
 
 // --------------------------------------------------------------------------
 // GeoTIFF profile (see XTIFF.cpp)
@@ -1314,7 +1315,7 @@ template <typename DT> static void DecodeMonoStrip(const uint8_t *buf, const tms
     for (uint32_t l{}; l < strips; ++l) {
         uint8_t poffset{ offset };
         const uint8_t *src_pixel = buf;
-        auto *dst_pixel = reinterpret_cast<DT *>(dst_line_begin);
+        auto *dst_pixel = yato::pointer_cast<DT*>(dst_line_begin);
         uint32_t t{}, i{};
         uint16_t stored_bits{};
         while (i < dst_line) {
@@ -1342,8 +1343,8 @@ template <typename DT, typename DS = uint8_t> static void DecodeStrip(const uint
 	const uint32_t bits_mask = (static_cast<uint32_t>(1) << bitspersample) - 1;
 
 	for (uint32_t l{}; l < strips; ++l) {
-		const auto* src_pixel = reinterpret_cast<const DS*>(buf);
-		auto *dst_pixel = reinterpret_cast<DT*>(dst_line_begin) + sample;
+		const auto* src_pixel = yato::pointer_cast<const DS*>(buf);
+		auto *dst_pixel = yato::pointer_cast<DT*>(dst_line_begin) + sample;
 		uint32_t t{}, i{};
 		uint16_t stored_bits{};
 		while (i < dst_line) {
@@ -1548,7 +1549,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			// ---------------------------------------------------------------------------------
 
 			// create a new 8-bit DIB
-			dib.reset(CreateImageType(header_only, image_type, width, height, bitspersample, MIN<uint16_t>(2, samplesperpixel)));
+			dib.reset(CreateImageType(header_only, image_type, width, height, bitspersample, std::min<uint16_t>(2, samplesperpixel)));
 			if (!dib) {
 				throw FI_MSG_ERROR_DIB_MEMORY;
 			}
@@ -2258,11 +2259,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						half half_value;
 
-						for (uint32_t l = 0; l < nrow; l++) {
-							uint16_t *src_pixel = (uint16_t*)(buf.get() + l * src_line);
-							float *dst_pixel = (float*)bits;
+						for (uint32_t l = 0; l < nrow; ++l) {
+							const uint16_t *src_pixel = yato::pointer_cast<uint16_t*>(buf.get() + l * src_line);
+							float *dst_pixel = yato::pointer_cast<float*>(bits);
 
-							for (tmsize_t x = 0; x < (tmsize_t)(src_line / sizeof(uint16_t)); x++) {
+							for (tmsize_t x = 0; x < (tmsize_t)(src_line / sizeof(uint16_t)); ++x) {
 								half_value.setBits(src_pixel[x]);
 								dst_pixel[x] = half_value;
 							}
@@ -2608,7 +2609,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 							auto *pBuf = static_cast<uint8_t*>(buffer.get());
 		
 							for (uint32_t x = 0; x < width; x++) {
-								INPLACESWAP(pBuf[0], pBuf[2]);
+								std::swap(pBuf[0], pBuf[2]);
 								pBuf += samplesperpixel;
 							}
 						}

@@ -238,7 +238,7 @@ ConvertAnyTag(FITAG *tag) {
 		case FIDT_UNDEFINED:// 8-bit untyped data 
 		default:
 		{
-			int max_size = MIN((int)FreeImage_GetTagLength(tag), (int)MAX_TEXT_EXTENT);
+			int max_size = std::min((int)FreeImage_GetTagLength(tag), (int)MAX_TEXT_EXTENT);
 			if (max_size == MAX_TEXT_EXTENT)
 				max_size--;
 			memcpy(format, (char*)FreeImage_GetTagValue(tag), max_size);
@@ -337,7 +337,7 @@ ConvertExifTag(FITAG *tag) {
 		{
 			const char *componentStrings[7] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
 			auto *pvalue = (const uint8_t*)FreeImage_GetTagValue(tag);
-			for (uint32_t i = 0; i < MIN((uint32_t)4, FreeImage_GetTagCount(tag)); i++) {
+			for (uint32_t i = 0; i < std::min((uint32_t)4, FreeImage_GetTagCount(tag)); i++) {
 				int j = pvalue[i];
 				if (j > 0 && j < 7)
 					buffer += componentStrings[j];

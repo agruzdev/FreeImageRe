@@ -116,7 +116,7 @@ ReadMetadata(png_structp png_ptr, png_infop info_ptr, FIBITMAP *dib) {
 			std::unique_ptr<FITAG, decltype(&FreeImage_DeleteTag)> tag(FreeImage_CreateTag(), &FreeImage_DeleteTag);
 			if (!tag) return FALSE;
 
-			uint32_t tag_length = (uint32_t) MAX(text_ptr[i].text_length, text_ptr[i].itxt_length);
+			uint32_t tag_length = (uint32_t) std::max(text_ptr[i].text_length, text_ptr[i].itxt_length);
 
 			FreeImage_SetTagLength(tag.get(), tag_length);
 			FreeImage_SetTagCount(tag.get(), tag_length);
@@ -586,7 +586,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 						png_get_PLTE(png_ptr.get(),info_ptr.get(), &png_palette, &palette_entries);
 
-						palette_entries = MIN((unsigned)palette_entries, FreeImage_GetColorsUsed(dib.get()));
+						palette_entries = std::min((unsigned)palette_entries, FreeImage_GetColorsUsed(dib.get()));
 
 						// store the palette
 

@@ -182,7 +182,7 @@ u[0..n-1][0..n-1], using the right-hand side function rhs[0..n-1][0..n-1].
 */
 static void fmg_relaxation(FIBITMAP *U, FIBITMAP *RHS, int n) {
 	int row, col, ipass, isw, jsw;
-	const float h = 1.0F / (n - 1);
+	const float h = 1.F / (n - 1);
 	const float h2 = h*h;
 
 	const int u_pitch  = FreeImage_GetPitch(U) / sizeof(float);
@@ -218,8 +218,8 @@ rhs[0..n-1][0..n-1], while res[0..n-1][0..n-1] is returned.
 static void fmg_residual(FIBITMAP *RES, FIBITMAP *U, FIBITMAP *RHS, int n) {
 	int row, col;
 
-	const float h = 1.0F / (n-1);	
-	const float h2i = 1.0F / (h*h);
+	const float h = 1.F / (n-1);	
+	const float h2i = 1.F / (h*h);
 
 	const int res_pitch  = FreeImage_GetPitch(RES) / sizeof(float);
 	const int u_pitch  = FreeImage_GetPitch(U) / sizeof(float);
@@ -469,10 +469,10 @@ FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle) {
 	const int height = FreeImage_GetHeight(Laplacian);
 
 	// get nearest larger dimension length that is acceptable by the algorithm
-	int n = MAX(width, height);
+	int n = std::max(width, height);
 	int size = 0;
 	while ((n >>= 1) > 0) size++;
-	if ((1 << size) < MAX(width, height)) {
+	if ((1 << size) < std::max(width, height)) {
 		size++;
 	}
 	// size must be of the form 2^j + 1 for some integer j

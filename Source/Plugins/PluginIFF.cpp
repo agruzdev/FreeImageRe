@@ -279,7 +279,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				if (pal) {
-					unsigned palette_entries = MIN((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib.get()));
+					unsigned palette_entries = std::min((unsigned)ch_size / 3, FreeImage_GetColorsUsed(dib.get()));
 					for (unsigned k = 0; k < palette_entries; k++) {
 						io->read_proc(&pal[k].red, 1, 1, handle );
 						io->read_proc(&pal[k].green, 1, 1, handle );
@@ -405,7 +405,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 						if (depth == 24) {
 							for (unsigned x = 0; x < width; ++x){
-								INPLACESWAP(dest[x * 3], dest[x * 3 + 2]);
+								std::swap(dest[x * 3], dest[x * 3 + 2]);
 							}
 						}
 #endif

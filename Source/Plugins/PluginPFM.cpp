@@ -333,7 +333,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 	const unsigned lineWidth = FreeImage_GetLine(dib);
 	
 	// save image as Little Endian
-	const float scalefactor = -1.0F;
+	const float scalefactor = -1.F;
 
 	char buffer[PFM_MAXLINE];	// temporary buffer whose size should be enough for what we need
 

@@ -624,7 +624,7 @@ Rotate8Bit(FIBITMAP *dib, double angle, double x_shift, double y_shift, double x
 				p = (double)InterpolatedValue(ImageRasterArray, width, height, x1, y1, spline);
 			}
 			// clamp and convert to uint8_t
-			dst_bits[x] = (uint8_t)MIN(MAX((int)0, (int)(p + 0.5)), (int)255);
+			dst_bits[x] = (uint8_t)std::clamp((int)(p + 0.5), 0, 255);
 		}
 	}
 
