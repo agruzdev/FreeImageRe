@@ -186,7 +186,7 @@ LoadPixelData(FreeImageIO *io, fi_handle handle, FIBITMAP *dib, int height, unsi
 		for (unsigned y = 0; y < FreeImage_GetHeight(dib); y++) {
 			auto *pixel = FreeImage_GetScanLine(dib, y);
 			for (unsigned x = 0; x < FreeImage_GetWidth(dib); x++) {
-				INPLACESWAP(pixel[0], pixel[2]);
+				std::swap(pixel[0], pixel[2]);
 				pixel += (bit_count >> 3);
 			}
 		}
@@ -518,7 +518,7 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 				FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 				for (unsigned int i = 0; i < used_colors; i++) {
-					INPLACESWAP(pal[i].red, pal[i].blue);
+					std::swap(pal[i].red, pal[i].blue);
 				}
 #endif
 

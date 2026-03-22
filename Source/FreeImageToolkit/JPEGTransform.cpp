@@ -136,10 +136,10 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 	// normalize the rectangle
 
 	if (*right < *left) {
-		INPLACESWAP(*left, *right);
+		std::swap(*left, *right);
 	}
 	if (*bottom < *top) {
-		INPLACESWAP(*top, *bottom);
+		std::swap(*top, *bottom);
 	}
 
 	// test for "noop" rect

@@ -1588,7 +1588,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// swap R and B channels
 					uint8_t *target_p = target;
 					for (unsigned x = 0; x < cinfo.image_width; x++) {
-						INPLACESWAP(target_p[0], target_p[2]);
+						std::swap(target_p[0], target_p[2]);
 						target_p += 3;
 					}
 #endif
@@ -1648,7 +1648,7 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// swap R and B channels
 					uint8_t *target_p = target;
 					for (unsigned x = 0; x < cinfo.image_width; x++) {
-						INPLACESWAP(target_p[0], target_p[2]);
+						std::swap(target_p[0], target_p[2]);
 						target_p += 3;
 					}
 #endif

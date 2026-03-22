@@ -2609,7 +2609,7 @@ SaveOneTIFF(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flag
 							auto *pBuf = static_cast<uint8_t*>(buffer.get());
 		
 							for (uint32_t x = 0; x < width; x++) {
-								INPLACESWAP(pBuf[0], pBuf[2]);
+								std::swap(pBuf[0], pBuf[2]);
 								pBuf += samplesperpixel;
 							}
 						}

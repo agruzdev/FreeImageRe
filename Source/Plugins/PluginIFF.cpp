@@ -405,7 +405,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 						if (depth == 24) {
 							for (unsigned x = 0; x < width; ++x){
-								INPLACESWAP(dest[x * 3], dest[x * 3 + 2]);
+								std::swap(dest[x * 3], dest[x * 3 + 2]);
 							}
 						}
 #endif

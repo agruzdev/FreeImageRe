@@ -80,7 +80,7 @@ SwapRedBlue32(FIBITMAP* dib) {
 	uint8_t* line = FreeImage_GetBits(dib);
 	for (unsigned y = 0; y < height; ++y, line += pitch) {
 		for (uint8_t* pixel = line; pixel < line + lineSize ; pixel += bytesperpixel) {
-			INPLACESWAP(pixel[0], pixel[2]);
+			std::swap(pixel[0], pixel[2]);
 		}
 	}
 	
@@ -276,9 +276,9 @@ CIELabToRGB(float L, float a, float b, T *rgb) {
 	XYZToRGB(X, Y, Z, &R, &G, &B);
 	
 	// clamp values to [0..max_val]
-	T red	= (T)std::clamp(R * max_val, 0.0F, max_val);
-	T green	= (T)std::clamp(G * max_val, 0.0F, max_val);
-	T blue	= (T)std::clamp(B * max_val, 0.0F, max_val);
+	T red	= (T)std::clamp(R * max_val, 0.F, max_val);
+	T green	= (T)std::clamp(G * max_val, 0.F, max_val);
+	T blue	= (T)std::clamp(B * max_val, 0.F, max_val);
 
 	assignRGB(red, green, blue, rgb);
 }

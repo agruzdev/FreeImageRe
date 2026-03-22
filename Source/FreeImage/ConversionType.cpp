@@ -67,7 +67,7 @@ CONVERT_TYPE<Tdst, Tsrc>::convert(FIBITMAP *src, FREE_IMAGE_TYPE dst_type) {
 
 /** Convert a greyscale image of type Tsrc to a 8-bit grayscale dib.
 	Conversion is done using either a linear scaling from [min, max] to [0, 255]
-	or a rounding from src_pixel to (uint8_t) MIN(255, MAX(0, q)) where int q = int(src_pixel + 0.5); 
+	or a rounding from src_pixel to (uint8_t) clamp(q, 0, 255) where int q = int(src_pixel + 0.5); 
 */
 template<class Tsrc>
 class CONVERT_TO_BYTE

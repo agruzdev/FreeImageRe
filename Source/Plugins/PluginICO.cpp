@@ -314,7 +314,7 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB
 		FIRGBA8 *pal = FreeImage_GetPalette(dib.get());
 		for (unsigned i = 0; i < CalculateUsedPaletteEntries(bit_count); i++) {
-			INPLACESWAP(pal[i].red, pal[i].blue);
+			std::swap(pal[i].red, pal[i].blue);
 		}
 #endif
 	}
@@ -349,7 +349,7 @@ LoadStandardIcon(FreeImageIO *io, fi_handle handle, int flags, FIBOOL header_onl
 		for (int y = 0; y < height; y++) {
 			uint8_t *pixel = FreeImage_GetScanLine(dib.get(), y);
 			for (int x = 0; x < width; x++) {
-				INPLACESWAP(pixel[0], pixel[2]);
+				std::swap(pixel[0], pixel[2]);
 				pixel += (bit_count>>3);
 			}
 		}

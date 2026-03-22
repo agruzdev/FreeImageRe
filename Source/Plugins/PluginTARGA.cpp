@@ -533,7 +533,7 @@ _assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	} else {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 		*(reinterpret_cast<uint32_t*>(bits)) = *(reinterpret_cast<const uint32_t*> (val));
-#else // NOTE This is faster then doing reinterpret_cast to int + INPLACESWAP !
+#else // NOTE This is faster then doing reinterpret_cast to int + std::swap !
 		bits[FI_RGBA_BLUE]	= val[0];
 		bits[FI_RGBA_GREEN] = val[1];
 		bits[FI_RGBA_RED]	= val[2];

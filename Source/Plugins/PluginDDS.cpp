@@ -574,7 +574,7 @@ template <class DECODER> void DecodeDXTBlock (uint8_t *dstData, const uint8_t *s
 			decoder.GetColor(x, color);
 
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_RGB 
-			INPLACESWAP(dst[FI_RGBA_RED], dst[FI_RGBA_BLUE]);
+			std::swap(dst[FI_RGBA_RED], dst[FI_RGBA_BLUE]);
 #endif 
 			dst += 4;
 		}
@@ -660,7 +660,7 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	for (int y = 0; y < height; y++) {
 		uint8_t *pixels = FreeImage_GetScanLine(dib.get(), y);
 		for (int x = 0; x < width; x++) {
-			INPLACESWAP(pixels[FI_RGBA_RED], pixels[FI_RGBA_BLUE]);
+			std::swap(pixels[FI_RGBA_RED], pixels[FI_RGBA_BLUE]);
 			pixels += bytespp;
 		}
 	}
