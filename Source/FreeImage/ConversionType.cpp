@@ -134,7 +134,7 @@ CONVERT_TO_BYTE<Tsrc>::convert(FIBITMAP *src, FIBOOL scale_linear) {
 			for (x = 0; x < width; x++) {
 				// rounding
 				int q = int(src_bits[x] + 0.5);
-				dst_bits[x] = (uint8_t) MIN(255, MAX(0, q));
+				dst_bits[x] = (uint8_t) std::clamp(q, 0, 255);
 			}
 		}
 	}

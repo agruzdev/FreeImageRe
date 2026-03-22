@@ -185,7 +185,7 @@ FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear) {
 		case FIT_RGBF:
 			if (scale_linear) {
 				BitmapTransform<float, FIRGBF>(dst, src, [](const FIRGBF& p) {
-					return CLAMP(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
+					return std::clamp(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
 			}
 			else {
 				BitmapTransform<float, FIRGBF>(dst, src, [](const FIRGBF& p) {
@@ -196,7 +196,7 @@ FreeImage_ConvertToFloat(FIBITMAP *dib, FIBOOL scale_linear) {
 		case FIT_RGBAF:
 			if (scale_linear) {
 				BitmapTransform<float, FIRGBAF>(dst, src, [](const FIRGBAF& p) {
-					return CLAMP(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
+					return std::clamp(LUMA_REC709(p.red, p.green, p.blue), 0.0F, 1.0F); });
 			}
 			else {
 				BitmapTransform<float, FIRGBAF>(dst, src, [](const FIRGBAF& p) {

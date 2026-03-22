@@ -123,9 +123,9 @@ CMYKToRGB(T C, T M, T Y, T K, T* out) {
 	unsigned b = (max_val - Y) * (max_val - K) / max_val;
 
 	// clamp values to [0..max_val]
-	T red	= (T)CLAMP(r, (unsigned)0, max_val);
-	T green	= (T)CLAMP(g, (unsigned)0, max_val);
-	T blue	= (T)CLAMP(b, (unsigned)0, max_val);
+	T red	= (T)std::clamp(r, (unsigned)0, max_val);
+	T green	= (T)std::clamp(g, (unsigned)0, max_val);
+	T blue	= (T)std::clamp(b, (unsigned)0, max_val);
 
 	assignRGB(red, green, blue, out);
 }
@@ -276,9 +276,9 @@ CIELabToRGB(float L, float a, float b, T *rgb) {
 	XYZToRGB(X, Y, Z, &R, &G, &B);
 	
 	// clamp values to [0..max_val]
-	T red	= (T)CLAMP(R * max_val, 0.0F, max_val);
-	T green	= (T)CLAMP(G * max_val, 0.0F, max_val);
-	T blue	= (T)CLAMP(B * max_val, 0.0F, max_val);
+	T red	= (T)std::clamp(R * max_val, 0.0F, max_val);
+	T green	= (T)std::clamp(G * max_val, 0.0F, max_val);
+	T blue	= (T)std::clamp(B * max_val, 0.0F, max_val);
 
 	assignRGB(red, green, blue, rgb);
 }

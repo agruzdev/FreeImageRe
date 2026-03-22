@@ -312,7 +312,7 @@ FreeImage_AdjustBrightness(FIBITMAP *src, double percentage) {
 	const double scale = (100 + percentage) / 100;
 	for (int i = 0; i < 256; i++) {
 		value = i * scale;
-		value = MAX(0.0, MIN(value, 255.0));
+		value = std::clamp(value, 0.0, 255.0);
 		LUT[i] = (uint8_t)floor(value + 0.5);
 	}
 	return FreeImage_AdjustCurve(src, LUT, FICC_RGB);
@@ -338,7 +338,7 @@ FreeImage_AdjustContrast(FIBITMAP *src, double percentage) {
 	const double scale = (100 + percentage) / 100;
 	for (int i = 0; i < 256; i++) {
 		value = 128 + (i - 128) * scale;
-		value = MAX(0.0, MIN(value, 255.0));
+		value = std::clamp(value, 0.0, 255.0);
 		LUT[i] = (uint8_t)floor(value + 0.5);
 	}
 	return FreeImage_AdjustCurve(src, LUT, FICC_RGB);
@@ -1019,7 +1019,7 @@ FreeImage_GetAdjustColorsLookupTable(uint8_t *LUT, double brightness, double con
 		const double v = (100.0 + contrast) / 100.0;
 		for (int i = 0; i < 256; i++) {
 			value = 128 + (dblLUT[i] - 128) * v;
-			dblLUT[i] = MAX(0.0, MIN(value, 255.0));
+			dblLUT[i] = std::clamp(value, 0.0, 255.0);
 		}
 		result++;
 	}
@@ -1029,7 +1029,7 @@ FreeImage_GetAdjustColorsLookupTable(uint8_t *LUT, double brightness, double con
 		const double v = (100.0 + brightness) / 100.0;
 		for (int i = 0; i < 256; i++) {
 			value = dblLUT[i] * v;
-			dblLUT[i] = MAX(0.0, MIN(value, 255.0));
+			dblLUT[i] = std::clamp(value, 0.0, 255.0);
 		}
 		result++;
 	}
@@ -1040,7 +1040,7 @@ FreeImage_GetAdjustColorsLookupTable(uint8_t *LUT, double brightness, double con
 		const double v = 255.0 * (double)pow((double)255, -exponent);
 		for (int i = 0; i < 256; i++) {
 			value = pow(dblLUT[i], exponent) * v;
-			dblLUT[i] = MAX(0.0, MIN(value, 255.0));
+			dblLUT[i] = std::clamp(value, 0.0, 255.0);
 		}
 		result++;
 	}

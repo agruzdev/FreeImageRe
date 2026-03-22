@@ -729,7 +729,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						case 16: {
 							uint16_t *rgb555 = static_cast<uint16_t *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].red   = (uint8_t)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
@@ -743,7 +743,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						case 24: {
 							FILE_BGR *bgr = static_cast<FILE_BGR *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].blue  = bgr->b;
@@ -762,7 +762,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 							FILE_BGRA *bgra = static_cast<FILE_BGRA *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].blue  = bgra->b;

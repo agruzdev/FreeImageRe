@@ -255,7 +255,7 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 				for (unsigned x = 0; x < width; x++) {
 					// convert by copying greyscale channel to each R, G, B channels
 					// assume float values are in [0..1]
-					const float value = CLAMP(src_pixel[x], 0.0F, 1.0F);
+					const float value = std::clamp(src_pixel[x], 0.0F, 1.0F);
 					dst_pixel[x].red   = value;
 					dst_pixel[x].green = value;
 					dst_pixel[x].blue  = value;
@@ -278,7 +278,7 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 				for (unsigned x = 0; x < width; x++) {
 					// convert by copying greyscale channel to each R, G, B channels
 					// assume float values are in [0..1]
-					const float value = static_cast<float>(CLAMP(src_pixel[x], 0.0, 1.0));
+					const float value = static_cast<float>(std::clamp(src_pixel[x], 0.0, 1.0));
 					dst_pixel[x].red   = value;
 					dst_pixel[x].green = value;
 					dst_pixel[x].blue  = value;
@@ -300,9 +300,9 @@ FreeImage_ConvertToRGBF(FIBITMAP *dib) {
 
 				for (unsigned x = 0; x < width; x++) {
 					// convert and skip alpha channel
-					dst_pixel[x].red   = CLAMP(src_pixel[x].red, 0.0F, 1.0F);
-					dst_pixel[x].green = CLAMP(src_pixel[x].green, 0.0F, 1.0F);
-					dst_pixel[x].blue  = CLAMP(src_pixel[x].blue, 0.0F, 1.0F);
+					dst_pixel[x].red   = std::clamp(src_pixel[x].red, 0.0F, 1.0F);
+					dst_pixel[x].green = std::clamp(src_pixel[x].green, 0.0F, 1.0F);
+					dst_pixel[x].blue  = std::clamp(src_pixel[x].blue, 0.0F, 1.0F);
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;

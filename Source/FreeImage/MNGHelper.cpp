@@ -1206,7 +1206,7 @@ mng_WriteJNG(int format_id, FreeImageIO *io, FIBITMAP *dib, fi_handle handle, in
 			// write chunks
 			for (uint32_t k = 0; k < size_in_bytes;) {
 				uint32_t bytes_left = size_in_bytes - k;
-				uint32_t chunk_size = MIN(JPEG_CHUNK_SIZE, bytes_left);
+				uint32_t chunk_size = std::min(JPEG_CHUNK_SIZE, bytes_left);
 				mng_WriteChunk(mng_JDAT, &jpeg_data[k], chunk_size, hJngMemory);
 				k += chunk_size;
 			}

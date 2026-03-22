@@ -1023,7 +1023,7 @@ FreeImage_GetTransparencyCount(FIBITMAP *dib) {
 void DLL_CALLCONV
 FreeImage_SetTransparencyTable(FIBITMAP *dib, uint8_t *table, int count) {
 	if (dib) {
-		count = MAX(0, MIN(count, 256));
+		count = std::clamp(count, 0, 256);
 		if (FreeImage_GetBPP(dib) <= 8) {
 			((FREEIMAGEHEADER *)dib->data)->transparent = (count > 0) ? TRUE : FALSE;
 			((FREEIMAGEHEADER *)dib->data)->transparency_count = count;

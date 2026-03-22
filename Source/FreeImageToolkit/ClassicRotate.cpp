@@ -388,13 +388,13 @@ Rotate90(FIBITMAP *src) {
 				for (unsigned xs = 0; xs < dst_width; xs += RBLOCK) {
 					// y-segment
 					for (unsigned ys = 0; ys < dst_height; ys += RBLOCK) {
-						for (unsigned y = ys; y < MIN(dst_height, ys + RBLOCK); y++) {    // do rotation
+						for (unsigned y = ys; y < std::min(dst_height, ys + RBLOCK); y++) {    // do rotation
 							const unsigned y2 = dst_height - y - 1;
 							// point to src pixel at (y2, xs)
 							const uint8_t *src_bits = bsrc + (xs * src_pitch) + (y2 * bytespp);
 							// point to dst pixel at (xs, y)
 							uint8_t *dst_bits = bdest + (y * dst_pitch) + (xs * bytespp);
-							for (unsigned x = xs; x < MIN(dst_width, xs + RBLOCK); x++) {
+							for (unsigned x = xs; x < std::min(dst_width, xs + RBLOCK); x++) {
 								// dst.SetPixel(x, y, src.GetPixel(y2, x));
 								AssignPixel(dst_bits, src_bits, bytespp);
 								dst_bits += bytespp;
@@ -580,13 +580,13 @@ Rotate270(FIBITMAP *src) {
 				for (unsigned xs = 0; xs < dst_width; xs += RBLOCK) {
 					// y-segment
 					for (unsigned ys = 0; ys < dst_height; ys += RBLOCK) {
-						for (unsigned x = xs; x < MIN(dst_width, xs + RBLOCK); x++) {    // do rotation
+						for (unsigned x = xs; x < std::min(dst_width, xs + RBLOCK); x++) {    // do rotation
 							x2 = dst_width - x - 1;
 							// point to src pixel at (ys, x2)
 							const uint8_t *src_bits = bsrc + (x2 * src_pitch) + (ys * bytespp);
 							// point to dst pixel at (x, ys)
 							uint8_t *dst_bits = bdest + (ys * dst_pitch) + (x * bytespp);
-							for (unsigned y = ys; y < MIN(dst_height, ys + RBLOCK); y++) {
+							for (unsigned y = ys; y < std::min(dst_height, ys + RBLOCK); y++) {
 								// dst.SetPixel(x, y, src.GetPixel(y, x2));
 								AssignPixel(dst_bits, src_bits, bytespp);
 								src_bits += bytespp;

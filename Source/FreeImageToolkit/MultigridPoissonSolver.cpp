@@ -469,10 +469,10 @@ FreeImage_MultigridPoissonSolver(FIBITMAP *Laplacian, int ncycle) {
 	const int height = FreeImage_GetHeight(Laplacian);
 
 	// get nearest larger dimension length that is acceptable by the algorithm
-	int n = MAX(width, height);
+	int n = std::max(width, height);
 	int size = 0;
 	while ((n >>= 1) > 0) size++;
-	if ((1 << size) < MAX(width, height)) {
+	if ((1 << size) < std::max(width, height)) {
 		size++;
 	}
 	// size must be of the form 2^j + 1 for some integer j

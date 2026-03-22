@@ -1253,7 +1253,7 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, int32_t le
 					default:
 					{
 						// skip resource
-						unsigned skip_length = MIN(oResource._Size, nTotalBytes - nBytes);
+						unsigned skip_length = std::min(oResource._Size, nTotalBytes - nBytes);
 						io->seek_proc(handle, skip_length, SEEK_CUR);
 						nBytes += skip_length;
 					}
