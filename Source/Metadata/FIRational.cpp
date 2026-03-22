@@ -19,6 +19,7 @@
 // Use at your own risk!
 // ==========================================================
 
+#include <format>
 #include "FreeImage.h"
 #include "Utilities.h"
 #include "FIRational.h"
@@ -164,11 +165,11 @@ FIBOOL FIRational::isInteger() {
 
 /// Convert as "numerator/denominator"
 std::string FIRational::toString() {
-	std::ostringstream s;
+	std::string s;
 	if (isInteger()) {
-		s << intValue();
+		s = std::to_string(intValue());
 	} else {
-		s << _numerator << "/" << _denominator;
+        s = std::format("{}/{}", _numerator, _denominator);
 	}
-	return s.str();
+	return s;
 }
