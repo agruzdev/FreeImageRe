@@ -433,10 +433,11 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 	uint8_t *profile = (uint8_t*)dataptr;
 
 	// read the comment
-	std::unique_ptr<void, decltype(&free)> safeValue(malloc((length + 1) * sizeof(char)), &free);
-	if (!safeValue) return FALSE;
-	auto *value = static_cast<char*>(safeValue.get());
-	memcpy(value, profile, length);
+    std::unique_ptr<char[]> value(new(std::nothrow) char[length + 1]);
+    if (!value) {
+        return FALSE;
+    }
+	memcpy(value.get(), profile, length);
 	value[length] = '\0';
 
 	bool bSuccess{};
@@ -449,7 +450,7 @@ jpeg_read_comment(FIBITMAP *dib, const uint8_t *dataptr, unsigned int datalen) {
 		bSuccess = bSuccess && FreeImage_SetTagLength(tag.get(), count);
 		bSuccess = bSuccess && FreeImage_SetTagCount(tag.get(), count);
 		bSuccess = bSuccess && FreeImage_SetTagType(tag.get(), FIDT_ASCII);
-		bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), value);
+		bSuccess = bSuccess && FreeImage_SetTagValue(tag.get(), value.get());
 
 		// store the tag
 		bSuccess = bSuccess && FreeImage_SetMetadata(FIMD_COMMENTS, dib, FreeImage_GetTagKey(tag.get()), tag.get());
@@ -506,7 +507,6 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	jpeg_saved_marker_ptr marker;
 	int num_markers = 0;
 	int seq_no;
-	JOCTET *icc_data;
 	unsigned total_length;
 
 	const int MAX_SEQ_NO = 255;			// sufficient since marker numbers are bytes
@@ -563,13 +563,16 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 		total_length += data_length[seq_no];
 	}
 	
-	if (total_length <= 0)
-		return FALSE;		// found only empty markers ?
+    if (total_length <= 0) {
+        return FALSE;		// found only empty markers ?
+    }
 	
 	// allocate space for assembled data 
-	icc_data = (JOCTET *) malloc(total_length * sizeof(JOCTET));
-	if (!icc_data)
-		return FALSE;		// out of memory
+    std::unique_ptr<void, decltype(&free)> safeIcc(malloc(total_length * sizeof(JOCTET), &free);
+    auto *icc_data = static_cast<JOCTET*>(safeIcc.get());
+    if (!icc_data) {
+        return FALSE;		// out of memory
+    }
 	
 	// and fill it in
 	for (marker = cinfo->marker_list; marker; marker = marker->next) {
@@ -589,6 +592,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	
 	*icc_data_ptr = icc_data;
 	*icc_data_len = total_length;
+    safeIcc.release();
 	
 	return TRUE;
 }
@@ -786,9 +790,11 @@ jpeg_write_icc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 	if (iccProfile->size && iccProfile->data) {
 		// ICC_HEADER_SIZE: ICC signature is 'ICC_PROFILE' + 2 bytes
 
-		auto *profile = (uint8_t*)malloc((iccProfile->size + ICC_HEADER_SIZE) * sizeof(uint8_t));
-		if (!profile) return FALSE;
-		memcpy(profile, icc_signature, 12);
+        std::unique_ptr<uint8_t[]> profile(new(std::nothrow) uint8_t[iccProfile->size + ICC_HEADER_SIZE]);
+        if (!profile) {
+            return FALSE;
+        }
+		memcpy(profile.get(), icc_signature, 12);
 
 		for (long i = 0; i < (long)iccProfile->size; i += MAX_DATA_BYTES_IN_MARKER) {
 			unsigned length = std::min((long)(iccProfile->size - i), MAX_DATA_BYTES_IN_MARKER);
@@ -797,11 +803,9 @@ jpeg_write_icc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 			// number of markers
 			profile[13] = (uint8_t) (iccProfile->size / MAX_DATA_BYTES_IN_MARKER + 1);
 
-			memcpy(profile + ICC_HEADER_SIZE, (uint8_t*)iccProfile->data + i, length);
-			jpeg_write_marker(cinfo, ICC_MARKER, profile, (length + ICC_HEADER_SIZE));
+			memcpy(profile.get() + ICC_HEADER_SIZE, (uint8_t *)iccProfile->data + i, length);
+			jpeg_write_marker(cinfo, ICC_MARKER, profile.get(), (length + ICC_HEADER_SIZE));
         }
-
-		free(profile);
 
 		return TRUE;		
 	}
@@ -829,8 +833,10 @@ jpeg_write_iptc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 			for (long i = 0; i < (long)profile_size; i += 65517L) {
 				unsigned length = std::min((long)profile_size - i, 65517L);
 				unsigned roundup = length & 0x01;	// needed for Photoshop
-				auto *iptc_profile = (uint8_t*)malloc(length + roundup + tag_length);
-				if (!iptc_profile) break;
+                std::unique_ptr<uint8_t[]> iptc_profile(new(std::nothrow) uint8_t[length + roundup + tag_length]);
+                if (!iptc_profile) {
+                    break;
+                }
 				// Photoshop identification string
 				memcpy(&iptc_profile[0], "Photoshop 3.0\x0", 14);
 				// 8BIM segment type
@@ -842,8 +848,7 @@ jpeg_write_iptc_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 				memcpy(&iptc_profile[tag_length], &profile[i], length);
 				if (roundup)
 					iptc_profile[length + tag_length] = 0;
-				jpeg_write_marker(cinfo, IPTC_MARKER, iptc_profile, length + roundup + tag_length);
-				free(iptc_profile);
+				jpeg_write_marker(cinfo, IPTC_MARKER, iptc_profile.get(), length + roundup + tag_length);
 			}
 
 			// release profile
@@ -877,18 +882,18 @@ jpeg_write_xmp_profile(j_compress_ptr cinfo, FIBITMAP *dib) {
 
 			uint32_t tag_length = FreeImage_GetTagLength(tag_xmp);
 
-			auto *profile = (uint8_t*)malloc((tag_length + xmp_header_size) * sizeof(uint8_t));
-			if (!profile) return FALSE;
-			memcpy(profile, xmp_signature, xmp_header_size);
+            std::unique_ptr<uint8_t[]> profile(new(std::nothrow) uint8_t[tag_length + xmp_header_size]);
+            if (!profile) {
+                return FALSE;
+            }
+			memcpy(profile.get(), xmp_signature, xmp_header_size);
 
 			for (uint32_t i = 0; i < tag_length; i += 65504L) {
 				unsigned length = std::min((long)(tag_length - i), 65504L);
 				
-				memcpy(profile + xmp_header_size, tag_value + i, length);
-				jpeg_write_marker(cinfo, EXIF_MARKER, profile, (length + xmp_header_size));
+				memcpy(profile.get() + xmp_header_size, tag_value + i, length);
+				jpeg_write_marker(cinfo, EXIF_MARKER, profile.get(), (length + xmp_header_size));
 			}
-
-			free(profile);
 
 			return TRUE;	
 		}
@@ -921,17 +926,17 @@ jpeg_write_exif_profile_raw(j_compress_ptr cinfo, FIBITMAP *dib) {
 		if (tag_value) {
 			uint32_t tag_length = FreeImage_GetTagLength(tag_exif);
 
-			auto *profile = (uint8_t*)malloc(tag_length * sizeof(uint8_t));
-			if (!profile) return FALSE;
+            std::unique_ptr<uint8_t[]> profile(new(std::nothrow) uint8_t[tag_length]);
+            if (!profile) {
+                return FALSE;
+            }
 
 			for (uint32_t i = 0; i < tag_length; i += 65504L) {
 				unsigned length = std::min((long)(tag_length - i), 65504L);
 				
-				memcpy(profile, tag_value + i, length);
-				jpeg_write_marker(cinfo, EXIF_MARKER, profile, length);
+				memcpy(profile.get(), tag_value + i, length);
+				jpeg_write_marker(cinfo, EXIF_MARKER, profile.get(), length);
 			}
-
-			free(profile);
 
 			return TRUE;
 		}
@@ -1576,8 +1581,9 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			if (color_type == FIC_RGB) {
 				// 24-bit RGB image : need to swap red and blue channels
 				unsigned pitch = FreeImage_GetPitch(dib);
-				auto *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
-				if (!target) {
+                std::unique_ptr<uint8_t[]> safeTarget(new(std::nothrow) uint8_t[pitch]);
+                auto *target{ safeTarget.get() };
+				if (target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
 
@@ -1595,11 +1601,11 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// write the scanline
 					jpeg_write_scanlines(&cinfo, &target, 1);
 				}
-				free(target);
 			}
 			else if (color_type == FIC_CMYK) {
 				unsigned pitch = FreeImage_GetPitch(dib);
-				auto *target = (uint8_t*)malloc(pitch * sizeof(uint8_t));
+                std::unique_ptr<uint8_t[]> safeTarget(new(std::nothrow) uint8_t[pitch]);
+                auto *target{ safeTarget.get() };
 				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1622,7 +1628,6 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					// write the scanline
 					jpeg_write_scanlines(&cinfo, &target, 1);
 				}
-				free(target);
 			}
 			else if (color_type == FIC_MINISBLACK) {
 				// 8-bit standard greyscale images
@@ -1635,7 +1640,8 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 			else if (color_type == FIC_PALETTE) {
 				// 8-bit palettized images are converted to 24-bit images
 				FIRGBA8 *palette = FreeImage_GetPalette(dib);
-				auto *target = (uint8_t*)malloc(cinfo.image_width * 3);
+                std::unique_ptr<uint8_t[]> safeTarget(new(std::nothrow) uint8_t[cinfo.image_width * 3]);
+                auto *target{ safeTarget.get() };
 				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1656,14 +1662,13 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 
 					jpeg_write_scanlines(&cinfo, &target, 1);
 				}
-
-				free(target);
 			}
 			else if (color_type == FIC_MINISWHITE) {
 				// reverse 8-bit greyscale image, so reverse grey value on the fly
 				unsigned i;
 				uint8_t reverse[256];
-				auto *target = (uint8_t *)malloc(cinfo.image_width);
+                std::unique_ptr<uint8_t[]> safeTarget(new(std::nothrow) uint8_t[cinfo.image_width]);
+                auto *target{ safeTarget.get() };
 				if (!target) {
 					throw FI_MSG_ERROR_MEMORY;
 				}
@@ -1679,8 +1684,6 @@ Save(FreeImageIO *io, FIBITMAP *dib, fi_handle handle, int page, int flags, void
 					}
 					jpeg_write_scanlines(&cinfo, &target, 1);
 				}
-
-				free(target);
 			}
 
 			// Step 8: Finish compression 
