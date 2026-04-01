@@ -516,14 +516,14 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	
 	*icc_data_ptr = nullptr;		// avoid confusion if FALSE return
 	*icc_data_len = 0;
-	
+
 	/**
 	this first pass over the saved markers discovers whether there are
 	any ICC markers and verifies the consistency of the marker numbering.
 	*/
-	
+
 	memset(marker_present, 0, (MAX_SEQ_NO + 1));
-	
+
 	for (marker = cinfo->marker_list; marker; marker = marker->next) {
 		if (marker_is_icc(marker)) {
 			if (num_markers == 0) {
@@ -545,7 +545,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 			data_length[seq_no] = marker->data_length - ICC_HEADER_SIZE;
 		}
 	}
-	
+
 	if (num_markers == 0)
 		return FALSE;
 		
@@ -553,7 +553,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 	check for missing markers, count total space needed,
 	compute offset of each marker's part of the data.
 	*/
-	
+
 	total_length = 0;
 	for (seq_no = 1; seq_no <= num_markers; seq_no++) {
 		if (marker_present[seq_no] == 0) {
@@ -562,18 +562,17 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 		data_offset[seq_no] = total_length;
 		total_length += data_length[seq_no];
 	}
-	
+
     if (total_length <= 0) {
         return FALSE;		// found only empty markers ?
     }
-	
+
 	// allocate space for assembled data 
-    std::unique_ptr<void, decltype(&free)> safeIcc(malloc(total_length * sizeof(JOCTET), &free);
-    auto *icc_data = static_cast<JOCTET*>(safeIcc.get());
+    std::unique_ptr<JOCTET, decltype(&free)> icc_data(static_cast<JOCTET*>(malloc(total_length * sizeof(JOCTET))), &free);
     if (!icc_data) {
         return FALSE;		// out of memory
     }
-	
+
 	// and fill it in
 	for (marker = cinfo->marker_list; marker; marker = marker->next) {
 		if (marker_is_icc(marker)) {
@@ -581,7 +580,7 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 			JOCTET *dst_ptr;
 			unsigned length;
 			seq_no = GETJOCTET(marker->data[12]);
-			dst_ptr = icc_data + data_offset[seq_no];
+			dst_ptr = icc_data.get() + data_offset[seq_no];
 			src_ptr = marker->data + ICC_HEADER_SIZE;
 			length = data_length[seq_no];
 			while (length--) {
@@ -589,11 +588,10 @@ jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *i
 			}
 		}
 	}
-	
-	*icc_data_ptr = icc_data;
+
+	*icc_data_ptr = icc_data.release();
 	*icc_data_len = total_length;
-    safeIcc.release();
-	
+
 	return TRUE;
 }
 #endif
