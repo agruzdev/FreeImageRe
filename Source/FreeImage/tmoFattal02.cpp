@@ -513,7 +513,7 @@ static FIBITMAP* tmoFattal02(FIBITMAP *Y, float alpha, float beta) {
 		// get the number of levels for the pyramid
 		const unsigned width = FreeImage_GetWidth(H);
 		const unsigned height = FreeImage_GetHeight(H);
-		unsigned minsize = MIN(width, height);
+		unsigned minsize = std::min(width, height);
 		while (minsize >= MIN_PYRAMID_SIZE) {
 			nlevels++;
 			minsize /= 2;
@@ -607,8 +607,8 @@ Apply the Gradient Domain High Dynamic Range Compression to a RGBF image and con
 FIBITMAP* DLL_CALLCONV 
 FreeImage_TmoFattal02(FIBITMAP *dib, double color_saturation, double attenuation) {	
 	const float alpha = 0.1F;									// parameter alpha = 0.1
-	const float beta = (float)MAX(0.8, MIN(0.9, attenuation));	// parameter beta = [0.8..0.9]
-	const float s = (float)MAX(0.4, MIN(0.6, color_saturation));// exponent s controls color saturation = [0.4..0.6]
+	const float beta = (float)std::clamp(attenuation, 0.8, 0.9);	// parameter beta = [0.8..0.9]
+	const float s = (float)std::clamp(color_saturation, 0.4, 0.6);// exponent s controls color saturation = [0.4..0.6]
 
 	FIBITMAP *src{};
 	FIBITMAP *Yin{};

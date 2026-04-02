@@ -112,8 +112,8 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 		return FALSE;
 	}
 
-	*left = CLAMP(*left, 0, width);
-	*top = CLAMP(*top, 0, height);
+	*left = std::clamp(*left, 0, width);
+	*top = std::clamp(*top, 0, height);
 
 	// negative/zero right and bottom count from the edges inwards
 
@@ -124,8 +124,8 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 		*bottom = height + *bottom;
 	}
 
-	*right = CLAMP(*right, 0, width);
-	*bottom = CLAMP(*bottom, 0, height);
+	*right = std::clamp(*right, 0, width);
+	*bottom = std::clamp(*bottom, 0, height);
 
 	// test for empty rect
 
@@ -136,10 +136,10 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 	// normalize the rectangle
 
 	if (*right < *left) {
-		INPLACESWAP(*left, *right);
+		std::swap(*left, *right);
 	}
 	if (*bottom < *top) {
-		INPLACESWAP(*top, *bottom);
+		std::swap(*top, *bottom);
 	}
 
 	// test for "noop" rect

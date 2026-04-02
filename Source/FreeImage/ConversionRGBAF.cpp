@@ -121,10 +121,10 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 				auto *dst_pixel = (FIRGBAF*)dst_bits;
 				for (unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel->red   = (float)(src_pixel[FI_RGBA_RED])   / 255.0F;
-					dst_pixel->green = (float)(src_pixel[FI_RGBA_GREEN]) / 255.0F;
-					dst_pixel->blue  = (float)(src_pixel[FI_RGBA_BLUE])  / 255.0F;
-					dst_pixel->alpha = (float)(src_pixel[FI_RGBA_ALPHA]) / 255.0F;
+					dst_pixel->red   = (float)(src_pixel[FI_RGBA_RED])   / 255.F;
+					dst_pixel->green = (float)(src_pixel[FI_RGBA_GREEN]) / 255.F;
+					dst_pixel->blue  = (float)(src_pixel[FI_RGBA_BLUE])  / 255.F;
+					dst_pixel->alpha = (float)(src_pixel[FI_RGBA_ALPHA]) / 255.F;
 
 					src_pixel += bytespp;
 					dst_pixel++;
@@ -146,11 +146,11 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 
 				for (unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					const float dst_value = (float)src_pixel[x] / 65535.0F;
+					const float dst_value = (float)src_pixel[x] / 65535.F;
 					dst_pixel[x].red   = dst_value;
 					dst_pixel[x].green = dst_value;
 					dst_pixel[x].blue  = dst_value;
-					dst_pixel[x].alpha = 1.0F;
+					dst_pixel[x].alpha = 1.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -169,10 +169,10 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 
 				for (unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.0F;
-					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.0F;
-					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.0F;
-					dst_pixel[x].alpha = 1.0F;
+					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.F;
+					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.F;
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.F;
+					dst_pixel[x].alpha = 1.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -191,10 +191,10 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 
 				for (unsigned x = 0; x < width; x++) {
 					// convert and scale to the range [0..1]
-					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.0F;
-					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.0F;
-					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.0F;
-					dst_pixel[x].alpha = (float)(src_pixel[x].alpha) / 65535.0F;
+					dst_pixel[x].red   = (float)(src_pixel[x].red)   / 65535.F;
+					dst_pixel[x].green = (float)(src_pixel[x].green) / 65535.F;
+					dst_pixel[x].blue  = (float)(src_pixel[x].blue)  / 65535.F;
+					dst_pixel[x].alpha = (float)(src_pixel[x].alpha) / 65535.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -216,7 +216,7 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 					dst_pixel[x].red   = (float)(src_pixel[x].red   / static_cast<double>(std::numeric_limits<uint32_t>::max()));
 					dst_pixel[x].green = (float)(src_pixel[x].green / static_cast<double>(std::numeric_limits<uint32_t>::max()));
 					dst_pixel[x].blue  = (float)(src_pixel[x].blue  / static_cast<double>(std::numeric_limits<uint32_t>::max()));
-					dst_pixel[x].alpha = 1.0F;
+					dst_pixel[x].alpha = 1.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -258,11 +258,11 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 				for (unsigned x = 0; x < width; x++) {
 					// convert by copying greyscale channel to each R, G, B channels
 					// assume float values are in [0..1]
-					const float value = CLAMP(src_pixel[x], 0.0F, 1.0F);
+					const float value = std::clamp(src_pixel[x], 0.F, 1.F);
 					dst_pixel[x].red   = value;
 					dst_pixel[x].green = value;
 					dst_pixel[x].blue  = value;
-					dst_pixel[x].alpha = 1.0F;
+					dst_pixel[x].alpha = 1.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;
@@ -281,10 +281,10 @@ FreeImage_ConvertToRGBAF(FIBITMAP *dib) {
 
 				for (unsigned x = 0; x < width; x++) {
 					// convert pixels directly, while adding a "dummy" alpha of 1.0
-					dst_pixel[x].red   = CLAMP(src_pixel[x].red, 0.0F, 1.0F);
-					dst_pixel[x].green = CLAMP(src_pixel[x].green, 0.0F, 1.0F);
-					dst_pixel[x].blue  = CLAMP(src_pixel[x].blue, 0.0F, 1.0F);
-					dst_pixel[x].alpha = 1.0F;
+					dst_pixel[x].red   = std::clamp(src_pixel[x].red, 0.F, 1.F);
+					dst_pixel[x].green = std::clamp(src_pixel[x].green, 0.F, 1.F);
+					dst_pixel[x].blue  = std::clamp(src_pixel[x].blue, 0.F, 1.F);
+					dst_pixel[x].alpha = 1.F;
 				}
 				src_bits += src_pitch;
 				dst_bits += dst_pitch;

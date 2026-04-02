@@ -372,7 +372,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 			while (dw.min.y <= dw.max.y) {
 				// read a chunk
 				rgbaFile.setFrameBuffer (&chunk[0][0] - dw.min.x - dw.min.y * width, 1, width);
-				rgbaFile.readPixels (dw.min.y, MIN(dw.min.y + chunk_size - 1, dw.max.y));
+				rgbaFile.readPixels (dw.min.y, std::min(dw.min.y + chunk_size - 1, dw.max.y));
 				// fill the dib
 				const int y_max = ((dw.max.y - dw.min.y) <= chunk_size) ? (dw.max.y - dw.min.y) : chunk_size;
 				for ( int y = 0; y < y_max; y++) {

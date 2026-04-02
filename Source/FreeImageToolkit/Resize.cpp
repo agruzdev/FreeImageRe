@@ -125,7 +125,7 @@ GetRGBAPalette(FIBITMAP *dib, FIRGBA8 * const buffer) {
 	}
 	memcpy(buffer, FreeImage_GetPalette(dib), ncolors * sizeof(FIRGBA8));
 	// merge the transparency table
-	const unsigned ntransp = MIN(ncolors, FreeImage_GetTransparencyCount(dib));
+	const unsigned ntransp = std::min(ncolors, FreeImage_GetTransparencyCount(dib));
 	const uint8_t * const tt = FreeImage_GetTransparencyTable(dib);
 	for (unsigned i = 0; i < ntransp; i++) {
 		buffer[i].alpha = tt[i];
@@ -180,8 +180,8 @@ CWeightsTable::CWeightsTable(CGenericFilter *pFilter, unsigned uDstSize, unsigne
 		const double dCenter = (double)u / dScale + dOffset;
 
 		// find the significant edge points that affect the pixel
-		const int iLeft = MAX(0, (int)(dCenter - dWidth + 0.5));
-		const int iRight = MIN((int)(dCenter + dWidth + 0.5), int(uSrcSize));
+		const int iLeft = std::max(0, (int)(dCenter - dWidth + 0.5));
+		const int iRight = std::min((int)(dCenter + dWidth + 0.5), int(uSrcSize));
 
 		m_WeightTable[u].Left = iLeft; 
 		m_WeightTable[u].Right = iRight;
@@ -543,7 +543,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[x] = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										dst_bits[x] = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 									}
 								}
 							} else {
@@ -568,7 +568,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										value *= 0xFF;
 
 										// clamp and place result in destination pixel
-										dst_bits[x] = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										dst_bits[x] = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 									}
 								}
 							}
@@ -604,9 +604,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 										dst_bits += 3;
 									}
 								}
@@ -632,7 +632,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										value *= 0xFF;
 
 										// clamp and place result in destination pixel
-										const uint8_t bval = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										const uint8_t bval = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits[FI_RGBA_RED]	= bval;
 										dst_bits[FI_RGBA_GREEN]	= bval;
 										dst_bits[FI_RGBA_BLUE]	= bval;
@@ -673,10 +673,10 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += 4;
 								}
 							}
@@ -714,7 +714,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[x] = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+									dst_bits[x] = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 								}
 							}
 						}
@@ -749,9 +749,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 									dst_bits += 3;
 								}
 							}
@@ -788,10 +788,10 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += 4;
 								}
 							}
@@ -830,7 +830,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[x] = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										dst_bits[x] = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 									}
 								}
 							} else {
@@ -855,7 +855,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[x] = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										dst_bits[x] = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 									}
 								}
 							}
@@ -891,9 +891,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 										dst_bits += 3;
 									}
 								}
@@ -920,7 +920,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 										}
 
 										// clamp and place result in destination pixel
-										const uint8_t bval = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										const uint8_t bval = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits[FI_RGBA_RED]	= bval;
 										dst_bits[FI_RGBA_GREEN]	= bval;
 										dst_bits[FI_RGBA_BLUE]	= bval;
@@ -960,10 +960,10 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += 4;
 								}
 							}
@@ -1002,9 +1002,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 								}
 
 								// clamp and place result in destination pixel
-								dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(((g * 0xFF) / 0x3F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(((g * 0xFF) / 0x3F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
 								dst_bits += 3;
 							}
 						}
@@ -1034,9 +1034,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 								}
 
 								// clamp and place result in destination pixel
-								dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(((g * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(((g * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
 								dst_bits += 3;
 							}
 						}
@@ -1071,9 +1071,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 							}
 
 							// clamp and place result in destination pixel
-							dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 							dst_bits += 3;
 						}
 					}
@@ -1108,10 +1108,10 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 							}
 
 							// clamp and place result in destination pixel
-							dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 							dst_bits += 4;
 						}
 					}
@@ -1148,7 +1148,7 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(value + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(value + 0.5), 0, 0xFFFF);
 					dst_bits += wordspp;
 				}
 			}
@@ -1184,9 +1184,9 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(r + 0.5), 0, 0xFFFF);
-					dst_bits[1] = (uint16_t)CLAMP<int>((int)(g + 0.5), 0, 0xFFFF);
-					dst_bits[2] = (uint16_t)CLAMP<int>((int)(b + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(r + 0.5), 0, 0xFFFF);
+					dst_bits[1] = (uint16_t)std::clamp<int>((int)(g + 0.5), 0, 0xFFFF);
+					dst_bits[2] = (uint16_t)std::clamp<int>((int)(b + 0.5), 0, 0xFFFF);
 					dst_bits += wordspp;
 				}
 			}
@@ -1223,10 +1223,10 @@ void CResizeEngine::horizontalFilter(FIBITMAP *const src, unsigned height, unsig
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(r + 0.5), 0, 0xFFFF);
-					dst_bits[1] = (uint16_t)CLAMP<int>((int)(g + 0.5), 0, 0xFFFF);
-					dst_bits[2] = (uint16_t)CLAMP<int>((int)(b + 0.5), 0, 0xFFFF);
-					dst_bits[3] = (uint16_t)CLAMP<int>((int)(a + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(r + 0.5), 0, 0xFFFF);
+					dst_bits[1] = (uint16_t)std::clamp<int>((int)(g + 0.5), 0, 0xFFFF);
+					dst_bits[2] = (uint16_t)std::clamp<int>((int)(b + 0.5), 0, 0xFFFF);
+					dst_bits[3] = (uint16_t)std::clamp<int>((int)(a + 0.5), 0, 0xFFFF);
 					dst_bits += wordspp;
 				}
 			}
@@ -1324,7 +1324,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										value *= 0xFF;
 
 										// clamp and place result in destination pixel
-										*dst_bits = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										*dst_bits = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1353,7 +1353,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										value *= 0xFF;
 
 										// clamp and place result in destination pixel
-										*dst_bits = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										*dst_bits = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1393,9 +1393,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1424,7 +1424,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										value *= 0xFF;
 
 										// clamp and place result in destination pixel
-										const uint8_t bval = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										const uint8_t bval = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits[FI_RGBA_RED]	= bval;
 										dst_bits[FI_RGBA_GREEN]	= bval;
 										dst_bits[FI_RGBA_BLUE]	= bval;
@@ -1467,10 +1467,10 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += dst_pitch;
 								}
 							}
@@ -1512,7 +1512,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 									}
 
 									// clamp and place result in destination pixel
-									*dst_bits = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+									*dst_bits = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 									dst_bits += dst_pitch;
 								}
 							}
@@ -1549,9 +1549,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 									dst_bits += dst_pitch;
 								}
 							}
@@ -1589,10 +1589,10 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += dst_pitch;
 								}
 							}
@@ -1633,7 +1633,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										}
 
 										// clamp and place result in destination pixel
-										*dst_bits = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										*dst_bits = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1659,7 +1659,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										}
 
 										// clamp and place result in destination pixel
-										*dst_bits = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										*dst_bits = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1696,9 +1696,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										}
 
 										// clamp and place result in destination pixel
-										dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-										dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+										dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
 										dst_bits += dst_pitch;
 									}
 								}
@@ -1724,7 +1724,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 										}
 
 										// clamp and place result in destination pixel
-										const uint8_t bval = (uint8_t)CLAMP<int>((int)(value + 0.5), 0, 0xFF);
+										const uint8_t bval = (uint8_t)std::clamp<int>((int)(value + 0.5), 0, 0xFF);
 										dst_bits[FI_RGBA_RED]	= bval;
 										dst_bits[FI_RGBA_GREEN]	= bval;
 										dst_bits[FI_RGBA_BLUE]	= bval;
@@ -1764,10 +1764,10 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 									}
 
 									// clamp and place result in destination pixel
-									dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(r + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(g + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(b + 0.5), 0, 0xFF);
-									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int)(a + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(r + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(g + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(b + 0.5), 0, 0xFF);
+									dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int)(a + 0.5), 0, 0xFF);
 									dst_bits += dst_pitch;
 								}
 							}
@@ -1808,9 +1808,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 								}
 
 								// clamp and place result in destination pixel
-								dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(((g * 0xFF) / 0x3F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(((g * 0xFF) / 0x3F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
 								dst_bits += dst_pitch;
 							}
 						}
@@ -1839,9 +1839,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 								}
 
 								// clamp and place result in destination pixel
-								dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int)(((g * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
-								dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int)(((r * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int)(((g * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
+								dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int)(((b * 0xFF) / 0x1F) + 0.5), 0, 0xFF);
 								dst_bits += dst_pitch;
 							}
 						}
@@ -1879,9 +1879,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 							}
 
 							// clamp and place result in destination pixel
-							dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int) (r + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int) (g + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int) (b + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int) (r + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int) (g + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int) (b + 0.5), 0, 0xFF);
 							dst_bits += dst_pitch;
 						}
 					}
@@ -1919,10 +1919,10 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 							}
 
 							// clamp and place result in destination pixel
-							dst_bits[FI_RGBA_RED]	= (uint8_t)CLAMP<int>((int) (r + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_GREEN]	= (uint8_t)CLAMP<int>((int) (g + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_BLUE]	= (uint8_t)CLAMP<int>((int) (b + 0.5), 0, 0xFF);
-							dst_bits[FI_RGBA_ALPHA]	= (uint8_t)CLAMP<int>((int) (a + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_RED]	= (uint8_t)std::clamp<int>((int) (r + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_GREEN]	= (uint8_t)std::clamp<int>((int) (g + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_BLUE]	= (uint8_t)std::clamp<int>((int) (b + 0.5), 0, 0xFF);
+							dst_bits[FI_RGBA_ALPHA]	= (uint8_t)std::clamp<int>((int) (a + 0.5), 0, 0xFF);
 							dst_bits += dst_pitch;
 						}
 					}
@@ -1965,7 +1965,7 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(value + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(value + 0.5), 0, 0xFFFF);
 
 					dst_bits += dst_pitch;
 				}
@@ -2009,9 +2009,9 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(r + 0.5), 0, 0xFFFF);
-					dst_bits[1] = (uint16_t)CLAMP<int>((int)(g + 0.5), 0, 0xFFFF);
-					dst_bits[2] = (uint16_t)CLAMP<int>((int)(b + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(r + 0.5), 0, 0xFFFF);
+					dst_bits[1] = (uint16_t)std::clamp<int>((int)(g + 0.5), 0, 0xFFFF);
+					dst_bits[2] = (uint16_t)std::clamp<int>((int)(b + 0.5), 0, 0xFFFF);
 
 					dst_bits += dst_pitch;
 				}
@@ -2056,10 +2056,10 @@ void CResizeEngine::verticalFilter(FIBITMAP *const src, unsigned width, unsigned
 					}
 
 					// clamp and place result in destination pixel
-					dst_bits[0] = (uint16_t)CLAMP<int>((int)(r + 0.5), 0, 0xFFFF);
-					dst_bits[1] = (uint16_t)CLAMP<int>((int)(g + 0.5), 0, 0xFFFF);
-					dst_bits[2] = (uint16_t)CLAMP<int>((int)(b + 0.5), 0, 0xFFFF);
-					dst_bits[3] = (uint16_t)CLAMP<int>((int)(a + 0.5), 0, 0xFFFF);
+					dst_bits[0] = (uint16_t)std::clamp<int>((int)(r + 0.5), 0, 0xFFFF);
+					dst_bits[1] = (uint16_t)std::clamp<int>((int)(g + 0.5), 0, 0xFFFF);
+					dst_bits[2] = (uint16_t)std::clamp<int>((int)(b + 0.5), 0, 0xFFFF);
+					dst_bits[3] = (uint16_t)std::clamp<int>((int)(a + 0.5), 0, 0xFFFF);
 
 					dst_bits += dst_pitch;
 				}

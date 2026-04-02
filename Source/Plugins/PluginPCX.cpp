@@ -522,7 +522,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				// do a safe copy of the scanline into 'line'
 				written = readLine(io, handle, line.get(), lineLength, bIsRLE, ReadBuf.get(), ReadPos);
 				// sometimes (already encountered), PCX images can have a lineLength > pitch
-				memcpy(bits, line.get(), MIN(pitch, lineLength));
+				memcpy(bits, line.get(), std::min(pitch, lineLength));
 
 				// skip trailing garbage at the end of the scanline
 

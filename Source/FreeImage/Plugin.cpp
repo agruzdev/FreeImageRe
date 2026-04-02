@@ -34,6 +34,7 @@
 #else
 #include <ctype.h>
 #endif // _WIN32
+#include <format>
 
 #include <filesystem>
 
@@ -787,9 +788,7 @@ namespace {
 
 	std::filesystem::path MakeRandomSuffix()
 	{
-		std::stringstream strs{};
-		strs << ".fitmp" << std::hex << static_cast<uint32_t>(std::rand());
-		return strs.str();
+		return std::format(".fitmp{:x}", static_cast<uint32_t>(std::rand()));
 	}
 
 

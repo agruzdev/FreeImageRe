@@ -853,8 +853,8 @@ FreeImage_EnlargeCanvas(FIBITMAP *src, int left, int top, int right, int bottom,
 		unsigned srcPitch = FreeImage_GetPitch(src);
 		unsigned dstPitch = FreeImage_GetPitch(dst);
 
-		int lineWidth = bytespp * (width + MIN(0, left) + MIN(0, right));
-		int lines = height + MIN(0, top) + MIN(0, bottom);
+		int lineWidth = bytespp * (width + std::min(0, left) + std::min(0, right));
+		int lines = height + std::min(0, top) + std::min(0, bottom);
 
 		if (left <= 0) {
 			srcPtr += (-left * bytespp);

@@ -1253,7 +1253,7 @@ bool psdParser::ReadImageResources(FreeImageIO *io, fi_handle handle, int32_t le
 					default:
 					{
 						// skip resource
-						unsigned skip_length = MIN(oResource._Size, nTotalBytes - nBytes);
+						unsigned skip_length = std::min(oResource._Size, nTotalBytes - nBytes);
 						io->seek_proc(handle, skip_length, SEEK_CUR);
 						nBytes += skip_length;
 					}
@@ -1451,7 +1451,7 @@ FIBITMAP* psdParser::ReadImageData(FreeImageIO* io, fi_handle handle) {
 		case PSDP_CMYK	:
 		case PSDP_MULTICHANNEL	:
 			// force PSDP_MULTICHANNEL CMY as CMYK
-			dstCh = (mode == PSDP_MULTICHANNEL && !header_only) ? 4 : MIN<unsigned>(nChannels, 4);
+			dstCh = (mode == PSDP_MULTICHANNEL && !header_only) ? 4 : std::min<unsigned>(nChannels, 4);
 			if (dstCh < 3) {
 				throw "Invalid number of channels";
 			}

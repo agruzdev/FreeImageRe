@@ -35,10 +35,10 @@ FreeImage_RescaleRect(FIBITMAP *src, int dst_width, int dst_height, int src_left
 
 	// normalize the rectangle
 	if (src_right < src_left) {
-		INPLACESWAP(src_left, src_right);
+		std::swap(src_left, src_right);
 	}
 	if (src_bottom < src_top) {
-		INPLACESWAP(src_top, src_bottom);
+		std::swap(src_top, src_bottom);
 	}
 
 	// check the size of the sub image

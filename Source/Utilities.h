@@ -144,21 +144,6 @@ template <class T> T MAX(const T &a, const T &b) {
 	return (a > b) ? a: b;
 }
 
-/// Min function
-template <class T> T MIN(const T &a, const T &b) {
-	return (a < b) ? a: b;
-}
-
-/// INPLACESWAP adopted from codeguru.com 
-template <class T> void INPLACESWAP(T& a, T& b) {
-	a ^= b; b ^= a; a ^= b;
-}
-
-/// Clamp function
-template <class T> T CLAMP(const T &value, const T &min_value, const T &max_value) {
-	return ((value < min_value) ? min_value : (value > max_value) ? max_value : value);
-}
-
 /** This procedure computes minimum min and maximum max
  of n numbers using only (3n/2) - 2 comparisons.
  min = L[i1] and max = L[i2].

@@ -1227,7 +1227,7 @@ ImageQuality  Q (BD==1)  Q (BD==8)   Q (BD==16)  Q (BD==32F) Subsample   Overlap
 */
 static void 
 SetCompression(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, float fltImageQuality) {
-    if (fltImageQuality < 1.0F) {
+    if (fltImageQuality < 1.F) {
         // overlap
 		if (fltImageQuality >= 0.5F) {
 			wmiSCP->olOverlap = OL_ONE;
@@ -1243,7 +1243,7 @@ SetCompression(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, float fl
 
 	    // bit depth
 		if (pixelInfo->bdBitDepth == BD_1) {
-			wmiSCP->uiDefaultQPIndex = (U8)(8 - 5.0F * fltImageQuality + 0.5F);
+			wmiSCP->uiDefaultQPIndex = (U8)(8 - 5.F * fltImageQuality + 0.5F);
 		}
 		else {
 			// remap [0.8, 0.866, 0.933, 1.0] to [0.8, 0.9, 1.0, 1.1]
@@ -1252,8 +1252,8 @@ SetCompression(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, float fl
 				fltImageQuality = 0.8F + (fltImageQuality - 0.8F) * 1.5F;
 			}
 
-            const int qi = (int) (10.0F * fltImageQuality);
-            const float qf = 10.0F * fltImageQuality - (float)qi;
+            const int qi = (int) (10.F * fltImageQuality);
+            const float qf = 10.F * fltImageQuality - (float)qi;
 			
 			const int *pQPs = 
 				(wmiSCP->cfColorFormat == YUV_420 || wmiSCP->cfColorFormat == YUV_422) ?
@@ -1263,14 +1263,14 @@ SetCompression(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, float fl
 				(pixelInfo->bdBitDepth == BD_16F ? DPK_QPS_16f[qi] :
 				DPK_QPS_32f[qi])));
 				
-			wmiSCP->uiDefaultQPIndex = (U8) (0.5F + (float) pQPs[0] * (1.0F - qf) + (float) (pQPs + 6)[0] * qf);
-			wmiSCP->uiDefaultQPIndexU = (U8) (0.5F + (float) pQPs[1] * (1.0F - qf) + (float) (pQPs + 6)[1] * qf);
-			wmiSCP->uiDefaultQPIndexV = (U8) (0.5F + (float) pQPs[2] * (1.0F - qf) + (float) (pQPs + 6)[2] * qf);
-            wmiSCP->uiDefaultQPIndexYHP = (U8) (0.5F + (float) pQPs[3] * (1.0F - qf) + (float) (pQPs + 6)[3] * qf);
-			wmiSCP->uiDefaultQPIndexUHP = (U8) (0.5F + (float) pQPs[4] * (1.0F - qf) + (float) (pQPs + 6)[4] * qf);
-			wmiSCP->uiDefaultQPIndexVHP = (U8) (0.5F + (float) pQPs[5] * (1.0F - qf) + (float) (pQPs + 6)[5] * qf);
+			wmiSCP->uiDefaultQPIndex = (U8) (0.5F + (float) pQPs[0] * (1.F - qf) + (float) (pQPs + 6)[0] * qf);
+			wmiSCP->uiDefaultQPIndexU = (U8) (0.5F + (float) pQPs[1] * (1.F - qf) + (float) (pQPs + 6)[1] * qf);
+			wmiSCP->uiDefaultQPIndexV = (U8) (0.5F + (float) pQPs[2] * (1.F - qf) + (float) (pQPs + 6)[2] * qf);
+            wmiSCP->uiDefaultQPIndexYHP = (U8) (0.5F + (float) pQPs[3] * (1.F - qf) + (float) (pQPs + 6)[3] * qf);
+			wmiSCP->uiDefaultQPIndexUHP = (U8) (0.5F + (float) pQPs[4] * (1.F - qf) + (float) (pQPs + 6)[4] * qf);
+			wmiSCP->uiDefaultQPIndexVHP = (U8) (0.5F + (float) pQPs[5] * (1.F - qf) + (float) (pQPs + 6)[5] * qf);
 		}
-	} // fltImageQuality < 1.0F
+	} // fltImageQuality < 1.F
     else {
 		// lossless mode
 		wmiSCP->uiDefaultQPIndex = 1;
@@ -1286,7 +1286,7 @@ Set encoder parameters
 */
 static void 
 SetEncoderParameters(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, int flags, FIBOOL bHasAlpha) {
-	float fltImageQuality = 1.0F;
+	float fltImageQuality = 1.F;
 
 	// all values have been set to zero by the API
 	// update default values for some attributes
@@ -1317,10 +1317,10 @@ SetEncoderParameters(CWMIStrCodecParam *wmiSCP, const PKPixelInfo *pixelInfo, in
 		// defaut to 0.80
 		fltImageQuality = 0.8F;
 	} else if ((flags & JXR_LOSSLESS) == JXR_LOSSLESS) {
-		fltImageQuality = 1.0F;
+		fltImageQuality = 1.F;
 	} else {
 		quality = (quality >= 100) ? 100 : quality;
-		fltImageQuality = quality / 100.0F;
+		fltImageQuality = quality / 100.F;
 	}
 	SetCompression(wmiSCP, pixelInfo, fltImageQuality);
 

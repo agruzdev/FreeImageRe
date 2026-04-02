@@ -498,10 +498,10 @@ FreeImage_Copy(FIBITMAP *src, int left, int top, int right, int bottom) {
 
 	// normalize the rectangle
 	if (right < left) {
-		INPLACESWAP(left, right);
+		std::swap(left, right);
 	}
 	if (bottom < top) {
-		INPLACESWAP(top, bottom);
+		std::swap(top, bottom);
 	}
 	// check the size of the sub image
 	const int src_width  = FreeImage_GetWidth(src);
@@ -790,10 +790,10 @@ FreeImage_CreateView(FIBITMAP *dib, unsigned left, unsigned top, unsigned right,
 
 	// normalize the rectangle
 	if (right < left) {
-		INPLACESWAP(left, right);
+		std::swap(left, right);
 	}
 	if (bottom < top) {
-		INPLACESWAP(top, bottom);
+		std::swap(top, bottom);
 	}
 
 	// check the size of the sub image

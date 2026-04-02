@@ -533,7 +533,7 @@ _assignPixel<32>(uint8_t* bits, const uint8_t* val, FIBOOL as24bit) {
 	} else {
 #if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
 		*(reinterpret_cast<uint32_t*>(bits)) = *(reinterpret_cast<const uint32_t*> (val));
-#else // NOTE This is faster then doing reinterpret_cast to int + INPLACESWAP !
+#else // NOTE This is faster then doing reinterpret_cast to int + std::swap !
 		bits[FI_RGBA_BLUE]	= val[0];
 		bits[FI_RGBA_GREEN] = val[1];
 		bits[FI_RGBA_RED]	= val[2];
@@ -729,7 +729,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						case 16: {
 							uint16_t *rgb555 = static_cast<uint16_t *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].red   = (uint8_t)((((*rgb555 & FI16_555_RED_MASK) >> FI16_555_RED_SHIFT) * 0xFF) / 0x1F);
@@ -743,7 +743,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						case 24: {
 							FILE_BGR *bgr = static_cast<FILE_BGR *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].blue  = bgr->b;
@@ -762,7 +762,7 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 							FILE_BGRA *bgra = static_cast<FILE_BGRA *>(static_cast<void *>(cmap.get()));
 							unsigned start = (unsigned)header.cm_first_entry;
-							unsigned stop = MIN((unsigned)256, (unsigned)header.cm_length);
+							unsigned stop = std::min((unsigned)256, (unsigned)header.cm_length);
 
 							for (count = start; count < stop; count++) {
 								palette[count].blue  = bgra->b;
