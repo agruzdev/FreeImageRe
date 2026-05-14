@@ -34,7 +34,7 @@ ExternalProject_Add(DAVID
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
-    CONFIGURE_COMMAND ${MESON_EXECUTABLE} setup --backend ${MESON_BACKEND} --buildtype ${MESON_BUILD_TYPE}
+    CONFIGURE_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ${MESON_EXECUTABLE} setup --backend ${MESON_BACKEND} --buildtype ${MESON_BUILD_TYPE}
             --default-library static -Denable_tools=false -Denable_tests=false --prefix ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/install --libdir=lib
             ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build ${EXTERNALPROJECT_SOURCE_PREFIX}/dav1d/source
     BUILD_COMMAND ${MESON_EXECUTABLE} compile -C ${EXTERNALPROJECT_BINARY_ROOT}/dav1d/build

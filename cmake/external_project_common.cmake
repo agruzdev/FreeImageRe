@@ -30,6 +30,10 @@ endif()
 
 
 
+set(EXTERNALPROJECT_CMAKE_ARGS
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+)
 set(EXTERNALPROJECT_SOURCE_ROOT ${CMAKE_SOURCE_DIR}/dependencies CACHE PATH "Directory to download and unpack dependencies")
 set(EXTERNALPROJECT_BINARY_ROOT ${CMAKE_BINARY_DIR}/dependencies CACHE PATH "Directory to build and install dependencies")
 
