@@ -3,6 +3,12 @@
 #
 # Output targets: LibTIFF
 
+if (USE_SYSTEM_LIBTIFF OR USE_SYSTEM_LIBS)
+    find_package(PkgConfig)
+    pkg_check_modules(LIBTIFF REQUIRED IMPORTED_TARGET libtiff-4)
+    add_library(libTIFF ALIAS PkgConfig::LIBTIFF)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.imath.cmake) # Only for half.h

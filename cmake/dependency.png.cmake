@@ -3,6 +3,11 @@
 #
 # Output target: LibPNG
 
+if (USE_SYSTEM_LIBPNG OR USE_SYSTEM_LIBS)
+    find_package(PNG)
+    add_library(LibPNG ALIAS PNG::PNG)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 

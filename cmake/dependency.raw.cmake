@@ -3,6 +3,12 @@
 #
 # Output target: LibRAW
 
+if (USE_SYSTEM_LIBRAW OR USE_SYSTEM_LIBS)
+    find_package(PkgConfig)
+    pkg_check_modules(LIBRAW REQUIRED IMPORTED_TARGET libraw)
+    add_library(LibRAW ALIAS PkgConfig::LIBRAW)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 

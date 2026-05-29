@@ -2,6 +2,12 @@
 #
 # Output target: LibJPEG
 
+if (USE_SYSTEM_LIBJPEG OR USE_SYSTEM_LIBS)
+    find_package(JPEG REQUIRED)
+    add_library(LibJPEG ALIAS JPEG::JPEG)
+    return()
+endif()
+
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 

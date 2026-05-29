@@ -4,6 +4,11 @@
 # Output target: LibYato
 # YATO_INCLUDE_DIR - includes
 
+if (USE_SYSTEM_YATO OR USE_SYSTEM_LIBS)
+    find_package(Yato REQUIRED CONFIG)
+    add_library(LibYato ALIAS Yato::Yato)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
