@@ -35,10 +35,10 @@ extern "C" {
 #undef FAR
 #include <setjmp.h>
 
-#include "jinclude.h"
+#include <cstddef>
+#include <cstdio>
 #include "jpeglib.h"
 #include "jerror.h"
-#include "jversion.h"
 #include "jmorecfg.h"
 }
 
@@ -482,119 +482,6 @@ marker_is_icc(jpeg_saved_marker_ptr marker) {
 
 	return FALSE;
 }
-
-#ifndef JPEG_HAS_READ_ICC_PROFILE
-/**
-  See if there was an ICC profile in the JPEG file being read;
-  if so, reassemble and return the profile data.
-
-  TRUE is returned if an ICC profile was found, FALSE if not.
-  If TRUE is returned, *icc_data_ptr is set to point to the
-  returned data, and *icc_data_len is set to its length.
-  
-  IMPORTANT: the data at **icc_data_ptr has been allocated with malloc()
-  and must be freed by the caller with free() when the caller no longer
-  needs it.  (Alternatively, we could write this routine to use the
-  IJG library's memory allocator, so that the data would be freed implicitly
-  at jpeg_finish_decompress() time.  But it seems likely that many apps
-  will prefer to have the data stick around after decompression finishes.)
-  
-  NOTE: if the file contains invalid ICC APP2 markers, we just silently
-  return FALSE.  You might want to issue an error message instead.
-*/
-static FIBOOL 
-jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned *icc_data_len) {
-	jpeg_saved_marker_ptr marker;
-	int num_markers = 0;
-	int seq_no;
-	unsigned total_length;
-
-	const int MAX_SEQ_NO = 255;			// sufficient since marker numbers are bytes
-	uint8_t marker_present[MAX_SEQ_NO+1];	// 1 if marker found
-	unsigned data_length[MAX_SEQ_NO+1];	// size of profile data in marker
-	unsigned data_offset[MAX_SEQ_NO+1];	// offset for data in marker
-	
-	*icc_data_ptr = nullptr;		// avoid confusion if FALSE return
-	*icc_data_len = 0;
-
-	/**
-	this first pass over the saved markers discovers whether there are
-	any ICC markers and verifies the consistency of the marker numbering.
-	*/
-
-	memset(marker_present, 0, (MAX_SEQ_NO + 1));
-
-	for (marker = cinfo->marker_list; marker; marker = marker->next) {
-		if (marker_is_icc(marker)) {
-			if (num_markers == 0) {
-				// number of markers
-				num_markers = GETJOCTET(marker->data[13]);
-			}
-			else if (num_markers != GETJOCTET(marker->data[13])) {
-				return FALSE;		// inconsistent num_markers fields 
-			}
-			// sequence number
-			seq_no = GETJOCTET(marker->data[12]);
-			if (seq_no <= 0 || seq_no > num_markers) {
-				return FALSE;		// bogus sequence number 
-			}
-			if (marker_present[seq_no]) {
-				return FALSE;		// duplicate sequence numbers 
-			}
-			marker_present[seq_no] = 1;
-			data_length[seq_no] = marker->data_length - ICC_HEADER_SIZE;
-		}
-	}
-
-	if (num_markers == 0)
-		return FALSE;
-		
-	/**
-	check for missing markers, count total space needed,
-	compute offset of each marker's part of the data.
-	*/
-
-	total_length = 0;
-	for (seq_no = 1; seq_no <= num_markers; seq_no++) {
-		if (marker_present[seq_no] == 0) {
-			return FALSE;		// missing sequence number
-		}
-		data_offset[seq_no] = total_length;
-		total_length += data_length[seq_no];
-	}
-
-    if (total_length <= 0) {
-        return FALSE;		// found only empty markers ?
-    }
-
-	// allocate space for assembled data 
-    std::unique_ptr<JOCTET, decltype(&free)> icc_data(static_cast<JOCTET*>(malloc(total_length * sizeof(JOCTET))), &free);
-    if (!icc_data) {
-        return FALSE;		// out of memory
-    }
-
-	// and fill it in
-	for (marker = cinfo->marker_list; marker; marker = marker->next) {
-		if (marker_is_icc(marker)) {
-			JOCTET FAR *src_ptr;
-			JOCTET *dst_ptr;
-			unsigned length;
-			seq_no = GETJOCTET(marker->data[12]);
-			dst_ptr = icc_data.get() + data_offset[seq_no];
-			src_ptr = marker->data + ICC_HEADER_SIZE;
-			length = data_length[seq_no];
-			while (length--) {
-				*dst_ptr++ = *src_ptr++;
-			}
-		}
-	}
-
-	*icc_data_ptr = icc_data.release();
-	*icc_data_len = total_length;
-
-	return TRUE;
-}
-#endif
 
 /**
 	Read JPEG_APPD marker (IPTC or Adobe Photoshop profile)
