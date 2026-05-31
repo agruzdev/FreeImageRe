@@ -31,7 +31,7 @@ set_property(TARGET DE265 PROPERTY FOLDER "Dependencies")
 
 set(LIBDE265_INCLUDE_DIRS ${INSTALL_DIR}/include)
 set(LIBDE265_LINK_DIRS ${INSTALL_DIR}/lib)
-if (WIN32)
+if (MSVC)
     set(LIBDE265_LIBRARY libde265)
 else()
     set(LIBDE265_LIBRARY de265)

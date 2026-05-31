@@ -31,7 +31,7 @@ set_property(TARGET KVAZAAR PROPERTY FOLDER "Dependencies")
 
 set(KVAZAAR_INCLUDE_DIRS ${INSTALL_DIR}/include)
 set(KVAZAAR_LINK_DIRS ${INSTALL_DIR}/lib)
-if(WIN32)
+if(MSVC)
     set(KVAZAAR_LIBRARY libkvazaar)
 else()
     set(KVAZAAR_LIBRARY kvazaar)
