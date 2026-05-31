@@ -12,25 +12,25 @@ ExternalProject_Add(OPENJPEG
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/openjpeg"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/openjpeg/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/openjpeg/build"
+    INSTALL_DIR "${EXTERNALPROJECT_BINARY_ROOT}/openjpeg/install"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     UPDATE_COMMAND ""
     PATCH_COMMAND ""
     BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t openjp2
-    INSTALL_COMMAND ""
     CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DBUILD_STATIC_LIBS=ON" "-DBUILD_SHARED_LIBS=OFF" "-DBUILD_CODEC=OFF" "-DBUILD_JPIP=OFF" "-DBUILD_TESTING=OFF"
         "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG}"
+        "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/openjpeg/install"
     EXCLUDE_FROM_ALL
 )
 
-ExternalProject_Get_Property(OPENJPEG SOURCE_DIR)
-ExternalProject_Get_Property(OPENJPEG BINARY_DIR)
+ExternalProject_Get_Property(OPENJPEG INSTALL_DIR)
 
 add_library(LibOpenJPEG INTERFACE)
 add_dependencies(LibOpenJPEG OPENJPEG)
-link_config_aware_library_path(LibOpenJPEG ${BINARY_DIR}/bin ${CMAKE_STATIC_LIBRARY_PREFIX}openjp2${CMAKE_STATIC_LIBRARY_SUFFIX})
-target_include_directories(LibOpenJPEG INTERFACE ${SOURCE_DIR}/src/lib ${BINARY_DIR}/src/lib/openjp2)
+target_link_directories(LibOpenJPEG INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibOpenJPEG INTERFACE openjp2)
+target_include_directories(LibOpenJPEG INTERFACE ${INSTALL_DIR}/include/openjpeg-2.5)
 set_property(TARGET OPENJPEG PROPERTY FOLDER "Dependencies")
 
-unset(SOURCE_DIR)
-unset(BINARY_DIR)
+unset(INSTALL_DIR)
 

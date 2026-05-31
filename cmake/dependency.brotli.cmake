@@ -29,11 +29,8 @@ ExternalProject_Get_Property(BROTLI INSTALL_DIR)
 
 add_library(LibBrotli INTERFACE)
 add_dependencies(LibBrotli BROTLI)
-target_link_libraries(LibBrotli INTERFACE
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlidec${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlienc${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}brotlicommon${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+target_link_directories(LibBrotli INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibBrotli INTERFACE brotlidec brotlienc brotlicommon)
 target_include_directories(LibBrotli INTERFACE ${INSTALL_DIR}/include)
 set_property(TARGET BROTLI PROPERTY FOLDER "Dependencies")
 

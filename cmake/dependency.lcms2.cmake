@@ -28,7 +28,8 @@ ExternalProject_Get_Property(LCMS2 INSTALL_DIR)
 
 add_library(LibLCMS2 INTERFACE)
 add_dependencies(LibLCMS2 LCMS2)
-target_link_libraries(LibLCMS2 INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_link_directories(LibLCMS2 INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibLCMS2 INTERFACE lcms2)
 target_include_directories(LibLCMS2 INTERFACE ${INSTALL_DIR}/include)
 set_property(TARGET LCMS2 PROPERTY FOLDER "Dependencies")
 

@@ -31,7 +31,8 @@ ExternalProject_Get_Property(IMATH INSTALL_DIR)
 
 add_library(LibImath INTERFACE)
 add_dependencies(LibImath IMATH)
-target_link_libraries(LibImath INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Imath${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_link_directories(LibImath INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibImath INTERFACE Imath)
 target_include_directories(LibImath INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath)
 set_property(TARGET IMATH PROPERTY FOLDER "Dependencies")
 

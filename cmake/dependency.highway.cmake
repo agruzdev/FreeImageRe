@@ -28,7 +28,8 @@ ExternalProject_Get_Property(HIGHWAY INSTALL_DIR)
 
 add_library(LibHighway INTERFACE)
 add_dependencies(LibHighway HIGHWAY)
-target_link_libraries(LibHighway INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}hwy${CMAKE_STATIC_LIBRARY_SUFFIX})
+target_link_directories(LibHighway INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibHighway INTERFACE hwy)
 target_include_directories(LibHighway INTERFACE ${INSTALL_DIR}/include)
 set_property(TARGET HIGHWAY PROPERTY FOLDER "Dependencies")
 

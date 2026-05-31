@@ -45,12 +45,9 @@ ExternalProject_Get_Property(JPEGXL INSTALL_DIR)
 
 add_library(LibJpegXL INTERFACE)
 add_dependencies(LibJpegXL JPEGXL)
-target_link_libraries(LibJpegXL INTERFACE
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jxl_cms${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+target_link_directories(LibJpegXL INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibJpegXL INTERFACE jxl jxl_cms LibHighway LibBrotli LibLCMS2)
 target_include_directories(LibJpegXL INTERFACE ${INSTALL_DIR}/include)
-target_link_libraries(LibJpegXL INTERFACE LibHighway LibBrotli LibLCMS2)
 set_property(TARGET JPEGXL PROPERTY FOLDER "Dependencies")
 
 set(JPEGXL_ROOT ${INSTALL_DIR})
