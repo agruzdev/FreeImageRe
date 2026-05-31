@@ -41,6 +41,8 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.yato.cmake)
 
 option(USE_SYSTEM_LIBJPEG "Use system-provided LibJPEG library" OFF)
 option(FREEIMAGE_WITH_LIBJPEG "Compile with the LibJPEG backend" ON)
+option(FREEIMAGE_WITH_LIBJPEG_TRANSFORMS "LibJPEG lossless transforms" ON)
+
 if (FREEIMAGE_WITH_LIBJPEG)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.jpeg.cmake)
 endif()
