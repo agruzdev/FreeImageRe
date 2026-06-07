@@ -125,4 +125,4 @@ function(meson_build_type_from_cmake RETVAR_)
 endfunction()
 
 
-endif() #_EXTERNAL_PROJECT_INCLUDE_GUARD_
+endif()  #_EXTERNAL_PROJECT_INCLUDE_GUARD_
