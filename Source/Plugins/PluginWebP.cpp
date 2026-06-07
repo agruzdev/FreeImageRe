@@ -27,7 +27,7 @@
 #include "webp/decode.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
-#include "dec/vp8i_dec.h"
+//#include "dec/vp8i_dec.h"
 
 // ==========================================================
 // Plugin Interface
@@ -679,13 +679,32 @@ InitWEBP(Plugin *plugin, int format_id) {
 	plugin->supports_no_pixels_proc = SupportsNoPixels;
 }
 
+namespace {
+
+	const char* PrintWebpVersion(uint32_t major, uint32_t minor, uint32_t revision) {
+		static char buffer[128] = {};
+		std::snprintf(buffer, std::size(buffer), "LibWebP v%u.%u.%u", major, minor, revision);
+		return buffer;
+	}
+
+	FIDEPENDENCY MakeWebpDependency() {
+		const auto packedVersion = static_cast<uint32_t>(WebPGetDecoderVersion());
+		const auto major    = (packedVersion >> 16) & 0xFF;
+		const auto minor    = (packedVersion >> 8) & 0xFF;
+		const auto revision = packedVersion & 0xFF;
+
+		return FIDEPENDENCY {
+			.name = "LibWebP",
+			.fullVersion = PrintWebpVersion(major, minor, revision),
+			.majorVersion = major,
+			.minorVersion = minor
+		};
+	}
+
+} // namespace
+
 
 const FIDEPENDENCY* GetWebpDependencyInfo() {
-	static const FIDEPENDENCY info = {
-		.name = "LibWebP",
-		.fullVersion  = "LibWebP v" FI_QUOTE(DEC_MAJ_VERSION) "." FI_QUOTE(DEC_MIN_VERSION) "." FI_QUOTE(DEC_REV_VERSION),
-		.majorVersion = DEC_MAJ_VERSION,
-		.minorVersion = DEC_MIN_VERSION
-	};
+	static const FIDEPENDENCY info = MakeWebpDependency();
 	return &info;
 }

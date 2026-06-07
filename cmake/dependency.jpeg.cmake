@@ -22,7 +22,7 @@ if (JPEG_REPOSITORY STREQUAL "IJG")
                 -t "${EXTERNALPROJECT_SOURCE_PREFIX}/jpeg/source"
         BUILD_COMMAND ${BUILD_COMMAND_FOR_TARGET}
         INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
-        CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/jpeg/install"
+        CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/jpeg/install"
         EXCLUDE_FROM_ALL
     )
 
@@ -30,7 +30,8 @@ if (JPEG_REPOSITORY STREQUAL "IJG")
 
     add_library(LibJPEG INTERFACE)
     add_dependencies(LibJPEG JPEG)
-    target_link_libraries(LibJPEG INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
+    target_link_directories(LibJPEG INTERFACE ${INSTALL_DIR}/lib)
+    target_link_libraries(LibJPEG INTERFACE jpeg)
     target_include_directories(LibJPEG INTERFACE ${INSTALL_DIR}/include)
     set_property(TARGET JPEG PROPERTY FOLDER "Dependencies")
 
@@ -56,7 +57,7 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
                                                  "${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/build/jversion.h"
                                                  "${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/build/jconfigint.h"
                     -t "${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/install/include"
-        CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DENABLE_SHARED=OFF" "-DENABLE_STATIC=ON" "-DWITH_JPEG7=ON" "-DWITH_CRT_DLL=ON"
+        CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DENABLE_SHARED=OFF" "-DENABLE_STATIC=ON" "-DWITH_JPEG7=ON" "-DWITH_CRT_DLL=ON"
             "-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON" "-DWITH_TOOLS=OFF" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/install"
             "-DCMAKE_INSTALL_DEFAULT_LIBDIR:PATH=lib"
         EXCLUDE_FROM_ALL
@@ -66,10 +67,11 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
 
     add_library(LibJPEG INTERFACE)
     add_dependencies(LibJPEG TURBOJPEG)
+    target_link_directories(LibJPEG INTERFACE ${INSTALL_DIR}/lib)
     if (MSVC)
-        target_link_libraries(LibJPEG INTERFACE ${INSTALL_DIR}/lib/turbojpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX})
+        target_link_libraries(LibJPEG INTERFACE turbojpeg-static${CMAKE_STATIC_LIBRARY_SUFFIX})
     else()
-        target_link_libraries(LibJPEG INTERFACE ${INSTALL_DIR}/lib/libturbojpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
+        target_link_libraries(LibJPEG INTERFACE libturbojpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
     endif()
     target_compile_options(LibJPEG INTERFACE "-DJPEG_HAS_READ_ICC_PROFILE=1")
     target_include_directories(LibJPEG INTERFACE ${INSTALL_DIR}/include)

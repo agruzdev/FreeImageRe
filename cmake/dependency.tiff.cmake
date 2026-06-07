@@ -25,7 +25,7 @@ ExternalProject_Add(TIFF
                                              "${EXTERNALPROJECT_SOURCE_PREFIX}/tiff/source/libtiff/tif_dir.h"
                                              "${EXTERNALPROJECT_BINARY_ROOT}/tiff/build/libtiff/tif_config.h"
                 -t "${EXTERNALPROJECT_BINARY_ROOT}/tiff/install/include"
-    CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" 
+    CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DZLIB_ROOT:PATH=${ZLIB_ROOT}" 
         "-Dzlib=ON" "-Dlibdeflate=OFF" "-Djpeg=OFF" "-Dold-jpeg=OFF" "-Djpeg12=OFF" "-Djbig=OFF" "-Dwebp=OFF" "-Dzstd=OFF" "-Dlzma=OFF"
         "-Dtiff-tools=OFF" "-Dtiff-tests=OFF" "-Dtiff-docs=OFF" "-Dtiff-install=ON" "-Dwin32-io=OFF"
         "-DBUILD_SHARED_LIBS=OFF" "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG}" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/tiff/install"
@@ -37,10 +37,11 @@ ExternalProject_Get_Property(TIFF INSTALL_DIR)
 
 add_library(LibTIFF INTERFACE)
 add_dependencies(LibTIFF TIFF)
+target_link_directories(LibTIFF INTERFACE ${INSTALL_DIR}/lib)
 if (MSVC AND IS_DEBUG_CONFIG)
-    target_link_libraries(LibTIFF INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}tiffd${CMAKE_STATIC_LIBRARY_SUFFIX})
+    target_link_libraries(LibTIFF INTERFACE tiffd)
 else()
-    target_link_libraries(LibTIFF INTERFACE ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}tiff${CMAKE_STATIC_LIBRARY_SUFFIX})
+    target_link_libraries(LibTIFF INTERFACE tiff)
 endif()
 target_include_directories(LibTIFF INTERFACE ${INSTALL_DIR}/include)
 set_property(TARGET TIFF PROPERTY FOLDER "Dependencies")

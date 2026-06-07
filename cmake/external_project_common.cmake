@@ -74,6 +74,18 @@ else()
 endif()
 
 
+set(EXTERNALPROJECT_CMAKE_ARGS ${CMAKE_TOOLCHAIN_FILE_ARG} ${CMAKE_BUILD_TYPE_ARG})
+if (CMAKE_MAKE_PROGRAM)
+    set(EXTERNALPROJECT_CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}")
+endif()
+if (CMAKE_C_COMPILER)
+    set(EXTERNALPROJECT_CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
+endif()
+if (CMAKE_CXX_COMPILER)
+    set(EXTERNALPROJECT_CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+endif()
+
+
 if (MSVC)
     set(ZERO_WARNINGS_FLAG "/w")
     set(EHSC_FLAG "/EHsc")
@@ -85,32 +97,6 @@ else()
     set(FPIC_FLAG "-fPIC")
     set(DEF_FLAG "-D")
 endif()
-
-macro(link_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/${LIBRARY_}"
-            debug "${PREFIX_}/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
-endmacro()
-
-macro(link_config_aware_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/Release/${LIBRARY_}"
-            debug "${PREFIX_}/Debug/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
-endmacro()
-
-macro(link_config_aware_library_path TARGET_ PREFIX_ LIBRARY_)
-    link_config_aware_library_path2(${TARGET_} ${PREFIX_} ${LIBRARY_} ${LIBRARY_})
-endmacro()
 
 
 
@@ -139,4 +125,4 @@ function(meson_build_type_from_cmake RETVAR_)
 endfunction()
 
 
-endif() #_EXTERNAL_PROJECT_INCLUDE_GUARD_
+endif()  #_EXTERNAL_PROJECT_INCLUDE_GUARD_
