@@ -98,32 +98,6 @@ else()
     set(DEF_FLAG "-D")
 endif()
 
-macro(link_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/${LIBRARY_}"
-            debug "${PREFIX_}/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
-endmacro()
-
-macro(link_config_aware_library_path2 TARGET_ PREFIX_ LIBRARY_ LIBRARY_DEBUG_)
-    if (IS_MULTI_CONFIG)
-        target_link_libraries(${TARGET_} INTERFACE
-            optimized "${PREFIX_}/Release/${LIBRARY_}"
-            debug "${PREFIX_}/Debug/${LIBRARY_DEBUG_}"
-        )
-    else ()
-        target_link_libraries(${TARGET_} INTERFACE "${PREFIX_}/${LIBRARY_}")
-    endif()
-endmacro()
-
-macro(link_config_aware_library_path TARGET_ PREFIX_ LIBRARY_)
-    link_config_aware_library_path2(${TARGET_} ${PREFIX_} ${LIBRARY_} ${LIBRARY_})
-endmacro()
-
 
 
 function(meson_build_type_from_cmake RETVAR_)
