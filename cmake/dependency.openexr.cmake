@@ -36,13 +36,10 @@ ExternalProject_Get_Property(EXR INSTALL_DIR)
 
 add_library(LibOpenEXR INTERFACE)
 add_dependencies(LibOpenEXR EXR)
+target_link_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/lib)
 target_link_libraries(LibOpenEXR INTERFACE
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXR${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}OpenEXRCore${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Iex${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}IlmThread${CMAKE_STATIC_LIBRARY_SUFFIX}
-    LibOpenJPH
-    LibImath
+    OpenEXR OpenEXRCore Iex IlmThread
+    LibOpenJPH LibImath
 )
 target_include_directories(LibOpenEXR INTERFACE ${INSTALL_DIR}/include ${INSTALL_DIR}/include/Imath ${INSTALL_DIR}/include/OpenEXR)
 set_property(TARGET EXR PROPERTY FOLDER "Dependencies")
