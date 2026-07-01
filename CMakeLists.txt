@@ -31,10 +31,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # External dependencies
 set(EXTERNALPROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+option(USE_SYSTEM_LIBS "Use system-provided libraries" OFF)
+
+option(USE_SYSTEM_ZLIB "Use system-provided ZLib library" OFF)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.zlib.cmake)
+
+option(USE_SYSTEM_YATO "Use system-provided Yato library" OFF)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.yato.cmake)
 
+option(USE_SYSTEM_LIBJPEG "Use system-provided LibJPEG library" OFF)
 option(FREEIMAGE_WITH_LIBJPEG "Compile with the LibJPEG backend" ON)
+option(FREEIMAGE_WITH_LIBJPEG_TRANSFORMS "LibJPEG lossless transforms" ON)
+
 if (FREEIMAGE_WITH_LIBJPEG)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.jpeg.cmake)
 endif()
@@ -44,31 +52,37 @@ if (FREEIMAGE_WITH_LIBOPENJPEG)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openjpeg.cmake)
 endif()
 
+option(USE_SYSTEM_LIBOPENEXR "Use system-provided OpenEXR library" OFF)
 option(FREEIMAGE_WITH_LIBOPENEXR "Compile with the LibOpenEXR backend" ON)
 if (FREEIMAGE_WITH_LIBOPENEXR)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openexr.cmake)
 endif()
 
+option(USE_SYSTEM_LIBPNG "Use system-provided LibPNG library" OFF)
 option(FREEIMAGE_WITH_LIBPNG "Compile with the LibPNG backend" ON)
 if (FREEIMAGE_WITH_LIBPNG)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.png.cmake)
 endif()
 
+option(USE_SYSTEM_LIBTIFF "Use system-provided LibTIFF library" OFF)
 option(FREEIMAGE_WITH_LIBTIFF "Compile with the LibTIFF backend" ON)
 if (FREEIMAGE_WITH_LIBTIFF)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.tiff.cmake)
 endif()
 
+option(USE_SYSTEM_LIBWEBP "Use system-provided LibWEBP library" OFF)
 option(FREEIMAGE_WITH_LIBWEBP "Compile with the LibWEBP backend" ON)
 if (FREEIMAGE_WITH_LIBWEBP)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.webp.cmake)
 endif()
 
+option(USE_SYSTEM_LIBRAW "Use system-provided LibRAW library" OFF)
 option(FREEIMAGE_WITH_LIBRAW "Compile with the LibRAW backend" ON)
 if (FREEIMAGE_WITH_LIBRAW)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.raw.cmake)
 endif()
 
+option(USE_SYSTEM_LIBHEIF "Use system-provided LibHEIF library" OFF)
 option(FREEIMAGE_WITH_LIBHEIF "Compile with the LibHEIF backend" ON)
 if (FREEIMAGE_WITH_LIBHEIF)
     include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.heif.cmake)

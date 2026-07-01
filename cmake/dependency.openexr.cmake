@@ -4,6 +4,11 @@
 # Output target: LibOpenEXR
 #
 
+if (USE_SYSTEM_LIBOPENEXR OR USE_SYSTEM_LIBS)
+    find_package(OpenEXR REQUIRED CONFIG)
+    add_library(LibOpenEXR ALIAS OpenEXR::OpenEXR)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.openjph.cmake)

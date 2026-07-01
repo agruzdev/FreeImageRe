@@ -22,7 +22,8 @@
 #include "zlib.h"
 #include "FreeImage.h"
 #include "Utilities.h"
-#include "zutil.h"	/* must be the last header because of error C3163 in VS2008 (_vsnprintf defined in stdio.h) */
+
+constexpr uint8_t GZIP_OS_UNKNOWN = 255;
 
 /**
 Compresses a source buffer into a target buffer, using the ZLib library. 
@@ -115,7 +116,7 @@ FreeImage_ZLibGZip(uint8_t *target, uint32_t target_size, uint8_t *source, uint3
 			return 0;
         case Z_OK: {
             // patch header, setup crc and length (stolen from mod_trace_output)
-            uint8_t *p = target + 8; *p++ = 2; *p = OS_CODE; // xflags, os_code
+            uint8_t *p = target + 8; *p++ = 2; *p = GZIP_OS_UNKNOWN; // xflags, os_code
  	        crc = crc32(crc, source, source_size);
 	        memcpy(target + 4 + dest_len, &crc, 4);
 	        memcpy(target + 8 + dest_len, &source_size, 4);

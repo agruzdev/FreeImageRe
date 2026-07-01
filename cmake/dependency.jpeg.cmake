@@ -2,6 +2,12 @@
 #
 # Output target: LibJPEG
 
+if (USE_SYSTEM_LIBJPEG OR USE_SYSTEM_LIBS)
+    find_package(JPEG REQUIRED)
+    add_library(LibJPEG ALIAS JPEG::JPEG)
+    return()
+endif()
+
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 
@@ -73,7 +79,6 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
     else()
         target_link_libraries(LibJPEG INTERFACE libturbojpeg${CMAKE_STATIC_LIBRARY_SUFFIX})
     endif()
-    target_compile_options(LibJPEG INTERFACE "-DJPEG_HAS_READ_ICC_PROFILE=1")
     target_include_directories(LibJPEG INTERFACE ${INSTALL_DIR}/include)
     set_property(TARGET TURBOJPEG PROPERTY FOLDER "Dependencies")
 

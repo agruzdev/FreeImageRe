@@ -6,6 +6,11 @@
 if(NOT _ZLIB_DEP_INCLUDE_GUARD_)
 set(_ZLIB_DEP_INCLUDE_GUARD_ ON)
 
+if (USE_SYSTEM_ZLIB OR USE_SYSTEM_LIBS)
+    find_package(ZLIB REQUIRED)
+    add_library(LibZLIB ALIAS ZLIB::ZLIB)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 

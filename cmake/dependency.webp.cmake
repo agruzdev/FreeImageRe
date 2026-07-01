@@ -3,6 +3,12 @@
 #
 # Output target: LibWEBP
 
+if (USE_SYSTEM_LIBWEBP OR USE_SYSTEM_LIBS)
+    find_package(PkgConfig)
+    pkg_check_modules(LIBWEBP REQUIRED IMPORTED_TARGET libwebp)
+    add_library(LibWEBP ALIAS PkgConfig::LIBWEBP)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 

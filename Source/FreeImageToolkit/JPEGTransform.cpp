@@ -28,10 +28,15 @@ extern "C" {
 #undef FAR
 #include <setjmp.h>
 
-#include "jinclude.h"
+#include <cstddef>
+#include <cstdio>
 #include "jpeglib.h"
 #include "jerror.h"
+
+#if FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
 #include "transupp.h"
+#endif // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
+
 }
 
 #endif // FREEIMAGE_WITH_LIBJPEG
@@ -154,6 +159,7 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 	return TRUE;
 }
 
+#if FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
 static FIBOOL
 JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* dst_io, fi_handle dst_handle, FREE_IMAGE_JPEG_OPERATION operation, int* left, int* top, int* right, int* bottom, FIBOOL perfect) {
 	const FIBOOL onlyReturnCropRect = (!dst_io || !dst_handle);
@@ -368,13 +374,14 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 	return TRUE;
 }
 
-#else // FREEIMAGE_WITH_LIBJPEG
+#else // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
 
 static FIBOOL
 JPEGTransformFromHandle(FreeImageIO*, fi_handle, FreeImageIO*, fi_handle, FREE_IMAGE_JPEG_OPERATION, int*, int*, int*, int*, FIBOOL) {
 	return FALSE;
 }
 
+#endif // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
 #endif // FREEIMAGE_WITH_LIBJPEG
 
 // ----------------------------------------------------------

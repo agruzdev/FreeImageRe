@@ -3,14 +3,19 @@
 #
 # Output target: LibHEIF
 
+set(HEIF_VERSION "1.20.2")
+
+if (USE_SYSTEM_LIBHEIF OR USE_SYSTEM_LIBS)
+    find_package(libheif REQUIRED CONFIG)
+    add_library(LibHEIF ALIAS heif)
+    return()
+endif()
 
 include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.de265.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.kvazaar.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.dav1d.cmake)
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.svtav1.cmake)
-
-set(HEIF_VERSION "1.20.2")
 
 ExternalProject_Add(HEIF
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/heif
