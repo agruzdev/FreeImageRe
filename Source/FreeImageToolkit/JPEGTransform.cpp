@@ -95,9 +95,13 @@ ls_jpeg_output_message (j_common_ptr cinfo) {
 	FreeImage_OutputMessageProc(FIF_JPEG, buffer);
 }
 
+#endif //FREEIMAGE_WITH_LIBJPEG
+
 // ----------------------------------------------------------
 //   Main program
 // ----------------------------------------------------------
+
+#if FREEIMAGE_WITH_LIBJPEG_TRANSFORMS && FREEIMAGE_WITH_LIBJPEG
 
 /**
 Build a crop string. 
@@ -159,7 +163,7 @@ getCropString(char* crop, size_t cropSize, int* left, int* top, int* right, int*
 	return TRUE;
 }
 
-#if FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
+
 static FIBOOL
 JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* dst_io, fi_handle dst_handle, FREE_IMAGE_JPEG_OPERATION operation, int* left, int* top, int* right, int* bottom, FIBOOL perfect) {
 	const FIBOOL onlyReturnCropRect = (!dst_io || !dst_handle);
@@ -374,15 +378,14 @@ JPEGTransformFromHandle(FreeImageIO* src_io, fi_handle src_handle, FreeImageIO* 
 	return TRUE;
 }
 
-#else // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
+#else // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS && FREEIMAGE_WITH_LIBJPEG
 
 static FIBOOL
 JPEGTransformFromHandle(FreeImageIO*, fi_handle, FreeImageIO*, fi_handle, FREE_IMAGE_JPEG_OPERATION, int*, int*, int*, int*, FIBOOL) {
 	return FALSE;
 }
 
-#endif // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
-#endif // FREEIMAGE_WITH_LIBJPEG
+#endif // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS && FREEIMAGE_WITH_LIBJPEG
 
 // ----------------------------------------------------------
 //   FreeImage interface

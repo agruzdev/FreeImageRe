@@ -37,6 +37,7 @@ extern "C" {
 
 #include <cstddef>
 #include <cstdio>
+#include "jversion.h"
 #include "jpeglib.h"
 #include "jerror.h"
 #include "jmorecfg.h"
@@ -626,12 +627,15 @@ read_markers(j_decompress_ptr cinfo, FIBITMAP *dib) {
 	uint8_t *icc_profile{};
 	unsigned icc_length = 0;
 
+	// Only libjpeg-turbo has the builtin jpeg_read_icc_profile() function
+#ifdef LIBJPEG_TURBO_VERSION
 	if (jpeg_read_icc_profile(cinfo, &icc_profile, &icc_length)) {
 		// copy ICC profile data
 		FreeImage_CreateICCProfile(dib, icc_profile, icc_length);
 		// clean up
 		free(icc_profile);
 	}
+#endif
 
 	return TRUE;
 }
