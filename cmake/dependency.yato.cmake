@@ -15,8 +15,8 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(YATO
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/yato
-    URL "https://github.com/agruzdev/Yato/archive/4920cfc8cf8fa2c4879f3b7679b2a1aa6092bae4.zip"
-    URL_MD5 "02c227cb8199282f1f581289ba1e97b5"
+    URL "https://github.com/agruzdev/Yato/archive/246c83a29912db50535b3e0737d32f8cdf39165e.zip"
+    URL_MD5 "e6c716dc7e95bc2b2eee22776b7f9022"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/yato"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/yato/source"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
