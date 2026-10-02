@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    name: Build ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -17,31 +18,47 @@ jobs:
       fail-fast: false
 
       # Set up a matrix to run the following 3 configurations:
-      # 1. <Windows, Release, latest MSVC compiler toolchain on the default runner image, default generator>
-      # 2. <Linux, Release, latest GCC compiler toolchain on the default runner image, default generator>
-      # 3. <Linux, Release, latest Clang compiler toolchain on the default runner image, default generator>
+      # 1. <Windows, Release, latest MSVC compiler toolchain, x64>
+      # 2. <Windows, Release, latest MSVC compiler toolchain, ARM64>
+      # 3. <Linux, Release, latest GCC compiler toolchain, x64>
       #
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        c_compiler: [gcc, cl]
+        platform: [windows-x64, windows-arm64, ubuntu-x64]
         include:
-          - os: windows-latest
+          - platform: windows-x64
+            os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-          - os: ubuntu-latest
+            arch: x64
+            build_type: Release
+          - platform: windows-arm64
+            os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+            arch: ARM64
+            build_type: Release
+          - platform: ubuntu-x64
+            os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: ubuntu-latest
-            c_compiler: cl
-
+            arch: x64
+            build_type: Release
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
+
+    - name: Install Perl and NASM on Windows
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: choco install strawberryperl nasm -y --no-progress
+
+    - name: Install Perl and NASM on Linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y perl nasm
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -56,17 +73,28 @@ jobs:
         cmakeVersion: "~4.2.0"  # use most recent 4.2.x version
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
-        -DFREEIMAGE_WITH_LIBHEIF:BOOL=OFF
-        -DFREEIMAGE_BUILD_TESTS:BOOL=ON
+      # Configure CMake in a 'build' subdirectory. Use -A for Visual Studio architecture selection.
+      shell: bash
+      run: |
+        jpeg_repository_arg=""
+        if [ "${{ matrix.os }}" = "windows-latest" ] && [ "${{ matrix.arch }}" = "ARM64" ]; then
+          jpeg_repository_arg="-DJPEG_REPOSITORY=IJG"
+        fi
+
+        arch_arg=""
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          arch_arg="-A ${{ matrix.arch }}"
+        fi
+
+        cmake -B "${{ steps.strings.outputs.build-output-dir }}" \
+          $arch_arg \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }} \
+          -S "${{ github.workspace }}" \
+          -DFREEIMAGE_BUILD_TESTS:BOOL=ON \
+          $jpeg_repository_arg
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
