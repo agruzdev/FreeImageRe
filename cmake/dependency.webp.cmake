@@ -15,8 +15,9 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(WEBP
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/webp
-    URL "https://chromium.googlesource.com/webm/libwebp/+archive/4fa21912338357f89e4fd51cf2368325b59e9bd9.tar.gz"   #v1.6.0
-    # googlesource can't provide stable hash, so ignore hash check
+    GIT_REPOSITORY https://chromium.googlesource.com/webm/libwebp
+    GIT_TAG v1.6.0
+    GIT_SHALLOW TRUE
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/webp"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/webp/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/webp/build"
