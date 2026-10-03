@@ -17,8 +17,8 @@ unset(INSTALL_DIR)
 
 ExternalProject_Add(PNG
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/png
-    URL "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.58.zip"
-    URL_MD5 "cbe5ea7693c21109ad42488d3441a06a"
+    URL "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.59.zip"
+    URL_MD5 "6153c5dc69e28f8eebdda6e391b7b432"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/png"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/png/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/png/build"
