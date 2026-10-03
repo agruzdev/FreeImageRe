@@ -7,8 +7,8 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(HIGHWAY
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/highway
-    URL "https://github.com/google/highway/archive/refs/tags/1.3.0.zip"
-    URL_MD5 "e91017527ce45fad36e2e8803ecda565"
+    URL "https://github.com/google/highway/archive/refs/tags/1.4.0.zip"
+    URL_MD5 "01725add949a803786de7c67f2d57f85"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/highway"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/highway/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/highway/build"
