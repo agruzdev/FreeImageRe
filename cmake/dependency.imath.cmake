@@ -11,8 +11,8 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(IMATH
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/imath
-    URL "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.2.2.zip"
-    URL_MD5 "d9c3aadc25a7d47a893b649787e59a44"
+    URL "https://github.com/AcademySoftwareFoundation/Imath/archive/refs/tags/v3.2.3.zip"
+    URL_MD5 "aa7df0e279cbebe4e0f25e9e71a64733"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/imath"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/imath/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/imath/build"
