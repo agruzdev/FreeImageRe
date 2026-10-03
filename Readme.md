@@ -46,6 +46,27 @@ fi.save(fi.FIF_EXR, zero, "zero.exr")  # Accepts 2D or 3D numpy arrays
 Changes made to FreeImage v3.18:
 
 
+Version 4.2.1:
+ - Fixed support of Android aarch64
+ - Fixed unstable downloading of webp sources
+ - Added support of the MSVC ARM64 target
+ - Added support of compilation with system dependencies
+ - Added libaom v3.15.1
+ - Removed the dav1d and svtav1 dependencies
+ - Updated libde265 till v1.1.3
+ - Updated libheif till v1.23.5
+ - Updated highway till v1.4.0
+ - Updated imath till v3.2.3
+ - Updated jpeg till v10
+ - Updated jpeg-turbo till v3.2.0
+ - Updated jpegXL till v0.12.0
+ - Updated LCMS2 till v2.19.1
+ - Updated OpenEXR till v3.5.2
+ - Updated OpenJPH till v0.32.0
+ - Updated libpng till v1.6.59
+ - Updated libraw till v0.22.2
+
+
 Version 4.2.0:
  - Extended Plugin2 API to support opening multibitmap memory only once for all pages
  - Fixed crashes due to plugin object lifetime
