@@ -47,8 +47,8 @@ elseif(JPEG_REPOSITORY STREQUAL "JPEG-turbo")
     # https://github.com/libjpeg-turbo/libjpeg-turbo
     ExternalProject_Add(TURBOJPEG
         PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg
-        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.1.4.1.zip"
-        URL_MD5 "ae4f5588fdbeba371ddfe83b58a6eb1b"
+        URL "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.2.0.zip"
+        URL_MD5 "e78fed9947ef9f66c36210f3d87f0bd0"
         DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/turbojpeg"
         SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/turbojpeg/source"
         BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/turbojpeg/build"
