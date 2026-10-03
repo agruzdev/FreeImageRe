@@ -7,8 +7,8 @@ include(${EXTERNALPROJECT_INCLUDE_DIR}/external_project_common.cmake)
 
 ExternalProject_Add(LCMS2
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/lcms2
-    URL "https://github.com/mm2/Little-CMS/archive/6ae7e97cc1b0a44f1996d51160de9fbab97bb7b8.zip"    # use release tag as soon as CMakeLists.txt released
-    URL_MD5 "59e25c1eb15d3de85f4b691e3fea96fd"
+    URL "https://github.com/mm2/Little-CMS/releases/download/lcms2.19.1/lcms2-2.19.1.zip"
+    URL_MD5 "fc4e344adf6d64de88c8f199efbb036b"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/lcms2"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/lcms2/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/lcms2/build"
@@ -20,17 +20,23 @@ ExternalProject_Add(LCMS2
     INSTALL_COMMAND ${BUILD_COMMAND_FOR_TARGET} -t install
     CMAKE_ARGS ${EXTERNALPROJECT_CMAKE_ARGS} "-DLCMS2_BUILD_SHARED=OFF" "-DLCMS2_BUILD_STATIC=ON" "-DLCMS2_BUILD_TESTS=OFF" "-DLCMS2_BUILD_TIFICC=OFF"
         "-DLCMS2_BUILD_JPGICC=OFF" "-DLCMS2_BUILD_TOOLS=OFF" "-DLCMS2_WITH_JPEG=OFF" "-DLCMS2_WITH_TIFF=OFF" "-DLCMS2_WITH_ZLIB=OFF"
-        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG} -DCMS_NO_REGISTER_KEYWORD=1" "-DCMAKE_DEBUG_POSTFIX=" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/lcms2/install"
+        "-DCMAKE_C_FLAGS:STRING=${ZERO_WARNINGS_FLAG} ${FPIC_FLAG} -DCMS_NO_REGISTER_KEYWORD=1" "-DCMAKE_INSTALL_PREFIX:PATH=${EXTERNALPROJECT_BINARY_ROOT}/lcms2/install"
     EXCLUDE_FROM_ALL
 )
 
 ExternalProject_Get_Property(LCMS2 INSTALL_DIR)
 
+if (MSVC AND IS_DEBUG_CONFIG)
+    set(LCMS2_NAME lcms2d)  # LCMS2's cmake forces debug suffix in MSVC
+else()
+    set(LCMS2_NAME lcms2)
+endif()
+
 add_library(LibLCMS2 INTERFACE)
 add_dependencies(LibLCMS2 LCMS2)
-target_link_directories(LibLCMS2 INTERFACE ${INSTALL_DIR}/lib)
-target_link_libraries(LibLCMS2 INTERFACE lcms2)
 target_include_directories(LibLCMS2 INTERFACE ${INSTALL_DIR}/include)
+target_link_directories(LibLCMS2 INTERFACE ${INSTALL_DIR}/lib)
+target_link_libraries(LibLCMS2 INTERFACE ${LCMS2_NAME})
 set_property(TARGET LCMS2 PROPERTY FOLDER "Dependencies")
 
 set(LCMS2_ROOT ${INSTALL_DIR})

@@ -748,8 +748,8 @@ catch (...) {
 #define GET_BROTLI_MINOR(hex) static_cast<uint32_t>(((hex) >> 12) & 0xFFF)
 #define GET_BROTLI_PATCH(hex) static_cast<uint32_t>((hex) & 0xFFF)
 
-#define GET_LCMS2_MAJOR(version) static_cast<uint32_t>((version) / 100)
-#define GET_LCMS2_MINOR(version) static_cast<uint32_t>(((version) % 100) / 10)
+#define GET_LCMS2_MAJOR(version) static_cast<uint32_t>((version) / 1000)
+#define GET_LCMS2_MINOR(version) static_cast<uint32_t>(((version) % 1000) / 10)
 #define GET_LCMS2_MICRO(version) static_cast<uint32_t>((version) % 10)
 
 namespace
