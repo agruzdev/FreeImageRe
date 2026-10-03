@@ -16,8 +16,8 @@ unset(INSTALL_DIR)
 
 ExternalProject_Add(JPEGXL
     PREFIX ${EXTERNALPROJECT_BINARY_ROOT}/jpegxl
-    URL "https://github.com/libjxl/libjxl/archive/refs/tags/v0.11.2.zip"
-    URL_MD5 "6f5d0b0a99358baea6e4f891305db878"
+    URL "https://github.com/libjxl/libjxl/archive/refs/tags/v0.12.0.zip"
+    URL_MD5 "37c1e2411e64f1f2e0f086bd1d181026"
     DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/jpegxl"
     SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/jpegxl/source"
     BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/jpegxl/build"
