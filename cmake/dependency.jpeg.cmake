@@ -16,8 +16,8 @@ set_property(CACHE JPEG_REPOSITORY PROPERTY STRINGS "IJG" "JPEG-turbo")
 
 if (JPEG_REPOSITORY STREQUAL "IJG")
     ExternalProject_Add(JPEG
-        URL "https://www.ijg.org/files/jpegsr9f.zip"
-        URL_MD5 "8bd2706c80ac696856a1334430a6ffd1"
+        URL "https://www.ijg.org/files/jpegsr10.zip"
+        URL_MD5 "d26bcc89f38796bfc97a7bd29d7fabcf"
         DOWNLOAD_DIR "${EXTERNALPROJECT_SOURCE_ROOT}/jpeg"
         SOURCE_DIR "${EXTERNALPROJECT_SOURCE_PREFIX}/jpeg/source"
         BINARY_DIR "${EXTERNALPROJECT_BINARY_ROOT}/jpeg/build"
