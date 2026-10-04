@@ -1,6 +1,4 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: All platforms build
 
 on:
   push:
@@ -118,9 +116,63 @@ jobs:
       # run: ctest --build-config ${{ matrix.build_type }}
       run: echo "Tests are skipped"
 
+  build-android:
+    name: Build android-arm64-v8a
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_NDK_VERSION: 29.0.14206865
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/29.0.14206865
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Cache Android NDK
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.ANDROID_NDK_HOME }}
+        key: ${{ runner.os }}-android-ndk-${{ env.ANDROID_NDK_VERSION }}
+
+    - name: Install Android NDK
+      shell: bash
+      run: sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+
+    - name: Cache Android dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ github.workspace }}/dependencies
+          ${{ github.workspace }}/build-android-release/dependencies
+        key: ${{ runner.os }}-android-${{ env.ANDROID_NDK_VERSION }}-arm64-v8a-${{ hashFiles('CMakeLists.txt', 'CMakePresets.json', 'cmake/**/*.cmake') }}
+
+    - name: Setup CMake
+      uses: lukka/get-cmake@latest
+      with:
+        cmakeVersion: "~4.2.0"
+
+    - name: Configure CMake
+      shell: bash
+      run: cmake --preset android-release-unix
+
+    - name: Build and package
+      working-directory: ${{ github.workspace }}/build-android-release
+      run: cmake --build . -t package
+
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: package-android-arm64-v8a
+        path: ${{ github.workspace }}/build-android-release/FreeImageRe-*.zip
+        if-no-files-found: error
+
   update-draft-release:
     name: Update draft release
-    needs: build
+    needs:
+      - build
+      - build-android
     if: |
       github.ref == 'refs/heads/master' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

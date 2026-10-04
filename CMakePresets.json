@@ -71,7 +71,7 @@
       "name": "android-release-windows",
       "displayName": "Android Release (Windows)",
       "inherits": "android-base",
-      "generator": "MinGW Makefiles",
+      "generator": "Ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -82,7 +82,7 @@
       "name": "android-release-unix",
       "displayName": "Android Release (Unix)",
       "inherits": "android-base",
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "condition": {
         "type": "notEquals",
         "lhs": "${hostSystemName}",

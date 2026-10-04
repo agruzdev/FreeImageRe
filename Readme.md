@@ -14,6 +14,15 @@ Same to the original FreeImage [dual license](https://freeimage.sourceforge.io/l
 All changes are described below in this file.
 
 
+### Supported (tested) platforms
+
+Compilation with all dependencies should work on:
+
+- Windows MSVC x64 / x32 / ARM64
+- Ubuntu GCC x64
+- Android arm64-v8a
+
+
 ### Supported formats
 
 Formats supported in FreeImageRe:
