@@ -50,6 +50,10 @@ target_link_libraries(LibJpegXL INTERFACE jxl jxl_cms LibHighway LibBrotli LibLC
 target_include_directories(LibJpegXL INTERFACE ${INSTALL_DIR}/include)
 set_property(TARGET JPEGXL PROPERTY FOLDER "Dependencies")
 
+if(ANDROID)
+    target_link_libraries(LibJpegXL INTERFACE log)
+endif()
+
 set(JPEGXL_ROOT ${INSTALL_DIR})
 
 unset(INSTALL_DIR)

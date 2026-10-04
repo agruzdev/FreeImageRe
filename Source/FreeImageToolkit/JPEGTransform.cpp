@@ -23,20 +23,19 @@
 
 #if FREEIMAGE_WITH_LIBJPEG
 
+#include <cstddef>
+#include <cstdio>
+
 extern "C" {
 #define XMD_H
 #undef FAR
 #include <setjmp.h>
-
-#include <cstddef>
-#include <cstdio>
 #include "jpeglib.h"
 #include "jerror.h"
 
 #if FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
 #include "transupp.h"
 #endif // FREEIMAGE_WITH_LIBJPEG_TRANSFORMS
-
 }
 
 #endif // FREEIMAGE_WITH_LIBJPEG

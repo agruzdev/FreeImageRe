@@ -30,13 +30,13 @@
 #pragma warning (disable : 4786) // identifier was truncated to 'number' characters
 #endif
 
+#include <cstddef>
+#include <cstdio>
+#include <csetjmp>
+
 extern "C" {
 #define XMD_H
 #undef FAR
-#include <setjmp.h>
-
-#include <cstddef>
-#include <cstdio>
 #include "jversion.h"
 #include "jpeglib.h"
 #include "jerror.h"
