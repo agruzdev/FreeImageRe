@@ -1,0 +1,869 @@
+digraph FreeImageReDependencies {
+    rankdir=LR;
+    compound=true;
+    splines=polyline;
+    concentrate=false;
+
+    graph [
+        fontname="Segoe UI",
+        label="FreeImageRe dependency graph",
+        labelloc="t",
+        fontsize=18,
+        nodesep=0.35,
+        ranksep=1.0
+    ];
+
+    node [
+        shape=box,
+        style="rounded,filled",
+        fillcolor="#F5F5F5",
+        fontname="Segoe UI",
+        fontsize=10
+    ];
+
+    edge [
+        fontname="Segoe UI",
+        fontsize=8,
+        color="#555555"
+    ];
+
+    // =========================================================================
+    // Main project
+    // =========================================================================
+
+    FreeImage [
+        label="FreeImageRe\nFreeImage shared library",
+        shape=component,
+        fillcolor="#9FD5E0"
+    ];
+
+    LibYato [
+        label="Yato\ncommit 246c83a",
+        fillcolor="#D9EAD3"
+    ];
+
+    LibZLIB [
+        label="zlib 1.3.2",
+        shape=component,
+        fillcolor="#FFD966"
+    ];
+
+    FreeImage -> LibYato [
+        label="always"
+    ];
+
+    FreeImage -> LibZLIB [
+        label="always"
+    ];
+
+    // =========================================================================
+    // FreeImage plugins and active backends
+    // =========================================================================
+
+    subgraph cluster_active_plugins {
+        label="Active FreeImage plugins";
+        color="#7F9DB9";
+        style="rounded";
+
+        PluginJPEG [
+            label="PluginJPEG"
+        ];
+
+        PluginJ2K [
+            label="PluginJ2K / PluginJP2"
+        ];
+
+        PluginPNG [
+            label="PluginPNG"
+        ];
+
+        PluginEXR [
+            label="PluginEXR"
+        ];
+
+        PluginTIFF [
+            label="PluginTIFF / PluginG3"
+        ];
+
+        PluginWEBP [
+            label="PluginWebP"
+        ];
+
+        PluginRAW [
+            label="PluginRAW"
+        ];
+
+        PluginHEIF [
+            label="PluginHEIF"
+        ];
+
+        PluginJPEGXL [
+            label="PluginJPEGXL"
+        ];
+
+        PluginJXR [
+            label="PluginJXR"
+        ];
+    }
+
+    FreeImage -> PluginJPEG;
+    FreeImage -> PluginJ2K;
+    FreeImage -> PluginPNG;
+    FreeImage -> PluginEXR;
+    FreeImage -> PluginTIFF;
+    FreeImage -> PluginWEBP;
+    FreeImage -> PluginRAW;
+    FreeImage -> PluginHEIF;
+    FreeImage -> PluginJPEGXL;
+    FreeImage -> PluginJXR;
+
+    PluginJPEG -> LibJPEG;
+    PluginJ2K -> LibOpenJPEG;
+    PluginPNG -> LibPNG;
+    PluginEXR -> LibOpenEXR;
+    PluginTIFF -> LibTIFF;
+    PluginWEBP -> LibWEBP;
+    PluginRAW -> LibRAW;
+    PluginHEIF -> LibHEIF;
+    PluginJPEGXL -> LibJpegXL;
+    PluginJXR -> LibJXR;
+
+    LibJPEG [
+        label="libjpeg-turbo 3.2.0\nor IJG jpeg 10",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibOpenJPEG [
+        label="OpenJPEG 2.5.4\nopenjp2",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibPNG [
+        label="libpng 1.6.59",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibTIFF [
+        label="libtiff 4.7.1",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibWEBP [
+        label="libwebp 1.6.0\nwebp + webpmux + sharpyuv",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibRAW [
+        label="LibRaw 0.22.2",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibHEIF [
+        label="libheif 1.23.5",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibJpegXL [
+        label="JPEG XL 0.12.0",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibOpenEXR [
+        label="OpenEXR 3.5.2",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibJXR [
+        label="LibJXR\ninternal dependency",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    // =========================================================================
+    // Active transitive dependencies
+    // =========================================================================
+
+    LibPNG -> LibZLIB [
+        label="zlib"
+    ];
+
+    LibTIFF -> LibZLIB [
+        label="zlib=ON"
+    ];
+
+    LibTIFF -> LibImath [
+        label="half.h"
+    ];
+
+    LibOpenEXR -> LibImath [
+        label="Imath::Imath"
+    ];
+
+    LibOpenEXR -> LibOpenJPH [
+        label="external OpenJPH"
+    ];
+
+    LibHEIF -> LibAOM [
+        label="AV1 encoder + decoder"
+    ];
+
+    LibHEIF -> LibDE265 [
+        label="HEVC decoder"
+    ];
+
+    LibHEIF -> LibKvazaar [
+        label="HEVC encoder"
+    ];
+
+    LibHEIF -> LibZLIB [
+        label="ZLIB_ROOT"
+    ];
+
+    LibJpegXL -> LibZLIB [
+        label="ZLIB_ROOT"
+    ];
+
+    LibJpegXL -> LibHighway [
+        label="HWY_ROOT"
+    ];
+
+    LibJpegXL -> LibBrotli [
+        label="Brotli_ROOT"
+    ];
+
+    LibJpegXL -> LibLCMS2 [
+        label="LCMS2_ROOT"
+    ];
+
+    LibImath [
+        label="Imath 3.2.3",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibOpenJPH [
+        label="OpenJPH 0.32.0",
+        shape=component,
+        fillcolor="#FFD966"
+    ];
+
+    LibAOM [
+        label="AOM 3.15.1",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibDE265 [
+        label="libde265 1.1.3",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibKvazaar [
+        label="Kvazaar 2.3.2",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibHighway [
+        label="Highway 1.4.0",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibBrotli [
+        label="Brotli 1.2.0",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    LibLCMS2 [
+        label="Little CMS 2.19.1",
+        shape=component,
+        fillcolor="#D9EAD3"
+    ];
+
+    // =========================================================================
+    // OpenEXR internal dependencies
+    // =========================================================================
+
+    OpenEXR_Deflate [
+        label="OpenEXR internal\ndeflate",
+        style="rounded,dashed",
+        fillcolor="#EDEDED"
+    ];
+
+    OpenEXR_ZSTD [
+        label="OpenEXR internal\nzstd",
+        style="rounded,dashed",
+        fillcolor="#EDEDED"
+    ];
+
+    LibOpenEXR -> OpenEXR_Deflate [
+        label="OPENEXR_FORCE_INTERNAL_DEFLATE=ON",
+        style=dashed,
+        color="#777777"
+    ];
+
+    LibOpenEXR -> OpenEXR_ZSTD [
+        label="OPENEXR_FORCE_INTERNAL_ZSTD=ON",
+        style=dashed,
+        color="#777777"
+    ];
+
+    // =========================================================================
+    // Bundled source components
+    // =========================================================================
+
+    AOM_LIBYUV [
+        label="AOM bundled libyuv",
+        style="rounded,dashed",
+        fillcolor="#EDEDED"
+    ];
+
+    AOM_LIBWEBM [
+        label="AOM bundled libwebm",
+        style="rounded,dashed",
+        fillcolor="#EDEDED"
+    ];
+
+    LibAOM -> AOM_LIBYUV [
+        label="bundled source",
+        style=dashed,
+        color="#777777"
+    ];
+
+    LibAOM -> AOM_LIBWEBM [
+        label="bundled source",
+        style=dashed,
+        color="#777777"
+    ];
+
+    // =========================================================================
+    // Optional libheif codec dependencies
+    // =========================================================================
+
+    subgraph cluster_optional_heif {
+        label="Optional libheif codec dependencies";
+        color="#C9A227";
+        style="rounded,dashed";
+
+        LibX265 [
+            label="x265\nWITH_X265=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibX264 [
+            label="x264\nWITH_X264=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibOpenH264 [
+            label="OpenH264\nWITH_OpenH264_DECODER=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibDAV1D [
+            label="dav1d\nWITH_DAV1D=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibSVTAV1 [
+            label="SVT-AV1\nWITH_SvtEnc=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibRAV1E [
+            label="rav1e\nWITH_RAV1E=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibVVDEC [
+            label="vvdec\nWITH_VVDEC=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibVVENC [
+            label="vvenc\nWITH_VVENC=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibUVG266 [
+            label="uvg266\nWITH_UVG266=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibFFmpeg [
+            label="FFmpeg\navcodec + avutil",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibHEIFOpenJPEG [
+            label="OpenJPEG\nlibheif backend",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibHEIFOpenJPH [
+            label="OpenJPH\nHT-J2K encoder",
+            fillcolor="#FFF2CC"
+        ];
+    }
+
+    LibHEIF -> LibX265 [
+        label="WITH_X265=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibX264 [
+        label="WITH_X264=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibOpenH264 [
+        label="WITH_OpenH264_DECODER=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibDAV1D [
+        label="WITH_DAV1D=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibSVTAV1 [
+        label="WITH_SvtEnc=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibRAV1E [
+        label="WITH_RAV1E=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibVVDEC [
+        label="WITH_VVDEC=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibVVENC [
+        label="WITH_VVENC=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibUVG266 [
+        label="WITH_UVG266=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibFFmpeg [
+        label="WITH_FFMPEG_DECODER=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibHEIFOpenJPEG [
+        label="WITH_OpenJPEG_* = ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibHEIF -> LibHEIFOpenJPH [
+        label="WITH_OPENJPH_ENCODER=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Optional libtiff codec dependencies
+    // =========================================================================
+
+    subgraph cluster_optional_tiff {
+        label="Optional libtiff codec dependencies";
+        color="#C9A227";
+        style="rounded,dashed";
+
+        LibDeflate [
+            label="libdeflate\n-Dlibdeflate=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        TIFFJPEG [
+            label="JPEG\n-Djpeg=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        TIFFJPEG12 [
+            label="JPEG 12-bit\n-Djpeg12=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibJBIG [
+            label="JBIG\n-Djbig=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        TIFFWEBP [
+            label="WebP\n-Dwebp=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibZSTD [
+            label="ZSTD\n-Dzstd=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        LibLZMA [
+            label="LZMA / XZ\n-Dlzma=ON",
+            fillcolor="#FFF2CC"
+        ];
+    }
+
+    LibTIFF -> LibDeflate [
+        label="-Dlibdeflate=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibDeflate -> LibZLIB [
+        label="still requires zlib",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> TIFFJPEG [
+        label="-Djpeg=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> TIFFJPEG12 [
+        label="-Djpeg12=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> LibJBIG [
+        label="-Djbig=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> TIFFWEBP [
+        label="-Dwebp=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> LibZSTD [
+        label="-Dzstd=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibTIFF -> LibLZMA [
+        label="-Dlzma=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Optional JPEG XL dependencies
+    // =========================================================================
+
+    subgraph cluster_optional_jpegxl {
+        label="Optional JPEG XL dependencies";
+        color="#C9A227";
+        style="rounded,dashed";
+
+        JXL_SJPEG [
+            label="sjpeg\nJPEGXL_ENABLE_SJPEG=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        JXL_SKCMS [
+            label="skcms\nJPEGXL_ENABLE_SKCMS=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        JXL_TCMALLOC [
+            label="gperftools / tcmalloc\nJPEGXL_ENABLE_TCMALLOC=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        JXL_LIBPNG [
+            label="libpng\nJPEGXL_BUNDLE_LIBPNG=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        JXL_OPENEXR [
+            label="OpenEXR\nJPEGXL_ENABLE_OPENEXR=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        JXL_JNI [
+            label="Java / JNI\nJPEGXL_ENABLE_JNI=ON",
+            fillcolor="#FFF2CC"
+        ];
+    }
+
+    LibJpegXL -> JXL_SJPEG [
+        label="JPEGXL_ENABLE_SJPEG=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibJpegXL -> JXL_SKCMS [
+        label="JPEGXL_ENABLE_SKCMS=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibJpegXL -> JXL_TCMALLOC [
+        label="JPEGXL_ENABLE_TCMALLOC=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibJpegXL -> JXL_LIBPNG [
+        label="JPEGXL_BUNDLE_LIBPNG=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibJpegXL -> JXL_OPENEXR [
+        label="JPEGXL_ENABLE_OPENEXR=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibJpegXL -> JXL_JNI [
+        label="JPEGXL_ENABLE_JNI=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Optional OpenEXR dependencies
+    // =========================================================================
+
+    OpenEXR_TBB [
+        label="oneTBB\nOPENEXR_USE_TBB=ON",
+        fillcolor="#FFF2CC"
+    ];
+
+    SystemZSTD [
+        label="system zstd >= 1.5.0\nOPENEXR_FORCE_INTERNAL_ZSTD=OFF",
+        fillcolor="#FFF2CC"
+    ];
+
+    SystemDeflate [
+        label="system Deflate / zlib\nOPENEXR_FORCE_INTERNAL_DEFLATE=OFF",
+        fillcolor="#FFF2CC"
+    ];
+
+    LibOpenEXR -> OpenEXR_TBB [
+        label="OPENEXR_USE_TBB=ON",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibOpenEXR -> SystemZSTD [
+        label="use external zstd",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibOpenEXR -> SystemDeflate [
+        label="use external Deflate",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Optional WebP tool dependencies
+    // =========================================================================
+
+    subgraph cluster_optional_webp {
+        label="Optional WebP tool dependencies";
+        color="#C9A227";
+        style="rounded,dashed";
+
+        GIF [
+            label="GIF\nWEBP_BUILD_GIF2WEBP=ON",
+            fillcolor="#FFF2CC"
+        ];
+
+        WebPToolsPNG [
+            label="PNG\nWebP tools",
+            fillcolor="#FFF2CC"
+        ];
+
+        WebPToolsJPEG [
+            label="JPEG\nWebP tools",
+            fillcolor="#FFF2CC"
+        ];
+
+        WebPToolsTIFF [
+            label="TIFF\nWebP tools",
+            fillcolor="#FFF2CC"
+        ];
+
+        OpenGL [
+            label="OpenGL\nvwebp",
+            fillcolor="#FFF2CC"
+        ];
+    }
+
+    LibWEBP -> GIF [
+        label="GIF detection",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibWEBP -> WebPToolsPNG [
+        label="tools",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibWEBP -> WebPToolsJPEG [
+        label="tools",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibWEBP -> WebPToolsTIFF [
+        label="tools",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    LibWEBP -> OpenGL [
+        label="vwebp",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // OpenJPH optional TIFF support
+    // =========================================================================
+
+    OpenJPH_TIFF [
+        label="OpenJPH TIFF support\nOJPH_ENABLE_TIFF_SUPPORT=ON",
+        fillcolor="#FFF2CC"
+    ];
+
+    LibOpenJPH -> OpenJPH_TIFF [
+        label="currently OFF",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    OpenJPH_TIFF -> LibTIFF [
+        label="TIFF dependency",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Potential standalone OpenJPH FreeImage plugin
+    // =========================================================================
+
+    PotentialJ2KPlugin [
+        label="Potential standalone\nJPEG 2000 plugin",
+        fillcolor="#FFF2CC",
+        style="rounded,dashed"
+    ];
+
+    FreeImage -> PotentialJ2KPlugin [
+        label="not active:\ncurrent plugin uses OpenJPEG",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    PotentialJ2KPlugin -> LibOpenJPH [
+        label="OpenJPH backend",
+        style=dashed,
+        color="#C9A227"
+    ];
+
+    // =========================================================================
+    // Platform/runtime dependencies
+    // =========================================================================
+
+    SystemThreads [
+        label="System Threads\nWin32 / pthreads",
+        fillcolor="#EDEDED",
+        style="rounded,dashed"
+    ];
+
+    SystemAtomics [
+        label="System atomics",
+        fillcolor="#EDEDED",
+        style="rounded,dashed"
+    ];
+
+    SystemMath [
+        label="System math library\nlibm where required",
+        fillcolor="#EDEDED",
+        style="rounded,dashed"
+    ];
+
+    SystemDL [
+        label="Dynamic loader\nCMAKE_DL_LIBS",
+        fillcolor="#EDEDED",
+        style="rounded,dashed"
+    ];
+
+    LibOpenEXR -> SystemThreads [
+        label="threading",
+        style=dotted
+    ];
+
+    LibOpenEXR -> SystemDL [
+        label="CMAKE_DL_LIBS",
+        style=dotted
+    ];
+
+    LibJpegXL -> SystemThreads [
+        label="Threads::Threads",
+        style=dotted
+    ];
+
+    LibJpegXL -> SystemAtomics [
+        label="find_package(Atomics)",
+        style=dotted
+    ];
+
+    LibWEBP -> SystemThreads [
+        label="WEBP_USE_THREAD=ON",
+        style=dotted
+    ];
+
+    LibWEBP -> SystemMath [
+        label="math fallback",
+        style=dotted
+    ];
+
+    LibTIFF -> SystemMath [
+        label="CMath",
+        style=dotted
+    ];
+}

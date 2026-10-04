@@ -14,6 +14,60 @@ Same to the original FreeImage [dual license](https://freeimage.sourceforge.io/l
 All changes are described below in this file.
 
 
+### Supported formats
+
+Formats supported in FreeImageRe:
+
+| Format | `FREE_IMAGE_FORMAT` | Library | Extensions |
+|---|---|---|---|
+| Windows Bitmap | `FIF_BMP` | Built-in plugin | `.bmp`, `.dib` |
+| Icon / Cursor | `FIF_ICO` | Built-in plugin | `.ico`, `.cur` |
+| JPEG | `FIF_JPEG` | [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo) or [libjpeg](https://www.ijg.org) | `.jpg`, `.jpeg`, `.jpe`, `.jif`, `.jfif` |
+| JPEG Network Graphics | `FIF_JNG` | Not supported | `.jng` |
+| C64 Koala | `FIF_KOALA` | Built-in plugin | `.koa` |
+| Amiga IFF / LBM | `FIF_LBM`, `FIF_IFF` | Built-in plugin | `.iff`, `.lbm` |
+| Multiple-image Network Graphics | `FIF_MNG` | Built-in plugin | `.mng` |
+| Portable Bitmap | `FIF_PBM` | Built-in plugin | `.pbm` |
+| Portable Bitmap, raw | `FIF_PBMRAW` | Built-in plugin | `.pbm` |
+| Kodak PhotoCD | `FIF_PCD` | Built-in plugin | `.pcd` |
+| PCX | `FIF_PCX` | Built-in plugin | `.pcx` |
+| Portable Graymap | `FIF_PGM` | Built-in plugin | `.pgm` |
+| Portable Graymap, raw | `FIF_PGMRAW` | Built-in plugin | `.pgm` |
+| PNG | `FIF_PNG` | [libpng](https://github.com/pnggroup/libpng) | `.png` |
+| Portable Pixmap | `FIF_PPM` | Built-in plugin | `.ppm` |
+| Portable Pixmap, raw | `FIF_PPMRAW` | Built-in plugin | `.ppm` |
+| Sun Raster | `FIF_RAS` | Built-in plugin | `.ras` |
+| TARGA / Truevision TGA | `FIF_TARGA` | Built-in plugin | `.tga`, `.targa` |
+| TIFF | `FIF_TIFF` | [libtiff](http://download.osgeo.org/libtiff/) | `.tif`, `.tiff` |
+| Wireless Bitmap | `FIF_WBMP` | Built-in plugin | `.wbmp` |
+| Adobe Photoshop | `FIF_PSD` | Built-in plugin | `.psd` |
+| Dr. Halo CUT | `FIF_CUT` | Built-in plugin | `.cut` |
+| X Bitmap | `FIF_XBM` | Built-in plugin | `.xbm` |
+| X PixMap | `FIF_XPM` | Built-in plugin | `.xpm` |
+| DirectDraw Surface | `FIF_DDS` | Built-in plugin | `.dds` |
+| Graphics Interchange Format | `FIF_GIF` | Built-in plugin | `.gif` |
+| Radiance HDR | `FIF_HDR` | Built-in plugin | `.hdr` |
+| Fax Group 3 | `FIF_FAXG3` | Built-in plugin | `.g3` |
+| SGI | `FIF_SGI` | Built-in plugin | `.sgi`, `.rgb`, `.rgba`, `.bw` |
+| OpenEXR | `FIF_EXR` | [OpenEXR](https://github.com/AcademySoftwareFoundation/openexr) | `.exr` |
+| JPEG 2000 codestream | `FIF_J2K` | [OpenJPEG](https://github.com/uclouvain/openjpeg) | `.j2k`, `.j2c` |
+| JPEG 2000 JP2 | `FIF_JP2` | [OpenJPEG](https://github.com/uclouvain/openjpeg) | `.jp2` |
+| Portable FloatMap | `FIF_PFM` | Built-in plugin | `.pfm` |
+| Macintosh PICT | `FIF_PICT` | Built-in plugin | `.pct`, `.pict` |
+| Camera RAW | `FIF_RAW` | [LibRaw](https://github.com/LibRaw/LibRaw) | `.raw`, `.crw`, `.cr2`, `.cr3`, `.nef`, `.nrw`, `.arw`, `.dng`, `.orf`, `.rw2`, `.pef`, `.raf`, `.srw`, `.rwl`, `.mrw`, `.kdc`, `.dcr`, `.x3f`, `.iiq`, `.3fr` |
+| WebP | `FIF_WEBP` | [libwebp](https://chromium.googlesource.com/webm/libwebp) | `.webp` |
+| JPEG-XR / HD Photo | `FIF_JXR` | Internal LibJXR | `.jxr`, `.wdp`, `.hdp` |
+| HEIF / HEIC | `FIF_HEIF` | [libheif](https://github.com/strukturag/libheif) | `.heif`, `.heifs`, `.heic`, `.heics` |
+| AVIF | `FIF_AVIF` | [libheif](https://github.com/strukturag/libheif) | `.avif` |
+| JPEG XL | `FIF_JPEGXL` | [libjxl](https://github.com/libjxl/libjxl) | `.jxl` |
+
+
+**Note:** libheif.so / heif.dll is linked in runtime
+
+See Release Notes for the latest bundled versions
+
+
+
 ### Python bindings
 
 To import FreeImage python package do the following steps:
