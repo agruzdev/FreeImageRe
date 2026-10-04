@@ -105,7 +105,7 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target package
 
     - name: Upload package artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: package-${{ matrix.platform }}
         path: ${{ steps.strings.outputs.build-output-dir }}/FreeImageRe-*.zip
