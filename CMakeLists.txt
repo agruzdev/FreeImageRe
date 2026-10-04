@@ -126,6 +126,8 @@ if(WIN32)
     if(CMAKE_VS_PLATFORM_NAME STREQUAL "ARM64") # cross-compilation
         set(CPACK_SYSTEM_NAME "win-arm64")
     endif()
+elseif(ANDROID)
+    set(CPACK_SYSTEM_NAME "android-${ANDROID_ABI}")
 elseif(UNIX)
     if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
         set(CPACK_SYSTEM_NAME "linux64")
