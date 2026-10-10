@@ -1,29 +1,51 @@
-## FreeImage Re(surrected)
+# FreeImageRe - FreeImage Re(surrected) Fork
 
-Fork of [the FreeImage project](https://freeimage.sourceforge.io/) in order to support FreeImage library for modern compilers and dependencies versions.
+FreeImageRe is a maintained fork of the [FreeImage project](https://freeimage.sourceforge.io/). It updates the original FreeImage 3.18 library for modern compilers and dependency versions while preserving binary compatibility with the FreeImage 3.18 dynamic library. This fork also includes vulnerability fixes and small API extensions.
 
-Also small extensions and fixes can be added.
-
-The dynamic library is binary compatible with FreeImage 3.18 and can replace it.
+FreeImageRe is a C/C++ image codec library, bitmap library, image loading library, image conversion library and FreeImage-compatible replacement. It hides a wide range of image-codec backends and platform-specific dependencies behind one stable, universal C API. Applications use the same API for loading, saving and converting images while FreeImageRe handles the underlying codec libraries and their versions.
 
 
-### Licensing
+## Licensing
 
-Same to the original FreeImage [dual license](https://freeimage.sourceforge.io/license.html).
+FreeImageRe uses the original FreeImage [dual license](https://freeimage.sourceforge.io/license.html): the FreeImage Public License (FIPL) or GNU GPL v2. Third-party dependencies have their own licenses.
 
-All changes are described below in this file.
+## Supported platforms
 
+The following configurations are built by the GitHub Actions workflow:
 
-### Supported (tested) platforms
+| Platform | Architecture | Toolchain | CI status | Configure preset or method |
+|---|---|---|---|---|
+| Windows | x64 | MSVC | Tested in CI | `msvc-release` or `msvc-debug` |
+| Windows | ARM64 | MSVC | Tested in CI | CMake with `-A ARM64` |
+| Ubuntu | x64 | GCC/G++ | Tested in CI | `linux-release` |
+| Android | `arm64-v8a` | Android NDK | Tested in CI | `android-release-unix` |
+| macOS | Native architecture | CMake and a C++20 compiler | N/A | `linux-release` or equivalent Unix generator |
 
-Compilation with all dependencies should work on:
+The presets are defined in [`CMakePresets.json`](CMakePresets.json). The Android preset requires `ANDROID_NDK_HOME` and targets Android platform `28`.
 
-- Windows MSVC x64 / x32 / ARM64
-- Ubuntu GCC x64
-- Android arm64-v8a
+### Windows
 
+```powershell
+cmake --preset msvc-release
+cmake --build build-vs18-release --config Release
+```
 
-### Supported formats
+### Linux
+
+```bash
+cmake --preset linux-release
+cmake --build build-linux-release
+```
+
+### Android
+
+```bash
+export ANDROID_NDK_HOME=/path/to/android-ndk
+cmake --preset android-release-unix
+cmake --build build-android-release
+```
+
+## Supported formats
 
 Formats supported in FreeImageRe:
 
@@ -70,189 +92,32 @@ Formats supported in FreeImageRe:
 | AVIF | `FIF_AVIF` | [libheif](https://github.com/strukturag/libheif) | `.avif` |
 | JPEG XL | `FIF_JPEGXL` | [libjxl](https://github.com/libjxl/libjxl) | `.jxl` |
 
+**Runtime dependency:** `libheif` is linked as a shared library. Applications using HEIF or AVIF must make `heif.dll` available on Windows or `libheif.so` available on Linux.
 
-**Note:** libheif.so / heif.dll is linked in runtime
+## Python bindings
 
-See Release Notes for the latest bundled versions
+To build the Python bindings, configure CMake with `-DFREEIMAGE_WITH_PYTHON_BINDINGS=ON`. Python development files and Numpy are required.
 
+After installation:
 
-
-### Python bindings
-
-To import FreeImage python package do the following steps:
-
-* On Windows make link FreeImage.pyd ==> FreeImage.dll     (a hard link is generated automatically when built from sources)
-* On Linux make link FreeImage.so ==> libFreeImage.so    (a symbolic link is generated automatically when built from sources)
-* Make sure the link and library is available on PYTHONPATH (https://docs.python.org/3/extending/building.html)
+- On Windows, make a link from `FreeImage.pyd` to `FreeImage.dll` (a hard link is generated automatically when built from sources).
+- On Linux, make a link from `FreeImage.so` to `libFreeImage.so` (a symbolic link is generated automatically when built from sources).
+- Make sure the link and library are available on `PYTHONPATH` ([Python documentation](https://docs.python.org/3/extending/building.html)).
 
 ```python
-
+import numpy as np
 import FreeImage as fi
 
-img = fi.load(r"myimage.jpg", fi.JPEG_EXIFROTATE) # Loads as numpy array
-...
+image = fi.load("input.jpg", fi.JPEG_EXIFROTATE)
+image, image_format = fi.loadf("input.jpg")
 
-img, format = fi.loadf(r"myimage.bin") # Returns image and format enum deduced from name or file data
-...
-
-import numpy
-zero = numpy.zeros((128, 128), dtype=numpy.float32)
-fi.save(fi.FIF_EXR, zero, "zero.exr")  # Accepts 2D or 3D numpy arrays
-...
-
-
+pixels = np.zeros((128, 128), dtype=np.float32)
+fi.save(fi.FIF_EXR, pixels, "output.exr")
 ```
 
+`load()` returns an image as a NumPy array. `loadf()` returns an image and the detected format enum. `save()` accepts 2D or 3D NumPy arrays.
 
-### What's new
+## Changes
 
-Changes made to FreeImage v3.18:
-
-
-Version 4.2.1:
- - Fixed support of Android aarch64
- - Fixed unstable downloading of webp sources
- - Added support of the MSVC ARM64 target
- - Added support of compilation with system dependencies
- - Added libaom v3.15.1
- - Removed the dav1d and svtav1 dependencies
- - Updated libde265 till v1.1.3
- - Updated libheif till v1.23.5
- - Updated highway till v1.4.0
- - Updated imath till v3.2.3
- - Updated jpeg till v10
- - Updated jpeg-turbo till v3.2.0
- - Updated jpegXL till v0.12.0
- - Updated LCMS2 till v2.19.1
- - Updated OpenEXR till v3.5.2
- - Updated OpenJPH till v0.32.0
- - Updated libpng till v1.6.59
- - Updated libraw till v0.22.2
-
-
-Version 4.2.0:
- - Extended Plugin2 API to support opening multibitmap memory only once for all pages
- - Fixed crashes due to plugin object lifetime
- - Fixed backward compatible behaviour of the FreeImage_FIFSupports... functions in case of disabled plugins
- - Error-safe writing of output files in FreeImage_Save
- - Updated turbojpeg till v3.1.4.1
- - Updated jpegxl till v0.11.2
- - Updated OpenEXR till v3.4.10
- - Updated OpenJPH till v0.27.0
- - Updated libpng till v1.6.58
- - Updated libraw till v0.22.1
-
-Version 4.1.1:
- - Updated zlib till v1.3.2
- - Updated LibPNG till v1.6.55
- - PluginTIFF: fixed wrongly disabled ICC for CMYK without conversion
- - PluginHEIF supports writing raw Exif
- - CMake configuration supports Android build
-
-Version 4.1.0:
- - New plugin support .jxl format, OpenXL
- - Added libjxl v0.11.1
- - Added brotli v1.2.0
- - Added highway v1.3.0
- - Added Little-CMS v2.18, at hash 6ae7e97c
- - Fixed MacOX compilation
- - Fixed read-after-free error in PluginTIFF
- - Fixed backward compatible behaviour of FreeImage_GetFIFCount()
- - More accurate refcounting and deinitialization
- - Updated version macro in FreeImage.h
-
-Version 4.0.0:
- - New versioning: FreeImageRe 4.0 as next step after FreeImage 3.18
- - Added support of extra TIFF image formats
- - Added support for opening FIMULTIBITMAP from Unicode path
- - Added support for 2-level dependencies info reporting
- - Added new version of API for processing diagnostic messages
- - Fixed infinite loop in TIFF thumbnail loading
- - Fixed multiple CVEs in TIFF, RAS, ICO, HDR, PSD, XBM, EXR, JXR plugins.
- - Fixed compilation for x32
- - Updated jpeg-turbo till v3.1.3
- - Updated OpenEXR till v3.4.4
- - Updated LibPNG till v1.6.54
- - Updated LibRaw till v0.22.0
- - Updated LibDav1d till v1.5.3
-
-Version 0.5:
- - Updated LibDE265 till v1.0.16
- - Updated jpeg-turbo till v3.1.2
- - Updated LibKvazaar till v2.3.2
- - Updated OpenEXR till v3.3.5
- - Updated OpenJPEG till v2.5.4
- - Updated LibPNG till v1.6.50
- - Updated LibSvtav1 till v3.1.2
- - Updated LibTIFF till v4.7.1
- - Updated LibWebP till v1.6.0
- - Updated LibHEIF till v1.20.2
-
-Version 0.4:
- - Building with libjpeg-turbo by default
- - Introduced a new Plugin2 API for plugins with state
- - Added a limited support for HEIC and AVIF formats
- - Extended FIF_* enums range and added function for mapping FIF index to FIF value
- - Updated jpeg-turbo till v3.1.0
- - Updated OpenEXR till v3.3.3
- - Updated OpenJPEG till v2.5.3
- - Updated LibPNG till v1.6.48
- - Updated LibRaw till v0.21.4
- - Updated LibWebP till v1.5.0
- - Updated LibSvtav1 till v3.0.2
- - Updated LibDav1d till v1.5.1
- - Updated LibKvazaar till v2.3.1
- - Updated LibDE265 till v1.0.15
- - Updated LibHEIF till v1.19.7
-
-Version 0.3:
- - Fixed the vulnerabilities: CVE-2021-33367, CVE-2023-47992, CVE-2023-47993, CVE-2023-47994, CVE-2023-47995, CVE-2023-47996, CVE-2023-47997
- - Added API for querying versions of compiled dependencies
- - Added Python3 bindings
- - Ability to enable/disable each image library dependency
- - FreeImage_ConvertToRGBF supports FI_DOUBLE input
- - Limited support of 2bit bitmaps
- - Updated OpenEXR till v3.3.0
- - Updated LibPNG till v1.6.44
- - Updated jpeg-turbo till v3.0.4
- - Updated LibTIFF till v4.7.0
- - Updated LibWebP till v1.4.0
- - Updated LibRaw till v0.21.3
-
-Version 0.2:
- - Removed Windows datatypes to avoid collisions
- - Added C++ wrappers
- - Added basic support for YUV images
- - Added basic support for Float32 complex images
- - Added function FreeImage_ConvertToColor
- - Added function FreeImage_FindMinMax and FreeImage_FindMinMaxValue
- - Added function FreeImage_TmoClamp and corresponding enum FITMO_CLAMP
- - Added function FreeImage_TmoLinear and corresponding enum FITMO_LINEAR
- - Added function FreeImage_DrawBitmap
- - Added function FreeImage_GetColorType2
- - Added function FreeImage_MakeHistogram
- - Updated zlib till v1.3.1
- - Updated OpenEXR till v3.2.2
- - Updated OpenJPEG till v2.5.2
- - Updaged LibJPEG till jpeg-9f
- - Updated LibPNG till v1.6.43
- - Updated LibTIFF till v4.6.0
- - Updated LibWebP till v1.3.2
- - Updated LibRaw till v0.21.2
-
-Version 0.1:
- - Compilation fix for FREEIMAGE_COLORORDER_RGB
- - Export Utility.h functions from DLL
- - Linking image formt dependencies as static libs
- - Updated zlib till v1.2.13
- - Updated OpenEXR till v3.1.4
- - Updated OpenJPEG till v2.5.0 (alternatively JPEG-turbo v2.1.4)
- - Updated LibPNG till v1.6.37
- - Updated LibTIFF till v4.4.0
- - Updated LibWebP till v1.2.4
- - Updated LibRaw till v0.20.0
- - PluginTIFF fixed to read images with packed bits
- - Minimalistic support of RGB(A) 32bits per channel for loading and conversion
- - Added functions FreeImageRe_GetVersion() and FreeImageRe_GetVersionNumbers()
-
+All changes relative to FreeImage 3.18 are documented in [`Changelog.md`](Changelog.md).
 
