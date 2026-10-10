@@ -2,6 +2,8 @@
 
 FreeImageRe is a maintained fork of the [FreeImage project](https://freeimage.sourceforge.io/). It updates the original FreeImage 3.18 library for modern compilers and dependency versions while preserving binary compatibility with the FreeImage 3.18 dynamic library. This fork also includes vulnerability fixes and small API extensions.
 
+## About
+
 FreeImageRe is a C/C++ image codec library, bitmap library, image loading library, image conversion library and FreeImage-compatible replacement. It hides a wide range of image-codec backends and platform-specific dependencies behind one stable, universal C API. Applications use the same API for loading, saving and converting images while FreeImageRe handles the underlying codec libraries and their versions.
 
 
