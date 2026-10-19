@@ -74,7 +74,7 @@ class CMakeBuildExt(build_ext):
 			command.extend(["--config", configuration])
 		subprocess.check_call(command, cwd=ROOT)
 
-		output_dir = Path(self.get_ext_fullpath("_freeimage")).parent
+		output_dir = Path(self.get_ext_fullpath("freeimage._freeimage")).parent
 		output_dir.mkdir(parents=True, exist_ok=True)
 
 		paths = []
@@ -92,12 +92,14 @@ class CMakeBuildExt(build_ext):
 		install_root = Path(metadata["targets"]["freeimage"]["install_path"]).parent.parent
 		for source in install_root.rglob("*"):
 			if source.is_file() and source.resolve() not in copied:
-				if source.suffix.lower() in {".pyd", ".dll", ".so"} or ".so." in source.name:
+				if source.suffix.lower() in {".pyd", ".dll", ".so", ".pyi"} or ".so." in source.name:
 					shutil.copy2(source, output_dir / source.name)
 
-		pyfile_path = ROOT / "Source/Python/freeimage.py"
-		if pyfile_path.exists():
-			shutil.copy2(pyfile_path, Path(self.build_lib) / pyfile_path.name)
+		init_path = ROOT / "Source/Python/__init__.py"
+		if init_path.exists():
+			package_dir = Path(self.build_lib) / "freeimage"
+			package_dir.mkdir(parents=True, exist_ok=True)
+			shutil.copy2(init_path, package_dir / init_path.name)
 
 
 class BuildPy(build_py):
@@ -140,7 +142,7 @@ setup(
 	author="Alexey Gruzdev",
 	python_requires=">=3.12",
 	install_requires=["numpy>= 2.0.0"],
-	ext_modules=[CMakeExtension("_freeimage")],
+		ext_modules=[CMakeExtension("freeimage._freeimage")],
 	cmdclass={
 		"build_ext": CMakeBuildExt,
 		"build_py": BuildPy,

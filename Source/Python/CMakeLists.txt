@@ -1,6 +1,9 @@
 include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.nanobind.cmake)
 
 
+# ===========================
+# Bindings module
+
 nanobind_add_module(FreeImagePy STABLE_ABI FreeImagePy.cpp)
 
 set_target_properties(FreeImagePy PROPERTIES OUTPUT_NAME "_freeimage")
@@ -41,9 +44,23 @@ file(GENERATE
     CONTENT "${FREEIMAGERE_BUILD_METADATA}"
 )
 
-install(
-    TARGETS FreeImagePy
+install(TARGETS FreeImagePy
     LIBRARY DESTINATION python
     RUNTIME DESTINATION python
+    COMPONENT python
+)
+
+# ========================
+# Stubs
+
+nanobind_add_stub(FreeImagePyStubs
+  MODULE _freeimage
+  OUTPUT "${CMAKE_BINARY_DIR}/_freeimage.pyi"
+  PYTHON_PATH $<TARGET_FILE_DIR:FreeImagePy>
+  DEPENDS FreeImagePy
+)
+
+install(FILES "${CMAKE_BINARY_DIR}/_freeimage.pyi"
+    DESTINATION python
     COMPONENT python
 )
