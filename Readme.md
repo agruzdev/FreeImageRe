@@ -32,11 +32,27 @@ cmake --preset msvc-release
 cmake --build build-vs18-release --config Release
 ```
 
+To build the Python wheel with a selected CMake preset:
+
+```powershell
+$env:FREEIMAGE_CMAKE_PRESET = "msvc-release"
+python -m build --wheel --no-isolation
+
+$env:FREEIMAGE_CMAKE_PRESET = "msvc-debug"
+python -m build --wheel --no-isolation
+```
+
+Alternatively, use `python setup.py bdist_wheel --cmake-preset=msvc-release`.
+
 ### Linux
 
 ```bash
 cmake --preset linux-release
 cmake --build build-linux-release
+```
+
+```bash
+FREEIMAGE_CMAKE_PRESET=linux-release python -m build --wheel --no-isolation
 ```
 
 ### Android
