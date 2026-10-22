@@ -41,6 +41,87 @@ void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message) {
 
 // ----------------------------------------------------------
 
+// disabled build options are not necessarily defined as 0
+#ifndef FREEIMAGE_WITH_LIBTIFF
+#define FREEIMAGE_WITH_LIBTIFF 0
+#endif
+#ifndef FREEIMAGE_WITH_LIBHEIF
+#define FREEIMAGE_WITH_LIBHEIF 0
+#endif
+#ifndef FREEIMAGE_WITH_LIBJPEGXL
+#define FREEIMAGE_WITH_LIBJPEGXL 0
+#endif
+#ifndef FREEIMAGE_WITH_LIBJXR
+#define FREEIMAGE_WITH_LIBJXR 0
+#endif
+#ifndef FREEIMAGE_WITH_LIBJPEG
+#define FREEIMAGE_WITH_LIBJPEG 0
+#endif
+#ifndef FREEIMAGE_WITH_LIBPNG
+#define FREEIMAGE_WITH_LIBPNG 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_BMP
+#define FREEIMAGE_WITH_PLUGIN_BMP 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_GIF
+#define FREEIMAGE_WITH_PLUGIN_GIF 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_ICO
+#define FREEIMAGE_WITH_PLUGIN_ICO 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_PCX
+#define FREEIMAGE_WITH_PLUGIN_PCX 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_PSD
+#define FREEIMAGE_WITH_PLUGIN_PSD 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_TARGA
+#define FREEIMAGE_WITH_PLUGIN_TARGA 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_DDS
+#define FREEIMAGE_WITH_PLUGIN_DDS 0
+#endif
+#ifndef FREEIMAGE_WITH_PLUGIN_HDR
+#define FREEIMAGE_WITH_PLUGIN_HDR 0
+#endif
+
+// Check that the plugin registry matches the build configuration:
+// a plugin which is compiled in must be registered, and a plugin
+// which is compiled out must not be. This is a plain check and not an
+// assert(), so that it is also active if NDEBUG is defined.
+static bool checkPluginRegistered(FREE_IMAGE_FORMAT fif, const char *name, bool compiledIn) {
+	const bool registered = FreeImage_FIFSupportsReading(fif) || FreeImage_FIFSupportsWriting(fif);
+	if (registered != compiledIn) {
+		printf("FAILED: plugin %s is %s but %s\n", name,
+			compiledIn ? "compiled in" : "compiled out",
+			registered ? "registered" : "not registered");
+		return false;
+	}
+	return true;
+}
+
+static bool checkPluginRegistry() {
+	bool ok = true;
+#define CHECK_PLUGIN(fif, macro) ok = checkPluginRegistered(fif, #fif, (macro) != 0) && ok
+	CHECK_PLUGIN(FIF_TIFF, FREEIMAGE_WITH_LIBTIFF);
+	CHECK_PLUGIN(FIF_HEIF, FREEIMAGE_WITH_LIBHEIF);
+	CHECK_PLUGIN(FIF_AVIF, FREEIMAGE_WITH_LIBHEIF);
+	CHECK_PLUGIN(FIF_JPEGXL, FREEIMAGE_WITH_LIBJPEGXL);
+	CHECK_PLUGIN(FIF_JXR, FREEIMAGE_WITH_LIBJXR);
+	CHECK_PLUGIN(FIF_JPEG, FREEIMAGE_WITH_LIBJPEG);
+	CHECK_PLUGIN(FIF_PNG, FREEIMAGE_WITH_LIBPNG);
+	CHECK_PLUGIN(FIF_BMP, FREEIMAGE_WITH_PLUGIN_BMP);
+	CHECK_PLUGIN(FIF_GIF, FREEIMAGE_WITH_PLUGIN_GIF);
+	CHECK_PLUGIN(FIF_ICO, FREEIMAGE_WITH_PLUGIN_ICO);
+	CHECK_PLUGIN(FIF_PCX, FREEIMAGE_WITH_PLUGIN_PCX);
+	CHECK_PLUGIN(FIF_PSD, FREEIMAGE_WITH_PLUGIN_PSD);
+	CHECK_PLUGIN(FIF_TARGA, FREEIMAGE_WITH_PLUGIN_TARGA);
+	CHECK_PLUGIN(FIF_DDS, FREEIMAGE_WITH_PLUGIN_DDS);
+	CHECK_PLUGIN(FIF_HDR, FREEIMAGE_WITH_PLUGIN_HDR);
+#undef CHECK_PLUGIN
+	return ok;
+}
+
 int main(int argc, char *argv[]) {
 	unsigned width  = 512;
 	unsigned height = 512;
@@ -70,6 +151,11 @@ int main(int argc, char *argv[]) {
 
 	// test plugins capabilities
 	showPlugins();
+
+	// the registered plugins must match the build configuration
+	if (!checkPluginRegistry()) {
+		return 1;
+	}
 
 	uint32_t depsCount = FreeImage_GetDependenciesCount();
 	for (uint32_t i = 0; i < depsCount; ++i) {

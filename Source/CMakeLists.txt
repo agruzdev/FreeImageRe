@@ -4,32 +4,12 @@ file(GLOB freeimage_sources FreeImage/*.cpp FreeImage/*.h)
 file(GLOB freeimage_toolkit_sources FreeImageToolkit/*.cpp FreeImageToolkit/*.h)
 file(GLOB metadata_sources Metadata/*.cpp Metadata/*.h)
 file(GLOB freeimage_headers ./*.h ./*.hpp)
-set(freeimage_plugins
-    Plugins/PluginBMP.cpp
-    Plugins/PluginCUT.cpp
-    Plugins/PluginDDS.cpp
-    Plugins/PluginGIF.cpp
-    Plugins/PluginHDR.cpp
-    Plugins/PluginICO.cpp
-    Plugins/PluginIFF.cpp
-    Plugins/PluginJNG.cpp
-    Plugins/PluginKOALA.cpp
-    Plugins/PluginMNG.cpp
-    Plugins/PluginPCD.cpp
-    Plugins/PluginPCX.cpp
-    Plugins/PluginPFM.cpp
-    Plugins/PluginPICT.cpp
-    Plugins/PluginPNM.cpp
-    Plugins/PluginPSD.cpp
-    Plugins/PluginRAS.cpp
-    Plugins/PluginSGI.cpp
-    Plugins/PluginTARGA.cpp
-    Plugins/PluginWBMP.cpp
-    Plugins/PluginXBM.cpp
-    Plugins/PluginXPM.cpp
-    Plugins/PSDParser.cpp
-    Plugins/PSDParser.h
-)
+
+# The MNG chunks parser is shared by the JNG and the MNG plugins only
+if (NOT FREEIMAGE_WITH_PLUGIN_JNG AND NOT FREEIMAGE_WITH_PLUGIN_MNG)
+    list(REMOVE_ITEM freeimage_sources ${CMAKE_CURRENT_SOURCE_DIR}/FreeImage/MNGHelper.cpp)
+endif()
+set(freeimage_plugins)
 
 
 include_directories(
@@ -72,6 +52,18 @@ endif()
 
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
+
+foreach(plugin_name IN LISTS FREEIMAGE_BUILTIN_PLUGINS)
+    if (FREEIMAGE_WITH_PLUGIN_${plugin_name})
+        target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_PLUGIN_${plugin_name}=1")
+        list(APPEND freeimage_plugins Plugins/Plugin${plugin_name}.cpp)
+    endif()
+endforeach()
+
+# PSDParser is used by the PSD and the TIFF plugins
+if (FREEIMAGE_WITH_PLUGIN_PSD OR FREEIMAGE_WITH_LIBTIFF)
+    list(APPEND freeimage_plugins Plugins/PSDParser.cpp Plugins/PSDParser.h)
+endif()
 
 
 if (FREEIMAGE_WITH_LIBOPENEXR)
