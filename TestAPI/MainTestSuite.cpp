@@ -158,6 +158,13 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+#if TEST_WITH_BMP
+	// test BMP RLE8 decoding
+	if (!testBMPRLE8()) {
+		return 1;
+	}
+#endif
+
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();

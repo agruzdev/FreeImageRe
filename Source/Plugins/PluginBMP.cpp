@@ -387,8 +387,10 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 						// apply them
 
-						bits     += delta_x;
-						scanline += delta_y;
+						// keep the position inside of the image
+
+						bits     = std::min(bits + (int)delta_x, width);
+						scanline = std::min(scanline + (int)delta_y, abs(height));
 
 						break;
 					}
@@ -399,12 +401,20 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 							return TRUE;
 						}
 
-						int count = std::min((int)status_byte, width - bits);
+						// the run must not exceed the scanline, the rest of it is skipped
+						int count = std::max(std::min((int)status_byte, width - bits), 0);
 
 						uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
-						if (io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
-							return FALSE;
+						if (count > 0) {
+							if (io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
+								return FALSE;
+							}
+						}
+						for (int i = count; i < (int)status_byte; i++) {
+							if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+								return FALSE;
+							}
 						}
 						
 						// align run length to even number of bytes 
@@ -415,7 +425,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 							}
 						}
 
-						bits += status_byte;													
+						bits = std::min(bits + (int)status_byte, width);
 
 						break;	
 					}
@@ -429,7 +439,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 					return TRUE;
 				}
 
-				int count = std::min((int)status_byte, width - bits);
+				int count = std::max(std::min((int)status_byte, width - bits), 0);
 
 				uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
