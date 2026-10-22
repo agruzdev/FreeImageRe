@@ -37,6 +37,13 @@
 
 static const char *s_copyright = "This program uses FreeImage, a free, open source image library supporting all common bitmap formats. See http://freeimage.sourceforge.net for details";
 
+// Loading of the external plugins (*.fip) at the library startup, see FREEIMAGE_WITH_EXTERNAL_PLUGINS in CMake
+#if FREEIMAGE_WITH_EXTERNAL_PLUGINS
+# define FREEIMAGE_LOAD_LOCAL_PLUGINS_ONLY FALSE
+#else
+# define FREEIMAGE_LOAD_LOCAL_PLUGINS_ONLY TRUE
+#endif
+
 //----------------------------------------------------------------------
 
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -46,7 +53,7 @@ FIBOOL APIENTRY
 DllMain(HANDLE hModule, uint32_t ul_reason_for_call, LPVOID lpReserved) {
 	switch (ul_reason_for_call) {
 		case DLL_PROCESS_ATTACH :
-			FreeImage_Initialise(FALSE);
+			FreeImage_Initialise(FREEIMAGE_LOAD_LOCAL_PLUGINS_ONLY);
 			break;
 
 		case DLL_PROCESS_DETACH :
@@ -72,7 +79,7 @@ void FreeImage_SO_Initialise() __attribute__((constructor));
 void FreeImage_SO_DeInitialise() __attribute__((destructor));
 
 void FreeImage_SO_Initialise() {
-    FreeImage_Initialise(FALSE);
+    FreeImage_Initialise(FREEIMAGE_LOAD_LOCAL_PLUGINS_ONLY);
 }
 
 void FreeImage_SO_DeInitialise() {
