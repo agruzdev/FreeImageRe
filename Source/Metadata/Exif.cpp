@@ -166,11 +166,20 @@ processIFDOffset(FITAG *tag, const char *pval, FIBOOL msb_order, uint32_t *subdi
 }
 
 /**
+Compare the n bytes of a signature with the data at pval; 'avail' is the number of bytes readable at pval
+*/
+static bool
+matchesAt(const char *pval, size_t avail, const char *signature, size_t n) {
+	return (avail >= n) && (memcmp(signature, pval, n) == 0);
+}
+
+/**
 Process a maker note IFD offset
 Returns the offset and the metadata model for this tag
+@param avail Number of bytes readable at pval
 */
 static void 
-processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *subdirOffset, TagLib::MDMODEL *md_model) {
+processMakerNote(FIBITMAP *dib, const char *pval, size_t avail, FIBOOL msb_order, uint32_t *subdirOffset, TagLib::MDMODEL *md_model) {
 	FITAG *tagMake{};
 
 	*subdirOffset = 0;
@@ -182,20 +191,20 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 	FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, "Make", &tagMake);
 	const char *Maker = (char*)FreeImage_GetTagValue(tagMake);
 
-	if ((memcmp("OLYMP\x00\x01", pval, 7) == 0) || (memcmp("OLYMP\x00\x02", pval, 7) == 0) || (memcmp("EPSON", pval, 5) == 0) || (memcmp("AGFA", pval, 4) == 0)) {
+	if ((matchesAt(pval, avail, "OLYMP\x00\x01", 7)) || (matchesAt(pval, avail, "OLYMP\x00\x02", 7)) || (matchesAt(pval, avail, "EPSON", 5)) || (matchesAt(pval, avail, "AGFA", 4))) {
 		// Olympus Type 1 Makernote
 		// Epson and Agfa use Olympus maker note standard, 
 		// see: http://www.ozhiker.com/electronics/pjmt/jpeg_info/
 		*md_model = TagLib::EXIF_MAKERNOTE_OLYMPUSTYPE1;
 		*subdirOffset = 8;
 	} 
-	else if (memcmp("OLYMPUS\x00\x49\x49\x03\x00", pval, 12) == 0) {
+	else if (matchesAt(pval, avail, "OLYMPUS\x00\x49\x49\x03\x00", 12)) {
 		// Olympus Type 2 Makernote
 		// !!! NOT YET SUPPORTED !!!
 		*subdirOffset = 0;
 		*md_model = TagLib::UNKNOWN;
 	}
-	else if (memcmp("Nikon", pval, 5) == 0) {
+	else if (matchesAt(pval, avail, "Nikon", 5)) {
 		/* There are two scenarios here:
 		 * Type 1:
 		 * :0000: 4E 69 6B 6F 6E 00 01 00-05 00 02 00 02 00 06 00 Nikon...........
@@ -204,7 +213,11 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 		 * :0000: 4E 69 6B 6F 6E 00 02 00-00 00 4D 4D 00 2A 00 00 Nikon....MM.*...
 		 * :0010: 00 08 00 1E 00 01 00 07-00 00 00 04 30 32 30 30 ............0200
 		 */
-		if (pval[6] == 1) {
+		if (avail < 7) {
+			// not enough data to read the version byte
+			*subdirOffset = 0;
+			*md_model = TagLib::UNKNOWN;
+		} else if (pval[6] == 1) {
 			// Nikon type 1 Makernote
 			*md_model = TagLib::EXIF_MAKERNOTE_NIKONTYPE1;
 			*subdirOffset = 8;
@@ -227,7 +240,7 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 		*subdirOffset = 0;		
     } else if (Maker && (FreeImage_strnicmp("Casio", Maker, 5) == 0)) {
         // Casio Makernote
-		if (memcmp("QVC\x00\x00\x00", pval, 6) == 0) {
+		if (matchesAt(pval, avail, "QVC\x00\x00\x00", 6)) {
 			// Casio Type 2 Makernote
 			*md_model = TagLib::EXIF_MAKERNOTE_CASIOTYPE2;
 			*subdirOffset = 6;
@@ -236,17 +249,23 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 			*md_model = TagLib::EXIF_MAKERNOTE_CASIOTYPE1;
 			*subdirOffset = 0;
 		}
-	} else if ((memcmp("FUJIFILM", pval, 8) == 0) || (Maker && (FreeImage_strnicmp("Fujifilm", Maker, 8) == 0))) {
+	} else if ((matchesAt(pval, avail, "FUJIFILM", 8)) || (Maker && (FreeImage_strnicmp("Fujifilm", Maker, 8) == 0))) {
         // Fujifile Makernote
 		// Fujifilm's Makernote always use little-endian order altough the Exif section maybe in little-endian order or in big-endian order. 
 		// If msb_order == TRUE, the Makernote won't be read: 
 		// the value of ifdStart will be 0x0c000000 instead of 0x0000000c and the MakerNote section will be discarded later
 		// in jpeg_read_exif_dir because the IFD is too high
 		*md_model = TagLib::EXIF_MAKERNOTE_FUJIFILM;
-        uint32_t ifdStart = ReadUint32(msb_order, pval + 8);
-		*subdirOffset = ifdStart;
+		if (avail >= 12) {
+			uint32_t ifdStart = ReadUint32(msb_order, pval + 8);
+			*subdirOffset = ifdStart;
+		} else {
+			// no room for the IFD offset
+			*subdirOffset = 0;
+			*md_model = TagLib::UNKNOWN;
+		}
     }
-	else if (memcmp("KYOCERA\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x00\x00\x00", pval, 22) == 0) {
+	else if (matchesAt(pval, avail, "KYOCERA\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x00\x00\x00", 22)) {
 		*md_model = TagLib::EXIF_MAKERNOTE_KYOCERA;
 		*subdirOffset = 22;
 	}
@@ -255,14 +274,14 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 		*md_model = TagLib::EXIF_MAKERNOTE_MINOLTA;
 		*subdirOffset = 0;
 	}
-	else if (memcmp("Panasonic\x00\x00\x00", pval, 12) == 0) {
+	else if (matchesAt(pval, avail, "Panasonic\x00\x00\x00", 12)) {
 		// Panasonic maker note
 		*md_model = TagLib::EXIF_MAKERNOTE_PANASONIC;
 		*subdirOffset = 12;
 	}
 	else if (Maker && (FreeImage_strnicmp("LEICA", Maker, 5) == 0)) {
 		// Leica maker note
-		if (memcmp("LEICA\x00\x00\x00", pval, 8) == 0) {
+		if (matchesAt(pval, avail, "LEICA\x00\x00\x00", 8)) {
 			// not yet supported makernote data ignored
 			*subdirOffset = 0;
 			*md_model = TagLib::UNKNOWN;
@@ -270,7 +289,7 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 	}
 	else if (Maker && ((FreeImage_strnicmp("Pentax", Maker, 6) == 0) || (FreeImage_strnicmp("Asahi", Maker, 5) == 0))) {
 		// Pentax maker note
-		if (memcmp("AOC\x00", pval, 4) == 0) {
+		if (matchesAt(pval, avail, "AOC\x00", 4)) {
 			// Type 2 Pentax Makernote
 			*md_model = TagLib::EXIF_MAKERNOTE_PENTAX;
 			*subdirOffset = 6;
@@ -280,15 +299,15 @@ processMakerNote(FIBITMAP *dib, const char *pval, FIBOOL msb_order, uint32_t *su
 			*subdirOffset = 0;
 		}
 	}	
-	else if ((memcmp("SONY CAM\x20\x00\x00\x00", pval, 12) == 0) || (memcmp("SONY DSC\x20\x00\x00\x00", pval, 12) == 0)) {
+	else if ((matchesAt(pval, avail, "SONY CAM\x20\x00\x00\x00", 12)) || (matchesAt(pval, avail, "SONY DSC\x20\x00\x00\x00", 12))) {
 		*md_model = TagLib::EXIF_MAKERNOTE_SONY;
 		*subdirOffset = 12;
 	}
-	else if ((memcmp("SIGMA\x00\x00\x00", pval, 8) == 0) || (memcmp("FOVEON\x00\x00", pval, 8) == 0)) {
+	else if ((matchesAt(pval, avail, "SIGMA\x00\x00\x00", 8)) || (matchesAt(pval, avail, "FOVEON\x00\x00", 8))) {
 		FITAG *tagModel{};
 		FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, "Model", &tagModel);
 		const char *Model = (char*)FreeImage_GetTagValue(tagModel);
-		if (Model && (memcmp("SIGMA SD1\x00", Model, 10) == 0)) {
+		if (Model && (FreeImage_GetTagLength(tagModel) >= 10) && (memcmp("SIGMA SD1\x00", Model, 10) == 0)) {
 			// Sigma SD1 maker note
 			*subdirOffset = 10;
 			*md_model = TagLib::EXIF_MAKERNOTE_SIGMA_SD1;
@@ -576,8 +595,13 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 		}
 
 		// determine how many entries there are in the current IFD
+		// the 2-byte entry count must lie within the buffer
+		if (((size_t)(ifdp - tiffp) + 2) > (size_t)dwLength) {
+			// suspicious IFD offset, ignore
+			continue;
+		}
 		nde = ReadUint16(msb_order, ifdp);
-		if (((size_t)(ifdp - tiffp) + 12 * nde) > (size_t)dwLength) {
+		if (((size_t)(ifdp - tiffp) + 2 + 12 * (size_t)nde) > (size_t)dwLength) {
 			// suspicious IFD offset, ignore
 			continue;
 		}
@@ -664,7 +688,7 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 				
 				// get offset and metadata model
 				if (FreeImage_GetTagID(tag) == TAG_MAKER_NOTE) {
-					processMakerNote(dib, pval, msb_order, &sub_offset, &next_mdmodel);
+					processMakerNote(dib, pval, (size_t)dwLength - (size_t)(pval - (const char*)tiffp), msb_order, &sub_offset, &next_mdmodel);
 					next_ifd = (uint8_t*)pval + sub_offset;
 				} else {
 					processIFDOffset(tag, pval, msb_order, &sub_offset, &next_mdmodel);
@@ -717,6 +741,10 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 	// --- handle thumbnail data ---
 	//
 
+	if ((dwOffsetIfd0 > dwLength) || (dwLength - dwOffsetIfd0 < 2)) {
+		// bad value
+		return FALSE;
+	}
 	const uint16_t entriesCount0th = ReadUint16(msb_order, ifd0th);
 	
 	const uint8_t* base = DIR_ENTRY_ADDR(ifd0th, entriesCount0th);
@@ -728,7 +756,7 @@ jpeg_read_exif_dir(FIBITMAP *dib, const uint8_t *tiffp, uint32_t dwOffsetIfd0, u
 		}
 	}
 	const uint32_t next_offset = ReadUint32(msb_order, base);
-	if ((next_offset == 0) || (next_offset >= dwLength)) {
+	if ((next_offset == 0) || (next_offset > dwLength) || (dwLength - next_offset < 2)) {
 		return TRUE; //< no thumbnail
 	}
 	
@@ -829,7 +857,7 @@ jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length, bool
 	uint8_t *pbProfile = (uint8_t*)data;
 
 	// verify the identifying string
-	const bool found_signature = (memcmp(exif_signature, pbProfile, sizeof(exif_signature)) == 0);
+	const bool found_signature = (dwProfileLength >= sizeof(exif_signature)) && (memcmp(exif_signature, pbProfile, sizeof(exif_signature)) == 0);
 	if (optional_signature || found_signature) {
 		// This is an Exif profile
 		// should contain a TIFF header with up to 2 IFDs (IFD stands for 'Image File Directory')
@@ -840,6 +868,11 @@ jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length, bool
 		}
 
 		// read the TIFF header (8 bytes)
+
+		if (dwProfileLength < 8) {
+			// too short to hold a TIFF header
+			return FALSE;
+		}
 
 		// check the endianess order
 		
@@ -860,7 +893,7 @@ jpeg_read_exif_profile(FIBITMAP *dib, const uint8_t *data, unsigned length, bool
 
 		// this is the offset to the first IFD (Image File Directory)
 		uint32_t dwFirstOffset = ReadUint32(bBigEndian, pbProfile + 4);
-		if (dwFirstOffset > dwProfileLength) {
+		if (dwFirstOffset >= dwProfileLength) {
 			// bad Exif data
 			return FALSE;
 		}
@@ -900,7 +933,7 @@ jpeg_read_exif_profile_raw(FIBITMAP *dib, const uint8_t *profile, unsigned lengt
     uint8_t exif_signature[6] = { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
 
 	// verify the identifying string
-	if (!optional_signature && (memcmp(exif_signature, profile, sizeof(exif_signature)) != 0)) {
+	if (!optional_signature && ((length < sizeof(exif_signature)) || (memcmp(exif_signature, profile, sizeof(exif_signature)) != 0))) {
 		// not an Exif profile
 		return FALSE;
 	}
