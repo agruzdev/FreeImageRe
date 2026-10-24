@@ -74,6 +74,7 @@ void testMemIO(const char *lpszPathName);
 bool testBMPRLE8();
 bool testBMPRLEBitDepth();
 bool testBMPTruncatedHeaders();
+bool testBMPHeaderVersions();
 
 // Multipage test suite
 // ==========================================================

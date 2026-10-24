@@ -333,4 +333,125 @@ bool testBMPTruncatedHeaders() {
 	return ok;
 }
 
+/**
+Build a 4x2 bottom-up BMP with the info header of the given version (40, 108 or 124 bytes).
+24 bit: BI_RGB, 32 bit: BI_BITFIELDS with the usual BGRA masks.
+Pixel (x, y) in the top row has the color (10 + x, 20 + x, 30 + x), the bottom row (110 + x, 120 + x, 130 + x).
+*/
+static std::vector<uint8_t> makeVersionedBmp(unsigned header_size, unsigned bit_count) {
+	const int width = 4, height = 2;
+	const unsigned bytes = bit_count / 8;
+	const unsigned pitch = (width * bytes + 3) & ~3u;
+	std::vector<uint8_t> pixels(pitch * height, 0);
+	for (int y = 0; y < height; y++) {
+		// the file is bottom-up: the first row of the file is the bottom row
+		const unsigned base = (y == 0) ? 110 : 10;
+		for (int x = 0; x < width; x++) {
+			uint8_t *p = &pixels[y * pitch + x * bytes];
+			p[0] = (uint8_t)(base + 20 + x);	// blue
+			p[1] = (uint8_t)(base + 10 + x);	// green
+			p[2] = (uint8_t)(base + x);			// red
+			if (bytes == 4) {
+				p[3] = 255;
+			}
+		}
+	}
+	const unsigned offset = 14 + header_size;
+	std::vector<uint8_t> file;
+	file.push_back('B');
+	file.push_back('M');
+	push32(file, (unsigned)(offset + pixels.size()));
+	push32(file, 0);
+	push32(file, offset);
+	push32(file, header_size);
+	push32(file, (unsigned)width);
+	push32(file, (unsigned)height);
+	push16(file, 1);
+	push16(file, bit_count);
+	push32(file, bit_count == 32 ? 3u : 0u);	// BI_BITFIELDS or BI_RGB
+	push32(file, (unsigned)pixels.size());
+	push32(file, 2835);
+	push32(file, 2835);
+	push32(file, 0);
+	push32(file, 0);
+	if (header_size >= 108) {
+		push32(file, 0x00FF0000);	// red mask
+		push32(file, 0x0000FF00);	// green mask
+		push32(file, 0x000000FF);	// blue mask
+		push32(file, bit_count == 32 ? 0xFF000000u : 0u);	// alpha mask
+		push32(file, 0x73524742);	// 'sRGB'
+		while (file.size() < 14 + header_size) {
+			file.push_back(0);		// endpoints, gamma, and the version 5 fields
+		}
+	}
+	file.insert(file.end(), pixels.begin(), pixels.end());
+	return file;
+}
+
+bool testBMPHeaderVersions() {
+	printf("testBMPHeaderVersions ...\n");
+	bool ok = true;
+
+	const unsigned sizes[] = { 40, 108, 124 };
+	const unsigned depths[] = { 24, 32 };
+	for (unsigned header_size : sizes) {
+		for (unsigned bit_count : depths) {
+			char what[96];
+			snprintf(what, sizeof(what), "BMP with a %u byte header, %u bit, is loaded", header_size, bit_count);
+			std::vector<uint8_t> file = makeVersionedBmp(header_size, bit_count);
+			FIBITMAP *dib = loadBmpFromBuffer(file);
+			bool good = (dib != nullptr) && FreeImage_GetWidth(dib) == 4 && FreeImage_GetHeight(dib) == 2 && FreeImage_GetBPP(dib) == bit_count;
+			if (good) {
+				// scanline 0 of the dib is the bottom row of the image
+				for (unsigned y = 0; y < 2; y++) {
+					const unsigned base = (y == 0) ? 110 : 10;
+					for (unsigned x = 0; x < 4; x++) {
+						FIRGBA8 color;
+						good &= FreeImage_GetPixelColor(dib, x, y, &color) != 0;
+						good &= color.red == base + x && color.green == base + 10 + x && color.blue == base + 20 + x;
+					}
+				}
+			}
+			ok &= expect(good, what);
+			if (dib) {
+				FreeImage_Unload(dib);
+			}
+		}
+	}
+
+	// header fields which cannot be decoded are rejected
+	{
+		std::vector<uint8_t> file = makeVersionedBmp(40, 24);
+		file[28] = 2;		// biBitCount = 2
+		file[29] = 0;
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib == nullptr, "BMP with a bit depth of 2 is rejected");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+	{
+		std::vector<uint8_t> file = makeVersionedBmp(40, 24);
+		file[14] = 44;		// biSize = 44, no such header
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib == nullptr, "BMP with an unknown header size is rejected");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+	{
+		// top-down and RLE8 compressed
+		std::vector<uint8_t> rle = { 4, 1, 0, 0, 4, 2, 0, 0, 0, 1 };
+		std::vector<uint8_t> file = makeBmp(4, -2, 8, 1, rle);
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib == nullptr, "top-down RLE8 BMP is rejected");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	printf(ok ? "testBMPHeaderVersions: OK\n" : "testBMPHeaderVersions: FAILED\n");
+	return ok;
+}
+
 #endif // TEST_WITH_BMP

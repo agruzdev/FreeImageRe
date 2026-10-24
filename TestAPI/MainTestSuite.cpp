@@ -169,6 +169,9 @@ int main(int argc, char *argv[]) {
 	if (!testBMPTruncatedHeaders()) {
 		return 1;
 	}
+	if (!testBMPHeaderVersions()) {
+		return 1;
+	}
 #endif
 
 	// other tests

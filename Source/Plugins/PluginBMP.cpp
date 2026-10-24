@@ -461,6 +461,48 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 // --------------------------------------------------------------------------
 
+/**
+Check the fields of a BITMAPINFOHEADER which are needed to decode the image.
+The header size has to be one of the versions which are accepted by Load:
+BITMAPINFOHEADER (40), BITMAPV2INFOHEADER (52), BITMAPV3INFOHEADER (56), the OS/2 2.x header (64),
+BITMAPV4HEADER (108) and BITMAPV5HEADER (124). The fields of the version 4 and 5 headers beyond
+the first 40 bytes are not used here.
+The negative width is checked by the callers.
+@return Returns NULL if the header is valid, otherwise the error message
+*/
+static const char *
+CheckBitmapInfoHeader(const FIBITMAPINFOHEADER *bih) {
+	switch (bih->biSize) {
+		case 40:
+		case 52:
+		case 56:
+		case 64:
+		case 108:
+		case 124:
+			break;
+		default:
+			return "Unsupported BMP header size";
+	}
+	switch (bih->biBitCount) {
+		case 1:
+		case 4:
+		case 8:
+		case 16:
+		case 24:
+		case 32:
+			break;
+		default:
+			return "Unsupported BMP bit depth";
+	}
+	if (bih->biHeight < 0) {
+		// a top-down DIB cannot be compressed with RLE
+		if ((bih->biCompression == BI_RLE4) || (bih->biCompression == BI_RLE8)) {
+			return "A top-down BMP cannot be RLE compressed";
+		}
+	}
+	return nullptr;
+}
+
 static FIBITMAP *
 LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_offset, int type) {
 	try {
@@ -477,6 +519,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
+		if (const char *error = CheckBitmapInfoHeader(&bih)) {
+			throw error;
+		}
 
 		// keep some general information about the bitmap
 
@@ -702,6 +747,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
+		if (const char *error = CheckBitmapInfoHeader(&bih)) {
+			throw error;
+		}
 
 		// keep some general information about the bitmap
 
