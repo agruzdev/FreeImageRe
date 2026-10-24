@@ -166,6 +166,9 @@ int main(int argc, char *argv[]) {
 	if (!testBMPRLEBitDepth()) {
 		return 1;
 	}
+	if (!testBMPTruncatedHeaders()) {
+		return 1;
+	}
 #endif
 
 	// other tests

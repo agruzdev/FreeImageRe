@@ -279,4 +279,58 @@ bool testBMPRLEBitDepth() {
 	return ok;
 }
 
+bool testBMPTruncatedHeaders() {
+	printf("testBMPTruncatedHeaders ...\n");
+	bool ok = true;
+
+	std::vector<uint8_t> pixels(4 * 4, 3);
+	const std::vector<uint8_t> valid = makeBmp(4, 4, 8, 0, pixels);
+	{
+		std::vector<uint8_t> file = valid;
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib != nullptr, "unmodified BMP is loaded");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	// the file header is 14 bytes, the info header 40 bytes: every file which ends in one
+	// of the headers must be rejected
+	const size_t cuts[] = { 0, 1, 2, 13, 14, 15, 18, 30, 53 };
+	for (size_t cut : cuts) {
+		std::vector<uint8_t> file(valid.begin(), valid.begin() + cut);
+		FIBITMAP *dib = nullptr;
+		if (!file.empty()) {
+			dib = loadBmpFromBuffer(file);
+		}
+		char what[64];
+		snprintf(what, sizeof(what), "BMP cut after %u bytes is rejected", (unsigned)cut);
+		ok &= expect(dib == nullptr, what);
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	// OS/2 1.x header (12 bytes) cut inside of the header
+	{
+		std::vector<uint8_t> file;
+		file.push_back('B');
+		file.push_back('M');
+		push32(file, 14 + 12);
+		push32(file, 0);
+		push32(file, 14 + 12);
+		push32(file, 12);			// BITMAPCOREHEADER
+		push16(file, 4);			// width
+		file.push_back(4);			// only the first byte of the height
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib == nullptr, "OS/2 1.x BMP cut inside of the header is rejected");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	printf(ok ? "testBMPTruncatedHeaders: OK\n" : "testBMPTruncatedHeaders: FAILED\n");
+	return ok;
+}
+
 #endif // TEST_WITH_BMP

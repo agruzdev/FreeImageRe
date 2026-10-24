@@ -73,6 +73,7 @@ void testExifRaw();
 void testMemIO(const char *lpszPathName);
 bool testBMPRLE8();
 bool testBMPRLEBitDepth();
+bool testBMPTruncatedHeaders();
 
 // Multipage test suite
 // ==========================================================

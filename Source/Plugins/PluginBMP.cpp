@@ -469,8 +469,11 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 		// load the info header
 
 		FIBITMAPINFOHEADER bih;
+		memset(&bih, 0, sizeof(bih));
 
-		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
+		if (io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
@@ -691,8 +694,11 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 		// load the info header
 
 		FIBITMAPINFOHEADER bih;
+		memset(&bih, 0, sizeof(bih));
 
-		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
+		if (io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
@@ -895,7 +901,10 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 		BITMAPINFOOS2_1X_HEADER bios2_1x;
 
-		io->read_proc(&bios2_1x, sizeof(BITMAPINFOOS2_1X_HEADER), 1, handle);
+		memset(&bios2_1x, 0, sizeof(bios2_1x));
+		if (io->read_proc(&bios2_1x, sizeof(BITMAPINFOOS2_1X_HEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapOS21XHeader(&bios2_1x);
 #endif
@@ -1106,7 +1115,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// read the fileheader
 
-		io->read_proc(&bitmapfileheader, sizeof(BITMAPFILEHEADER), 1, handle);
+		memset(&bitmapfileheader, 0, sizeof(bitmapfileheader));
+		if (io->read_proc(&bitmapfileheader, sizeof(BITMAPFILEHEADER), 1, handle) != 1) {
+			FreeImage_OutputMessageProc(s_format_id, "BMP file header is truncated");
+			return nullptr;
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapFileHeader(&bitmapfileheader);
 #endif
