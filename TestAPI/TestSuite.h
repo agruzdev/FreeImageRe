@@ -64,6 +64,7 @@ void testExifRaw();
 // ==========================================================
 
 void testMemIO(const char *lpszPathName);
+bool testDDSRGB();
 
 // Multipage test suite
 // ==========================================================

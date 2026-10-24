@@ -624,6 +624,11 @@ LoadRGB(const DDSURFACEDESC2 *desc, FreeImageIO *io, fi_handle handle) {
 	if (!dib) {
 		return nullptr;
 	}
+	if ((bpp != 16) && (FreeImage_GetBPP(dib.get()) != (unsigned)bpp)) {
+		// FreeImage_Allocate falls back to 8 bits for a bit depth it does not know,
+		// the lines of the file would be larger than the lines of the dib
+		return nullptr;
+	}
 
 	// read the file
 	// -------------------------------------------------------------------------

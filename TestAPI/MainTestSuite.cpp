@@ -158,6 +158,11 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+	// test DDS RGB loading
+	if (!testDDSRGB()) {
+		return 1;
+	}
+
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();
