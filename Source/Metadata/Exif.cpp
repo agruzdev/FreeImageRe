@@ -380,6 +380,12 @@ processCanonMakerNoteTag(FIBITMAP *dib, FITAG *tag) {
 
 	}
 
+	// the sub-tags are the members of an array of 16-bit values: never read more members than the value holds
+	if (FreeImage_GetTagType(tag) != FIDT_SHORT) {
+		return FALSE;
+	}
+	const uint32_t count = FreeImage_GetTagLength(tag) / sizeof(uint16_t);
+
 	uint16_t *pvalue = (uint16_t*)FreeImage_GetTagValue(tag);
 
 	// create a tag
@@ -387,7 +393,7 @@ processCanonMakerNoteTag(FIBITMAP *dib, FITAG *tag) {
 	if (!canonTag) return FALSE;
 
 	// we intentionally skip the first array member (if needed)
-    for (uint32_t i = startIndex; i < FreeImage_GetTagCount(tag); i++) {
+    for (uint32_t i = startIndex; i < count; i++) {
 
 		tag_id = (uint16_t)(subTagTypeBase + i);
 
