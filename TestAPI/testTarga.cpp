@@ -135,3 +135,45 @@ bool testTargaRLE() {
 	printf(ok ? "testTargaRLE: OK\n" : "testTargaRLE: FAILED\n");
 	return ok;
 }
+
+bool testTargaRLEPackets() {
+	printf("testTargaRLEPackets ...\n");
+	bool ok = true;
+
+	// 3x2 pixels of 24 bit: a line has 9 bytes and the scanline pitch of the dib is 12 bytes.
+	// A packet may span several lines. The second packet does not fit into the image: 5 pixels are
+	// decoded, the pixels of the packet which does not fit are not written
+	{
+		std::vector<uint8_t> data = {
+			0x84, 1, 2, 3,		// run of 5 pixels
+			0x81, 4, 5, 6,		// run of 2 pixels, only 1 pixel is left
+			0, 0, 0, 0
+		};
+		std::vector<uint8_t> file = makeRLETga(10, 3, 2, 24, data);
+		FIBITMAP *dib = loadTgaFromBuffer(file);
+		ok &= expect(dib != nullptr, "RLE image with a run which exceeds the image is loaded");
+		if (dib) {
+			bool pixels = true;
+			for (unsigned i = 0; i < 5; i++) {
+				FIRGBA8 color;
+				pixels &= FreeImage_GetPixelColor(dib, i % 3, i / 3, &color) != 0 && color.red == 3 && color.green == 2 && color.blue == 1;
+			}
+			ok &= expect(pixels, "the pixels before the run which exceeds the image are decoded");
+			FreeImage_Unload(dib);
+		}
+	}
+
+	// the same with a raw packet and 16 bit pixels, width 3: a line has 6 bytes, the pitch is 8 bytes
+	{
+		std::vector<uint8_t> data = { 0x04, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 0x03, 6, 0, 7, 0, 8, 0, 9, 0 };
+		std::vector<uint8_t> file = makeRLETga(10, 3, 2, 16, data);
+		FIBITMAP *dib = loadTgaFromBuffer(file);
+		ok &= expect(dib == nullptr || (FreeImage_GetWidth(dib) == 3 && FreeImage_GetHeight(dib) == 2), "16-bit RLE image with a packet which exceeds the image is handled");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	printf(ok ? "testTargaRLEPackets: OK\n" : "testTargaRLEPackets: FAILED\n");
+	return ok;
+}

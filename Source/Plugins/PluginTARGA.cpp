@@ -565,9 +565,6 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 	// Note, many of the params can be computed inside the function.
 	// However, because this is a template function, it will lead to redundant code duplication.
 
-	// this is used to guard against writing beyond the end of the image (on corrupted rle block)
-	const uint8_t* dib_end = FreeImage_GetScanLine(dib, height);//< one-past-end row
-
 	// Compute the rough size of a line...
 	const long pixels_offset = io->tell_proc(handle);
 	const long remaining_size = eof - pixels_offset;
@@ -594,9 +591,13 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 		const uint8_t packet_count = rle + 1;
 
-		//packet_count might be corrupt, test if we are not about to write beyond the last image bit
+		//packet_count might be corrupt, test if we are not about to write beyond the last image bit.
+		// A packet can span several lines, the padding at the end of a line of the dib is not available for pixels,
+		// therefore the number of the pixels left is counted, not the bytes.
 
-		if ((line_bits+x) + packet_count*pixel_size > dib_end) {
+		const size_t pixels_left = (size_t)(height - y) * width - (size_t)(x / pixel_size);
+
+		if (packet_count > pixels_left) {
 			FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_CORRUPTED);
 			// return what is left from the bitmap
 			return;

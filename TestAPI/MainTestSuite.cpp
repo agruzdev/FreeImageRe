@@ -162,6 +162,9 @@ int main(int argc, char *argv[]) {
 	if (!testTargaRLE()) {
 		return 1;
 	}
+	if (!testTargaRLEPackets()) {
+		return 1;
+	}
 
 	// other tests
 	testConvertToFloat();
