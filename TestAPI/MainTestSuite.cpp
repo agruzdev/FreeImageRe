@@ -163,6 +163,9 @@ int main(int argc, char *argv[]) {
 	if (!testBMPRLE8()) {
 		return 1;
 	}
+	if (!testBMPRLEBitDepth()) {
+		return 1;
+	}
 #endif
 
 	// other tests

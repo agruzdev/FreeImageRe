@@ -553,6 +553,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE4 :
+						if (bit_count != 4) {
+							throw "RLE4 compression requires a 4-bit BMP";
+						}
 						if ( LoadPixelDataRLE4(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -561,6 +564,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE8 :
+						if (bit_count != 8) {
+							throw "RLE8 compression requires an 8-bit BMP";
+						}
 						if ( LoadPixelDataRLE8(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -772,6 +778,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						return dib.release();
 
 					case BI_RLE4 :
+						if (bit_count != 4) {
+							throw "RLE4 compression requires a 4-bit BMP";
+						}
 						if ( LoadPixelDataRLE4(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -780,6 +789,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						break;
 
 					case BI_RLE8 :
+						if (bit_count != 8) {
+							throw "RLE8 compression requires an 8-bit BMP";
+						}
 						if ( LoadPixelDataRLE8(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {

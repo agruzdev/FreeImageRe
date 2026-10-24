@@ -185,4 +185,98 @@ bool testBMPRLE8() {
 	return ok;
 }
 
+/**
+Build a BMP file with a BITMAPINFOHEADER (40 bytes) and a 256 entry palette.
+The pixel data is given as is, bit_count and compression are arbitrary.
+*/
+static std::vector<uint8_t> makeBmp(int width, int height, unsigned bit_count, unsigned compression, const std::vector<uint8_t>& data) {
+	const unsigned headers = 14 + 40 + 256 * 4;
+	std::vector<uint8_t> file;
+	file.push_back('B');
+	file.push_back('M');
+	push32(file, (unsigned)(headers + data.size()));
+	push32(file, 0);
+	push32(file, headers);
+	push32(file, 40);			// BITMAPINFOHEADER
+	push32(file, (unsigned)width);
+	push32(file, (unsigned)height);
+	push16(file, 1);			// planes
+	push16(file, bit_count);
+	push32(file, compression);
+	push32(file, (unsigned)data.size());
+	push32(file, 2835);
+	push32(file, 2835);
+	push32(file, 0);
+	push32(file, 0);
+	for (unsigned i = 0; i < 256; i++) {
+		file.push_back((uint8_t)i);
+		file.push_back((uint8_t)i);
+		file.push_back((uint8_t)i);
+		file.push_back(0);
+	}
+	file.insert(file.end(), data.begin(), data.end());
+	return file;
+}
+
+/**
+Runs of a width of 64 pixels, 4 lines: much more than a scanline of a 1- or 4-bit image can hold
+*/
+static std::vector<uint8_t> makeLongRuns() {
+	std::vector<uint8_t> rle;
+	for (int y = 0; y < 4; y++) {
+		rle.push_back(64);
+		rle.push_back(0x11);
+		rle.push_back(0);
+		rle.push_back(0);
+	}
+	rle.push_back(0);
+	rle.push_back(1);
+	return rle;
+}
+
+// ----------------------------------------------------------
+
+bool testBMPRLEBitDepth() {
+	printf("testBMPRLEBitDepth ...\n");
+	bool ok = true;
+
+	// RLE8 and RLE4 data in a file whose bit depth is not 8 or 4: the decoders write more
+	// pixels per scanline than the allocated image can hold, so the file must be rejected
+	const struct { unsigned bit_count; unsigned compression; const char *what; } bad[] = {
+		{ 1, 1, "RLE8 with 1-bit depth is rejected" },
+		{ 4, 1, "RLE8 with 4-bit depth is rejected" },
+		{ 1, 2, "RLE4 with 1-bit depth is rejected" },
+		{ 8, 2, "RLE4 with 8-bit depth is rejected" },
+	};
+	for (const auto& t : bad) {
+		std::vector<uint8_t> file = makeBmp(64, 4, t.bit_count, t.compression, makeLongRuns());
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib == nullptr, t.what);
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	// the matching combinations are still decoded
+	{
+		std::vector<uint8_t> file = makeBmp(64, 4, 8, 1, makeLongRuns());
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib != nullptr && FreeImage_GetBPP(dib) == 8, "RLE8 with 8-bit depth is loaded");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+	{
+		std::vector<uint8_t> file = makeBmp(64, 4, 4, 2, makeLongRuns());
+		FIBITMAP *dib = loadBmpFromBuffer(file);
+		ok &= expect(dib != nullptr && FreeImage_GetBPP(dib) == 4, "RLE4 with 4-bit depth is loaded");
+		if (dib) {
+			FreeImage_Unload(dib);
+		}
+	}
+
+	printf(ok ? "testBMPRLEBitDepth: OK\n" : "testBMPRLEBitDepth: FAILED\n");
+	return ok;
+}
+
 #endif // TEST_WITH_BMP
