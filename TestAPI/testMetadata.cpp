@@ -138,6 +138,9 @@ bool testExifMalformed() {
 	// The same tag with the type BYTE and the count 4: only 4 bytes are stored, they are not an array of 16-bit values
 	ok &= expect(countMakerNoteTags(makeExifTiff(FIDT_ASCII, FIDT_BYTE, 4)) == 0, "Canon tag which is not an array of shorts");
 
+	// The Make tag is not an ASCII value, so it is not null-terminated and is not used to select the maker note format
+	ok &= expect(countMakerNoteTags(makeExifTiff(FIDT_BYTE, FIDT_SHORT, 4)) == 0, "Make tag which is not ASCII");
+
 	printf(ok ? "testExifMalformed: OK\n" : "testExifMalformed: FAILED\n");
 	return ok;
 }

@@ -189,7 +189,8 @@ processMakerNote(FIBITMAP *dib, const char *pval, size_t avail, FIBOOL msb_order
 	// WARNING: note that Maker may be NULL sometimes so check its value before using it
 	// (NULL pointer checking is done by FreeImage_strnicmp)
 	FreeImage_GetMetadata(FIMD_EXIF_MAIN, dib, "Make", &tagMake);
-	const char *Maker = (char*)FreeImage_GetTagValue(tagMake);
+	// only an ASCII value is null-terminated
+	const char *Maker = (tagMake && (FreeImage_GetTagType(tagMake) == FIDT_ASCII)) ? (char*)FreeImage_GetTagValue(tagMake) : nullptr;
 
 	if ((matchesAt(pval, avail, "OLYMP\x00\x01", 7)) || (matchesAt(pval, avail, "OLYMP\x00\x02", 7)) || (matchesAt(pval, avail, "EPSON", 5)) || (matchesAt(pval, avail, "AGFA", 4))) {
 		// Olympus Type 1 Makernote
