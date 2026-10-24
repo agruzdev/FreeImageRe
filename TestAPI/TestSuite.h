@@ -74,6 +74,7 @@ void testMemIO(const char *lpszPathName);
 bool testTargaRLE();
 bool testTargaRLEPackets();
 bool testDDSRGB();
+bool testPFM();
 bool testBMPRLE8();
 bool testBMPRLEBitDepth();
 bool testBMPTruncatedHeaders();
