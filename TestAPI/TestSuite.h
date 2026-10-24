@@ -64,6 +64,7 @@ void testExifRaw();
 // ==========================================================
 
 void testMemIO(const char *lpszPathName);
+bool testTargaRLE();
 
 // Multipage test suite
 // ==========================================================

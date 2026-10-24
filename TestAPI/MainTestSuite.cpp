@@ -158,6 +158,11 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+	// test TARGA RLE decoding
+	if (!testTargaRLE()) {
+		return 1;
+	}
+
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();
