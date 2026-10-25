@@ -56,19 +56,21 @@ jobs:
       shell: bash
       run: |
         apt-get update
-        apt-get install -y curl perl nasm sudo
+        apt-get install -y curl perl nasm sudo software-properties-common
 
     - name: Install Perl and NASM on Windows
       if: runner.os == 'Windows'
       shell: powershell
       run: choco install strawberryperl nasm -y --no-progress
 
-    - name: Setup GCC 11 (Linux)
+    # Install GCC 11
+    - name: Install C++20 Compiler (GCC 11)
       if: startsWith(matrix.platform, 'ubuntu')
-      uses: egor-tensin/setup-gcc@v1
-      with:
-        version: '11'
-        platform: 'x64'
+      shell: bash
+      run: |
+        add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        apt-get update
+        apt-get install -y gcc-11 g++-11
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -96,17 +98,10 @@ jobs:
           arch_arg="-A ${{ matrix.arch }}"
         fi
 
-        # Для Windows явно передаем cl через матрицу.
-        # Для Linux флаги компилятора опущены, так как setup-gcc автоматически 
-        # выставил системные переменные CC и CXX, которые CMake подхватит сам.
-        compiler_args=""
-        if [ "${{ runner.os }}" = "Windows" ]; then
-          compiler_args="-DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}"
-        fi
-
         cmake -B "${{ steps.strings.outputs.build-output-dir }}" \
           $arch_arg \
-          $compiler_args \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }} \
           -S "${{ github.workspace }}" \
@@ -236,7 +231,7 @@ jobs:
               --title "FreeImageRe build ${short_sha}" \
               --notes "Automated draft build from master."
           else
-            tag="${drafts[0]}"
+            tag="${drafts}"
           fi
 
           shopt -s nullglob
