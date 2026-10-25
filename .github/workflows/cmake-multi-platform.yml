@@ -72,7 +72,7 @@ jobs:
         export DEBIAN_FRONTEND=noninteractive
         add-apt-repository -y ppa:ubuntu-toolchain-r/test
         apt-get update
-        apt-get install -y gcc-11 g++-11
+        apt-get install -y gcc-11 g++-11 make
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
