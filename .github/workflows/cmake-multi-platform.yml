@@ -57,7 +57,7 @@ jobs:
       run: |
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
-        apt-get install -y curl perl nasm sudo software-properties-common
+        apt-get install -y curl perl nasm sudo unzip software-properties-common
 
     - name: Install Perl and NASM on Windows
       if: runner.os == 'Windows'
