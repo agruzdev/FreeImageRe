@@ -56,7 +56,7 @@ class CMakeBuildExt(build_ext):
 		subprocess.check_call(["cmake", "--preset", self.cmake_preset, "-DFREEIMAGE_WITH_PYTHON_BINDINGS=ON"], cwd=ROOT)
 
 	def _build(self, binary_dir: Path, configuration: str) -> None:
-		command = ["cmake", "--build", str(binary_dir), "--target", "FreeImagePy"]
+		command = ["cmake", "--build", str(binary_dir), "--target", "FreeImagePyStubs"]
 		if configuration:
 			command.extend(["--config", configuration])
 		subprocess.check_call(command, cwd=ROOT)
@@ -69,7 +69,7 @@ class CMakeBuildExt(build_ext):
 			return json.load(metadata_file)
 
 	def _install(self, binary_dir: Path, configuration: str, metadata: dict) -> None:
-		command = ["cmake", "--install", str(binary_dir)]
+		command = ["cmake", "--build", str(binary_dir), "--target", "install"]
 		if configuration:
 			command.extend(["--config", configuration])
 		subprocess.check_call(command, cwd=ROOT)

@@ -13,6 +13,10 @@ if (TARGET nanobind-static-abi3)
     set_property(TARGET nanobind-static-abi3 PROPERTY FOLDER "Dependencies")
 endif()
 
+if(UNIX AND NOT APPLE)
+    set_target_properties(FreeImagePy PROPERTIES INSTALL_RPATH "\$ORIGIN")
+endif()
+
 if (WIN32)
     set(FREEIMAGE_INSTALL_DIR bin)
 else()
