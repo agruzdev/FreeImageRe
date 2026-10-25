@@ -91,6 +91,11 @@ FreeImage_CloneTag(FITAG *tag) {
 		auto *src_tag = (const FITAGHEADER *)tag->data;
 		auto *dst_tag = (FITAGHEADER *)clone->data;
 
+		// a tag with a length must have a value to copy
+		if ((src_tag->length > 0) && !src_tag->value) {
+			throw FI_MSG_ERROR_PARSING;
+		}
+
 		// tag ID
 		dst_tag->id = src_tag->id;
 		// tag key
