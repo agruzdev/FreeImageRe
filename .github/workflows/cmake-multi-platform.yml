@@ -65,7 +65,7 @@ jobs:
 
     - name: Setup GCC 11 (Linux)
       if: startsWith(matrix.platform, 'ubuntu')
-      uses: egor-tisin/setup-gcc@v1
+      uses: egor-tensin/setup-gcc@v1
       with:
         version: '11'
         platform: 'x64'
@@ -96,6 +96,9 @@ jobs:
           arch_arg="-A ${{ matrix.arch }}"
         fi
 
+        # Для Windows явно передаем cl через матрицу.
+        # Для Linux флаги компилятора опущены, так как setup-gcc автоматически 
+        # выставил системные переменные CC и CXX, которые CMake подхватит сам.
         compiler_args=""
         if [ "${{ runner.os }}" = "Windows" ]; then
           compiler_args="-DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}"
