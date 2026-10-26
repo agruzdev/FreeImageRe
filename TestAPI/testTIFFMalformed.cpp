@@ -25,6 +25,12 @@
 
 #include <vector>
 #include <cstdint>
+#include <cstdlib>
+#ifdef _WIN32
+#include <thread>
+#include <future>
+#include <chrono>
+#endif
 
 // ----------------------------------------------------------
 
@@ -40,7 +46,7 @@ static void push32(std::vector<uint8_t>& v, unsigned value) {
 
 // TIFF tag types, photometric interpretations, planar configurations and sample formats
 enum { TT_SHORT = 3, TT_LONG = 4 };
-enum { PHOTOMETRIC_MINISWHITE = 0, PHOTOMETRIC_RGB = 2, PHOTOMETRIC_SEPARATED = 5 };
+enum { PHOTOMETRIC_MINISWHITE = 0, PHOTOMETRIC_MINISBLACK = 1, PHOTOMETRIC_RGB = 2, PHOTOMETRIC_SEPARATED = 5 };
 enum { PLANARCONFIG_CONTIG = 1, PLANARCONFIG_SEPARATE = 2 };
 enum { SAMPLEFORMAT_INT = 2, SAMPLEFORMAT_IEEEFP = 3 };
 
@@ -65,11 +71,12 @@ Build a little endian, uncompressed 4 x 4 TIFF with one strip per plane (rowsper
 @param samplesperpixel SamplesPerPixel
 @param planar PlanarConfiguration (1 = contiguous, 2 = separate)
 @param sampleformat SampleFormat of every sample, 0 to omit the tag
+@param tiled use one 16 x 16 tile per plane instead of one strip per plane
 */
-static std::vector<uint8_t> makeTiff(unsigned photometric, unsigned bitspersample, unsigned samplesperpixel, unsigned planar, unsigned sampleformat) {
-	const unsigned width = 4, height = 4;
+static std::vector<uint8_t> makeTiff(unsigned photometric, unsigned bitspersample, unsigned samplesperpixel, unsigned planar, unsigned sampleformat, bool tiled = false) {
+	const unsigned width = tiled ? 16 : 4, height = tiled ? 16 : 4;
 	const unsigned strips = (planar == 2) ? samplesperpixel : 1;
-	const unsigned strip_size = width * height * bitspersample / 8 * ((planar == 2) ? 1 : samplesperpixel);
+	const unsigned strip_size = (tiled ? 16 * 16 : width * height) * bitspersample / 8 * ((planar == 2) ? 1 : samplesperpixel);
 
 	std::vector<IfdEntry> e;
 	e.push_back(entry(256, TT_SHORT, { width }));
@@ -77,11 +84,21 @@ static std::vector<uint8_t> makeTiff(unsigned photometric, unsigned bitspersampl
 	e.push_back(entry(258, TT_SHORT, std::vector<unsigned>(samplesperpixel, bitspersample)));
 	e.push_back(entry(259, TT_SHORT, { 1 }));
 	e.push_back(entry(262, TT_SHORT, { photometric }));
-	e.push_back(entry(273, TT_LONG, std::vector<unsigned>(strips, 0))); // offsets are patched below
+	if (!tiled) {
+		e.push_back(entry(273, TT_LONG, std::vector<unsigned>(strips, 0))); // offsets are patched below
+	}
 	e.push_back(entry(277, TT_SHORT, { samplesperpixel }));
-	e.push_back(entry(278, TT_SHORT, { height }));
-	e.push_back(entry(279, TT_LONG, std::vector<unsigned>(strips, strip_size)));
+	if (!tiled) {
+		e.push_back(entry(278, TT_SHORT, { height }));
+		e.push_back(entry(279, TT_LONG, std::vector<unsigned>(strips, strip_size)));
+	}
 	e.push_back(entry(284, TT_SHORT, { planar }));
+	if (tiled) {
+		e.push_back(entry(322, TT_SHORT, { 16 }));
+		e.push_back(entry(323, TT_SHORT, { 16 }));
+		e.push_back(entry(324, TT_LONG, std::vector<unsigned>(strips, 0))); // offsets are patched below
+		e.push_back(entry(325, TT_LONG, std::vector<unsigned>(strips, strip_size)));
+	}
 	if (sampleformat) {
 		e.push_back(entry(339, TT_SHORT, std::vector<unsigned>(samplesperpixel, sampleformat)));
 	}
@@ -98,8 +115,12 @@ static std::vector<uint8_t> makeTiff(unsigned photometric, unsigned bitspersampl
 		}
 	}
 	const unsigned data_offset = extra_offset + extra_size;
-	for (unsigned s = 0; s < strips; s++) {
-		e[5].values[s] = data_offset + s * strip_size;
+	for (size_t i = 0; i < e.size(); i++) {
+		if (e[i].tag == 273 || e[i].tag == 324) {
+			for (unsigned s = 0; s < strips; s++) {
+				e[i].values[s] = data_offset + s * strip_size;
+			}
+		}
 	}
 
 	std::vector<uint8_t> t;
@@ -154,6 +175,26 @@ static unsigned loadTiff(const std::vector<uint8_t>& tiff) {
 	return bpp;
 }
 
+/**
+Same as loadTiff, but a file which makes the loader spin forever is reported as a failure instead of hanging the test suite
+*/
+static unsigned loadTiffGuarded(const std::vector<uint8_t>& tiff) {
+#ifdef _WIN32
+	std::packaged_task<unsigned()> task([&tiff]() { return loadTiff(tiff); });
+	std::future<unsigned> result = task.get_future();
+	std::thread worker(std::move(task));
+	if (result.wait_for(std::chrono::seconds(20)) != std::future_status::ready) {
+		printf("testTIFFMalformed: FAILED: the loader does not return\n");
+		fflush(stdout);
+		std::_Exit(1);
+	}
+	worker.join();
+	return result.get();
+#else
+	return loadTiff(tiff);
+#endif
+}
+
 static bool expect(bool condition, const char *what) {
 	if (!condition) {
 		printf("testTIFFMalformed: FAILED: %s\n", what);
@@ -182,6 +223,32 @@ bool testTIFFMalformed() {
 
 	// 3 x 16-bit signed samples are loaded as a 32-bit DIB, the channels do not fit into a pixel
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 16, 3, PLANARCONFIG_SEPARATE, SAMPLEFORMAT_INT)) == 0, "3 x int16, separate planes");
+
+	// tiled files: 16 x 16 pixels in a single tile
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 8, 3, PLANARCONFIG_CONTIG, 0, true)) == 24, "tiled RGB, contiguous");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 8, 3, PLANARCONFIG_SEPARATE, 0, true)) == 24, "tiled RGB, separate planes");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 8, 1, PLANARCONFIG_CONTIG, 0, true)) == 8, "tiled 8-bit grey");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 4, 1, PLANARCONFIG_CONTIG, 0, true)) == 4, "tiled 4-bit grey");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 4, 1, PLANARCONFIG_CONTIG, 0)) == 4, "4-bit grey");
+
+	// the tile loader copies a row of DIB pixels from a row of source pixels, which are smaller (6 bytes, DIB is RGBF)
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISWHITE, 16, 3, PLANARCONFIG_CONTIG, SAMPLEFORMAT_IEEEFP, true)) == 0, "tiled 3 x half float, contiguous");
+
+	// the tile loader writes every sample as an element of the DIB pixel, but the DIB pixel is smaller
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 8, 2, PLANARCONFIG_SEPARATE, 0, true)) == 0, "tiled RGB with 2 separate samples");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 16, 3, PLANARCONFIG_SEPARATE, SAMPLEFORMAT_INT, true)) == 0, "tiled 3 x int16, separate planes");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 4, 1, PLANARCONFIG_SEPARATE, 0, true)) == 0, "tiled 4-bit grey, separate planes");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 4, 2, PLANARCONFIG_CONTIG, 0, true)) == 0, "tiled 4-bit grey with 2 samples, contiguous");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISBLACK, 4, 2, PLANARCONFIG_SEPARATE, 0)) == 0, "4-bit grey with 2 samples, separate planes");
+
+	// CMYK with separate planes: the 8-bit DIB has less bytes than channels, so the channel width is 0 and the loader does not advance;
+	// 3 x half float are loaded as RGBF, the channels are wider than the samples
+	ok &= expect(loadTiffGuarded(makeTiff(PHOTOMETRIC_SEPARATED, 8, 2, PLANARCONFIG_SEPARATE, 0)) == 0, "CMYK with 2 separate samples");
+	ok &= expect(loadTiffGuarded(makeTiff(PHOTOMETRIC_SEPARATED, 16, 3, PLANARCONFIG_SEPARATE, SAMPLEFORMAT_IEEEFP)) == 0, "3 x half float, CMYK, separate planes");
+
+	// 32-bit samples with 4 channels are only supported for RGBA (and grey / LogLuv), not for CMYK
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 32, 4, PLANARCONFIG_CONTIG, 0)) == 32, "RGBA with 32-bit samples");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_SEPARATED, 32, 4, PLANARCONFIG_CONTIG, 0)) == 0, "CMYK with 32-bit samples");
 
 	printf(ok ? "testTIFFMalformed: OK\n" : "testTIFFMalformed: FAILED\n");
 	return ok;

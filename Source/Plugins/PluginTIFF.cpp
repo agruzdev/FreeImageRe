@@ -1117,7 +1117,7 @@ IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samp
 		case 32:
 			if ((photometric == PHOTOMETRIC_MINISWHITE) || (photometric == PHOTOMETRIC_MINISBLACK) || (photometric == PHOTOMETRIC_LOGLUV)) { 
 				return TRUE;
-			} else if ((photometric == PHOTOMETRIC_RGB) && (samplesperpixel == 3) || (samplesperpixel == 4)) {
+			} else if ((photometric == PHOTOMETRIC_RGB) && ((samplesperpixel == 3) || (samplesperpixel == 4))) {
 				// RGB[A]F
 				return TRUE;
 			} else {
@@ -1712,6 +1712,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				if (planar_config == PLANARCONFIG_CONTIG && dibBpp > srcBpp) {
 					throw "Unsupported number of samples or bits per sample";
 				}
+				// with separate planes a channel must be at least as wide as a source sample (Bpc is 0 if the DIB pixel has less bytes than channels)
+				if (planar_config == PLANARCONFIG_SEPARATE && (Bpc == 0 || Bpc > bitspersample / 8)) {
+					throw "Unsupported number of samples or bits per sample";
+				}
 				
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -2006,6 +2010,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									} // strips
 								}
 								else { // not whole number of bytes
+									if (Bpp < chCount * (bitspersample <= 8 ? 1u : 2u)) {
+										// DecodeStrip writes every channel as a separate element of the DIB pixel
+										throw "Unsupported number of samples or bits per sample";
+									}
 									if (bitspersample <= 8) {
 										DecodeStrip<uint8_t>(buf.get(), src_line, dib_strip, width, dst_pitch, strips, sample, chCount, bitspersample);
 									}
@@ -2095,6 +2103,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							uint8_t *dst_bits = bits + (x * Bipp) / 8;
                             const uint8_t dst_offset = (x * Bipp) & 0x7;
 							if (8 == bitspersample || 16 == bitspersample) {
+								if (Bpp > samplesperpixel * bitspersample / 8) {
+									// the DIB pixel is larger than the source pixel (e.g. 3 x half float stored as RGBF)
+									throw "Unsupported number of samples or bits per sample";
+								}
 								for (uint32_t k = 0; k < nrows; ++k) {
 									memcpy(dst_bits, src_bits, dst_line * Bpp);
 									src_bits += tileRowSize;
@@ -2102,6 +2114,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 								}
 							}
 							else {
+								if (samplesperpixel > 1 && Bpp < samplesperpixel * (bitspersample <= 8 ? 1u : 2u)) {
+									// DecodeStrip writes every sample as an element of the DIB line
+									throw "Unsupported number of samples or bits per sample";
+								}
 								if (bitspersample <= 8) {
                                     if (1 == samplesperpixel) {
                                         DecodeMonoStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line *samplesperpixel, dst_pitch, nrows, bitspersample, dst_offset);
@@ -2146,6 +2162,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 									}
 								}
 								else {
+									if (Bpp < samplesperpixel * (bitspersample <= 8 ? 1u : 2u)) {
+										// DecodeStrip writes every channel as a separate element of the DIB pixel
+										throw "Unsupported number of samples or bits per sample";
+									}
 									if (bitspersample <= 8) {
 										DecodeStrip<uint8_t>(src_bits, tileRowSize, dst_bits, dst_line, dst_pitch, nrows, sample, samplesperpixel, bitspersample);
 									}
