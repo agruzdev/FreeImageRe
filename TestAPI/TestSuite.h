@@ -2,7 +2,7 @@
 // FreeImage 3 Test Script
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //
@@ -36,6 +36,13 @@
 #endif
 #endif // WIN32
 
+// The BMP test needs the BMP plugin. FREEIMAGE_WITH_PLUGIN_BMP is set by the build
+// system if the plugin can be disabled, otherwise the plugin is always built in.
+#if !defined(FREEIMAGE_WITH_PLUGIN_BMP) || FREEIMAGE_WITH_PLUGIN_BMP
+#define TEST_WITH_BMP 1
+#else
+#define TEST_WITH_BMP 0
+#endif
 
 // Some useful tools
 // ==========================================================
@@ -65,6 +72,15 @@ void testExifRaw();
 
 void testMemIO(const char *lpszPathName);
 bool testDDSRGB();
+bool testBMPRLE8();
+bool testBMPRLEBitDepth();
+bool testBMPTruncatedHeaders();
+bool testBMPHeaderVersions();
+
+// Metadata test suite
+// ==========================================================
+
+bool testExifMalformed();
 
 // Multipage test suite
 // ==========================================================

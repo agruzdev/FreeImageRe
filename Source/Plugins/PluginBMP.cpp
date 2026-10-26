@@ -387,8 +387,10 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 						// apply them
 
-						bits     += delta_x;
-						scanline += delta_y;
+						// keep the position inside of the image
+
+						bits     = std::min(bits + (int)delta_x, width);
+						scanline = std::min(scanline + (int)delta_y, abs(height));
 
 						break;
 					}
@@ -399,12 +401,20 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 							return TRUE;
 						}
 
-						int count = std::min((int)status_byte, width - bits);
+						// the run must not exceed the scanline, the rest of it is skipped
+						int count = std::max(std::min((int)status_byte, width - bits), 0);
 
 						uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
-						if (io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
-							return FALSE;
+						if (count > 0) {
+							if (io->read_proc((void *)(sline + bits), sizeof(uint8_t) * count, 1, handle) != 1) {
+								return FALSE;
+							}
+						}
+						for (int i = count; i < (int)status_byte; i++) {
+							if (io->read_proc(&second_byte, sizeof(uint8_t), 1, handle) != 1) {
+								return FALSE;
+							}
 						}
 						
 						// align run length to even number of bytes 
@@ -415,7 +425,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 							}
 						}
 
-						bits += status_byte;													
+						bits = std::min(bits + (int)status_byte, width);
 
 						break;	
 					}
@@ -429,7 +439,7 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 					return TRUE;
 				}
 
-				int count = std::min((int)status_byte, width - bits);
+				int count = std::max(std::min((int)status_byte, width - bits), 0);
 
 				uint8_t *sline = FreeImage_GetScanLine(dib, scanline);
 
@@ -451,6 +461,48 @@ LoadPixelDataRLE8(FreeImageIO *io, fi_handle handle, int width, int height, FIBI
 
 // --------------------------------------------------------------------------
 
+/**
+Check the fields of a BITMAPINFOHEADER which are needed to decode the image.
+The header size has to be one of the versions which are accepted by Load:
+BITMAPINFOHEADER (40), BITMAPV2INFOHEADER (52), BITMAPV3INFOHEADER (56), the OS/2 2.x header (64),
+BITMAPV4HEADER (108) and BITMAPV5HEADER (124). The fields of the version 4 and 5 headers beyond
+the first 40 bytes are not used here.
+The negative width is checked by the callers.
+@return Returns NULL if the header is valid, otherwise the error message
+*/
+static const char *
+CheckBitmapInfoHeader(const FIBITMAPINFOHEADER *bih) {
+	switch (bih->biSize) {
+		case 40:
+		case 52:
+		case 56:
+		case 64:
+		case 108:
+		case 124:
+			break;
+		default:
+			return "Unsupported BMP header size";
+	}
+	switch (bih->biBitCount) {
+		case 1:
+		case 4:
+		case 8:
+		case 16:
+		case 24:
+		case 32:
+			break;
+		default:
+			return "Unsupported BMP bit depth";
+	}
+	if (bih->biHeight < 0) {
+		// a top-down DIB cannot be compressed with RLE
+		if ((bih->biCompression == BI_RLE4) || (bih->biCompression == BI_RLE8)) {
+			return "A top-down BMP cannot be RLE compressed";
+		}
+	}
+	return nullptr;
+}
+
 static FIBITMAP *
 LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_offset, int type) {
 	try {
@@ -459,11 +511,17 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 		// load the info header
 
 		FIBITMAPINFOHEADER bih;
+		memset(&bih, 0, sizeof(bih));
 
-		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
+		if (io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
+		if (const char *error = CheckBitmapInfoHeader(&bih)) {
+			throw error;
+		}
 
 		// keep some general information about the bitmap
 
@@ -543,6 +601,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE4 :
+						if (bit_count != 4) {
+							throw "RLE4 compression requires a 4-bit BMP";
+						}
 						if ( LoadPixelDataRLE4(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -551,6 +612,9 @@ LoadWindowsBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bit
 						break;
 
 					case BI_RLE8 :
+						if (bit_count != 8) {
+							throw "RLE8 compression requires an 8-bit BMP";
+						}
 						if ( LoadPixelDataRLE8(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -675,11 +739,17 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 		// load the info header
 
 		FIBITMAPINFOHEADER bih;
+		memset(&bih, 0, sizeof(bih));
 
-		io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle);
+		if (io->read_proc(&bih, sizeof(FIBITMAPINFOHEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapInfoHeader(&bih);
 #endif
+		if (const char *error = CheckBitmapInfoHeader(&bih)) {
+			throw error;
+		}
 
 		// keep some general information about the bitmap
 
@@ -762,6 +832,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						return dib.release();
 
 					case BI_RLE4 :
+						if (bit_count != 4) {
+							throw "RLE4 compression requires a 4-bit BMP";
+						}
 						if ( LoadPixelDataRLE4(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -770,6 +843,9 @@ LoadOS22XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 						break;
 
 					case BI_RLE8 :
+						if (bit_count != 8) {
+							throw "RLE8 compression requires an 8-bit BMP";
+						}
 						if ( LoadPixelDataRLE8(io, handle, width, height, dib.get()) ) {
 							return dib.release();
 						} else {
@@ -873,7 +949,10 @@ LoadOS21XBMP(FreeImageIO *io, fi_handle handle, int flags, unsigned bitmap_bits_
 
 		BITMAPINFOOS2_1X_HEADER bios2_1x;
 
-		io->read_proc(&bios2_1x, sizeof(BITMAPINFOOS2_1X_HEADER), 1, handle);
+		memset(&bios2_1x, 0, sizeof(bios2_1x));
+		if (io->read_proc(&bios2_1x, sizeof(BITMAPINFOOS2_1X_HEADER), 1, handle) != 1) {
+			throw "BMP info header is truncated";
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapOS21XHeader(&bios2_1x);
 #endif
@@ -1084,7 +1163,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 		// read the fileheader
 
-		io->read_proc(&bitmapfileheader, sizeof(BITMAPFILEHEADER), 1, handle);
+		memset(&bitmapfileheader, 0, sizeof(bitmapfileheader));
+		if (io->read_proc(&bitmapfileheader, sizeof(BITMAPFILEHEADER), 1, handle) != 1) {
+			FreeImage_OutputMessageProc(s_format_id, "BMP file header is truncated");
+			return nullptr;
+		}
 #ifdef FREEIMAGE_BIGENDIAN
 		SwapFileHeader(&bitmapfileheader);
 #endif

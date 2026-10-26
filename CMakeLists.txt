@@ -94,10 +94,6 @@ if (FREEIMAGE_WITH_LIBJPEGXL)
 endif()
 
 option(FREEIMAGE_WITH_PYTHON_BINDINGS "Build pythin bindings" OFF)
-if (FREEIMAGE_WITH_PYTHON_BINDINGS)
-    find_package(Python3 COMPONENTS Development REQUIRED)
-    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.pybind.cmake)
-endif()
 
 # Internal dependencies
 option(FREEIMAGE_WITH_LIBJXR "Compile with the LibJXR backend" ON)
@@ -118,6 +114,14 @@ if(FREEIMAGE_BUILD_TESTS)
     add_subdirectory(TestAPI)
 endif()
 
+install(FILES
+       "${CMAKE_CURRENT_SOURCE_DIR}/license-fi.txt"
+       "${CMAKE_CURRENT_SOURCE_DIR}/license-gplv2.txt"
+       "${CMAKE_CURRENT_SOURCE_DIR}/license-gplv3.txt"
+       "${CMAKE_CURRENT_SOURCE_DIR}/Readme.md"
+       "${CMAKE_CURRENT_SOURCE_DIR}/Changelog.md"
+    DESTINATION . COMPONENT doc
+)
 
 # ===========================
 # CPack
@@ -141,7 +145,11 @@ set(CPACK_PACKAGE_VENDOR "Alexey Gruzdev")
 set(CPACK_PACKAGE_VERSION_MAJOR "${FREEIMAGERE_MAJOR_VERSION}")
 set(CPACK_PACKAGE_VERSION_MINOR "${FREEIMAGERE_MINOR_VERSION}")
 set(CPACK_PACKAGE_VERSION_PATCH "${FREEIMAGERE_PATCH_VERSION}")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license-fi.txt")
 set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_GROUPING "ALL_COMPONENTS_IN_ONE")
+set(CPACK_COMPONENTS_ALL dist doc)
 
 include(CPack)
 
