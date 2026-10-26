@@ -6,7 +6,7 @@ All changes relative to FreeImage v3.18 are listed below.
 
 Current project version. See the repository history for changes not listed in the release notes below.
 
-- Fixed the vulnerabilities: CVE-2020-21427, CVE-2024-9029, CVE-2024-28568, CVE-2024-28570, CVE-2024-28573, CVE-2024-28577, CVE-2021-40264, CVE-2024-28572
+- Fixed the vulnerabilities: CVE-2020-21427, CVE-2024-9029, CVE-2024-28568, CVE-2024-28570, CVE-2024-28573, CVE-2024-28577, CVE-2021-40264, CVE-2024-28572, CVE-2020-21428, CVE-2024-28581
 
 ## Version 4.2.1
 
