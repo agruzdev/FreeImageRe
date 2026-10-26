@@ -114,6 +114,11 @@ if(FREEIMAGE_BUILD_TESTS)
     add_subdirectory(TestAPI)
 endif()
 
+option(FREEIMAGE_BUILD_SAMPLE_LOADER "Build LoadSample, the single-file loader used by TestSamples/run-samples.sh" OFF)
+if(FREEIMAGE_BUILD_SAMPLE_LOADER)
+    add_subdirectory(TestSamples)
+endif()
+
 install(FILES
        "${CMAKE_CURRENT_SOURCE_DIR}/license-fi.txt"
        "${CMAKE_CURRENT_SOURCE_DIR}/license-gplv2.txt"
