@@ -135,6 +135,31 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${free
 target_sources(FreeImage PRIVATE ${freeimage_all_sources})
 set_target_properties(FreeImage PROPERTIES PUBLIC_HEADER "FreeImage.h;FreeImage.hpp")
 
+# Version resource of the DLL
+if (WIN32)
+    # The fourth number of the file version. Use it to distinguish rebuilds of the same FreeImageRe version.
+    set(FREEIMAGE_VERSION_TWEAK "0" CACHE STRING "Fourth component of the version number in the Windows version resource")
+    # If it is not empty, the file is marked as a special build and the text is shown in the file properties.
+    set(FREEIMAGE_SPECIAL_BUILD "" CACHE STRING "Description of a special build in the Windows version resource")
+
+    if (NOT FREEIMAGE_VERSION_TWEAK MATCHES "^(0|[1-9][0-9]*)$" OR FREEIMAGE_VERSION_TWEAK GREATER 65535)
+        message(FATAL_ERROR "Invalid value of the FREEIMAGE_VERSION_TWEAK option. Must be an integer in range 0..65535 without leading zeros")
+    endif()
+
+    if (NOT "${FREEIMAGE_SPECIAL_BUILD}" STREQUAL "")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_FLAG "VS_FF_SPECIALBUILD")
+        # escape the string for the resource compiler
+        string(REPLACE "\\" "\\\\" FREEIMAGE_SPECIAL_BUILD_ESCAPED "${FREEIMAGE_SPECIAL_BUILD}")
+        string(REPLACE "\"" "\"\"" FREEIMAGE_SPECIAL_BUILD_ESCAPED "${FREEIMAGE_SPECIAL_BUILD_ESCAPED}")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_VALUE "            VALUE \"SpecialBuild\", \"${FREEIMAGE_SPECIAL_BUILD_ESCAPED}\\0\"")
+    else()
+        set(FREEIMAGE_RC_SPECIAL_BUILD_FLAG "0")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_VALUE "")
+    endif()
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/FreeImage.rc.in ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc @ONLY)
+    target_sources(FreeImage PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc)
+endif()
 
 message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
 install(TARGETS FreeImage COMPONENT dist)
