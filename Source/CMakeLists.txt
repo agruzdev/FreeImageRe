@@ -62,6 +62,13 @@ else()
 endif()
 
 
+# External plugins (*.fip) are loaded from the directory of the executable when the library is initialized.
+# Disable it to prevent loading of any code which is not a part of the library itself.
+option(FREEIMAGE_WITH_EXTERNAL_PLUGINS "Load external plugins (*.fip) at startup" ON)
+if (FREEIMAGE_WITH_EXTERNAL_PLUGINS)
+    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_EXTERNAL_PLUGINS=1")
+endif()
+
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 

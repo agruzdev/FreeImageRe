@@ -650,7 +650,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 	auto& plugins = PluginsRegistrySingleton::Instance();
 	if (plugins.AddRef()) {
 		// external plugin initialization
-#ifdef _WIN32
+#if defined(_WIN32) && FREEIMAGE_WITH_EXTERNAL_PLUGINS
 		if (!load_local_plugins_only) {
 			int count = 0;
 			char buffer[MAX_PATH + 200];
@@ -706,7 +706,7 @@ FreeImage_Initialise(FIBOOL load_local_plugins_only) {
 				SetCurrentDirectoryW(current_dir);
 			}
 		}
-#endif // _WIN32
+#endif // _WIN32 && FREEIMAGE_WITH_EXTERNAL_PLUGINS
 	}
 }
 
