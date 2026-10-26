@@ -72,7 +72,7 @@ jobs:
         export DEBIAN_FRONTEND=noninteractive
         add-apt-repository -y ppa:ubuntu-toolchain-r/test
         apt-get update
-        apt-get install -y gcc-13 g++-13 make
+        apt-get install -y gcc-13 g++-13 binutils make
         update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
     - name: Set reusable strings
