@@ -163,6 +163,22 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+#if TEST_WITH_BMP
+	// test BMP RLE8 decoding
+	if (!testBMPRLE8()) {
+		return 1;
+	}
+	if (!testBMPRLEBitDepth()) {
+		return 1;
+	}
+	if (!testBMPTruncatedHeaders()) {
+		return 1;
+	}
+	if (!testBMPHeaderVersions()) {
+		return 1;
+	}
+#endif
+
 	// other tests
 	testConvertToFloat();
 	testConvertToColor();
