@@ -2,7 +2,7 @@
 // FreeImage 3 Test Script
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //
@@ -105,6 +105,11 @@ int main(int argc, char *argv[]) {
 	// test Exif raw metadata loading & saving
 	testExifRaw();
 
+	// test malformed Exif data
+	if (!testExifMalformed()) {
+		return 1;
+	}
+
 	// test thumbnail functions
 	testThumbnail("exif.jpg", 0);
 
@@ -165,6 +170,25 @@ int main(int argc, char *argv[]) {
 	if (!testTargaRLEPackets()) {
 		return 1;
 	}
+	// test DDS RGB loading
+	if (!testDDSRGB()) {
+		return 1;
+	}
+#if TEST_WITH_BMP
+	// test BMP RLE8 decoding
+	if (!testBMPRLE8()) {
+		return 1;
+	}
+	if (!testBMPRLEBitDepth()) {
+		return 1;
+	}
+	if (!testBMPTruncatedHeaders()) {
+		return 1;
+	}
+	if (!testBMPHeaderVersions()) {
+		return 1;
+	}
+#endif
 
 	// other tests
 	testConvertToFloat();

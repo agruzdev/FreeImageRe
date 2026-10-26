@@ -62,14 +62,6 @@ else()
 endif()
 
 
-if (FREEIMAGE_WITH_PYTHON_BINDINGS)
-    target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-    target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")
-    target_link_directories(FreeImage PRIVATE ${Python3_LIBRARY_DIRS})
-    target_link_libraries(FreeImage PRIVATE LibPybind ${Python3_LIBRARIES})
-endif()
-
-
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 
@@ -143,17 +135,39 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source files" FILES ${free
 target_sources(FreeImage PRIVATE ${freeimage_all_sources})
 set_target_properties(FreeImage PROPERTIES PUBLIC_HEADER "FreeImage.h;FreeImage.hpp")
 
-message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
-install(TARGETS FreeImage)
-if (FREEIMAGE_WITH_PYTHON_BINDINGS)
-    if (WIN32)
-        install(CODE "message(STATUS \"Make a hardlink for Python: FreeImage.pyd\")")
-        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_hardlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.pyd WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/bin\" COMMAND_ERROR_IS_FATAL ANY)")
-    else()
-        install(CODE "message(STATUS \"Make a symlink for Python: FreeImage.so\")")
-        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.so WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/lib\" COMMAND_ERROR_IS_FATAL ANY)")
+# Version resource of the DLL
+if (WIN32)
+    # The fourth number of the file version. Use it to distinguish rebuilds of the same FreeImageRe version.
+    set(FREEIMAGE_VERSION_TWEAK "0" CACHE STRING "Fourth component of the version number in the Windows version resource")
+    # If it is not empty, the file is marked as a special build and the text is shown in the file properties.
+    set(FREEIMAGE_SPECIAL_BUILD "" CACHE STRING "Description of a special build in the Windows version resource")
+
+    if (NOT FREEIMAGE_VERSION_TWEAK MATCHES "^(0|[1-9][0-9]*)$" OR FREEIMAGE_VERSION_TWEAK GREATER 65535)
+        message(FATAL_ERROR "Invalid value of the FREEIMAGE_VERSION_TWEAK option. Must be an integer in range 0..65535 without leading zeros")
     endif()
+
+    if (NOT "${FREEIMAGE_SPECIAL_BUILD}" STREQUAL "")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_FLAG "VS_FF_SPECIALBUILD")
+        # escape the string for the resource compiler
+        string(REPLACE "\\" "\\\\" FREEIMAGE_SPECIAL_BUILD_ESCAPED "${FREEIMAGE_SPECIAL_BUILD}")
+        string(REPLACE "\"" "\"\"" FREEIMAGE_SPECIAL_BUILD_ESCAPED "${FREEIMAGE_SPECIAL_BUILD_ESCAPED}")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_VALUE "            VALUE \"SpecialBuild\", \"${FREEIMAGE_SPECIAL_BUILD_ESCAPED}\\0\"")
+    else()
+        set(FREEIMAGE_RC_SPECIAL_BUILD_FLAG "0")
+        set(FREEIMAGE_RC_SPECIAL_BUILD_VALUE "")
+    endif()
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/FreeImage.rc.in ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc @ONLY)
+    target_sources(FreeImage PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc)
 endif()
+
+message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
+install(TARGETS FreeImage COMPONENT dist)
 if (FREEIMAGE_WITH_LIBHEIF)
-    install(FILES ${LibHEIF_INSTALL_LIBRARY} TYPE ${LibHEIF_INSTALL_TYPE} RENAME ${LibHEIF_INSTALL_NAME})
+    install(FILES ${LibHEIF_INSTALL_LIBRARY} TYPE ${LibHEIF_INSTALL_TYPE} RENAME ${LibHEIF_INSTALL_NAME} COMPONENT dist)
+endif()
+
+
+if (FREEIMAGE_WITH_PYTHON_BINDINGS)
+    add_subdirectory(Python)
 endif()
