@@ -2,7 +2,7 @@
 // FreeImage 3 Test Script
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //
@@ -71,6 +71,7 @@ void testExifRaw();
 // ==========================================================
 
 void testMemIO(const char *lpszPathName);
+bool testDDSRGB();
 bool testBMPRLE8();
 bool testBMPRLEBitDepth();
 bool testBMPTruncatedHeaders();

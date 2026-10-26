@@ -2,7 +2,7 @@
 // FreeImage 3 Test Script
 //
 // Design and implementation by
-// - Hervé Drolon (drolon@infonie.fr)
+// - HervÃ© Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //
@@ -163,6 +163,10 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+	// test DDS RGB loading
+	if (!testDDSRGB()) {
+		return 1;
+	}
 #if TEST_WITH_BMP
 	// test BMP RLE8 decoding
 	if (!testBMPRLE8()) {
