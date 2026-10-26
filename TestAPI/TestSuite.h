@@ -71,6 +71,8 @@ void testExifRaw();
 // ==========================================================
 
 void testMemIO(const char *lpszPathName);
+bool testTargaRLE();
+bool testTargaRLEPackets();
 bool testDDSRGB();
 bool testBMPRLE8();
 bool testBMPRLEBitDepth();

@@ -205,7 +205,7 @@ class IOCache
 {
 public:
 	IOCache(FreeImageIO *io, fi_handle handle, size_t size) :
-		_safeBuffer(new uint8_t[size]), _begin{_safeBuffer.get()}, _end{_begin + size}, _ptr{_end}, _size(size), _io(io), _handle(handle)	{
+		_safeBuffer(new uint8_t[size]()), _begin{_safeBuffer.get()}, _end{_begin + size}, _ptr{_end}, _size(size), _io(io), _handle(handle)	{
 	}
 
 	inline
@@ -213,7 +213,7 @@ public:
 		if (_ptr >= _end) {
 			// need refill
 			_ptr = _begin;
-			_io->read_proc(_ptr, sizeof(uint8_t), (unsigned)_size, _handle);	//### EOF - no problem?
+			fill();
 		}
 
 		uint8_t result = *_ptr;
@@ -238,7 +238,7 @@ public:
 			_io->seek_proc(_handle, -remaining, SEEK_CUR);
 
 			_ptr = _begin;
-			_io->read_proc(_ptr, sizeof(uint8_t), (unsigned)_size, _handle);	//### EOF - no problem?
+			fill();
 		}
 
 		uint8_t *result = _ptr;
@@ -246,6 +246,14 @@ public:
 		_ptr += count;
 
 		return result;
+	}
+
+	/// read the next block into the cache, the part behind the end of the file is zero
+	void fill() {
+		const size_t read = _io->read_proc(_begin, sizeof(uint8_t), (unsigned)_size, _handle);
+		if (read < _size) {
+			memset(_begin + read, 0, _size - read);
+		}
 	}
 
 private:
@@ -557,15 +565,18 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 	// Note, many of the params can be computed inside the function.
 	// However, because this is a template function, it will lead to redundant code duplication.
 
-	// this is used to guard against writing beyond the end of the image (on corrupted rle block)
-	const uint8_t* dib_end = FreeImage_GetScanLine(dib, height);//< one-past-end row
-
 	// Compute the rough size of a line...
-	long pixels_offset = io->tell_proc(handle);
-	long sz = ((eof - pixels_offset) / height);
+	const long pixels_offset = io->tell_proc(handle);
+	const long remaining_size = eof - pixels_offset;
+	if (remaining_size < height) {
+		// the file ends before there is one byte for each line
+		throw FI_MSG_ERROR_CORRUPTED;
+	}
+	const long sz = remaining_size / height;
 
-	// ...and allocate cache of this size (yields good results)
-	IOCache cache(io, handle, sz);
+	// ...and allocate cache of this size (yields good results),
+	// the cache has to be able to hold some pixels, as a pixel must not span more than two blocks
+	IOCache cache(io, handle, std::max<size_t>((size_t)sz, 4 * (size_t)file_pixel_size));
 
 	int x = 0, y = 0;
 
@@ -580,9 +591,13 @@ loadRLE(FIBITMAP* dib, int width, int height, FreeImageIO* io, fi_handle handle,
 
 		const uint8_t packet_count = rle + 1;
 
-		//packet_count might be corrupt, test if we are not about to write beyond the last image bit
+		//packet_count might be corrupt, test if we are not about to write beyond the last image bit.
+		// A packet can span several lines, the padding at the end of a line of the dib is not available for pixels,
+		// therefore the number of the pixels left is counted, not the bytes.
 
-		if ((line_bits+x) + packet_count*pixel_size > dib_end) {
+		const size_t pixels_left = (size_t)(height - y) * width - (size_t)(x / pixel_size);
+
+		if (packet_count > pixels_left) {
 			FreeImage_OutputMessageProc(s_format_id, FI_MSG_ERROR_CORRUPTED);
 			// return what is left from the bitmap
 			return;

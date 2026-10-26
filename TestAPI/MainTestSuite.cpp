@@ -163,6 +163,13 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+	// test TARGA RLE decoding
+	if (!testTargaRLE()) {
+		return 1;
+	}
+	if (!testTargaRLEPackets()) {
+		return 1;
+	}
 	// test DDS RGB loading
 	if (!testDDSRGB()) {
 		return 1;
