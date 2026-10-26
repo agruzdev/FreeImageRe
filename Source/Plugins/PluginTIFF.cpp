@@ -1706,6 +1706,12 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				const unsigned srcBpp = bitspersample * samplesperpixel / 8;
 
 				assert(Bpc <= 2); //< CMYK is only uint8_t or SHORT 
+
+				// a DIB pixel larger than a source pixel makes the loops below read past the end of the strip buffer
+				// (e.g. 3 x half float stored as RGBF)
+				if (planar_config == PLANARCONFIG_CONTIG && dibBpp > srcBpp) {
+					throw "Unsupported number of samples or bits per sample";
+				}
 				
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -1919,6 +1925,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 						}
 						else {
 							if (srcBpp * 8 == srcBits) {
+								if (Bpp > srcBpp) {
+									// the DIB pixel is larger than the source pixel (e.g. 3 x half float stored as RGBF)
+									throw "Unsupported number of samples or bits per sample";
+								}
 								for (uint32_t l = 0; l < rows; l++) {
 									for (uint8_t* pixel = bits, *src_pixel = buf.get() + l * src_line; pixel < bits + dst_pitch; pixel += Bpp, src_pixel += srcBpp) {
 										AssignPixel(pixel, src_pixel, Bpp);
@@ -1973,6 +1983,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 							}
 							else {
 								if (!(bitspersample & 7)) {
+									if (chCount * Bpc > Bpp) {
+										// the channels do not fit into a DIB pixel
+										throw "Unsupported number of samples or bits per sample";
+									}
 									const unsigned channelOffset = sample * Bpc;
 
 									// - loop for strips in block -
