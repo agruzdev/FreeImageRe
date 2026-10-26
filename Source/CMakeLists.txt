@@ -165,8 +165,8 @@ if (WIN32)
         set(FREEIMAGE_RC_SPECIAL_BUILD_VALUE "")
     endif()
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/FreeImage.rc.in ${CMAKE_CURRENT_BINARY_DIR}/FreeImage.rc @ONLY)
-    target_sources(FreeImage PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/FreeImage.rc)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/FreeImage.rc.in ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc @ONLY)
+    target_sources(FreeImage PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImage.rc)
 endif()
 
 message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
