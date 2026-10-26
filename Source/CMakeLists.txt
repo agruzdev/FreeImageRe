@@ -62,14 +62,6 @@ else()
 endif()
 
 
-if (FREEIMAGE_WITH_PYTHON_BINDINGS)
-    target_include_directories(FreeImage PRIVATE ${PYBIND_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-    target_compile_definitions(FreeImage PRIVATE "-DFREEIMAGE_WITH_PYTHON_BINDINGS=1")
-    target_link_directories(FreeImage PRIVATE ${Python3_LIBRARY_DIRS})
-    target_link_libraries(FreeImage PRIVATE LibPybind ${Python3_LIBRARIES})
-endif()
-
-
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 
@@ -170,16 +162,12 @@ if (WIN32)
 endif()
 
 message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_PREFIX}")
-install(TARGETS FreeImage)
-if (FREEIMAGE_WITH_PYTHON_BINDINGS)
-    if (WIN32)
-        install(CODE "message(STATUS \"Make a hardlink for Python: FreeImage.pyd\")")
-        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_hardlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.pyd WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/bin\" COMMAND_ERROR_IS_FATAL ANY)")
-    else()
-        install(CODE "message(STATUS \"Make a symlink for Python: FreeImage.so\")")
-        install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink \"./$<TARGET_FILE_NAME:FreeImage>\" FreeImage.so WORKING_DIRECTORY \"${CMAKE_INSTALL_PREFIX}/lib\" COMMAND_ERROR_IS_FATAL ANY)")
-    endif()
-endif()
+install(TARGETS FreeImage COMPONENT dist)
 if (FREEIMAGE_WITH_LIBHEIF)
-    install(FILES ${LibHEIF_INSTALL_LIBRARY} TYPE ${LibHEIF_INSTALL_TYPE} RENAME ${LibHEIF_INSTALL_NAME})
+    install(FILES ${LibHEIF_INSTALL_LIBRARY} TYPE ${LibHEIF_INSTALL_TYPE} RENAME ${LibHEIF_INSTALL_NAME} COMPONENT dist)
+endif()
+
+
+if (FREEIMAGE_WITH_PYTHON_BINDINGS)
+    add_subdirectory(Python)
 endif()

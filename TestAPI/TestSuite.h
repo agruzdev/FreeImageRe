@@ -65,6 +65,11 @@ void testExifRaw();
 
 void testMemIO(const char *lpszPathName);
 
+// Metadata test suite
+// ==========================================================
+
+bool testExifMalformed();
+
 // Multipage test suite
 // ==========================================================
 

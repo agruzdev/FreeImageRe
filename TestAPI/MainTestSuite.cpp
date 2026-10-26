@@ -105,6 +105,11 @@ int main(int argc, char *argv[]) {
 	// test Exif raw metadata loading & saving
 	testExifRaw();
 
+	// test malformed Exif data
+	if (!testExifMalformed()) {
+		return 1;
+	}
+
 	// test thumbnail functions
 	testThumbnail("exif.jpg", 0);
 

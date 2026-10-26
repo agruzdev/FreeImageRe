@@ -622,8 +622,10 @@ FreeImage_Clone(FIBITMAP *dib) {
 						std::string dst_key = j.first;
 						auto *dst_tag = FreeImage_CloneTag(j.second);
 
-						// assign key and tag value
-						(*dst_tagmap)[dst_key] = dst_tag;
+						// assign key and tag value (a tag that could not be cloned is left out)
+						if (dst_tag) {
+							(*dst_tagmap)[dst_key] = dst_tag;
+						}
 					}
 
 					// assign model and tagmap
@@ -1374,8 +1376,10 @@ FreeImage_CloneMetadata(FIBITMAP *dst, FIBITMAP *src) {
 					std::string dst_key = j.first;
 					auto *dst_tag = FreeImage_CloneTag(j.second);
 
-					// assign key and tag value
-					(*dst_tagmap)[dst_key] = dst_tag;
+					// assign key and tag value (a tag that could not be cloned is left out)
+					if (dst_tag) {
+						(*dst_tagmap)[dst_key] = dst_tag;
+					}
 				}
 
 				// assign model and tagmap
@@ -1459,7 +1463,13 @@ FreeImage_SetMetadata(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, const char *key, 
 			}
 
 			// create a new tag
-			(*tagmap)[key] = FreeImage_CloneTag(tag);
+			if (auto *new_tag = FreeImage_CloneTag(tag)) {
+				(*tagmap)[key] = new_tag;
+			} else {
+				// the old tag is already deleted: drop its entry
+				tagmap->erase(key);
+				return FALSE;
+			}
 		}
 		else {
 			// delete existing tag
