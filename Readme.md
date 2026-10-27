@@ -141,5 +141,5 @@ All changes relative to FreeImage 3.18 are documented in [`Changelog.md`](Change
 
 ## Security
 
-The state of the public CVEs reported against FreeImage and FreeImageRe, with links to the fixes and to the sample files, is listed in [`SECURITY-CVE.md`](SECURITY-CVE.md). The samples can be downloaded and run with the scripts in [`TestSamples`](TestSamples/README.md).
+The state of the public CVEs reported against FreeImage and FreeImageRe, with links to the fixes and to the sample files, is listed in [`SECURITY-CVE.md`](SECURITY-CVE.md). The samples can be downloaded and run with the script in [`TestSamples`](TestSamples/README.md).
 
