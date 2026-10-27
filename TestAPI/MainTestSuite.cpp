@@ -41,50 +41,6 @@ void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message) {
 
 // ----------------------------------------------------------
 
-// disabled build options are not necessarily defined as 0
-#ifndef FREEIMAGE_WITH_LIBTIFF
-#define FREEIMAGE_WITH_LIBTIFF 0
-#endif
-#ifndef FREEIMAGE_WITH_LIBHEIF
-#define FREEIMAGE_WITH_LIBHEIF 0
-#endif
-#ifndef FREEIMAGE_WITH_LIBJPEGXL
-#define FREEIMAGE_WITH_LIBJPEGXL 0
-#endif
-#ifndef FREEIMAGE_WITH_LIBJXR
-#define FREEIMAGE_WITH_LIBJXR 0
-#endif
-#ifndef FREEIMAGE_WITH_LIBJPEG
-#define FREEIMAGE_WITH_LIBJPEG 0
-#endif
-#ifndef FREEIMAGE_WITH_LIBPNG
-#define FREEIMAGE_WITH_LIBPNG 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_BMP
-#define FREEIMAGE_WITH_PLUGIN_BMP 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_GIF
-#define FREEIMAGE_WITH_PLUGIN_GIF 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_ICO
-#define FREEIMAGE_WITH_PLUGIN_ICO 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_PCX
-#define FREEIMAGE_WITH_PLUGIN_PCX 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_PSD
-#define FREEIMAGE_WITH_PLUGIN_PSD 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_TARGA
-#define FREEIMAGE_WITH_PLUGIN_TARGA 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_DDS
-#define FREEIMAGE_WITH_PLUGIN_DDS 0
-#endif
-#ifndef FREEIMAGE_WITH_PLUGIN_HDR
-#define FREEIMAGE_WITH_PLUGIN_HDR 0
-#endif
-
 // Check that the plugin registry matches the build configuration:
 // a plugin which is compiled in must be registered, and a plugin
 // which is compiled out must not be. This is a plain check and not an

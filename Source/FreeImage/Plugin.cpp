@@ -42,6 +42,7 @@
 #include "Utilities.h"
 #include "FreeImageIO.h"
 #include "Plugin.h"
+#include "FreeImageOptions.h"
 
 #include "../Metadata/FreeImageTag.h"
 

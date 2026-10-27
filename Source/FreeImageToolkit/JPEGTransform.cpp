@@ -21,6 +21,8 @@
 // Use at your own risk!
 // ==========================================================
 
+#include "FreeImageOptions.h"
+
 #if FREEIMAGE_WITH_LIBJPEG
 
 #include <cstddef>

@@ -53,12 +53,36 @@ endif()
 target_link_libraries(FreeImage PRIVATE LibYato)
 target_link_libraries(FreeImage PRIVATE LibZLIB)
 
+# The header with the FREEIMAGE_WITH_PLUGIN_<NAME> and FREEIMAGE_WITH_LIB<NAME> switches (1 or 0) is generated into the build tree
+set(FREEIMAGE_OPTION_DEFINES "")
 foreach(plugin_name IN LISTS FREEIMAGE_BUILTIN_PLUGINS)
     if (FREEIMAGE_WITH_PLUGIN_${plugin_name})
-        target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_PLUGIN_${plugin_name}=1")
+        string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_PLUGIN_${plugin_name} 1
+")
         list(APPEND freeimage_plugins Plugins/Plugin${plugin_name}.cpp)
+    else()
+        string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_PLUGIN_${plugin_name} 0
+")
     endif()
 endforeach()
+foreach(lib_name OPENEXR JPEG OPENJPEG PNG TIFF WEBP RAW HEIF JPEGXL JXR)
+    if (FREEIMAGE_WITH_LIB${lib_name})
+        string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_LIB${lib_name} 1
+")
+    else()
+        string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_LIB${lib_name} 0
+")
+    endif()
+endforeach()
+if (FREEIMAGE_WITH_LIBJPEG AND FREEIMAGE_WITH_LIBJPEG_TRANSFORMS)
+    string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_LIBJPEG_TRANSFORMS 1
+")
+else()
+    string(APPEND FREEIMAGE_OPTION_DEFINES "#define FREEIMAGE_WITH_LIBJPEG_TRANSFORMS 0
+")
+endif()
+configure_file(FreeImage/FreeImageOptions.h.in ${CMAKE_CURRENT_BINARY_DIR}/gen/FreeImageOptions.h @ONLY)
+target_include_directories(FreeImage PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/gen)
 
 # PSDParser is used by the PSD and the TIFF plugins
 if (FREEIMAGE_WITH_PLUGIN_PSD OR FREEIMAGE_WITH_LIBTIFF)
@@ -67,64 +91,51 @@ endif()
 
 
 if (FREEIMAGE_WITH_LIBOPENEXR)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBOPENEXR=1")
     target_link_libraries(FreeImage PRIVATE LibOpenEXR)
     list(APPEND freeimage_plugins Plugins/PluginEXR.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBJPEG)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJPEG=1")
-    if (FREEIMAGE_WITH_LIBJPEG_TRANSFORMS)
-        target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJPEG_TRANSFORMS=1")
-    endif()
     target_link_libraries(FreeImage PRIVATE LibJPEG)
     list(APPEND freeimage_plugins Plugins/PluginJPEG.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBOPENJPEG)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBOPENJPEG=1")
     target_link_libraries(FreeImage PRIVATE LibOpenJPEG)
     list(APPEND freeimage_plugins Plugins/PluginJ2K.cpp Plugins/PluginJP2.cpp Plugins/J2KHelper.cpp Plugins/J2KHelper.h)
 endif()
 
 if (FREEIMAGE_WITH_LIBPNG)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBPNG=1")
     target_link_libraries(FreeImage PRIVATE LibPNG)
     list(APPEND freeimage_plugins Plugins/PluginPNG.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBTIFF)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBTIFF=1")
     target_link_libraries(FreeImage PRIVATE LibTIFF)
     list(APPEND freeimage_plugins Plugins/PluginTIFF.cpp Plugins/PluginG3.cpp Plugins/TIFFLogLuv.cpp Plugins/XTIFF.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBWEBP)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBWEBP=1")
     target_link_libraries(FreeImage PRIVATE LibWEBP)
     list(APPEND freeimage_plugins Plugins/PluginWebP.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBRAW)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBRAW=1")
     target_link_libraries(FreeImage PRIVATE LibRAW)
     list(APPEND freeimage_plugins Plugins/PluginRAW.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBHEIF)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBHEIF=1")
     target_link_libraries(FreeImage PRIVATE LibHEIF)
     list(APPEND freeimage_plugins Plugins/PluginHEIF.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBJXR)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJXR=1")
     target_link_libraries(FreeImage PRIVATE LibJXR)
     list(APPEND freeimage_plugins Plugins/PluginJXR.cpp)
 endif()
 
 if (FREEIMAGE_WITH_LIBJPEGXL)
-    target_compile_definitions(FreeImage PUBLIC "-DFREEIMAGE_WITH_LIBJPEGXL=1")
     target_link_libraries(FreeImage PRIVATE LibJpegXL)
     list(APPEND freeimage_plugins Plugins/PluginJPEGXL.cpp)
 endif()
