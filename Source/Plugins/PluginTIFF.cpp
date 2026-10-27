@@ -1707,15 +1707,6 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				assert(Bpc <= 2); //< CMYK is only uint8_t or SHORT 
 
-				// a DIB pixel larger than a source pixel makes the loops below read past the end of the strip buffer
-				// (e.g. 3 x half float stored as RGBF)
-				if (planar_config == PLANARCONFIG_CONTIG && dibBpp > srcBpp) {
-					throw "Unsupported number of samples or bits per sample";
-				}
-				// with separate planes a channel must be at least as wide as a source sample (Bpc is 0 if the DIB pixel has less bytes than channels)
-				if (planar_config == PLANARCONFIG_SEPARATE && (Bpc == 0 || Bpc > bitspersample / 8)) {
-					throw "Unsupported number of samples or bits per sample";
-				}
 				
 				// In the tiff file the lines are save from up to down 
 				// In a DIB the lines must be saved from down to up
@@ -1727,6 +1718,11 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				auto buf(std::make_unique<uint8_t[]>(TIFFStripSize(tif)));
 
 				if (planar_config == PLANARCONFIG_CONTIG) {
+					// a DIB pixel larger than a source pixel makes the loops below read past the end of the strip buffer
+					// (e.g. 3 x half float stored as RGBF)
+					if (dibBpp > srcBpp) {
+						throw "Unsupported number of samples or bits per sample";
+					}
 
 					// - loop for strip blocks -
 
@@ -1784,6 +1780,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				
 				}
 				else if (planar_config == PLANARCONFIG_SEPARATE) {
+					// with separate planes a channel must be at least as wide as a source sample (Bpc is 0 if the DIB pixel has less bytes than channels)
+					if (Bpc == 0 || Bpc > bitspersample / 8) {
+						throw "Unsupported number of samples or bits per sample";
+					}
 
 					uint8_t *dib_strip = bits;
 					uint8_t *al_strip = alpha_bits;
