@@ -22,6 +22,8 @@
 #include "FreeImage.h"
 #include "Utilities.h"
 
+#include <cctype>
+
 // ==========================================================
 // Internal functions
 // ==========================================================
@@ -58,7 +60,9 @@ pfm_get_line(FreeImageIO *io, fi_handle handle, char *buffer, int length) {
 }
 
 /**
-Get an integer value from the actual position pointed by handle
+Get an integer value from the actual position pointed by handle.
+Only white space and comments may precede the number, which may start with a plus sign. Any other character
+before the number or a number which does not fit into an int is a parsing error.
 */
 static int
 pfm_get_int(FreeImageIO *io, fi_handle handle) {
@@ -98,6 +102,22 @@ pfm_get_int(FreeImageIO *io, fi_handle handle) {
             break;
 		}
 
+        if (c == '+') {
+            // optional plus sign, a digit has to follow
+            if (!io->read_proc(&c, 1, 1, handle)) {
+                throw FI_MSG_ERROR_PARSING;
+            }
+            if (c < '0' || c > '9') {
+                throw FI_MSG_ERROR_PARSING;
+            }
+            break;
+        }
+
+        if (!std::isspace((unsigned char)c)) {
+            // a minus sign or any other character
+            throw FI_MSG_ERROR_PARSING;
+        }
+
 		if (!io->read_proc(&c, 1, 1, handle)) {
 			throw FI_MSG_ERROR_PARSING;
 		}
@@ -108,7 +128,12 @@ pfm_get_int(FreeImageIO *io, fi_handle handle) {
     int i = 0;
 
     while (1) {
-        i = (i * 10) + (c - '0');
+        const int digit = c - '0';
+        if (i > (INT_MAX - digit) / 10) {
+            // does not fit into an int
+            throw FI_MSG_ERROR_PARSING;
+        }
+        i = (i * 10) + digit;
 
 		if (!io->read_proc(&c, 1, 1, handle)) {
 			throw FI_MSG_ERROR_PARSING;
@@ -228,8 +253,14 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		}
 
 		// Read the header information: width, height and the scale value
-		unsigned width  = (unsigned) pfm_get_int(io, handle);
-		unsigned height = (unsigned) pfm_get_int(io, handle);
+		const int header_width  = pfm_get_int(io, handle);
+		const int header_height = pfm_get_int(io, handle);
+		// RGBF images read a line of 3 * width floats into std::make_unique<float[]>(lineWidth) below, so 3 * width must not overflow: width <= INT_MAX / 3
+		if ((header_width <= 0) || (header_height <= 0) || (header_width > INT_MAX / 3)) {
+			throw FI_MSG_ERROR_PARSING;
+		}
+		const unsigned width  = (unsigned)header_width;
+		const unsigned height = (unsigned)header_height;
 		float scalefactor = 1;
 
 		FIBOOL bResult = pfm_get_line(io, handle, line_buffer, PFM_MAXLINE);

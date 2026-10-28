@@ -189,6 +189,10 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 #endif
+	// test PFM header validation
+	if (!testPFM()) {
+		return 1;
+	}
 
 	// other tests
 	testConvertToFloat();
