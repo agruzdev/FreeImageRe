@@ -1077,10 +1077,11 @@ check for uncommon bitspersample values (e.g. 10, 12, ...)
 @param photometric TIFFTAG_PHOTOMETRIC tiff tag
 @param bitspersample TIFFTAG_BITSPERSAMPLE tiff tag
 @param samplesperpixel TIFFTAG_SAMPLESPERPIXEL tiff tag
+@param sampleformat TIFFTAG_SAMPLEFORMAT tiff tag
 @return Returns FALSE if a uncommon bit-depth is encountered, returns TRUE otherwise
 */
 static FIBOOL 
-IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samplesperpixel) {
+IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samplesperpixel, uint16_t sampleformat) {
 
 	switch (bitspersample) {
 		case 1:
@@ -1108,6 +1109,10 @@ IsValidBitsPerSample(uint16_t photometric, uint16_t bitspersample, uint16_t samp
 				return FALSE;
 			}
 		case 16:
+			if (photometric == PHOTOMETRIC_SEPARATED && sampleformat == SAMPLEFORMAT_IEEEFP) {
+				// there is no float CMYK image, a CMYK image is 8 or 16 bit unsigned integer
+				return FALSE;
+			}
 			if (photometric != PHOTOMETRIC_PALETTE) { 
 				return TRUE;
 			} else {
@@ -1424,7 +1429,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 		// check for unsupported formats
 		// ---------------------------------------------------------------------------------
 
-		if (!IsValidBitsPerSample(photometric, bitspersample, samplesperpixel)) {
+		uint16_t sampleformat = SAMPLEFORMAT_UINT;
+		TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLEFORMAT, &sampleformat);
+
+		if (!IsValidBitsPerSample(photometric, bitspersample, samplesperpixel, sampleformat)) {
 			FreeImage_OutputMessageProc(s_format_id, 
 				"Unable to handle this format: bitspersample = %d, samplesperpixel = %d, photometric = %d", 
 				(int)bitspersample, (int)samplesperpixel, (int)photometric);
