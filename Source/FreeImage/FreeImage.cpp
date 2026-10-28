@@ -32,6 +32,7 @@
 
 #include "FreeImage.h"
 #include "Utilities.h"
+#include "FreeImageOptions.h"
 
 //----------------------------------------------------------------------
 

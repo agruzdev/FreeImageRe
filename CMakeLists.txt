@@ -101,6 +101,16 @@ if (FREEIMAGE_WITH_LIBJXR)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/LibJXR ${CMAKE_CURRENT_BINARY_DIR}/LibJXR)
 endif()
 
+# Built-in plugins, which have no external dependency.
+# Each of them can be excluded from the build with FREEIMAGE_WITH_PLUGIN_<NAME>=OFF.
+# Plugins backed by an external library are switched with the FREEIMAGE_WITH_LIB* options above.
+set(FREEIMAGE_BUILTIN_PLUGINS
+    BMP CUT DDS GIF HDR ICO IFF JNG KOALA MNG PCD PCX PFM PICT PNM PSD RAS SGI TARGA WBMP XBM XPM
+)
+foreach(plugin_name IN LISTS FREEIMAGE_BUILTIN_PLUGINS)
+    option(FREEIMAGE_WITH_PLUGIN_${plugin_name} "Compile with the ${plugin_name} plugin" ON)
+endforeach()
+
 set(FREEIMAGE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
 add_definitions("-DFREEIMAGERE_MAJOR_VERSION=${FREEIMAGERE_MAJOR_VERSION}")

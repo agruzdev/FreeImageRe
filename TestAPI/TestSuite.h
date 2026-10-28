@@ -23,6 +23,7 @@
 #define TEST_FREEIMAGE_API_H
 
 #include "FreeImage.h"
+#include "FreeImageOptions.h"
 
 #include <stdio.h>
 #include <math.h>

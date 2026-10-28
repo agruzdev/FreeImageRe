@@ -42,6 +42,7 @@
 #include "Utilities.h"
 #include "FreeImageIO.h"
 #include "Plugin.h"
+#include "FreeImageOptions.h"
 
 #include "../Metadata/FreeImageTag.h"
 
@@ -376,43 +377,87 @@ private:
 PluginsRegistry::PluginsRegistry()
 {
 	// internal plugins initialization
+#if FREEIMAGE_WITH_PLUGIN_BMP
 	Put(FIF_BMP, InitBMP);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_ICO
 	Put(FIF_ICO, InitICO);
+#endif
 #if FREEIMAGE_WITH_LIBJPEG
 	Put(FIF_JPEG, InitJPEG);
 #endif
+#if FREEIMAGE_WITH_PLUGIN_JNG
 	Put(FIF_JNG, InitJNG);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_KOALA
 	Put(FIF_KOALA, InitKOALA);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_IFF
 	Put(FIF_IFF, InitIFF);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_MNG
 	Put(FIF_MNG, InitMNG);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PNM
 	Put(FIF_PBM, InitPNM, false, nullptr, "PBM", "Portable Bitmap (ASCII)", "pbm", "^P1");
 	Put(FIF_PBMRAW, InitPNM, false, nullptr, "PBMRAW", "Portable Bitmap (RAW)", "pbm", "^P4");
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PCD
 	Put(FIF_PCD, InitPCD);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PCX
 	Put(FIF_PCX, InitPCX);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PNM
 	Put(FIF_PGM, InitPNM, false, nullptr, "PGM", "Portable Greymap (ASCII)", "pgm", "^P2");
 	Put(FIF_PGMRAW, InitPNM, false, nullptr, "PGMRAW", "Portable Greymap (RAW)", "pgm", "^P5");
+#endif
 #if FREEIMAGE_WITH_LIBPNG
 	Put(FIF_PNG, InitPNG);
 #endif
+#if FREEIMAGE_WITH_PLUGIN_PNM
 	Put(FIF_PPM, InitPNM, false, nullptr, "PPM", "Portable Pixelmap (ASCII)", "ppm", "^P3");
 	Put(FIF_PPMRAW, InitPNM, false, nullptr, "PPMRAW", "Portable Pixelmap (RAW)", "ppm", "^P6");
+#endif
+#if FREEIMAGE_WITH_PLUGIN_RAS
 	Put(FIF_RAS, InitRAS);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_TARGA
 	Put(FIF_TARGA, InitTARGA);
+#endif
 #if FREEIMAGE_WITH_LIBTIFF
 	Put(FIF_TIFF, InitTIFF);
 #endif
+#if FREEIMAGE_WITH_PLUGIN_WBMP
 	Put(FIF_WBMP, InitWBMP);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PSD
 	Put(FIF_PSD, InitPSD);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_CUT
 	Put(FIF_CUT, InitCUT);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_XBM
 	Put(FIF_XBM, InitXBM);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_XPM
 	Put(FIF_XPM, InitXPM);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_DDS
 	Put(FIF_DDS, InitDDS);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_GIF
 	Put(FIF_GIF, InitGIF);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_HDR
 	Put(FIF_HDR, InitHDR);
+#endif
 #if FREEIMAGE_WITH_LIBTIFF
 	Put(FIF_FAXG3, InitG3);
 #endif
+#if FREEIMAGE_WITH_PLUGIN_SGI
 	Put(FIF_SGI, InitSGI);
+#endif
 #if FREEIMAGE_WITH_LIBOPENEXR
 	Put(FIF_EXR, InitEXR);
 #endif
@@ -420,8 +465,12 @@ PluginsRegistry::PluginsRegistry()
 	Put(FIF_J2K, InitJ2K);
 	Put(FIF_JP2, InitJP2);
 #endif
+#if FREEIMAGE_WITH_PLUGIN_PFM
 	Put(FIF_PFM, InitPFM);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_PICT
 	Put(FIF_PICT, InitPICT);
+#endif
 #if FREEIMAGE_WITH_LIBRAW
 	Put(FIF_RAW, InitRAW);
 #endif

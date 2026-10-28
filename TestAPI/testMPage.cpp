@@ -178,10 +178,19 @@ void testMultiPage(const char *lpszPathName) {
 	printf("testMultiPage ...\n");
 
 	// test multipage creation
+	// (tests for plugins disabled at build time are left out,
+	// main() checks that such plugins are really not registered)
+#if FREEIMAGE_WITH_PLUGIN_ICO
 	testBuildMPage(lpszPathName, "sample.ico", FIF_ICO, 24);
+#endif
+#if FREEIMAGE_WITH_LIBTIFF
 	testBuildMPage(lpszPathName, "sample.tif", FIF_TIFF, 24);
+#endif
+#if FREEIMAGE_WITH_PLUGIN_GIF
 	testBuildMPage(lpszPathName, "sample.gif", FIF_GIF, 8);
+#endif
 
+#if FREEIMAGE_WITH_LIBTIFF
 	// test multipage copy
 	testCloneMultiPage(FIF_TIFF, "sample.tif", "clone.tif", TIFF_LZW);
 
@@ -190,4 +199,5 @@ void testMultiPage(const char *lpszPathName) {
 
 	// test multipage cache
 	testMPageCache(lpszPathName, "mpages.tif");
+#endif
 }
