@@ -221,6 +221,11 @@ bool testTIFFMalformed() {
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_MINISWHITE, 16, 3, PLANARCONFIG_CONTIG, SAMPLEFORMAT_IEEEFP)) == 0, "3 x half float, not RGB, contiguous");
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_SEPARATED, 16, 3, PLANARCONFIG_CONTIG, SAMPLEFORMAT_IEEEFP)) == 0, "3 x half float, CMYK, contiguous");
 
+	// what is supported has to stay loadable: half float RGB (as RGBF) and integer CMYK (converted to RGB)
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 16, 3, PLANARCONFIG_CONTIG, SAMPLEFORMAT_IEEEFP)) == 96, "3 x half float, RGB, contiguous");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_SEPARATED, 8, 4, PLANARCONFIG_CONTIG, 0)) == 24, "CMYK, 8-bit, contiguous");
+	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_SEPARATED, 16, 4, PLANARCONFIG_CONTIG, 0)) == 48, "CMYK, 16-bit, contiguous");
+
 	// 3 x 16-bit signed samples are loaded as a 32-bit DIB, the channels do not fit into a pixel
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 16, 3, PLANARCONFIG_SEPARATE, SAMPLEFORMAT_INT)) == 0, "3 x int16, separate planes");
 
