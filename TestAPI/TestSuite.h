@@ -58,6 +58,7 @@ void testAllocateCloneUnload(const char *lpszPathName);
 FIBOOL testAllocateCloneUnloadType(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height);
 void testImageType(unsigned width, unsigned height);
 void testImageTypeTIFF(unsigned width, unsigned height);
+bool testTIFFMalformed();
 
 // Header loading test suite
 // ==========================================================

@@ -124,6 +124,11 @@ int main(int argc, char *argv[]) {
 	// test loading / saving / converting image types using the TIFF plugin
 	testImageTypeTIFF(width, height);
 
+	// test malformed TIFF sample layouts
+	if (!testTIFFMalformed()) {
+		return 1;
+	}
+
 	// test multipage streaming
 	testStreamMultiPage("sample.tif");
 
