@@ -11,6 +11,7 @@ jobs:
   build:
     name: Build ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
 
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
@@ -39,32 +40,47 @@ jobs:
             build_type: Release
           - platform: ubuntu-x64
             os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
+            container:
+              image: ubuntu:20.04
+              options: --user root
+            c_compiler: gcc-13
+            cpp_compiler: g++-13
             arch: x64
             build_type: Release
 
     steps:
     - uses: actions/checkout@v7
 
+    - name: Install Prerequisites (Linux Container)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y curl perl nasm sudo unzip git software-properties-common
+
     - name: Install Perl and NASM on Windows
       if: runner.os == 'Windows'
       shell: powershell
       run: choco install strawberryperl nasm -y --no-progress
 
-    - name: Install Perl and NASM on Linux
-      if: runner.os == 'Linux'
+    # Install GCC 11
+    - name: Install C++20 Compiler (GCC 13)
+      if: startsWith(matrix.platform, 'ubuntu')
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y perl nasm
+        export DEBIAN_FRONTEND=noninteractive
+        add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        apt-get update
+        apt-get install -y gcc-13 g++-13 binutils make
+        update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
       run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir=$GITHUB_WORKSPACE/build" >> "$GITHUB_OUTPUT"
 
     - name: Setup CMake
       uses: lukka/get-cmake@latest
@@ -87,11 +103,11 @@ jobs:
 
         cmake -B "${{ steps.strings.outputs.build-output-dir }}" \
           $arch_arg \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type }} \
-          -S "${{ github.workspace }}" \
+          -S "$GITHUB_WORKSPACE" \
           -DFREEIMAGE_BUILD_TESTS:BOOL=ON \
           $jpeg_repository_arg
 
@@ -112,7 +128,7 @@ jobs:
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      # See https://cmake.org for more detail
       # run: ctest --build-config ${{ matrix.build_type }}
       run: echo "Tests are skipped"
 
@@ -218,7 +234,7 @@ jobs:
               --title "FreeImageRe build ${short_sha}" \
               --notes "Automated draft build from master."
           else
-            tag="${drafts[0]}"
+            tag="${drafts}"
           fi
 
           shopt -s nullglob
