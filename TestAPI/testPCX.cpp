@@ -196,6 +196,24 @@ bool testPCX() {
 		}
 	}
 
+	// 256 colors in a file which is shorter than 769 bytes: there is no palette and the pixel data must not be taken as one.
+	// The first data byte is 12, the id of a palette.
+	{
+		auto getByte = [](int y, int plane, int i) { return (uint8_t)(y == 0 && i == 0 ? 12 : 20 + i + y); };
+		std::vector<uint8_t> file = makePCX(4, 2, 8, 1, 4, getByte);
+		FIBITMAP *dib = loadPcxFromBuffer(file);
+		ok &= expect(dib != nullptr, "short 8 bit file: loaded");
+		if (dib) {
+			const FIRGBA8 *pal = FreeImage_GetPalette(dib);
+			bool same = (pal != nullptr);
+			for (int i = 0; same && i < 256; i++) {
+				same = (pal[i].red == i && pal[i].green == i && pal[i].blue == i);
+			}
+			ok &= expect(same, "short 8 bit file: the default gray palette is kept");
+			FreeImage_Unload(dib);
+		}
+	}
+
 	// A file which ends in the middle of the pixel data: it is either rejected or
 	// loaded with the expected size, but it must not be read beyond its end
 	{

@@ -447,15 +447,16 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 			case 8:
 			{
-				uint8_t palette_id;
+				uint8_t palette_id = 0;
 
-				io->seek_proc(handle, -769L, SEEK_END);
-				io->read_proc(&palette_id, 1, 1, handle);
+				// a file which is shorter than 769 bytes has no palette, the seek fails and the position stays behind the header
+				if (io->seek_proc(handle, -769L, SEEK_END) != 0 || io->read_proc(&palette_id, 1, 1, handle) != 1) {
+					palette_id = 0;
+				}
 
 				if (palette_id == 0x0C) {
 
-					if (std::unique_ptr<uint8_t[]> cmap(new(std::nothrow) uint8_t[768]); cmap) {
-						io->read_proc(cmap.get(), 768, 1, handle);
+					if (std::unique_ptr<uint8_t[]> cmap(new(std::nothrow) uint8_t[768]); cmap && io->read_proc(cmap.get(), 768, 1, handle) == 1) {
 
 						pal = FreeImage_GetPalette(dib.get());
 						const auto *pColormap = cmap.get();
