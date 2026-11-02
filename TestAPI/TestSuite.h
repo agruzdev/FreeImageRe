@@ -81,6 +81,7 @@ bool testBMPRLE8();
 bool testBMPRLEBitDepth();
 bool testBMPTruncatedHeaders();
 bool testBMPHeaderVersions();
+bool testPCX();
 
 // Metadata test suite
 // ==========================================================

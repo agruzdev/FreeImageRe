@@ -549,10 +549,13 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				memset(buffer.get(), 0, width * sizeof(uint8_t));
 
+				// bytes_per_line can be smaller than the width, then the missing pixels stay 0
+				const unsigned planeWidth = std::min(width, (unsigned)header.bytes_per_line * 8);
+
 				for (int plane = 0; plane < 4; plane++) {
 					bit = (uint8_t)(1 << plane);
 
-					for (unsigned x = 0; x < width; x++) {
+					for (unsigned x = 0; x < planeWidth; x++) {
 						index = (unsigned)((x / 8) + plane * header.bytes_per_line);
 						mask = (uint8_t)(0x80 >> (x & 0x07));
 						buffer[x] |= (line[index] & mask) ? bit : 0;
@@ -561,8 +564,10 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 
 				// then write the dib row
 
-				for (unsigned x = 0; x < width / 2; x++) {
-					bits[x] = (buffer[2*x] << 4) | buffer[2*x+1];
+				for (unsigned x = 0; x < (width + 1) / 2; x++) {
+					// the last pixel of a row with odd width is the high nibble of the last byte
+					const uint8_t low = (2*x+1 < width) ? buffer[2*x+1] : 0;
+					bits[x] = (buffer[2*x] << 4) | low;
 				}
 
 				// skip trailing garbage at the end of the scanline
@@ -588,17 +593,20 @@ Load(FreeImageIO *io, fi_handle handle, int page, int flags, void *data) {
 				const auto *pLine = line.get();
 				unsigned x;
 
-				for (x = 0; x < width; x++) {
+				// bytes_per_line can be smaller than the width, then the missing pixels stay 0
+				const unsigned planeWidth = std::min(width, (unsigned)header.bytes_per_line);
+
+				for (x = 0; x < planeWidth; x++) {
 					bits[x * 3 + FI_RGBA_RED] = pLine[x];
 				}
 				pLine += header.bytes_per_line;
 
-				for (x = 0; x < width; x++) {
+				for (x = 0; x < planeWidth; x++) {
 					bits[x * 3 + FI_RGBA_GREEN] = pLine[x];
 				}
 				pLine += header.bytes_per_line;
 
-				for (x = 0; x < width; x++) {
+				for (x = 0; x < planeWidth; x++) {
 					bits[x * 3 + FI_RGBA_BLUE] = pLine[x];
 				}
 				pLine += header.bytes_per_line;
