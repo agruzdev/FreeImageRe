@@ -37,14 +37,6 @@
 #endif
 #endif // WIN32
 
-// The BMP test needs the BMP plugin. FREEIMAGE_WITH_PLUGIN_BMP is set by the build
-// system if the plugin can be disabled, otherwise the plugin is always built in.
-#if !defined(FREEIMAGE_WITH_PLUGIN_BMP) || FREEIMAGE_WITH_PLUGIN_BMP
-#define TEST_WITH_BMP 1
-#else
-#define TEST_WITH_BMP 0
-#endif
-
 // Some useful tools
 // ==========================================================
 FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale);
