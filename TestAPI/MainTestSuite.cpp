@@ -210,6 +210,7 @@ int main(int argc, char *argv[]) {
 	testHeaderOnly();
 #endif
 	
+#if FREEIMAGE_WITH_PLUGIN_TARGA
 	// test TARGA RLE decoding
 	if (!testTargaRLE()) {
 		return 1;
@@ -217,11 +218,14 @@ int main(int argc, char *argv[]) {
 	if (!testTargaRLEPackets()) {
 		return 1;
 	}
+#endif
+#if FREEIMAGE_WITH_PLUGIN_DDS
 	// test DDS RGB loading
 	if (!testDDSRGB()) {
 		return 1;
 	}
-#if TEST_WITH_BMP
+#endif
+#if FREEIMAGE_WITH_PLUGIN_BMP
 	// test BMP RLE8 decoding
 	if (!testBMPRLE8()) {
 		return 1;
@@ -236,10 +240,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 #endif
+#if FREEIMAGE_WITH_PLUGIN_PFM
 	// test PFM header validation
 	if (!testPFM()) {
 		return 1;
 	}
+#endif
 
 	// other tests
 	testConvertToFloat();
