@@ -246,6 +246,12 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 #endif
+#if FREEIMAGE_WITH_PLUGIN_PCX
+	// test PCX decoding
+	if (!testPCX()) {
+		return 1;
+	}
+#endif
 
 	// other tests
 	testConvertToFloat();
