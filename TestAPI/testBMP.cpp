@@ -20,7 +20,7 @@
 
 #include "TestSuite.h"
 
-#if TEST_WITH_BMP
+#if FREEIMAGE_WITH_PLUGIN_BMP
 
 #include <vector>
 #include <cstdint>
@@ -454,4 +454,4 @@ bool testBMPHeaderVersions() {
 	return ok;
 }
 
-#endif // TEST_WITH_BMP
+#endif // FREEIMAGE_WITH_PLUGIN_BMP
