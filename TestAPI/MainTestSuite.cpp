@@ -78,7 +78,7 @@ static bool checkPluginRegistry() {
 	return ok;
 }
 
-int main(int argc, char *argv[]) {
+TEST(FreeImageAPI, MainTestSuite) {
 	unsigned width  = 512;
 	unsigned height = 512;
 
@@ -109,9 +109,7 @@ int main(int argc, char *argv[]) {
 	showPlugins();
 
 	// the registered plugins must match the build configuration
-	if (!checkPluginRegistry()) {
-		return 1;
-	}
+	ASSERT_TRUE(checkPluginRegistry());
 
 	uint32_t depsCount = FreeImage_GetDependenciesCount();
 	for (uint32_t i = 0; i < depsCount; ++i) {
@@ -148,9 +146,7 @@ int main(int argc, char *argv[]) {
 	testExifRaw();
 
 	// test malformed Exif data
-	if (!testExifMalformed()) {
-		return 1;
-	}
+	ASSERT_TRUE(testExifMalformed());
 
 	// test thumbnail functions
 	testThumbnail("exif.jpg", 0);
@@ -167,9 +163,7 @@ int main(int argc, char *argv[]) {
 	testImageTypeTIFF(width, height);
 
 	// test malformed TIFF sample layouts
-	if (!testTIFFMalformed()) {
-		return 1;
-	}
+	ASSERT_TRUE(testTIFFMalformed());
 
 	// test multipage streaming
 	testStreamMultiPage("sample.tif");
@@ -212,45 +206,27 @@ int main(int argc, char *argv[]) {
 	
 #if FREEIMAGE_WITH_PLUGIN_TARGA
 	// test TARGA RLE decoding
-	if (!testTargaRLE()) {
-		return 1;
-	}
-	if (!testTargaRLEPackets()) {
-		return 1;
-	}
+	ASSERT_TRUE(testTargaRLE());
+	ASSERT_TRUE(testTargaRLEPackets());
 #endif
 #if FREEIMAGE_WITH_PLUGIN_DDS
 	// test DDS RGB loading
-	if (!testDDSRGB()) {
-		return 1;
-	}
+	ASSERT_TRUE(testDDSRGB());
 #endif
 #if FREEIMAGE_WITH_PLUGIN_BMP
 	// test BMP RLE8 decoding
-	if (!testBMPRLE8()) {
-		return 1;
-	}
-	if (!testBMPRLEBitDepth()) {
-		return 1;
-	}
-	if (!testBMPTruncatedHeaders()) {
-		return 1;
-	}
-	if (!testBMPHeaderVersions()) {
-		return 1;
-	}
+	ASSERT_TRUE(testBMPRLE8());
+	ASSERT_TRUE(testBMPRLEBitDepth());
+	ASSERT_TRUE(testBMPTruncatedHeaders());
+	ASSERT_TRUE(testBMPHeaderVersions());
 #endif
 #if FREEIMAGE_WITH_PLUGIN_PFM
 	// test PFM header validation
-	if (!testPFM()) {
-		return 1;
-	}
+	ASSERT_TRUE(testPFM());
 #endif
 #if FREEIMAGE_WITH_PLUGIN_PCX
 	// test PCX decoding
-	if (!testPCX()) {
-		return 1;
-	}
+	ASSERT_TRUE(testPCX());
 #endif
 
 	// other tests
@@ -264,7 +240,5 @@ int main(int argc, char *argv[]) {
 #if defined(FREEIMAGE_LIB) || !defined(WIN32)
 	FreeImage_DeInitialise();
 #endif
-
-	return 0;
 }
 

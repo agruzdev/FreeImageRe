@@ -121,6 +121,8 @@ add_subdirectory(Source)
 
 option(FREEIMAGE_BUILD_TESTS "Build test executables" OFF)
 if(FREEIMAGE_BUILD_TESTS)
+    include(CTest)
+    include(${EXTERNALPROJECT_INCLUDE_DIR}/dependency.gtest.cmake)
     add_subdirectory(TestAPI)
 endif()
 

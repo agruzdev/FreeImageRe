@@ -25,11 +25,17 @@
 #include "FreeImage.h"
 #include "FreeImageOptions.h"
 
+#include <gtest/gtest.h>
+
 #include <stdio.h>
 #include <math.h>
-#include <assert.h>
 #include <sys/stat.h>
 #include <stdlib.h>
+
+#ifdef assert
+#undef assert
+#endif
+#define assert(condition) EXPECT_TRUE(condition)
 
 #if (defined(WIN32) || defined(__WIN32__))
 #if (defined(_DEBUG))
