@@ -21,24 +21,35 @@
 
 
 #include "TestSuite.h"
+
 #include <memory>
 #include <iostream>
 
 // Local test functions
 // ----------------------------------------------------------
 
-void testHeif(FREE_IMAGE_FORMAT fif, const char* src_path, const char* dst_path)
+static void testHeif(FREE_IMAGE_FORMAT fif, const char* src_path, const char* dst_path)
 {
 	auto detected_fif = FreeImage_GetFIFFromFilename(src_path);
-	assert(detected_fif == fif);
+	EXPECT_TRUE(detected_fif == fif);
 
 	detected_fif = FreeImage_GetFileType(src_path);
-	assert(detected_fif == fif);
+	EXPECT_TRUE(detected_fif == fif);
 
 	std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> img_heic{ FreeImage_Load(fif, src_path, 0), &::FreeImage_Unload };
-	assert(img_heic != nullptr);
+	ASSERT_TRUE(img_heic != nullptr);
 	std::cout << "Test HEIF " << fif << ", size = " << FreeImage_GetWidth(img_heic.get()) << "x" << FreeImage_GetHeight(img_heic.get()) << std::endl;
 
 	const bool success = FreeImage_Save(fif, img_heic.get(), dst_path);
-	assert(success);
+	EXPECT_TRUE(success);
+}
+
+TEST(HEIF, Decode)
+{
+	testHeif(FIF_HEIF, "exif.heic", "heif_out.heic");
+}
+
+TEST(AVIF, Decode)
+{
+	testHeif(FIF_AVIF, "exif.avif", "avif_out.avif");
 }

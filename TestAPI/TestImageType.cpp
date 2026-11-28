@@ -22,6 +22,14 @@
 
 #include "TestSuite.h"
 
+
+TEST(ImageType, UnsupportedComplexJpegSave)
+{
+	auto bmp = FreeImage_AllocateT(FIT_COMPLEX, 128, 128, 128);
+	FreeImage_Save(FIF_JPEG, bmp, "failed_to_save.jpg");
+	FreeImage_Unload(bmp);
+}
+
 // Local test functions
 // ----------------------------------------------------------
 
@@ -50,11 +58,12 @@ FIBOOL testClone(const char *lpszPathName) {
 	return FALSE; 
 }
 
-void testAllocateCloneUnload(const char *lpszPathName) {
-	printf("testAllocateCloneUnload ...\n");
+TEST(JPEG, AllocateCloneUnload)
+{
+	const char *lpszPathName = "exif.jpg";
 
 	FIBOOL bResult = testClone(lpszPathName);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 }
 
 FIBOOL testAllocateCloneUnloadType(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height) {
@@ -419,78 +428,54 @@ FIBOOL testLoadSaveConvertComplexType(FIBITMAP *src, FREE_IMAGE_COLOR_CHANNEL ch
 // Main test functions
 // ----------------------------------------------------------
 
-void testImageType(unsigned width, unsigned height) {
-	FIBOOL bResult = FALSE;
+TEST(ImageType, InternalTypes)
+{
+	const unsigned width=512, height=512;
 
-	printf("testImageType ...\n");
 
-	bResult = testAllocateCloneUnloadType(FIT_BITMAP, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_UINT16, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_INT16, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_UINT32, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_INT32, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_FLOAT, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_DOUBLE, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_COMPLEX, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_RGB16, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_RGBA16, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_RGBF, width, height);
-	assert(bResult);
-	bResult = testAllocateCloneUnloadType(FIT_RGBAF, width, height);
-	assert(bResult);
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_BITMAP, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_UINT16, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_INT16, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_UINT32, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_INT32, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_FLOAT, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_DOUBLE, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_COMPLEX, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_RGB16, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_RGBA16, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_RGBF, width, height));
+	EXPECT_TRUE(testAllocateCloneUnloadType(FIT_RGBAF, width, height));
 }
 
 
-void testImageTypeTIFF(unsigned width, unsigned height) {
-	FIBOOL bResult = FALSE;
+TEST(TIFF, ImageTypes)
+{
+	const unsigned width=512, height=512;
 
-	printf("testImageTypeTIFF ...\n");
 
 	// create a test 8-bit image
 	FIBITMAP *src = createZonePlateImage(width, height, 128);
-	assert(src != NULL);
+	EXPECT_TRUE(src != NULL);
 
 	// save for further examination
-	bResult = FreeImage_Save(FIF_PNG, src, "zoneplate.png", PNG_DEFAULT);
-	assert(bResult);
+	EXPECT_TRUE(FreeImage_Save(FIF_PNG, src, "zoneplate.png", PNG_DEFAULT));
 
 	// test load /save / convert
 	// -------------------------	
 
-	bResult = testLoadSaveConvertImageType(src, FIT_BITMAP);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_UINT16);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_INT16);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_UINT32);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_INT32);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_FLOAT);
-	assert(bResult);
-	bResult = testLoadSaveConvertImageType(src, FIT_DOUBLE);
-	assert(bResult);
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_BITMAP));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_UINT16));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_INT16));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_UINT32));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_INT32));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_FLOAT));
+	EXPECT_TRUE(testLoadSaveConvertImageType(src, FIT_DOUBLE));
 
 	// complex type
-	bResult = testLoadSaveConvertComplexType(src, FICC_REAL);
-	assert(bResult);
-	bResult = testLoadSaveConvertComplexType(src, FICC_IMAG);
-	assert(bResult);
-	bResult = testLoadSaveConvertComplexType(src, FICC_MAG);
-	assert(bResult);
-	bResult = testLoadSaveConvertComplexType(src, FICC_PHASE);
-	assert(bResult);
+	EXPECT_TRUE(testLoadSaveConvertComplexType(src, FICC_REAL));
+	EXPECT_TRUE(testLoadSaveConvertComplexType(src, FICC_IMAG));
+	EXPECT_TRUE(testLoadSaveConvertComplexType(src, FICC_MAG));
+	EXPECT_TRUE(testLoadSaveConvertComplexType(src, FICC_PHASE));
 
 	// free test image
 	FreeImage_Unload(src);

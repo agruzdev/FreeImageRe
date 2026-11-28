@@ -22,6 +22,7 @@
 
 #include "TestSuite.h"
 
+
 // Local test functions
 // ----------------------------------------------------------
 
@@ -108,14 +109,14 @@ FIBOOL testHeaderData(const char *lpszPathName) {
 	try {
 		// load a file using the FIF_LOAD_NOPIXELS flag
 		FREE_IMAGE_FORMAT fif = FreeImage_GetFIFFromFilename(lpszPathName);
-		assert(FreeImage_FIFSupportsNoPixels(fif) == TRUE);
+		EXPECT_TRUE(FreeImage_FIFSupportsNoPixels(fif) == TRUE);
 
 		dib = FreeImage_Load(fif, lpszPathName, flags); 
 		if(!dib) throw(1);
 
 		// check that dib does not contains pixels
 		FIBOOL bHasPixel = FreeImage_HasPixels(dib);
-		assert(bHasPixel == FALSE);
+		EXPECT_TRUE(bHasPixel == FALSE);
 
 		// use accessors
 		FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
@@ -133,7 +134,7 @@ FIBOOL testHeaderData(const char *lpszPathName) {
 
 		// you cannot access pixels
 		uint8_t *bits = FreeImage_GetBits(dib);
-		assert(bits == NULL);
+		EXPECT_TRUE(bits == NULL);
 		
 		FreeImage_Unload(dib); 
 
@@ -194,7 +195,7 @@ testExifRawFile(const char *lpszPathName, int load_flags, int save_flags) {
 				uint32_t dst_length = FreeImage_GetTagLength(dst_tag);
 				uint8_t *dst_value = (uint8_t*)FreeImage_GetTagValue(dst_tag);
 
-				assert(length == dst_length);
+				EXPECT_TRUE(length == dst_length);
 			}
 			
 			FreeImage_Unload(dst); 
@@ -214,46 +215,46 @@ testExifRawFile(const char *lpszPathName, int load_flags, int save_flags) {
 // Main test functions
 // ----------------------------------------------------------
 
-void testHeaderOnly() {
+TEST(Headers, HeaderOnly)
+{
 	const char *src_file_jpg = "exif.jpg";
 	const char *src_file_png = "sample.png";
 
 	FIBOOL bResult = TRUE;
 
-	printf("testHeaderOnly ...\n");
 
 	testSupportsNoPixels();
 	
 	// JPEG plugin
 	bResult = testHeader(src_file_jpg);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 	bResult = testHeaderData(src_file_jpg);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 	// PNG plugin
 	bResult = testHeader(src_file_png);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 	bResult = testHeaderData(src_file_png);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 	// you cannot save 'header only' FIBITMAP
 	bResult = testExifRawFile(src_file_jpg, FIF_LOAD_NOPIXELS, 0);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 }
 
-void testExifRaw() {
+TEST(JPEG, ExifRaw)
+{
 	const char *src_file_jpg = "exif.jpg";
 
 	FIBOOL bResult = TRUE;
 
-	printf("testExifRaw ...\n");
 
 	// Exif raw metadata loading & saving
 
 	// check Exif raw metadata loading & saving
 	bResult = testExifRawFile(src_file_jpg, 0, 0);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 }

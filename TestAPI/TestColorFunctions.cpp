@@ -28,7 +28,7 @@
 /**
 Test FreeImage_GetHistogram
 */
-void testHistogram()
+TEST(Tools, Histogram)
 {
 	std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp(FreeImage_Allocate(4, 4, 32), & ::FreeImage_Unload);
 
@@ -122,42 +122,42 @@ void testHistogram()
 	uint8_t histMin{}, histMax{};
 	std::vector<uint32_t> hist(8 * 4);
 	bool success = FreeImage_MakeHistogram(bmp.get(), 8, &histMin, &histMax, hist.data(), 4, hist.data() + 1, 4, hist.data() + 2, 4, hist.data() + 3, 4);
-	assert(success);
+	EXPECT_TRUE(success);
 
-	assert(hist[0]  == 8);
-	assert(hist[4]  == 2);
-	assert(hist[8]  == 0);
-	assert(hist[12] == 0);
-	assert(hist[16] == 0);
-	assert(hist[20] == 2);
-	assert(hist[24] == 2);
-	assert(hist[28] == 2);
+	EXPECT_TRUE(hist[0]  == 8);
+	EXPECT_TRUE(hist[4]  == 2);
+	EXPECT_TRUE(hist[8]  == 0);
+	EXPECT_TRUE(hist[12] == 0);
+	EXPECT_TRUE(hist[16] == 0);
+	EXPECT_TRUE(hist[20] == 2);
+	EXPECT_TRUE(hist[24] == 2);
+	EXPECT_TRUE(hist[28] == 2);
 
-	assert(hist[1]  == 8);
-	assert(hist[5]  == 4);
-	assert(hist[9]  == 1);
-	assert(hist[13] == 0);
-	assert(hist[17] == 1);
-	assert(hist[21] == 1);
-	assert(hist[25] == 1);
-	assert(hist[29] == 0);
+	EXPECT_TRUE(hist[1]  == 8);
+	EXPECT_TRUE(hist[5]  == 4);
+	EXPECT_TRUE(hist[9]  == 1);
+	EXPECT_TRUE(hist[13] == 0);
+	EXPECT_TRUE(hist[17] == 1);
+	EXPECT_TRUE(hist[21] == 1);
+	EXPECT_TRUE(hist[25] == 1);
+	EXPECT_TRUE(hist[29] == 0);
 
-	assert(hist[2]  == 4);
-	assert(hist[6]  == 1);
-	assert(hist[10] == 2);
-	assert(hist[14] == 2);
-	assert(hist[18] == 1);
-	assert(hist[22] == 1);
-	assert(hist[26] == 3);
-	assert(hist[30] == 2);
+	EXPECT_TRUE(hist[2]  == 4);
+	EXPECT_TRUE(hist[6]  == 1);
+	EXPECT_TRUE(hist[10] == 2);
+	EXPECT_TRUE(hist[14] == 2);
+	EXPECT_TRUE(hist[18] == 1);
+	EXPECT_TRUE(hist[22] == 1);
+	EXPECT_TRUE(hist[26] == 3);
+	EXPECT_TRUE(hist[30] == 2);
 
-	assert(hist[3]  == 3);
-	assert(hist[7]  == 6);
-	assert(hist[11] == 4);
-	assert(hist[15] == 0);
-	assert(hist[19] == 0);
-	assert(hist[23] == 1);
-	assert(hist[27] == 2);
-	assert(hist[31] == 0);
+	EXPECT_TRUE(hist[3]  == 3);
+	EXPECT_TRUE(hist[7]  == 6);
+	EXPECT_TRUE(hist[11] == 4);
+	EXPECT_TRUE(hist[15] == 0);
+	EXPECT_TRUE(hist[19] == 0);
+	EXPECT_TRUE(hist[23] == 1);
+	EXPECT_TRUE(hist[27] == 2);
+	EXPECT_TRUE(hist[31] == 0);
 }
 

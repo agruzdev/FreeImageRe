@@ -23,15 +23,8 @@
 #include "TestSuite.h"
 #include "FreeImage.hpp"
 
-// ----------------------------------------------------------
-
-/**
-	FreeImage error handler
-	@param fif Format / Plugin responsible for the error 
-	@param message Error message
-*/
 void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message) {
-	printf("\n*** "); 
+	printf("\n*** ");
 	if(fif != FIF_UNKNOWN) {
 		printf("%s Format\n", FreeImage_GetFormatFromFIF(fif));
 	}
@@ -39,12 +32,6 @@ void FreeImageErrorHandler(FREE_IMAGE_FORMAT fif, const char *message) {
 	printf(" ***\n");
 }
 
-// ----------------------------------------------------------
-
-// Check that the plugin registry matches the build configuration:
-// a plugin which is compiled in must be registered, and a plugin
-// which is compiled out must not be. This is a plain check and not an
-// assert(), so that it is also active if NDEBUG is defined.
 static bool checkPluginRegistered(FREE_IMAGE_FORMAT fif, const char *name, bool compiledIn) {
 	const bool registered = FreeImage_FIFSupportsReading(fif) || FreeImage_FIFSupportsWriting(fif);
 	if (registered != compiledIn) {
@@ -78,43 +65,39 @@ static bool checkPluginRegistry() {
 	return ok;
 }
 
-TEST(FreeImageAPI, MainTestSuite) {
-	unsigned width  = 512;
-	unsigned height = 512;
-
-#if defined(_DEBUG) && defined(WIN32)
-	// check for memory leaks at program exit (after the 'return 0')
-	// through a call to _CrtDumpMemoryLeaks 
-	// note that in debug mode, objects allocated with the new operator 
-	// may be destroyed *after* the end of the main function. 
-	// OpenEXR
-	// note that OpenEXR produce so called "false memory leaks"
-	// see http://lists.nongnu.org/archive/html/openexr-devel/2013-11/msg00000.html
-
-	// False positive leak in LibJXL
-	// CMS context in static thread_local variable is never deleted
-	// https://github.com/libjxl/libjxl/issues/4166
-
-	_CrtSetDbgFlag(_CRTDBG_LEAK_CHECK_DF|_CRTDBG_ALLOC_MEM_DF);
-#endif
-
+class FreeImageTestEnvironment final : public ::testing::Environment {
+public:
+	void SetUp() override {
 #if defined(FREEIMAGE_LIB) || !defined(WIN32)
-	FreeImage_Initialise();
+		FreeImage_Initialise();
 #endif
+		FreeImage_SetOutputMessage(FreeImageErrorHandler);
+		showPlugins();
+	}
 
-	// initialize our own FreeImage error handler
-	FreeImage_SetOutputMessage(FreeImageErrorHandler);
+	void TearDown() override {
+#if defined(FREEIMAGE_LIB) || !defined(WIN32)
+		FreeImage_DeInitialise();
+#endif
+	}
+};
 
-	// test plugins capabilities
-	showPlugins();
+namespace {
+[[maybe_unused]] const auto *freeImageTestEnvironment =
+	::testing::AddGlobalTestEnvironment(new FreeImageTestEnvironment);
+}
 
-	// the registered plugins must match the build configuration
-	ASSERT_TRUE(checkPluginRegistry());
+TEST(Plugins, MatchBuildConfiguration)
+{
+	EXPECT_TRUE(checkPluginRegistry());
+}
 
-	uint32_t depsCount = FreeImage_GetDependenciesCount();
+TEST(Dependencies, ReportVersions)
+{
+	const uint32_t depsCount = FreeImage_GetDependenciesCount();
 	for (uint32_t i = 0; i < depsCount; ++i) {
 		auto dep = FreeImage_GetDependencyInfo(i);
-		assert(dep != nullptr);
+		ASSERT_NE(dep, nullptr);
 		if (dep->fullVersion) {
 			printf("%u %s\n", i, dep->fullVersion);
 		}
@@ -125,120 +108,5 @@ TEST(FreeImageAPI, MainTestSuite) {
 			dep = dep->next;
 		}
 	}
-
-	// test internal image types
-	testImageType(width, height);
-
-
-	auto bmp = FreeImage_AllocateT(FIT_COMPLEX, 128, 128, 128);
-	FreeImage_Save(FIF_JPEG, bmp, "failed_to_save.jpg");
-	FreeImage_Unload(bmp);
-
-
-#if FREEIMAGE_WITH_LIBJPEG
-	// test the clone function
-	testAllocateCloneUnload("exif.jpg");
-
-	// test JPEG lossless transform & cropping
-	testJPEG();
-
-	// test Exif raw metadata loading & saving
-	testExifRaw();
-
-	// test malformed Exif data
-	ASSERT_TRUE(testExifMalformed());
-
-	// test thumbnail functions
-	testThumbnail("exif.jpg", 0);
-
-	// test wrapped user buffer
-	testWrappedBuffer("exif.jpg", 0);
-
-	// test views
-	testCreateView("exif.jpg", 0);
-#endif
-
-#if FREEIMAGE_WITH_LIBTIFF
-	// test loading / saving / converting image types using the TIFF plugin
-	testImageTypeTIFF(width, height);
-
-	// test malformed TIFF sample layouts
-	ASSERT_TRUE(testTIFFMalformed());
-
-	// test multipage streaming
-	testStreamMultiPage("sample.tif");
-
-	// test multipage streaming with memory IO
-	testMultiPageMemory("sample.tif");
-#endif
-
-#if FREEIMAGE_WITH_LIBPNG
-	// test memory IO
-	testMemIO("sample.png");
-
-	// test multipage functions
-	testMultiPage("sample.png");
-
-	// test get/set channel
-	testImageChannels(width, height);
-#endif
-
-#if FREEIMAGE_WITH_LIBJXR
-	// test memory IO
-	testMemIO("exif.jxr");
-#endif
-
-#if FREEIMAGE_WITH_LIBHEIF
-	testHeif(FIF_HEIF, "exif.heic", "heif_out.heic");
-	testHeif(FIF_AVIF, "exif.avif", "avif_out.avif");
-#endif
-
-#if FREEIMAGE_WITH_LIBJPEGXL
-	testJpegXl(FIF_JPEGXL, "exif.jxl", "exif_out.jxl");
-	testJpegXl(FIF_JPEGXL, "exif_599.jxl", "exif_599_out.jxl");
-	testJpegXl(FIF_JPEGXL, "exif_rgba.jxl", "exif_rgba_out.jxl");
-#endif
-
-#if FREEIMAGE_WITH_LIBPNG && FREEIMAGE_WITH_LIBJPEG
-	// test loading header only
-	testHeaderOnly();
-#endif
-	
-#if FREEIMAGE_WITH_PLUGIN_TARGA
-	// test TARGA RLE decoding
-	ASSERT_TRUE(testTargaRLE());
-	ASSERT_TRUE(testTargaRLEPackets());
-#endif
-#if FREEIMAGE_WITH_PLUGIN_DDS
-	// test DDS RGB loading
-	ASSERT_TRUE(testDDSRGB());
-#endif
-#if FREEIMAGE_WITH_PLUGIN_BMP
-	// test BMP RLE8 decoding
-	ASSERT_TRUE(testBMPRLE8());
-	ASSERT_TRUE(testBMPRLEBitDepth());
-	ASSERT_TRUE(testBMPTruncatedHeaders());
-	ASSERT_TRUE(testBMPHeaderVersions());
-#endif
-#if FREEIMAGE_WITH_PLUGIN_PFM
-	// test PFM header validation
-	ASSERT_TRUE(testPFM());
-#endif
-#if FREEIMAGE_WITH_PLUGIN_PCX
-	// test PCX decoding
-	ASSERT_TRUE(testPCX());
-#endif
-
-	// other tests
-	testConvertToFloat();
-	testConvertToColor();
-	testFindMinMax();
-	testTmoClamp();
-	testTmoLinear();
-	testHistogram();
-
-#if defined(FREEIMAGE_LIB) || !defined(WIN32)
-	FreeImage_DeInitialise();
-#endif
 }
 

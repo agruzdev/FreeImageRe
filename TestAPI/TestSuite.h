@@ -32,11 +32,6 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 
-#ifdef assert
-#undef assert
-#endif
-#define assert(condition) EXPECT_TRUE(condition)
-
 #if (defined(WIN32) || defined(__WIN32__))
 #if (defined(_DEBUG))
 #include <crtdbg.h>
@@ -50,82 +45,6 @@ FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale);
 // Test plugins capabilities
 // ==========================================================
 void showPlugins();
-
-// Image types test suite
-// ==========================================================
-void testAllocateCloneUnload(const char *lpszPathName);
-FIBOOL testAllocateCloneUnloadType(FREE_IMAGE_TYPE image_type, unsigned width, unsigned height);
-void testImageType(unsigned width, unsigned height);
-void testImageTypeTIFF(unsigned width, unsigned height);
-bool testTIFFMalformed();
-
-// Header loading test suite
-// ==========================================================
-void testHeaderOnly();
-
-// Exif raw metadata loading & saving test suite
-// ==========================================================
-void testExifRaw();
-
-// IO test suite
-// ==========================================================
-
-void testMemIO(const char *lpszPathName);
-bool testTargaRLE();
-bool testTargaRLEPackets();
-bool testDDSRGB();
-bool testPFM();
-bool testBMPRLE8();
-bool testBMPRLEBitDepth();
-bool testBMPTruncatedHeaders();
-bool testBMPHeaderVersions();
-bool testPCX();
-
-// Metadata test suite
-// ==========================================================
-
-bool testExifMalformed();
-
-// Multipage test suite
-// ==========================================================
-
-void testMultiPage(const char *lpszPathName);
-void testStreamMultiPage(const char *lpszPathName);
-void testMultiPageMemory(const char *lpszPathName);
-
-// JPEG test suite
-// ==========================================================
-
-void testJPEG();
-
-// Channels test suite
-// ==========================================================
-
-void testImageChannels(unsigned width, unsigned height);
-
-
-// Thumbnails test suite
-// ==========================================================
-void testThumbnail(const char *lpszPathName, int flags);
-
-// Wrapped buffer test suite
-// ==========================================================
-
-void testWrappedBuffer(const char *lpszPathName, int flags);
-
-void testCreateView(const char *lpszPathName, int flags);
-
-// Other tests
-// ==========================================================
-
-void testConvertToFloat();
-void testConvertToColor();
-void testFindMinMax();
-void testTmoClamp();
-void testTmoLinear();
-void testHistogram();
-void testHeif(FREE_IMAGE_FORMAT fif, const char* src_path, const char* dst_path);
-void testJpegXl(FREE_IMAGE_FORMAT fif, const char* src_path, const char* dst_path);
 
 #endif // TEST_FREEIMAGE_API_H
 

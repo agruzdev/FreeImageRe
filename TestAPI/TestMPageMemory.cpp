@@ -76,7 +76,7 @@ void testLoadMultiBitmapFromMemory(const char *lpszPathName) {
 
 				// extract pages 
 				FIBOOL bSuccess = extractPagesFromMemory(fif, hmem);
-				assert(bSuccess);
+				EXPECT_TRUE(bSuccess);
 		
 				// close the stream
 				FreeImage_CloseMemory(hmem);
@@ -107,7 +107,7 @@ FIBOOL testSaveMultiBitmapToMemory(const char *input, const char *output, int ou
 		
 		// save the file to memory
 		bSuccess = FreeImage_SaveMultiBitmapToMemory(fif, src, dst_memory, output_flag);
-		assert(bSuccess);
+		EXPECT_TRUE(bSuccess);
 
 		// src is no longer needed: close and free src file
 		FreeImage_CloseMultiBitmap(src, 0);
@@ -117,7 +117,7 @@ FIBOOL testSaveMultiBitmapToMemory(const char *input, const char *output, int ou
 		uint32_t size_in_bytes = 0;
 
 		bSuccess = FreeImage_AcquireMemory(dst_memory, &mem_buffer, &size_in_bytes);
-		assert(bSuccess);
+		EXPECT_TRUE(bSuccess);
 
 		// save the buffer in a file stream
 		FILE *stream = fopen(output, "wb");
@@ -170,11 +170,11 @@ FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, const char *o
 	// load source stream as a buffer, i.e. 
 	// allocate a memory buffer and load temporary data
 	bSuccess = loadBuffer(lpszPathName, &buffer, &buffer_size);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 
 	// attach the binary data to a memory stream
 	FIMEMORY *src_stream = FreeImage_OpenMemory(buffer, buffer_size);
-	assert(src_stream);
+	EXPECT_TRUE(src_stream);
 
 	// open the multipage bitmap stream
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(src_stream, 0);
@@ -185,7 +185,7 @@ FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, const char *o
 	if(src) {
 		// get the page count
 		int count = FreeImage_GetPageCount(src);
-		assert(count > 2);
+		EXPECT_TRUE(count > 2);
 
 		// Load the bitmap at position '2'
 		FIBITMAP *dib = FreeImage_LockPage(src, 2);
@@ -209,7 +209,7 @@ FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, const char *o
 	if(src) {
 		// open and allocate a memory stream
 		FIMEMORY *dst_stream = FreeImage_OpenMemory();
-		assert(dst_stream);
+		EXPECT_TRUE(dst_stream);
 		
 		// save the file to memory
 		FreeImage_SaveMultiBitmapToMemory(fif, src, dst_stream, output_flag);
@@ -252,20 +252,22 @@ FIBOOL testMemoryStreamMultiPageOpenSave(const char *lpszPathName, const char *o
 
 // --------------------------------------------------------------------------
 
-void testMultiPageMemory(const char *lpszPathName) {
+TEST(TIFF, MemoryMultiPage)
+{
+	const char *lpszPathName="sample.tif";
+
 	FIBOOL bSuccess;
 
-	printf("testMultiPageMemory ...\n");
 	
 	// test FreeImage_LoadMultiBitmapFromMemory
 	testLoadMultiBitmapFromMemory(lpszPathName);
 
 	// test FreeImage_SaveMultiBitmapToMemory
 	bSuccess = testSaveMultiBitmapToMemory("sample.tif", "mpage-mstream.tif", 0);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 
 	// test FreeImage_LoadMultiBitmapFromMemory & FreeImage_SaveMultiBitmapToMemory
 	bSuccess = testMemoryStreamMultiPageOpenSave("sample.tif", "mpage-mstream-redirect.tif", 0, 0);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 
 }

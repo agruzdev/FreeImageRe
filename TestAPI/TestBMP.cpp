@@ -96,8 +96,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testBMPRLE8() {
-	printf("testBMPRLE8 ...\n");
+TEST(BMP, RLE8)
+{
 	bool ok = true;
 
 	// A valid image 6x2: scanline 0 is an encoded run, scanline 1 is an absolute run followed by an encoded run
@@ -181,8 +181,7 @@ bool testBMPRLE8() {
 		}
 	}
 
-	printf(ok ? "testBMPRLE8: OK\n" : "testBMPRLE8: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 /**
@@ -236,8 +235,8 @@ static std::vector<uint8_t> makeLongRuns() {
 
 // ----------------------------------------------------------
 
-bool testBMPRLEBitDepth() {
-	printf("testBMPRLEBitDepth ...\n");
+TEST(BMP, RLEBitDepth)
+{
 	bool ok = true;
 
 	// RLE8 and RLE4 data in a file whose bit depth is not 8 or 4: the decoders write more
@@ -275,12 +274,11 @@ bool testBMPRLEBitDepth() {
 		}
 	}
 
-	printf(ok ? "testBMPRLEBitDepth: OK\n" : "testBMPRLEBitDepth: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
-bool testBMPTruncatedHeaders() {
-	printf("testBMPTruncatedHeaders ...\n");
+TEST(BMP, TruncatedHeaders)
+{
 	bool ok = true;
 
 	std::vector<uint8_t> pixels(4 * 4, 3);
@@ -329,8 +327,7 @@ bool testBMPTruncatedHeaders() {
 		}
 	}
 
-	printf(ok ? "testBMPTruncatedHeaders: OK\n" : "testBMPTruncatedHeaders: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 /**
@@ -388,8 +385,8 @@ static std::vector<uint8_t> makeVersionedBmp(unsigned header_size, unsigned bit_
 	return file;
 }
 
-bool testBMPHeaderVersions() {
-	printf("testBMPHeaderVersions ...\n");
+TEST(BMP, HeaderVersions)
+{
 	bool ok = true;
 
 	const unsigned sizes[] = { 40, 108, 124 };
@@ -450,8 +447,7 @@ bool testBMPHeaderVersions() {
 		}
 	}
 
-	printf(ok ? "testBMPHeaderVersions: OK\n" : "testBMPHeaderVersions: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 #endif // FREEIMAGE_WITH_PLUGIN_BMP

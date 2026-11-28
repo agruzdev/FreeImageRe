@@ -20,6 +20,7 @@
 
 #include "TestSuite.h"
 
+
 #include <vector>
 #include <cstdint>
 
@@ -79,8 +80,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testDDSRGB() {
-	printf("testDDSRGB ...\n");
+TEST(DDS, RGB)
+{
 	bool ok = true;
 
 	// 24-bit 2x2, the file lines are 6 bytes
@@ -123,6 +124,5 @@ bool testDDSRGB() {
 		}
 	}
 
-	printf(ok ? "testDDSRGB: OK\n" : "testDDSRGB: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }

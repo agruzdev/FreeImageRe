@@ -20,6 +20,7 @@
 
 #include "TestSuite.h"
 
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -46,8 +47,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testPFM() {
-	printf("testPFM ...\n");
+TEST(PFM, Header)
+{
 	bool ok = true;
 
 	// a valid 2x2 greyscale image, the scale factor is negative: little endian floats
@@ -107,6 +108,5 @@ bool testPFM() {
 		}
 	}
 
-	printf(ok ? "testPFM: OK\n" : "testPFM: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }

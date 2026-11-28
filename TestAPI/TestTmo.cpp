@@ -21,16 +21,17 @@
 
 
 #include "TestSuite.h"
+
 #include <cmath>
 #include <memory>
 
 
-void testTmoClamp()
+TEST(TMO, Clamp)
 {
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBF, 4, 1, 8 * 3 * sizeof(float)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
 
 		const auto srcLine = reinterpret_cast<FIRGBF*>(FreeImage_GetBits(bmp1.get()));
 
@@ -51,31 +52,31 @@ void testTmoClamp()
 		srcLine[3].blue  = 0.7f;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_TmoClamp(bmp1.get()), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<FIRGB8*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[0].red == 0);
-		assert(std::abs(resLine[0].green - 25) <= 1);
-		assert(resLine[0].blue == 255);
+		EXPECT_TRUE(resLine[0].red == 0);
+		EXPECT_TRUE(std::abs(resLine[0].green - 25) <= 1);
+		EXPECT_TRUE(resLine[0].blue == 255);
 
-		assert(std::abs(resLine[1].red   - 128) <= 1);
-		assert(std::abs(resLine[1].green -  51) <= 1);
-		assert(std::abs(resLine[1].blue  - 230) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1].red   - 128) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1].green -  51) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1].blue  - 230) <= 1);
 
-		assert(std::abs(resLine[2].red   -  76) <= 1);
-		assert(std::abs(resLine[2].green - 102) <= 1);
-		assert(resLine[2].blue == 0);
+		EXPECT_TRUE(std::abs(resLine[2].red   -  76) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].green - 102) <= 1);
+		EXPECT_TRUE(resLine[2].blue == 0);
 
-		assert(resLine[3].red == 255);
-		assert(std::abs(resLine[3].green -  25) <= 1);
-		assert(std::abs(resLine[3].blue  - 179) <= 1);
+		EXPECT_TRUE(resLine[3].red == 255);
+		EXPECT_TRUE(std::abs(resLine[3].green -  25) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3].blue  - 179) <= 1);
 	}
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBA16, 4, 1, 8 * 4 * sizeof(uint16_t)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGBALPHA);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGBALPHA);
 
 		const auto srcLine = reinterpret_cast<FIRGBA16*>(FreeImage_GetBits(bmp1.get()));
 
@@ -96,31 +97,31 @@ void testTmoClamp()
 		srcLine[3].blue  = 2100;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ToneMapping(bmp1.get(), FITMO_CLAMP), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<FIRGBA8*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[0].red == 0);
-		assert(std::abs(resLine[0].green - 0) <= 1);
-		assert(std::abs(resLine[0].blue  - 0) <= 1);
+		EXPECT_TRUE(resLine[0].red == 0);
+		EXPECT_TRUE(std::abs(resLine[0].green - 0) <= 1);
+		EXPECT_TRUE(std::abs(resLine[0].blue  - 0) <= 1);
 
-		assert(std::abs(resLine[1].red  - 3) <= 1);
-		assert(resLine[1].green == 255);
-		assert(std::abs(resLine[1].blue - 0) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1].red  - 3) <= 1);
+		EXPECT_TRUE(resLine[1].green == 255);
+		EXPECT_TRUE(std::abs(resLine[1].blue - 0) <= 1);
 
-		assert(std::abs(resLine[2].red   - 0) <= 1);
-		assert(std::abs(resLine[2].green - 1) <= 1);
-		assert(std::abs(resLine[2].blue  - 0) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].red   - 0) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].green - 1) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].blue  - 0) <= 1);
 
-		assert(std::abs(resLine[3].red    - 44) <= 1);
-		assert(std::abs(resLine[3].green - 234) <= 1);
-		assert(std::abs(resLine[3].blue  -   8) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3].red    - 44) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3].green - 234) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3].blue  -   8) <= 1);
 	}
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGB32, 4, 1, 8 * 3 * sizeof(uint32_t)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
 
 		const auto srcLine = reinterpret_cast<FIRGB32*>(FreeImage_GetBits(bmp1.get()));
 
@@ -141,35 +142,35 @@ void testTmoClamp()
 		srcLine[3].blue  = 210;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ToneMapping(bmp1.get(), FITMO_CLAMP, 1023), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<FIRGB8*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[0].red == 0);
-		assert(std::abs(resLine[0].green - 25) <= 1);
-		assert(std::abs(resLine[0].blue  - 37) <= 1);
+		EXPECT_TRUE(resLine[0].red == 0);
+		EXPECT_TRUE(std::abs(resLine[0].green - 25) <= 1);
+		EXPECT_TRUE(std::abs(resLine[0].blue  - 37) <= 1);
 
-		assert(std::abs(resLine[1].red - 250) <= 1);
-		assert(resLine[1].green == 255);
-		assert(std::abs(resLine[1].blue - 22) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1].red - 250) <= 1);
+		EXPECT_TRUE(resLine[1].green == 255);
+		EXPECT_TRUE(std::abs(resLine[1].blue - 22) <= 1);
 
-		assert(std::abs(resLine[2].red   - 63) <= 1);
-		assert(std::abs(resLine[2].green - 64) <= 1);
-		assert(std::abs(resLine[2].blue  -  0) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].red   - 63) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].green - 64) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2].blue  -  0) <= 1);
 
-		assert(std::abs(resLine[3].red - 35) <= 1);
-		assert(resLine[3].green == 255);
-		assert(std::abs(resLine[3].blue - 52) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3].red - 35) <= 1);
+		EXPECT_TRUE(resLine[3].green == 255);
+		EXPECT_TRUE(std::abs(resLine[3].blue - 52) <= 1);
 	}
 }
 
 
-void testTmoLinear()
+TEST(TMO, Linear)
 {
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBF, 4, 1, 8 * 3 * sizeof(float)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
 
 		const auto srcLine = reinterpret_cast<FIRGBF*>(FreeImage_GetBits(bmp1.get()));
 
@@ -190,24 +191,24 @@ void testTmoLinear()
 		srcLine[3].blue = 17.0f;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_TmoLinear(bmp1.get()), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<FIRGB8*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[0].red   == 0);
-		assert(resLine[0].green == 0);
-		assert(resLine[0].blue  == 0);
+		EXPECT_TRUE(resLine[0].red   == 0);
+		EXPECT_TRUE(resLine[0].green == 0);
+		EXPECT_TRUE(resLine[0].blue  == 0);
 
-		assert(resLine[3].red   == 255);
-		assert(resLine[3].green == 255);
-		assert(resLine[3].blue  == 255);
+		EXPECT_TRUE(resLine[3].red   == 255);
+		EXPECT_TRUE(resLine[3].green == 255);
+		EXPECT_TRUE(resLine[3].blue  == 255);
 	}
 
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBA16, 4, 1, 8 * 4 * sizeof(uint16_t)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGBALPHA);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGBALPHA);
 
 		const auto srcLine = reinterpret_cast<FIRGBA16*>(FreeImage_GetBits(bmp1.get()));
 
@@ -232,29 +233,29 @@ void testTmoLinear()
 		srcLine[3].alpha = 1000;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ToneMapping(bmp1.get(), FITMO_LINEAR, 1000.0), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<FIRGBA8*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[1].red   == 0);
-		assert(resLine[1].green == 0);
-		assert(resLine[1].blue  == 0);
+		EXPECT_TRUE(resLine[1].red   == 0);
+		EXPECT_TRUE(resLine[1].green == 0);
+		EXPECT_TRUE(resLine[1].blue  == 0);
 
-		assert(resLine[3].red   == 255);
-		assert(resLine[3].green == 255);
-		assert(resLine[3].blue  == 255);
+		EXPECT_TRUE(resLine[3].red   == 255);
+		EXPECT_TRUE(resLine[3].green == 255);
+		EXPECT_TRUE(resLine[3].blue  == 255);
 
-		assert(resLine[0].alpha == 0);
-		assert(resLine[1].alpha == 255);
-		assert(std::abs(resLine[2].alpha - 127) <= 1);
-		assert(resLine[3].alpha == 255);
+		EXPECT_TRUE(resLine[0].alpha == 0);
+		EXPECT_TRUE(resLine[1].alpha == 255);
+		EXPECT_TRUE(std::abs(resLine[2].alpha - 127) <= 1);
+		EXPECT_TRUE(resLine[3].alpha == 255);
 	}
 
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_DOUBLE, 4, 1, 8 * sizeof(double)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
 
 		const auto srcLine = reinterpret_cast<double*> (FreeImage_GetBits(bmp1.get()));
 
@@ -264,20 +265,20 @@ void testTmoLinear()
 		srcLine[3] = 1010.0;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ToneMapping(bmp1.get(), FITMO_LINEAR), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<uint8_t*>(FreeImage_GetBits(res.get()));
 
-		assert(resLine[0] == 0);
-		assert(std::abs(resLine[1] - 10) <= 1);
-		assert(std::abs(resLine[2] - 125) <= 1);
-		assert(resLine[3] == 255);
+		EXPECT_TRUE(resLine[0] == 0);
+		EXPECT_TRUE(std::abs(resLine[1] - 10) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2] - 125) <= 1);
+		EXPECT_TRUE(resLine[3] == 255);
 	}
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_UINT16, 4, 1, 8 * sizeof(uint16_t)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
 
 		const auto srcLine = reinterpret_cast<uint16_t*> (FreeImage_GetBits(bmp1.get()));
 
@@ -287,14 +288,14 @@ void testTmoLinear()
 		srcLine[3] = 500;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ToneMapping(bmp1.get(), FITMO_LINEAR, 1023.0), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		const auto resLine = reinterpret_cast<uint8_t*>(FreeImage_GetBits(res.get()));
 
-		assert(std::abs(resLine[0] - 125) <= 1);
-		assert(std::abs(resLine[1] - 125) <= 1);
-		assert(std::abs(resLine[2] - 125) <= 1);
-		assert(std::abs(resLine[3] - 125) <= 1);
+		EXPECT_TRUE(std::abs(resLine[0] - 125) <= 1);
+		EXPECT_TRUE(std::abs(resLine[1] - 125) <= 1);
+		EXPECT_TRUE(std::abs(resLine[2] - 125) <= 1);
+		EXPECT_TRUE(std::abs(resLine[3] - 125) <= 1);
 	}
 }
 

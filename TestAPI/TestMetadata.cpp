@@ -128,8 +128,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testExifMalformed() {
-	printf("testExifMalformed ...\n");
+TEST(JPEG, MalformedExif)
+{
 	bool ok = true;
 
 	// A Canon camera settings array of 4 shorts: the first member is skipped, the other 3 become tags
@@ -141,8 +141,7 @@ bool testExifMalformed() {
 	// The Make tag is not an ASCII value, so it is not null-terminated and is not used to select the maker note format
 	ok &= expect(countMakerNoteTags(makeExifTiff(FIDT_BYTE, FIDT_SHORT, 4)) == 0, "Make tag which is not ASCII");
 
-	printf(ok ? "testExifMalformed: OK\n" : "testExifMalformed: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 #endif // FREEIMAGE_WITH_LIBJPEG

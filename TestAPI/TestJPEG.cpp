@@ -22,6 +22,7 @@
 
 #include "TestSuite.h"
 
+
 // Local test functions
 // ----------------------------------------------------------
 
@@ -32,36 +33,36 @@ void testJPEGTransform(const char *src_file) {
 	// perfect transformation
 	perfect = TRUE;
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_FLIP_H, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_FLIP_V, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_TRANSPOSE, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_TRANSVERSE, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_90, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_180, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_270, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 
 	// non perfect transformation
 	perfect = FALSE;
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_FLIP_H, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_FLIP_V, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_TRANSPOSE, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_TRANSVERSE, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_90, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_180, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_270, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 }
 
@@ -72,12 +73,12 @@ void testJPEGCrop(const char *src_file) {
 	// perfect transformation
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGCrop(src_file, "test.jpg", left, top, right, bottom);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 
 	// non perfect transformation (crop rectangle is adjusted automatically)
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGCrop(src_file, "test.jpg", left, top, right, bottom);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 }
 
 void testJPEGTransformCombined(const char *src_file, const char *dst_file) {
@@ -93,45 +94,45 @@ void testJPEGTransformCombined(const char *src_file, const char *dst_file) {
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_FLIP_H, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_FLIP_H, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_FLIP_V, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_FLIP_V, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_TRANSPOSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_TRANSPOSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_TRANSVERSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_TRANSVERSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_90, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_90, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_180, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_180, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 
 	left = 50; top = 100; right = 359; bottom = 354;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_270, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_270, &left, &top, &right, &bottom, perfect);
-	assert(bResult == FALSE);
+	EXPECT_TRUE(bResult == FALSE);
 
 	// perfect transformation NOT required
 	perfect = FALSE;
@@ -141,45 +142,45 @@ void testJPEGTransformCombined(const char *src_file, const char *dst_file) {
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_FLIP_H, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_FLIP_H, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_FLIP_V, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_FLIP_V, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_TRANSPOSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_TRANSPOSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_TRANSVERSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_TRANSVERSE, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_90, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_90, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_180, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_180, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 
 	left = 50; top = 100; right = 650; bottom = 500;
 	bResult = FreeImage_JPEGTransformCombined(src_file, NULL, FIJPEG_OP_ROTATE_270, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 	bResult = FreeImage_JPEGTransformCombined(src_file, dst_file, FIJPEG_OP_ROTATE_270, &left, &top, &right, &bottom, perfect);
-	assert(bResult == TRUE);
+	EXPECT_TRUE(bResult == TRUE);
 }
 
 void testJPEGSameFile(const char *src_file) {
@@ -189,15 +190,16 @@ void testJPEGSameFile(const char *src_file) {
 	// perfect transformation
 	perfect = TRUE;
 	bResult = FreeImage_JPEGTransform(src_file, "test.jpg", FIJPEG_OP_ROTATE_90, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 	bResult = FreeImage_JPEGTransform("test.jpg", "test.jpg", FIJPEG_OP_ROTATE_270, perfect);
-	assert(bResult);
+	EXPECT_TRUE(bResult);
 }
 
 // Main test function
 // ----------------------------------------------------------
 
-void testJPEG() {
+TEST(JPEG, LosslessTransformAndCropping)
+{
 	const char *src_file = "exif.jpg";
 
 	printf("testJPEG (should throw exceptions) ...\n");

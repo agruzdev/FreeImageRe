@@ -139,10 +139,17 @@ void testAcquireMemIO(const char *lpszPathName) {
 
 }
 
-void testMemIO(const char *lpszPathName) {
-	printf("testMemIO ...\n");
-	testSaveMemIO(lpszPathName);
-	testLoadMemIO(lpszPathName);
-	testAcquireMemIO(lpszPathName);
+TEST(MemIO, PNG)
+{
+	testSaveMemIO("sample.png");
+	testLoadMemIO("sample.png");
+	testAcquireMemIO("sample.png");
+}
+
+TEST(MemIO, JPEGXR)
+{
+	testSaveMemIO("exif.jxr");
+	testLoadMemIO("exif.jxr");
+	testAcquireMemIO("exif.jxr");
 }
 

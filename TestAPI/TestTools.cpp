@@ -21,6 +21,7 @@
 
 
 #include "TestSuite.h"
+
 #include <cmath>
 #include <memory>
 
@@ -83,12 +84,12 @@ FIBITMAP* createZonePlateImage(unsigned width, unsigned height, int scale) {
 }
 
 
-void testFindMinMax()
+TEST(Tools, FindMinMax)
 {
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_AllocateT(FIT_RGBF, 4, 4, 3 * sizeof(float)), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_RGB);
 		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
 			const auto line = reinterpret_cast<FIRGBF*>(FreeImage_GetScanLine(bmp1.get(), y));
 			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
@@ -114,14 +115,13 @@ void testFindMinMax()
 		double minBrightness{};
 		double maxBrightness{};
 
-		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
-		assert(success);
-		assert(std::abs(maxBrightness - 0.8) < 1e-6);
-		assert(std::abs(minBrightness - 0.1) < 1e-6);
+		EXPECT_TRUE(FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr)));
+		EXPECT_TRUE(std::abs(maxBrightness - 0.8) < 1e-6);
+		EXPECT_TRUE(std::abs(minBrightness - 0.1) < 1e-6);
 
 		const auto stride = FreeImage_GetPitch(bmp1.get());
-		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 3 * sizeof(FIRGBF));
-		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 2 * sizeof(FIRGBF));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 3 * sizeof(FIRGBF));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 2 * sizeof(FIRGBF));
 	}
 
 	{
@@ -129,8 +129,8 @@ void testFindMinMax()
 		auto icc = FreeImage_CreateICCProfile(bmp1.get(), nullptr, 0);
 		icc->flags = FIICC_COLOR_IS_YUV;
 
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_YUV);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_YUV);
 		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
 			const auto line = reinterpret_cast<FIRGBA8*>(FreeImage_GetScanLine(bmp1.get(), y));
 			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
@@ -157,21 +157,20 @@ void testFindMinMax()
 		double minBrightness{};
 		double maxBrightness{};
 
-		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
-		assert(success);
-		assert(std::abs(maxBrightness - 125.0) < 1e-6);
-		assert(std::abs(minBrightness - 10.0) < 1e-6);
+		EXPECT_TRUE(FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr)));
+		EXPECT_TRUE(std::abs(maxBrightness - 125.0) < 1e-6);
+		EXPECT_TRUE(std::abs(minBrightness - 10.0) < 1e-6);
 
 		const auto stride = FreeImage_GetPitch(bmp1.get());
-		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 2 * sizeof(FIRGBA8));
-		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 1 * sizeof(FIRGBA8));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 2 * stride + 2 * sizeof(FIRGBA8));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 1 * sizeof(FIRGBA8));
 	}
 
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp1(FreeImage_Allocate(4, 4, 8), &::FreeImage_Unload);
-		assert(bmp1 != nullptr);
-		assert(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
+		EXPECT_TRUE(bmp1 != nullptr);
+		EXPECT_TRUE(FreeImage_GetColorType(bmp1.get()) == FIC_MINISBLACK);
 		for (unsigned y = 0; y < FreeImage_GetHeight(bmp1.get()); ++y) {
 			const auto line = reinterpret_cast<uint8_t*>(FreeImage_GetScanLine(bmp1.get(), y));
 			for (unsigned x = 0; x < FreeImage_GetWidth(bmp1.get()); ++x) {
@@ -192,14 +191,13 @@ void testFindMinMax()
 		double minBrightness{};
 		double maxBrightness{};
 
-		auto success = FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr));
-		assert(success);
-		assert(std::abs(maxBrightness - 101.0) < 1e-6);
-		assert(std::abs(minBrightness - 8.0) < 1e-6);
+		EXPECT_TRUE(FreeImage_FindMinMax(bmp1.get(), &minBrightness, &maxBrightness, reinterpret_cast<void**>(&minPtr), reinterpret_cast<void**>(&maxPtr)));
+		EXPECT_TRUE(std::abs(maxBrightness - 101.0) < 1e-6);
+		EXPECT_TRUE(std::abs(minBrightness - 8.0) < 1e-6);
 
 		const auto stride = FreeImage_GetPitch(bmp1.get());
-		assert(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 0 * sizeof(uint8_t));
-		assert(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 3 * sizeof(uint8_t));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(minPtr) == FreeImage_GetBits(bmp1.get()) + 1 * stride + 0 * sizeof(uint8_t));
+		EXPECT_TRUE(reinterpret_cast<uint8_t*>(maxPtr) == FreeImage_GetBits(bmp1.get()) + 3 * stride + 3 * sizeof(uint8_t));
 	}
 
 	{
@@ -293,18 +291,17 @@ void testFindMinMax()
 		ptr[3].alpha = 45.7f;
 
 		FIRGBAF minVal, maxVal;
-		bool success = FreeImage_FindMinMaxValue(bmp.get(), &minVal, &maxVal);
-		assert(success);
+	EXPECT_TRUE(FreeImage_FindMinMaxValue(bmp.get(), &minVal, &maxVal));
 
-		assert(minVal.red == 0.1f);
-		assert(minVal.green == 0.0f);
-		assert(minVal.blue == 0.1f);
-		assert(minVal.alpha == 0.0f);
+		EXPECT_TRUE(minVal.red == 0.1f);
+		EXPECT_TRUE(minVal.green == 0.0f);
+		EXPECT_TRUE(minVal.blue == 0.1f);
+		EXPECT_TRUE(minVal.alpha == 0.0f);
 
-		assert(maxVal.red == 11.0f);
-		assert(maxVal.green == 9.3f);
-		assert(maxVal.blue == 9.2f);
-		assert(maxVal.alpha == 45.7f);
+		EXPECT_TRUE(maxVal.red == 11.0f);
+		EXPECT_TRUE(maxVal.green == 9.3f);
+		EXPECT_TRUE(maxVal.blue == 9.2f);
+		EXPECT_TRUE(maxVal.alpha == 45.7f);
 	}
 }
 

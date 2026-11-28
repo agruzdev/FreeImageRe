@@ -20,6 +20,7 @@
 
 #include "TestSuite.h"
 
+
 #if FREEIMAGE_WITH_PLUGIN_PCX
 
 #include <vector>
@@ -83,8 +84,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testPCX() {
-	printf("testPCX ...\n");
+TEST(PCX, Decoding)
+{
 	bool ok = true;
 
 	// 16 colors (4 planes of 1 bit), odd width: the last pixel must not be lost
@@ -248,8 +249,7 @@ bool testPCX() {
 		}
 	}
 
-	printf(ok ? "testPCX: OK\n" : "testPCX: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 #endif // FREEIMAGE_WITH_PLUGIN_PCX

@@ -21,6 +21,7 @@
 
 #include "TestSuite.h"
 
+
 #if FREEIMAGE_WITH_LIBTIFF
 
 #include <vector>
@@ -204,8 +205,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testTIFFMalformed() {
-	printf("testTIFFMalformed ...\n");
+TEST(TIFF, Malformed)
+{
 	bool ok = true;
 
 	// valid files must still load
@@ -255,8 +256,7 @@ bool testTIFFMalformed() {
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_RGB, 32, 4, PLANARCONFIG_CONTIG, 0)) == 32, "RGBA with 32-bit samples");
 	ok &= expect(loadTiff(makeTiff(PHOTOMETRIC_SEPARATED, 32, 4, PLANARCONFIG_CONTIG, 0)) == 0, "CMYK with 32-bit samples");
 
-	printf(ok ? "testTIFFMalformed: OK\n" : "testTIFFMalformed: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
 #endif // FREEIMAGE_WITH_LIBTIFF

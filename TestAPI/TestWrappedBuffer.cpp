@@ -32,18 +32,18 @@ static void testBasicWrapper(FIBOOL copySource, uint8_t *bits, FREE_IMAGE_TYPE t
 
 	// allocate a wrapper
 	src = FreeImage_ConvertFromRawBitsEx(copySource, bits, type, width, height, pitch, bpp, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, FALSE);
-	assert(src != NULL);
+	EXPECT_TRUE(src != NULL);
 	
 	// test clone
 	clone = FreeImage_Clone(src);
-	assert(clone != NULL);
+	EXPECT_TRUE(clone != NULL);
 
 	// test in-place processing
 	FreeImage_Invert(src);
 
 	// test processing
 	dst = FreeImage_ConvertToFloat(src);
-	assert(dst != NULL);
+	EXPECT_TRUE(dst != NULL);
 
 	FreeImage_Unload(dst);
 	FreeImage_Unload(clone);
@@ -79,7 +79,10 @@ static void testViewport(FIBITMAP *dib) {
 // Main test functions
 // ----------------------------------------------------------
 
-void testWrappedBuffer(const char *lpszPathName, int flags) {
+TEST(JPEG, WrappedBuffer)
+{
+	const char *lpszPathName="exif.jpg"; const int flags=0;
+
 	FIBITMAP *dib = NULL;
 
 	// simulate a user provided buffer
@@ -88,7 +91,7 @@ void testWrappedBuffer(const char *lpszPathName, int flags) {
 	// load the dib
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(lpszPathName);
 	dib = FreeImage_Load(fif, lpszPathName, flags); 
-	assert(dib != NULL);
+	EXPECT_TRUE(dib != NULL);
 
 	// get data info
 	FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
@@ -113,7 +116,10 @@ void testWrappedBuffer(const char *lpszPathName, int flags) {
 	FreeImage_Unload(dib);
 }
 
-void testCreateView(const char *lpszPathName, int flags) {
+TEST(JPEG, View)
+{
+	const char *lpszPathName="exif.jpg"; const int flags=0;
+
 	FIBITMAP *dib = NULL;
 	FIBITMAP *view = NULL;
 
@@ -123,11 +129,11 @@ void testCreateView(const char *lpszPathName, int flags) {
 	// load the dib
 	FREE_IMAGE_FORMAT fif = FreeImage_GetFileType(lpszPathName);
 	dib = FreeImage_Load(fif, lpszPathName, flags);
-	assert(dib != NULL);
+	EXPECT_TRUE(dib != NULL);
 
 	// get data info
 	FREE_IMAGE_TYPE type = FreeImage_GetImageType(dib);
-	assert(type == FIT_BITMAP);
+	EXPECT_TRUE(type == FIT_BITMAP);
 
 	unsigned width = FreeImage_GetWidth(dib);
 	unsigned height = FreeImage_GetHeight(dib);
@@ -150,8 +156,8 @@ void testCreateView(const char *lpszPathName, int flags) {
 	}
 
 	view = FreeImage_CreateView(dib, left, top, right, bottom);
-	assert(FreeImage_GetPitch(view) == pitch);
-	assert(FreeImage_GetBPP(view) == bpp);
+	EXPECT_TRUE(FreeImage_GetPitch(view) == pitch);
+	EXPECT_TRUE(FreeImage_GetBPP(view) == bpp);
 
 	// save as BMP - check correct pitch handling
 	FreeImage_Save(FIF_BMP, view, "test_view.bmp", 0);

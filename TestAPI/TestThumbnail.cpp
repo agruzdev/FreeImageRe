@@ -73,7 +73,7 @@ static FIBOOL testSaveThumbnail(const char *lpszPathName, int flags) {
 		if(!thumbnail) throw(1);
 
 		// clone the thumbnail and modify it (e.g. convert to greyscale)
-		assert(FreeImage_GetBPP(thumbnail) == 24);
+		EXPECT_TRUE(FreeImage_GetBPP(thumbnail) == 24);
 		t_clone = FreeImage_ConvertTo8Bits(thumbnail);
 		if(!t_clone) throw(1);
 
@@ -88,8 +88,7 @@ static FIBOOL testSaveThumbnail(const char *lpszPathName, int flags) {
 		// this thumbnail will then be loaded instead of the one we store in the JFXX segment
 		fif = FIF_TIFF;
 		FreeImage_SetMetadata(FIMD_EXIF_RAW, dib, NULL, NULL);
-		bResult = FreeImage_Save(fif, dib, lpszImagePathName, 0);
-		assert(bResult);
+		EXPECT_TRUE(FreeImage_Save(fif, dib, lpszImagePathName, 0));
 
 		// no longer needed		
 		FreeImage_Unload(dib);
@@ -105,7 +104,7 @@ static FIBOOL testSaveThumbnail(const char *lpszPathName, int flags) {
 		// check that the thumbnail is greyscale
 		// note that with JPEG, we cannot compare pixels between new_thumbnail and t_clone
 		// because JPEG compression will modify the pixels
-		assert(FreeImage_GetBPP(new_thumbnail) == 8);
+		EXPECT_TRUE(FreeImage_GetBPP(new_thumbnail) == 8);
 
 		FreeImage_Unload(dib);
 
@@ -122,19 +121,17 @@ static FIBOOL testSaveThumbnail(const char *lpszPathName, int flags) {
 /**
 Test thumbnail functions
 */
-void testThumbnail(const char *lpszPathName, int flags) {
-	FIBOOL bResult = FALSE;
+TEST(JPEG, Thumbnail)
+{
+	const char *lpszPathName="exif.jpg"; const int flags=0;
 
-	printf("testThumbnail ...\n");
 
 	// Thumbnail loading
-	bResult = testLoadThumbnail(lpszPathName, flags);
-	assert(bResult);
+	EXPECT_TRUE(testLoadThumbnail(lpszPathName, flags));
 
 #if FREEIMAGE_WITH_LIBTIFF
 	// Thumbnail saving
-	bResult = testSaveThumbnail(lpszPathName, flags);
-	assert(bResult);
+	EXPECT_TRUE(testSaveThumbnail(lpszPathName, flags));
 #endif
 }
 

@@ -21,20 +21,21 @@
 
 
 #include "TestSuite.h"
+
 #include <memory>
 #include <limits>
 
 /**
 Test FreeImage_ConvertToFloat
 */
-void testConvertToFloat()
+TEST(Conversion, Float)
 {
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp_uint16(FreeImage_AllocateT(FIT_UINT16, 5, 1, 16), &::FreeImage_Unload);
-		assert(bmp_uint16 != nullptr);
+		EXPECT_TRUE(bmp_uint16 != nullptr);
 
 		uint16_t* bmp_uint16_ptr = reinterpret_cast<uint16_t*>(FreeImage_GetBits(bmp_uint16.get()));
-		assert(bmp_uint16_ptr != nullptr);
+		EXPECT_TRUE(bmp_uint16_ptr != nullptr);
 
 		bmp_uint16_ptr[0] = 0;
 		bmp_uint16_ptr[1] = 255;
@@ -43,35 +44,35 @@ void testConvertToFloat()
 		bmp_uint16_ptr[4] = 65535;
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res_scaled(FreeImage_ConvertToFloat(bmp_uint16.get(), TRUE), &::FreeImage_Unload);
-		assert(res_scaled != nullptr);
+		EXPECT_TRUE(res_scaled != nullptr);
 
 		float* res_scaled_ptr = reinterpret_cast<float*>(FreeImage_GetBits(res_scaled.get()));
-		assert(res_scaled_ptr != nullptr);
-		assert(res_scaled_ptr[0] == 0.0f);
-		assert(res_scaled_ptr[1] == 255.0f / 65535.0f);
-		assert(res_scaled_ptr[2] == 1000.0f / 65535.0f);
-		assert(res_scaled_ptr[3] == 10000.0f / 65535.0f);
-		assert(res_scaled_ptr[4] == 1.0f);
+		EXPECT_TRUE(res_scaled_ptr != nullptr);
+		EXPECT_TRUE(res_scaled_ptr[0] == 0.0f);
+		EXPECT_TRUE(res_scaled_ptr[1] == 255.0f / 65535.0f);
+		EXPECT_TRUE(res_scaled_ptr[2] == 1000.0f / 65535.0f);
+		EXPECT_TRUE(res_scaled_ptr[3] == 10000.0f / 65535.0f);
+		EXPECT_TRUE(res_scaled_ptr[4] == 1.0f);
 
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ConvertToFloat(bmp_uint16.get(), FALSE), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		float* res_ptr = reinterpret_cast<float*>(FreeImage_GetBits(res.get()));
-		assert(res_ptr != nullptr);
-		assert(res_ptr[0] == 0.0f);
-		assert(res_ptr[1] == 255.0f);
-		assert(res_ptr[2] == 1000.0f);
-		assert(res_ptr[3] == 10000.0f);
-		assert(res_ptr[4] == 65535.0f);
+		EXPECT_TRUE(res_ptr != nullptr);
+		EXPECT_TRUE(res_ptr[0] == 0.0f);
+		EXPECT_TRUE(res_ptr[1] == 255.0f);
+		EXPECT_TRUE(res_ptr[2] == 1000.0f);
+		EXPECT_TRUE(res_ptr[3] == 10000.0f);
+		EXPECT_TRUE(res_ptr[4] == 65535.0f);
 	}
 
 	{
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> bmp_int32(FreeImage_AllocateT(FIT_INT32, 5, 1, 16), &::FreeImage_Unload);
-		assert(bmp_int32 != nullptr);
+		EXPECT_TRUE(bmp_int32 != nullptr);
 
 		int32_t* bmp_uint32_ptr = reinterpret_cast<int32_t*>(FreeImage_GetBits(bmp_int32.get()));
-		assert(bmp_uint32_ptr != nullptr);
+		EXPECT_TRUE(bmp_uint32_ptr != nullptr);
 
 		bmp_uint32_ptr[0] = 0;
 		bmp_uint32_ptr[1] = 255;
@@ -80,23 +81,23 @@ void testConvertToFloat()
 		bmp_uint32_ptr[4] = std::numeric_limits<int32_t>::max();
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res_scaled(FreeImage_ConvertToFloat(bmp_int32.get(), TRUE), &::FreeImage_Unload);
-		assert(res_scaled != nullptr);
+		EXPECT_TRUE(res_scaled != nullptr);
 
 		float* res_scaled_ptr = reinterpret_cast<float*>(FreeImage_GetBits(res_scaled.get()));
-		assert(res_scaled_ptr != nullptr);
-		assert(res_scaled_ptr[0] == 0.0f);
-		assert(res_scaled_ptr[4] == 1.0f);
+		EXPECT_TRUE(res_scaled_ptr != nullptr);
+		EXPECT_TRUE(res_scaled_ptr[0] == 0.0f);
+		EXPECT_TRUE(res_scaled_ptr[4] == 1.0f);
 
 
 		std::unique_ptr<FIBITMAP, decltype(&::FreeImage_Unload)> res(FreeImage_ConvertToFloat(bmp_int32.get(), FALSE), &::FreeImage_Unload);
-		assert(res != nullptr);
+		EXPECT_TRUE(res != nullptr);
 
 		float* res_ptr = reinterpret_cast<float*>(FreeImage_GetBits(res.get()));
-		assert(res_ptr != nullptr);
-		assert(res_ptr[0] == 0.0f);
-		assert(res_ptr[1] == 255.0f);
-		assert(res_ptr[2] == 10000.0f);
-		assert(res_ptr[3] == 65535.0f);
+		EXPECT_TRUE(res_ptr != nullptr);
+		EXPECT_TRUE(res_ptr[0] == 0.0f);
+		EXPECT_TRUE(res_ptr[1] == 255.0f);
+		EXPECT_TRUE(res_ptr[2] == 10000.0f);
+		EXPECT_TRUE(res_ptr[3] == 65535.0f);
 	}
 }
 

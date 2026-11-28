@@ -22,6 +22,7 @@
 
 #include "TestSuite.h"
 
+
 void  
 testBuildMPage(const char *src_filename, const char *dst_filename, FREE_IMAGE_FORMAT dst_fif, unsigned bpp) {
 	// get the file type
@@ -44,7 +45,7 @@ testBuildMPage(const char *src_filename, const char *dst_filename, FREE_IMAGE_FO
 					tmp = FreeImage_ConvertTo24Bits(rescaled);
 					break;
 			}
-			assert(tmp != NULL);
+			EXPECT_TRUE(tmp != NULL);
 			FreeImage_Unload(rescaled); 
 			rescaled = tmp;
 		}
@@ -67,12 +68,12 @@ void testMPageCache(const char *src_filename, const char *dst_filename) {
 	FREE_IMAGE_FORMAT src_fif = FreeImage_GetFileType(src_filename);
 	// load the file
 	FIBITMAP *src = FreeImage_Load(src_fif, src_filename, 0); //24bit image 
-	assert(src != NULL);
+	EXPECT_TRUE(src != NULL);
 
 	// convert to 24-bit
 	if(FreeImage_GetBPP(src) != 24) {
 		FIBITMAP *tmp = FreeImage_ConvertTo24Bits(src);
-		assert(tmp != NULL);
+		EXPECT_TRUE(tmp != NULL);
 		FreeImage_Unload(src); 
 		src = tmp;
 	}
@@ -174,8 +175,10 @@ void testLockDeleteMultiPage(const char *input) {
 
 // --------------------------------------------------------------------------
 
-void testMultiPage(const char *lpszPathName) {
-	printf("testMultiPage ...\n");
+TEST(PNG, MultiPage)
+{
+	const char *lpszPathName="sample.png";
+
 
 	// test multipage creation
 	// (tests for plugins disabled at build time are left out,

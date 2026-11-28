@@ -20,6 +20,7 @@
 
 #include "TestSuite.h"
 
+
 #include <vector>
 #include <cstdint>
 
@@ -68,8 +69,8 @@ static bool expect(bool condition, const char *what) {
 
 // ----------------------------------------------------------
 
-bool testTargaRLE() {
-	printf("testTargaRLE ...\n");
+TEST(TARGA, RLE)
+{
 	bool ok = true;
 
 	// A valid 24-bit image 4x2: the bottom row is one run, the top row is a raw packet of 4 pixels
@@ -132,12 +133,11 @@ bool testTargaRLE() {
 		}
 	}
 
-	printf(ok ? "testTargaRLE: OK\n" : "testTargaRLE: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }
 
-bool testTargaRLEPackets() {
-	printf("testTargaRLEPackets ...\n");
+TEST(TARGA, RLEPackets)
+{
 	bool ok = true;
 
 	// 3x2 pixels of 24 bit: a line has 9 bytes and the scanline pitch of the dib is 12 bytes.
@@ -174,6 +174,5 @@ bool testTargaRLEPackets() {
 		}
 	}
 
-	printf(ok ? "testTargaRLEPackets: OK\n" : "testTargaRLEPackets: FAILED\n");
-	return ok;
+	EXPECT_TRUE(ok);
 }

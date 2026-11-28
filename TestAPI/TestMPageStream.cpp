@@ -66,14 +66,14 @@ FIBOOL testStreamMultiPageOpen(const char *input, int flags) {
 		if(src) {
 			// get the page count
 			int count = FreeImage_GetPageCount(src);
-			assert(count > 1);
+			EXPECT_TRUE(count > 1);
 
 			// delete page 0 (modifications are stored to the cache)
 			FreeImage_DeletePage(src, 0);
 
 			// Close src file (nothing is done, the cache is cleared)
 			bSuccess = FreeImage_CloseMultiBitmap(src, 0);
-			assert(bSuccess);
+			EXPECT_TRUE(bSuccess);
 		}
 
 		// Close the src stream
@@ -109,7 +109,7 @@ FIBOOL testStreamMultiPageSave(const char *input, const char *output, int input_
 		if (file != NULL) {
 			// Save the multi-page file to the stream
 			FIBOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)file, output_flag);
-			assert(bSuccess);
+			EXPECT_TRUE(bSuccess);
 
 			// Close the dst stream
 			fclose(file);
@@ -141,7 +141,7 @@ FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int in
 
 	// Open src stream in read-only mode
 	FILE *src_file = fopen(input, "r+b");
-	assert(src_file);
+	EXPECT_TRUE(src_file);
 	if (src_file != NULL) {
 		// Open the multi-page file
 		FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromHandle(&io, (fi_handle)src_file);
@@ -150,7 +150,7 @@ FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int in
 		if(src) {
 			// get the page count
 			int count = FreeImage_GetPageCount(src);
-			assert(count > 2);
+			EXPECT_TRUE(count > 2);
 
 			// Load the bitmap at position '2'
 			FIBITMAP *dib = FreeImage_LockPage(src, 2);
@@ -170,11 +170,11 @@ FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int in
 
 			// Open dst stream in read/write mode
 			FILE *dst_file = fopen(output, "w+b");	
-			assert(dst_file);
+			EXPECT_TRUE(dst_file);
 			if (dst_file != NULL) {
 				// Save the multi-page file to the stream (modifications are applied)
 				FIBOOL bSuccess = FreeImage_SaveMultiBitmapToHandle(fif, src, &io, (fi_handle)dst_file, output_flag);
-				assert(bSuccess);
+				EXPECT_TRUE(bSuccess);
 
 				// Close the dst stream
 				fclose(dst_file);
@@ -182,7 +182,7 @@ FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int in
 
 			// Close src file (nothing is done, the cache is cleared)
 			bSuccess = FreeImage_CloseMultiBitmap(src, 0);
-			assert(bSuccess);
+			EXPECT_TRUE(bSuccess);
 		}
 
 		// Close the src stream
@@ -196,21 +196,23 @@ FIBOOL testStreamMultiPageOpenSave(const char *input, const char *output, int in
 
 // --------------------------------------------------------------------------
 
-void testStreamMultiPage(const char *lpszPathName) {
+TEST(TIFF, StreamMultiPage)
+{
+	const char *lpszPathName="sample.tif";
+
 	FIBOOL bSuccess;
 	
-	printf("testStreamMultiPage ...\n");
 
 	// test multipage stream (opening)
 	bSuccess = testStreamMultiPageOpen(lpszPathName, 0);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 
 	// test multipage stream (save as)
 	bSuccess = testStreamMultiPageSave(lpszPathName, "clone-stream.tif", 0, 0);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 	
 	// test multipage stream (open, modify, save as)
 	bSuccess = testStreamMultiPageOpenSave(lpszPathName, "redirect-stream.tif", 0, 0);
-	assert(bSuccess);
+	EXPECT_TRUE(bSuccess);
 
 }
